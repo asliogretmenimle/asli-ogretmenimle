@@ -14,6 +14,7 @@ export default function KargoRotasi({ grade, onFinish }: GameProps) {
   const rules = useMemo(() => ({}), [])
   const [index, setIndex] = useState(0)
   const [route, setRoute] = useState<NodeId[]>(['D'])
+  const [foundRoutes, setFoundRoutes] = useState<{ key: string; path: NodeId[]; length: number }[]>([])
   const [message, setMessage] = useState('')
   const [tries, setTries] = useState(0)
   const [mistakes, setMistakes] = useState(0)
@@ -30,18 +31,36 @@ export default function KargoRotasi({ grade, onFinish }: GameProps) {
     setMessage('')
   }
   const check = () => {
-    setTries((n) => n + 1)
     if (!visited) {
+      setTries((n) => n + 1)
       track.attempt(false)
       setMistakes((n) => n + 1)
       setMessage(`${PLACES.find((p) => p.id === target)?.name} adresine henüz ulaşmadın. Yol ağında komşu bir sokağa ilerle.`)
       return
     }
+    const key = routeKey(route)
+    if (foundRoutes.some((r) => r.key === key)) {
+      setTries((n) => n + 1)
+      track.attempt(false)
+      setMistakes((n) => n + 1)
+      setMessage('Bu sokakları daha önce kaydettin. Farklı bir güzergâh dene.')
+      return
+    }
     track.attempt(true)
-    track.item(tries === 0)
-    track.solutions(1)
-    setSolved(true)
-    setMessage(`Teslimat tamamlandı. Rotan ${length} m; en kısa rota ${shortest.d} m. İki rota arasındaki farkı karşılaştır.`)
+    const nextRoutes = [...foundRoutes, { key, path: route, length }]
+    setFoundRoutes(nextRoutes)
+    track.solutions(nextRoutes.length)
+    if (nextRoutes.length >= 2) {
+      track.item(tries === 0)
+      setSolved(true)
+      const shorter = nextRoutes[0].length === nextRoutes[1].length
+        ? 'İki rotanın uzunluğu eşit.'
+        : `${nextRoutes[0].length < nextRoutes[1].length ? 'İlk' : 'İkinci'} rota daha kısa.`
+      setMessage(`${shorter} Karşılaştır: ${nextRoutes[0].length} m ve ${nextRoutes[1].length} m. En kısa olası rota ${shortest.d} m.`)
+      return
+    }
+    setRoute(['D'])
+    setMessage(`İlk rotayı (${length} m) kaydettin. Şimdi aynı adrese farklı sokaklardan ulaş.`)
   }
   const next = () => {
     if (index === stops.length - 1) {
@@ -50,6 +69,7 @@ export default function KargoRotasi({ grade, onFinish }: GameProps) {
     }
     setIndex((i) => i + 1)
     setRoute(['D'])
+    setFoundRoutes([])
     setMessage('')
     setTries(0)
     setSolved(false)
@@ -79,7 +99,8 @@ export default function KargoRotasi({ grade, onFinish }: GameProps) {
         <div className="flex flex-col gap-3 rounded-2xl bg-white p-4 ring-1 ring-line">
           <p className="font-black text-ink">Rota: {route.map((id) => PLACES.find((p) => p.id === id)?.name).join(' → ')}</p>
           <p className="text-sm font-bold text-ink-soft">Toplam: {length} m · en kısa: {shortest.d} m</p>
-          {!solved ? <div className="flex gap-2"><BigButton variant="ghost" disabled={route.length <= 1} onClick={() => { setRoute((r) => r.slice(0, -1)); setMessage('') }}><ArrowLeft size={18} />Geri al</BigButton><BigButton onClick={check} className="flex-1"><Check size={18} />Teslimatı denetle</BigButton></div> : <BigButton onClick={next} className="w-full">{index === stops.length - 1 ? 'Rotaları tamamla' : 'Sonraki teslimat'}</BigButton>}
+          {foundRoutes.map((r, i) => <p key={r.key} className="rounded-lg bg-amber-50 p-2 text-xs font-bold text-amber-950">Rota {i + 1}: {r.path.map((id) => PLACES.find((p) => p.id === id)?.name).join(' → ')} · {r.length} m</p>)}
+          {!solved ? <div className="flex gap-2"><BigButton variant="ghost" disabled={route.length <= 1} onClick={() => { setRoute((r) => r.slice(0, -1)); setMessage('') }}><ArrowLeft size={18} />Geri al</BigButton><BigButton onClick={check} className="flex-1"><Check size={18} />{foundRoutes.length ? 'Alternatif rotayı kaydet' : 'Rotayı kaydet'}</BigButton></div> : <BigButton onClick={next} className="w-full">{index === stops.length - 1 ? 'Rotaları tamamla' : 'Sonraki teslimat'}</BigButton>}
           {message && <p className={`rounded-xl p-3 text-sm font-bold ${solved ? 'bg-emerald-50 text-emerald-900' : 'bg-amber-50 text-amber-900'}`} aria-live="polite">{message}</p>}
           {solved && <p className="rounded-xl bg-sky-50 p-3 text-sm font-bold text-sky-900">Seçtiğin yollar: {routeKey(route).split('|').join(', ')}</p>}
         </div>

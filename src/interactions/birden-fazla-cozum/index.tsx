@@ -78,11 +78,11 @@ function ProblemView({ grade, task, index, total, session: S, nudge: N, onNext }
         <div className="flex flex-col gap-3">
           <div className="rounded-2xl bg-white p-3 ring-1 ring-line">
             <p className="mb-2 text-sm font-black text-ink">{task.question}</p>
-            <div className="flex flex-wrap gap-2">{methodOptions.map((m) => <button key={m.id} type="button" aria-pressed={method === m.id} onClick={() => setMethod(m.id)} className={`min-h-11 rounded-xl px-3 text-sm font-bold ring-1 ${method === m.id ? 'bg-sky-600 text-white ring-sky-700' : 'bg-white text-ink ring-line'}`}>{m.label}</button>)}</div>
+            <div className="flex flex-wrap gap-2">{methodOptions.map((m) => <button key={m.id} type="button" disabled={S.done} aria-pressed={method === m.id} onClick={() => setMethod(m.id)} className={`min-h-11 rounded-xl px-3 text-sm font-bold ring-1 ${method === m.id ? 'bg-sky-600 text-white ring-sky-700' : 'bg-white text-ink ring-line'}`}>{m.label}</button>)}</div>
           </div>
-          {inputs.map((input, i) => <label key={input.label} className="rounded-xl bg-white p-3 text-sm font-black text-ink ring-1 ring-line">{input.label}<input type="number" step="any" value={input.value} onChange={(e) => setAnswers((a) => a.map((v, j) => j === i ? e.target.value : v))} className="mt-1 min-h-12 w-full rounded-lg bg-paper px-3 text-lg" /></label>)}
+          {inputs.map((input, i) => <label key={input.label} className="rounded-xl bg-white p-3 text-sm font-black text-ink ring-1 ring-line">{input.label}<input type="number" step="any" disabled={S.done} value={input.value} onChange={(e) => setAnswers((a) => a.map((v, j) => j === i ? e.target.value : v))} className="mt-1 min-h-12 w-full rounded-lg bg-paper px-3 text-lg" /></label>)}
           <p className="text-xs font-bold text-ink-soft">Kullandığın yollar: {used.map((id) => METHODS.find((m) => m.id === id)?.label).join(' · ') || 'henüz yok'}</p>
-          <BigButton onClick={check} className="w-full"><Check size={18} />Bu yolla çöz</BigButton>
+          <BigButton onClick={check} disabled={S.done} className="w-full"><Check size={18} />Bu yolla çöz</BigButton>
           {message && !S.done && <p className="rounded-xl bg-emerald-50 p-3 text-sm font-bold text-emerald-900">{message}<ArrowRight size={14} className="inline" /></p>}
           <p className="flex items-start gap-2 rounded-xl bg-sky-50 p-3 text-xs font-bold text-sky-900"><Lightbulb size={16} />Aynı yanıtı iki farklı yöntemle bulup koşulları denetle.</p>
         </div>
