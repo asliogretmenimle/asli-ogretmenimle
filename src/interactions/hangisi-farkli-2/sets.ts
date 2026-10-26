@@ -109,7 +109,7 @@ export const SETS: HSet[] = [
   {
     id: 'g2-clocks', g: [2, 3], title: 'Saatler',
     cards: [vis({ kind: 'clock', h: 3, m: 0 }), vis({ kind: 'clock', h: 12, m: 0 }), vis({ kind: 'clock', h: 6, m: 30 }), vis({ kind: 'clock', h: 9, m: 0 })],
-    props: [p('yarım saat', 'C', 'yarım saat değil'), p('akrep ile yelkovan üst üste', 'B'), p('akrep sağ tarafı gösteriyor', 'A'), p('akrep sol tarafı gösteriyor', 'D'), p('tam saat', 'ABD'), p('akrep ile yelkovan “L” gibi köşe yapıyor', 'AD')],
+    props: [p('yarım saat', 'C', 'yarım saat değil'), p('akrep ile yelkovan üst üste', 'B'), p('akrep 3’ü gösteriyor', 'A'), p('akrep 9’u gösteriyor', 'D'), p('tam saat', 'ABD'), p('akrep ile yelkovan “L” gibi köşe yapıyor', 'AD')],
   },
 
   // ───────── 3. sınıf ─────────
@@ -205,7 +205,7 @@ export const SETS: HSet[] = [
   {
     id: 'g5-order', g: [5], title: 'İşlem önceliği',
     cards: [tx('3 + 4 × 2'), tx('(3 + 4) × 2'), tx('3 × 4 + 2'), tx('3 × (4 + 2)')],
-    props: [p('sonucu 11', 'A'), p('sonucu 18', 'D'), p('parantez en başta', 'B'), p('önce yazılan işlem sonra yapılıyor', 'A'), p('parantez yok ve sonucu 14', 'C'), p('sonucu 14', 'BC'), p('parantez var', 'BD')],
+    props: [p('sonucu 11', 'A'), p('sonucu 18', 'D'), p('parantez en başta', 'B'), p('önce yazılan işlem sonra yapılıyor', 'AD'), p('parantez yok ve sonucu 14', 'C'), p('sonucu 14', 'BC'), p('parantez var', 'BD')],
   },
 
   // ───────── 6. sınıf ─────────
@@ -222,7 +222,7 @@ export const SETS: HSet[] = [
   {
     id: 'g6-expr', g: [6, 7], title: 'Cebirsel ifadeler',
     cards: [tx('2n + 4'), tx('2(n + 2)'), tx('n + n + 4'), tx('4n')],
-    props: [p('parantez içeriyor', 'B'), p('n iki kez yazılmış', 'C'), p('sabit terimi yok', 'D', 'sabit terimi var'), p('“katsayı × n + sayı” biçiminde', 'A'), p('n = 1 iken değeri 6', 'ABC'), p('n = 2 iken değeri 8', 'ABCD'), p('içinde 4 sayısı var', 'ACD')],
+    props: [p('parantez içeriyor', 'B'), p('n iki kez yazılmış', 'C'), p('sabit terimi yok', 'D', 'sabit terimi var'), p('“katsayı × n + sayı” biçiminde', 'A'), p('n = 1 iken değeri 6', 'ABC'), p('n = 2 iken değeri 8', 'ABCD'), p('içinde 4 sayısı var', 'ACD', 'içinde 4 sayısı yok')],
   },
   {
     id: 'g6-area', g: [6, 7], title: 'Alanlar',
@@ -259,7 +259,7 @@ export const SETS: HSet[] = [
       { t: 'table', head: ['x', 'y'], rows: [['2', '6'], ['3', '9'], ['5', '16']] },
       { t: 'table', head: ['x', 'y'], rows: [['1', '12'], ['2', '6'], ['3', '4']] },
     ],
-    props: [p('ters orantılı', 'D'), p('orantılı değil', 'C', 'orantılı'), p('y = 3x', 'A'), p('y, x’in 4 katı', 'B'), p('doğru orantılı', 'AB'), p('x artınca y artıyor', 'ABC'), p('y değerlerinden biri 12', 'ABD')],
+    props: [p('ters orantılı', 'D'), p('orantılı değil', 'C', 'orantılı'), p('y = 3x', 'A'), p('y, x’in 4 katı', 'B'), p('doğru orantılı', 'AB'), p('x artınca y artıyor', 'ABC'), p('y değerlerinden biri 12', 'ABD', 'y değerlerinde 12 yok')],
   },
   {
     id: 'g7-eq', g: [7, 8], title: 'Denklemler',

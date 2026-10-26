@@ -191,7 +191,7 @@ export const GARDEN_CSS = `
   .bahce-slot{transition:stroke .15s,fill .15s}
   [data-over] .bahce-slot{stroke:#0ea5e9;fill:rgba(14,165,233,.22)}
   .bahce-tap{cursor:pointer}
-  .bahce-tap:focus-visible{outline:none}
+  .bahce-tap:focus{outline:none}
   .bahce-tap:focus-visible .bahce-focus{stroke:#0ea5e9;stroke-width:4}
   .bahce-pulse{animation:bahce-pulse 1.2s ease-in-out infinite}
   @keyframes bahce-pulse{50%{opacity:.45}}

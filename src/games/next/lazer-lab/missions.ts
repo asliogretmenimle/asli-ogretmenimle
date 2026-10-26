@@ -103,7 +103,7 @@ const G6: Mission[] = [
     angleStep: 15,
     show: { angles: true },
     steps: [
-      { kind: 'predict', text: 'Işın aynadan sekip duvara çarpacak. Nereye çarpar? Tahminin olan noktaya dokun, sonra **Ateşle!**', tol: 1.3, hints: ['Işın aynaya hangi eğimle iniyorsa, aynadan nasıl kalkar? Elinle havada göster.'] },
+      { kind: 'predict', text: 'Işın aynadan sekip duvara çarpacak. Nereye çarpar? Tahminin olan noktaya dokun, sonra Ateşle!', tol: 1.3, hints: ['Işın aynaya hangi eğimle iniyorsa, aynadan nasıl kalkar? Elinle havada göster.'] },
       { kind: 'measure', b: 0, ray: 'in', text: 'Açıölçerin kolunu sürükle: gelen ışınla ayna arasındaki açıyı ölç.', hints: ['Açıölçerin merkezi ışının aynaya çarptığı noktada. Kolu gelen ışının üstüne getir.'] },
       { kind: 'measure', b: 0, ray: 'out', text: 'Şimdi yansıyan ışınla ayna arasındaki açıyı ölç.', ok: 'İki açı eşit! Işın aynaya hangi açıyla gelirse aynı açıyla yansır.' },
       {
@@ -140,7 +140,7 @@ const G6: Mission[] = [
     angleStep: 15,
     show: { angles: true },
     steps: [
-      { kind: 'build', inventory: 1, goal: 3, best: 1, text: 'Izgarada bir noktaya dokunarak ayna koy. Aynayı iki parmakla ya da düğmelerle döndür, sonra **Ateşle!**', ok: 'Kristal yandı! Aynadaki iki açıya bak: eşit mi?', hints: ['Işın sağa gidiyor. Aynayı ışının yolu üzerine koymalısın.', 'Aynayı 45° çevirirsen ışın kaç derece döner? Peki 30° ya da 60° çevirirsen?'] },
+      { kind: 'build', inventory: 1, goal: 3, best: 1, text: 'Izgarada bir noktaya dokunarak ayna koy. Aynayı iki parmakla ya da düğmelerle döndür, sonra Ateşle!', ok: 'Kristal yandı! Aynadaki iki açıya bak: eşit mi?', hints: ['Işın sağa gidiyor. Aynayı ışının yolu üzerine koymalısın.', 'Aynayı 45° çevirirsen ışın kaç derece döner? Peki 30° ya da 60° çevirirsen?'] },
       {
         kind: 'number',
         text: (c) => `Senin aynanda ışın aynayla ${r0(angAt(c, 0).mirror)}° yapıyor. Işın düz gitseydi kesikli çizgide ilerlerdi. Yansıyan ışın bu kesikli çizgiyle kaç derece yapıyor?`,
@@ -626,7 +626,7 @@ const G8: Mission[] = [
         min: 0,
         max: 20,
         tol: 0.11,
-        nudge: (v, ans, c) => {
+        nudge: (v, _ans, c) => {
           const s = segOf(c, 0)
           const N = s.dx * s.dx + s.dy * s.dy
           if (Math.abs(v - (Math.abs(s.dx) + Math.abs(s.dy))) < 0.11) return { q: 'Dik kenarları topladın; ışın hipotenüs boyunca gidiyor. Hipotenüs dik kenarların toplamından kısadır.', mis: 'Hipotenüs yerine dik kenarları topladı', tool: 'dinamikucgen' }

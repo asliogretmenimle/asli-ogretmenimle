@@ -32,8 +32,8 @@ export const f = (v: number, d = 2) => {
   const r = Math.round(v * 10 ** d) / 10 ** d
   return (Object.is(r, -0) ? 0 : r).toLocaleString('tr-TR', { maximumFractionDigits: d }).replace('-', '−')
 }
-/** −3 °C */
-export const deg = (v: number) => `${f(v)} °C`
+/** −3 °C */
+export const deg = (v: number) => `${f(v)}\u00a0°C`
 /** Değişim: +8, −5 */
 export const chg = (v: number) => (v > 0 ? `+${f(v)}` : f(v))
 
@@ -213,7 +213,7 @@ export function StepBar({ ink, steps, at }: { ink: Ink; steps: string[]; at: num
 
 /* ───────────── Sayı tuş takımı (eksi işareti ve ondalık virgül destekli) ───────────── */
 
-export function NumPad({ onSubmit, neg, dec, unit, ink, disabled, label = 'Kontrol et' }: { onSubmit: (n: number) => void; neg?: boolean; dec?: boolean; unit?: string; ink: Ink; disabled?: boolean; label?: string }) {
+export function NumPad({ onSubmit, neg, dec, unit, ink, disabled, label = 'Kontrol' }: { onSubmit: (n: number) => void; neg?: boolean; dec?: boolean; unit?: string; ink: Ink; disabled?: boolean; label?: string }) {
   const [st, setSt] = useState({ s: '', minus: false, fresh: false })
   const press = (d: string) =>
     setSt((c) => {
@@ -240,7 +240,7 @@ export function NumPad({ onSubmit, neg, dec, unit, ink, disabled, label = 'Kontr
   const key = `grid h-12 place-items-center rounded-xl text-2xl font-black transition active:translate-y-[2px] active:shadow-none disabled:opacity-40 sm:h-[52px] ${dark ? 'bg-slate-700 text-slate-50 shadow-[0_3px_0_#0f172a] ring-1 ring-slate-600' : 'bg-white text-ink shadow-[0_3px_0_#d9dbe8] ring-1 ring-line'}`
   const shown = (st.minus ? '−' : '') + (st.s || '')
   return (
-    <div className={`w-full max-w-[300px] rounded-2xl p-2.5 ${dark ? 'bg-slate-900 ring-1 ring-slate-700' : 'bg-slate-50 ring-1 ring-line'}`}>
+    <div data-numpad className={`w-full max-w-[300px] rounded-2xl p-2.5 ${dark ? 'bg-slate-900 ring-1 ring-slate-700' : 'bg-slate-50 ring-1 ring-line'}`}>
       <div className={`mb-2 flex h-14 items-center justify-center gap-2 rounded-xl text-3xl font-black tabular-nums ${dark ? 'bg-[#06101f] ring-2 ring-cyan-500/50' : 'bg-white ring-2 ring-sky-200'}`} aria-live="polite" style={dark ? { fontFamily: 'ui-monospace, Menlo, monospace', color: '#67e8f9', textShadow: '0 0 10px #22d3ee66' } : undefined}>
         <span className={shown ? (st.fresh ? 'opacity-50' : '') : dark ? 'text-slate-600' : 'text-slate-300'}>{shown || '?'}</span>
         {unit && <span className={`text-lg ${dark ? 'text-slate-400' : 'text-ink-soft'}`}>{unit}</span>}
@@ -254,7 +254,7 @@ export function NumPad({ onSubmit, neg, dec, unit, ink, disabled, label = 'Kontr
         {dec ? <button type="button" className={key} disabled={disabled} onClick={() => press(',')} aria-label="Virgül">,</button> : <span />}
         <button type="button" className={`${key} col-span-2`} disabled={disabled} onClick={() => press('0')}>0</button>
         <button type="button" disabled={disabled || !ready} onClick={submit} className="col-span-2 grid h-12 place-items-center rounded-xl bg-emerald-500 text-white shadow-[0_3px_0_#047857] transition active:translate-y-[2px] active:shadow-none disabled:opacity-40 sm:h-[52px]" aria-label={label}>
-          <span className="inline-flex items-center gap-1.5 text-base font-black"><Check size={22} strokeWidth={3} />{label}</span>
+          <span className="inline-flex items-center gap-1 text-[15px] font-black"><Check size={20} strokeWidth={3} />{label}</span>
         </button>
       </div>
     </div>

@@ -32,14 +32,14 @@ interface Base {
 export type Mission = Base &
   (
     | { kind: 'grid'; cols: number; rows: number; palette: Mod[]; targets: Partial<Record<Mod, number>>; diag: (c: Record<Mod, number>) => Diag | null; meter?: { mod: Mod; per: number; target: number; unit: string }; estimate?: { q: string; options: string[]; correct: number }; okText: string; asks: Ask[] }
-    | { kind: 'alloc'; units: number; segs: Mod[]; label: (k: number) => string; rules: Rule[]; goal: number; solLabel: (p: Plan) => string; resource: string; asks: (p: Plan) => Ask[] }
+    | { kind: 'alloc'; units: number; start: number[]; segs: Mod[]; label: (k: number) => string; rules: Rule[]; goal: number; solLabel: (p: Plan) => string; resource: string; asks: (p: Plan) => Ask[] }
     | { kind: 'compare'; total: number; unit: string; bars: { name: string; color: string; den: number; num: number }[]; asks: Ask[] }
     | { kind: 'chart'; names: string[]; data: number[]; max: number; unit: string; okText: string; asks: Ask[] }
     | { kind: 'mean'; values: number[]; step: number; unit: string; yRange: [number, number]; start: number; okText: string; asks: Ask[] }
     | { kind: 'share'; colonies: { name: string; color: string; people: number; water: number }[]; step: number; asks: Ask[] }
     | { kind: 'thermo'; marks: { id: string; label: string; color: string; target: number; desc: string }[]; asks: Ask[] }
     | { kind: 'prop'; sets: PlotSet[]; asks: Ask[] }
-    | { kind: 'sim'; units: number; unitValue: number; unit: string; resource: string; segs: Mod[]; label: (k: number) => string; cfg: SimCfg; minPop?: number; goal: number; asks: (p: Plan, r: SimResult) => Ask[] }
+    | { kind: 'sim'; units: number; start: number[]; unitValue: number; unit: string; resource: string; segs: Mod[]; label: (k: number) => string; cfg: SimCfg; minPop?: number; goal: number; asks: (p: Plan, r: SimResult) => Ask[] }
   )
 
 const frac12 = (k: number) => (k === 0 ? '0' : `[[${k}/12]]`)
@@ -90,6 +90,7 @@ const g5: Mission[] = [
     title: 'Enerji paylaşımı',
     prompt: 'Güneş panelleri bir solda 24 kWh enerji üretiyor; enerjiyi 12 eş bloğa ayırdık. Kurallara uyan bir plan kur. Sonra farklı bir plan daha bul!',
     units: 12,
+    start: [3, 3, 3, 3],
     segs: ['sera', 'oksijen', 'yasam', 'lab'],
     label: frac12,
     resource: '24 kWh enerji',
@@ -188,6 +189,7 @@ const g5: Mission[] = [
     title: 'Koloni simülasyonu',
     prompt: 'Koloniye her sol 120 L su geliyor, su 12 bloğa ayrıldı. Suyu sera, oksijen ve yaşam modülü arasında paylaştır, sonra 10 sol simüle et. Koloni 10 sol boyunca sağlıklı kalmalı. İki farklı plan bul!',
     units: 12,
+    start: [6, 2, 4],
     unitValue: 10,
     unit: 'L',
     resource: '120 L su',
@@ -241,6 +243,7 @@ const g6: Mission[] = [
     title: 'Enerji bütçesi',
     prompt: 'Panellerin bir soldaki üretimi 240 kWh. Enerjiyi %5’lik bloklarla paylaştır. Kurallara uyan bir plan kur, sonra farklı bir plan daha bul!',
     units: 20,
+    start: [5, 5, 5, 5],
     segs: ['sera', 'yasam', 'oksijen', 'lab'],
     label: pct20,
     resource: '240 kWh enerji',
@@ -341,6 +344,7 @@ const g6: Mission[] = [
     title: 'Koloni simülasyonu',
     prompt: 'Koloniye her sol 120 L su geliyor. Suyu %5’lik bloklarla paylaştır ve 10 sol simüle et. Koloni sağlıklı kalmalı ve en az 10 kişiye büyümeli. İki farklı plan bul!',
     units: 20,
+    start: [10, 5, 5],
     unitValue: 6,
     unit: 'L',
     resource: '120 L su',
@@ -435,6 +439,7 @@ const g7: Mission[] = [
     title: 'Oranlı enerji planı',
     prompt: 'Üssün günlük enerjisi 60 kWh; 3 kWh’lik 20 bloğa ayrıldı. Kurallara uyan bir plan kur, sonra farklı bir plan daha bul!',
     units: 20,
+    start: [5, 5, 5, 5],
     segs: ['sera', 'yasam', 'oksijen', 'lab'],
     label: (k) => `${k * 3} kWh`,
     resource: '60 kWh enerji',
@@ -483,6 +488,7 @@ const g7: Mission[] = [
     title: 'Kış simülasyonu',
     prompt: 'Üssün günlük enerjisi 300 kWh, %5’lik bloklara ayrıldı. Mars’ta geceler çok soğuk: ısıtma yetmezse üs içi soğur. 10 sol simüle et: üs içi 15 °C’nin altına düşmesin, oksijen ve yiyecek yetsin, nüfus en az 10 olsun. İki farklı plan bul!',
     units: 20,
+    start: [5, 5, 5, 5],
     unitValue: 15,
     unit: 'kWh',
     resource: '300 kWh enerji',

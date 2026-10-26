@@ -76,7 +76,7 @@ export function BarChart({ ink, cats, series, max, step, labelStep, edit, hl = [
   const [sel, setSel] = useState(0)
   const [refV, setRefV] = useState<{ v: number; c: string } | null>(null)
   const H = Math.round(clamp(w * 0.56, 250, 340))
-  const pad = { l: 42, r: 12, t: 24, b: cats.some((c) => c.wx) ? 58 : 34 }
+  const pad = { l: 42, r: 12, t: 24, b: cats.some((c) => c.wx) ? 60 : 34 }
   const pw = w - pad.l - pad.r
   const ph = H - pad.t - pad.b
   const base = pad.t + ph
@@ -152,8 +152,8 @@ export function BarChart({ ink, cats, series, max, step, labelStep, edit, hl = [
                     )
                   })}
                   {edit && <BarHit x={cx - Math.max(bw, 44) / 2 - 8} w={Math.max(bw, 44) + 16} top={pad.t - 12} bottom={base} label={c.label} value={series[0].values[i]} onSel={() => setSel(i)} onSet={(cy) => setAt(i, cy)} />}
-                  {c.wx && <WxIcon w={c.wx} x={cx - 12} y={base + 5} size={24} />}
-                  <text x={cx} y={base + (c.wx ? 46 : 20)} textAnchor="middle" fontSize={n > 4 && w < 420 ? 11 : 13} fontWeight={800} fill={sel === i && edit ? (ink.dark ? '#22d3ee' : '#0e7490') : ink.text} onClick={edit ? () => setSel(i) : undefined}>{c.label}</text>
+                  {c.wx && <WxIcon w={c.wx} x={cx - 12} y={base + 9} size={24} />}
+                  <text x={cx} y={base + (c.wx ? 50 : 20)} textAnchor="middle" fontSize={n > 4 && w < 420 ? 11 : 13} fontWeight={800} fill={sel === i && edit ? (ink.dark ? '#22d3ee' : '#0e7490') : ink.text} onClick={edit ? () => setSel(i) : undefined}>{c.label}</text>
                 </g>
               )
             })}
@@ -667,23 +667,28 @@ export function Thermo({ ink, lo, hi, level, stops = [], marks = [], onLevel, on
           <circle cx={tubeX} cy={Y(lo) + 30} r={21} fill="url(#ii-merc)" stroke={ink.dark ? '#64748b' : '#94a3b8'} strokeWidth={2} />
           <rect x={tubeX - 5} y={liquidTop} width={10} height={Y(lo) + 20 - liquidTop} fill="url(#ii-merc)" style={{ transition: 'y 160ms, height 160ms' }} />
           <circle cx={tubeX - 6} cy={Y(lo) + 24} r={5} fill="#fff" opacity={0.4} />
-          {/* işaretler */}
-          {marks.map((m) => (
-            <g key={m.label + m.v} pointerEvents="none">
-              <line x1={tubeX + 12} x2={tubeX + 22} y1={Y(m.v)} y2={Y(m.v)} stroke={m.color} strokeWidth={3} />
-              <rect x={tubeX + 22} y={Y(m.v) - 12} width={Math.max(64, m.label.length * 7.4 + 14)} height={24} rx={8} fill={m.color} />
-              <text x={tubeX + 29} y={Y(m.v) + 5} fontSize={12.5} fontWeight={900} fill="#fff">{m.label}</text>
-            </g>
-          ))}
+          {/* işaretler: sağ kenarda etiket, tüpe kesikli kılavuz */}
+          {marks.map((m) => {
+            const lw = Math.max(64, m.label.length * 7.2 + 14)
+            const lx = W - lw - 4
+            return (
+              <g key={m.label + m.v} pointerEvents="none">
+                <line x1={tubeX + 12} x2={lx} y1={Y(m.v)} y2={Y(m.v)} stroke={m.color} strokeWidth={1.6} strokeDasharray="3 3" opacity={0.8} />
+                <rect x={lx} y={Y(m.v) - 12} width={lw} height={24} rx={8} fill={m.color} />
+                <text x={lx + lw / 2} y={Y(m.v) + 5} textAnchor="middle" fontSize={12.5} fontWeight={900} fill="#fff">{m.label}</text>
+              </g>
+            )
+          })}
           {bracket && (
             <g pointerEvents="none" className="animate-fade-up">
-              <path d={`M${W - 34} ${Y(bracket[0])}h10V${Y(bracket[1])}h-10`} fill="none" stroke={ink.dark ? '#fbbf24' : '#b45309'} strokeWidth={2.5} />
-              <text x={W - 16} y={(Y(bracket[0]) + Y(bracket[1])) / 2 + 5} textAnchor="middle" fontSize={18} fontWeight={900} fill={ink.dark ? '#fbbf24' : '#b45309'}>?</text>
+              <path d={`M${tubeX + 30} ${Y(bracket[0])}h12V${Y(bracket[1])}h-12`} fill="none" stroke={ink.dark ? '#fbbf24' : '#b45309'} strokeWidth={2.5} />
+              <circle cx={tubeX + 56} cy={(Y(bracket[0]) + Y(bracket[1])) / 2} r={13} fill={ink.dark ? '#fbbf24' : '#b45309'} />
+              <text x={tubeX + 56} y={(Y(bracket[0]) + Y(bracket[1])) / 2 + 6} textAnchor="middle" fontSize={17} fontWeight={900} fill={ink.dark ? '#0b1324' : '#fff'}>?</text>
             </g>
           )}
           {/* zıplamalar */}
           {jumps.map(({ a, b, k }) => {
-            const x = tubeX + 26 + (k % 3) * 42 + (marks.length ? 70 : 0)
+            const x = tubeX + 28 + (k % 3) * 32
             const up = b > a
             const d = b - a
             const ya = Y(a), yb = Y(b)

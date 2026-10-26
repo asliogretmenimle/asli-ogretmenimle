@@ -104,7 +104,7 @@ export function BuildCanvas({ kind, region, keys, onChange, mark, dark, ghost }:
   const pad = kind === 'tile' ? 0.15 : 0.5
   const spanX = region.x1 - region.x0 + 2 * pad
   const spanY = region.y1 - region.y0 + 2 * pad
-  const u = Math.max(30, Math.min(64, (w - 8) / spanX))
+  const u = Math.max(30, Math.min(72, (w - 8) / spanX))
   const W = spanX * u, H = spanY * u
   const X = (x: number) => (x - region.x0 + pad) * u
   const Y = (y: number) => (region.y1 - y + pad) * u
@@ -178,7 +178,7 @@ export function BuildCanvas({ kind, region, keys, onChange, mark, dark, ghost }:
   return (
     <div ref={wrap} className="w-full">
       <div className={`mx-auto w-fit max-w-full rounded-2xl p-1 ${dark ? 'bg-slate-900 ring-1 ring-slate-600' : 'bg-white ring-1 ring-line'}`} style={{ touchAction: 'none' }}>
-        <svg ref={svgRef} {...bind()} viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="block h-auto max-w-full cursor-pointer select-none" style={{ touchAction: 'none' }} role="application" aria-label="Yapım alanı: parçaları eklemek için dokun ya da sürükle" data-testid="build-canvas">
+        <svg ref={svgRef} {...bind()} viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="block h-auto max-w-full cursor-pointer select-none" style={{ touchAction: 'none' }} role="application" aria-label="Yapım alanı: parçaları eklemek için dokun ya da sürükle" data-testid="build-canvas" data-region={`${region.x0},${region.y0},${region.x1},${region.y1},${pad}`}>
           {cands}
           {ghost?.map((k) => <Piece key={`g${k}`} k={k} X={X} Y={Y} u={u} color={dark ? '#64748b' : '#cbd5e1'} ghost />)}
           {keys.map((k) => <Piece key={k} k={k} X={X} Y={Y} u={u} color={mark?.(k) ?? BASE[kind]} dark={dark} />)}

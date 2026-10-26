@@ -165,7 +165,7 @@ function LineBuild({ api, d }: { api: Api; d: { city: string; temps: number[] } 
     if (wrong.length) {
       api.check(false)
       const i = wrong[0]
-      return api.nudge(`${DAYS[i]} noktası ${ys[i]} °C’de duruyor; tabloda ${d.temps[i]} °C. Noktayı yukarı mı aşağı mı taşımalısın?`)
+      return api.nudge(`${DAYS[i]} noktası ${ys[i]} °C’de duruyor; tabloda ${d.temps[i]} °C. Noktayı yukarı mı aşağı mı taşımalısın?`)
     }
     api.check(true)
     api.clear()
@@ -203,8 +203,8 @@ function LineBuild({ api, d }: { api: Api; d: { city: string; temps: number[] } 
             api={api}
             q={`${DAYS[best]} ile ${DAYS[best + 1]} arasında sıcaklık kaç derece arttı?`}
             unit="°C"
-            judge={(v) => (v === ups[best] ? true : v === d.temps[best + 1] ? { q: `Bu, ${DAYS[best + 1]} gününün sıcaklığı. Artış, iki sıcaklık arasındaki farktır: ${d.temps[best]} °C’den ${d.temps[best + 1]} °C’ye kaç derece çıkılır?`, misc: 'Değişim yerine son değeri yazdı' } : { q: `${d.temps[best]} °C’den ${d.temps[best + 1]} °C’ye çıkmak için kaç derece gerekir? İleri say ya da çıkar.` })}
-            onOk={() => { api.say(`En büyük artış: ${DAYS[best]}–${DAYS[best + 1]} arası, ${ups[best]} °C.`); api.complete() }}
+            judge={(v) => (v === ups[best] ? true : v === d.temps[best + 1] ? { q: `Bu, ${DAYS[best + 1]} gününün sıcaklığı. Artış, iki sıcaklık arasındaki farktır: ${d.temps[best]} °C’den ${d.temps[best + 1]} °C’ye kaç derece çıkılır?`, misc: 'Değişim yerine son değeri yazdı' } : { q: `${d.temps[best]} °C’den ${d.temps[best + 1]} °C’ye çıkmak için kaç derece gerekir? İleri say ya da çıkar.` })}
+            onOk={() => { api.say(`En büyük artış: ${DAYS[best]}–${DAYS[best + 1]} arası, ${ups[best]} °C.`); api.complete() }}
           />
         </Panel>
       )}
@@ -242,7 +242,7 @@ function SpreadCities({ api, d }: { api: Api; d: SpreadData }) {
   const tap = (city: 'i' | 'k', i: number) => {
     const a = city === 'i' ? d.izmir : d.konya
     const v = a[i]
-    if (v !== Math.min(...a) && v !== Math.max(...a)) return setNote(`${f(v)} °C en uçtaki nokta mı? Sayı doğrusunda daha solda ya da daha sağda nokta var mı?`)
+    if (v !== Math.min(...a) && v !== Math.max(...a)) return setNote(`${f(v)} °C en uçtaki nokta mı? Sayı doğrusunda daha solda ya da daha sağda nokta var mı?`)
     setNote(null)
     if (city === 'i') setTapI((t) => (t.includes(i) ? t : [...t, i]))
     else setTapK((t) => (t.includes(i) ? t : [...t, i]))
@@ -258,11 +258,11 @@ function SpreadCities({ api, d }: { api: Api; d: SpreadData }) {
   )
   const [cards] = useState<Opt[]>(() =>
     shuffle([
-      { t: `Konya’nın açıklığı ${rK} °C, İzmir’inki yalnızca ${rI} °C.`, ok: true, s: `Açıklık: ${rK} ve ${rI}` },
+      { t: `Konya’nın açıklığı ${rK} °C, İzmir’inki yalnızca ${rI} °C.`, ok: true, s: `Açıklık: ${rK} ve ${rI}` },
       { t: 'İzmir’in noktaları üst üste yığılmış, Konya’nınkiler yayılmış.', ok: true, s: 'Noktaların dağılışı' },
-      { t: `İzmir’de her gün ${Math.min(...d.izmir)} ile ${Math.max(...d.izmir)} °C arasında kaldı.`, ok: true, s: 'İzmir dar aralıkta' },
-      { t: `İki şehrin ortalaması da ${d.base} °C.`, ok: false, fb: 'Ortalamalar aynı. Bu, sıcaklığın ne kadar değiştiğini gösterir mi?', misc: 'Değişkenliği ortalamayla açıklamaya çalıştı' },
-      { t: `Konya’nın en yüksek sıcaklığı ${Math.max(...d.konya)} °C.`, ok: false, fb: 'Tek bir değer değişkenliği gösterir mi? En düşük değere de bakmak gerekmez mi?', misc: 'Değişkenliği tek uç değerle değerlendirdi' },
+      { t: `İzmir’de her gün ${Math.min(...d.izmir)} ile ${Math.max(...d.izmir)} °C arasında kaldı.`, ok: true, s: 'İzmir dar aralıkta' },
+      { t: `İki şehrin ortalaması da ${d.base} °C.`, ok: false, fb: 'Ortalamalar aynı. Bu, sıcaklığın ne kadar değiştiğini gösterir mi?', misc: 'Değişkenliği ortalamayla açıklamaya çalıştı' },
+      { t: `Konya’nın en yüksek sıcaklığı ${Math.max(...d.konya)} °C.`, ok: false, fb: 'Tek bir değer değişkenliği gösterir mi? En düşük değere de bakmak gerekmez mi?', misc: 'Değişkenliği tek uç değerle değerlendirdi' },
     ]),
   )
   const view: [number, number] = [d.base - 9, d.base + 9]
@@ -280,10 +280,10 @@ function SpreadCities({ api, d }: { api: Api; d: SpreadData }) {
         <Panel ink={ink} className="animate-fade-up">
           <Ask
             api={api}
-            q="Konya’nın açıklığı (en yüksek − en düşük) kaç °C?"
+            q="Konya’nın açıklığı (en yüksek − en düşük) kaç °C?"
             unit="°C"
-            judge={(v) => (v === rK ? true : v === Math.max(...d.konya) ? { q: 'Bu, en yüksek değer. Açıklık, en yüksek ile en düşük değer arasındaki uzaklıktır.', misc: 'Açıklığı en büyük değer sandı' } : { q: `Konya’nın en düşük sıcaklığı ${Math.min(...d.konya)}, en yüksek sıcaklığı ${Math.max(...d.konya)} °C. Aralarında kaç derece var?` })}
-            onOk={() => { setStep(2); api.say(`Konya’nın açıklığı ${rK} °C, İzmir’in açıklığı ${rI} °C.`) }}
+            judge={(v) => (v === rK ? true : v === Math.max(...d.konya) ? { q: 'Bu, en yüksek değer. Açıklık, en yüksek ile en düşük değer arasındaki uzaklıktır.', misc: 'Açıklığı en büyük değer sandı' } : { q: `Konya’nın en düşük sıcaklığı ${Math.min(...d.konya)}, en yüksek sıcaklığı ${Math.max(...d.konya)} °C. Aralarında kaç derece var?` })}
+            onOk={() => { setStep(2); api.say(`Konya’nın açıklığı ${rK} °C, İzmir’in açıklığı ${rI} °C.`) }}
           />
         </Panel>
       )}
@@ -390,19 +390,19 @@ function Forecast({ api, d }: { api: Api; d: { base: number; temps: number[] } }
     if (pred === null) return api.nudge('Önce sayı doğrusuna dokunarak ya da mor işareti sürükleyerek bir tahmin koy.', { tone: 'ok' })
     if (pred < mn || pred > mx) {
       api.check(false)
-      return api.nudge(pred > mx ? `Son 10 yılda 1 Haziran’da hiç ${f(pred)} °C kadar sıcak olmuş mu? En yüksek değer kaçtı?` : `Son 10 yılda hiç ${f(pred)} °C kadar serin olmuş mu? En düşük değer kaçtı?`, { misc: 'Tahmini verinin aralığı dışında yaptı' })
+      return api.nudge(pred > mx ? `Son 10 yılda 1 Haziran’da hiç ${f(pred)} °C kadar sıcak olmuş mu? En yüksek değer kaçtı?` : `Son 10 yılda hiç ${f(pred)} °C kadar serin olmuş mu? En düşük değer kaçtı?`, { misc: 'Tahmini verinin aralığı dışında yaptı' })
     }
     api.check(true)
     api.clear()
     setStep(2)
-    api.say(`Tahminin: ${f(pred)} °C. Şimdi bu tahmini verilerle gerekçelendir.`)
+    api.say(`Tahminin: ${f(pred)} °C. Şimdi bu tahmini verilerle gerekçelendir.`)
   }
   const [cards] = useState<Opt[]>(() =>
     shuffle([
-      { t: `Son 10 yılın ortalaması ${f(mean, 1)} °C.`, ok: true, s: `Ortalama ${f(mean, 1)} °C` },
-      { t: `10 yılın ${poss(inMid)} ${d.base - 1} ile ${d.base + 1} °C arasında.`, ok: true, s: 'Değerlerin çoğu bir aralıkta' },
-      { t: `En düşük ${mn}, en yüksek ${mx} °C oldu; tahminim bu aralıkta.`, ok: true, s: `Aralık ${mn}–${mx} °C` },
-      { t: `Geçen yıl ${d.temps[9]} °C idi; bu yıl da kesinlikle aynısı olur.`, ok: false, fb: 'Tek bir yıla bakmak yeterli mi? “Kesinlikle” diyebilir miyiz?', misc: 'Tek bir değere dayanarak kesin tahmin yaptı' },
+      { t: `Son 10 yılın ortalaması ${f(mean, 1)} °C.`, ok: true, s: `Ortalama ${f(mean, 1)} °C` },
+      { t: `10 yılın ${poss(inMid)} ${d.base - 1} ile ${d.base + 1} °C arasında.`, ok: true, s: 'Değerlerin çoğu bir aralıkta' },
+      { t: `En düşük ${mn}, en yüksek ${mx} °C oldu; tahminim bu aralıkta.`, ok: true, s: `Aralık ${mn}–${mx} °C` },
+      { t: `Geçen yıl ${d.temps[9]} °C idi; bu yıl da kesinlikle aynısı olur.`, ok: false, fb: 'Tek bir yıla bakmak yeterli mi? “Kesinlikle” diyebilir miyiz?', misc: 'Tek bir değere dayanarak kesin tahmin yaptı' },
       { t: 'Her yıl bir öncekinden daha sıcak oluyor.', ok: false, fb: 'Çizgi grafiğe bak: sıcaklık her yıl artıyor mu, yoksa inip çıkıyor mu?' },
     ]),
   )
@@ -440,11 +440,11 @@ function Forecast({ api, d }: { api: Api; d: { base: number; temps: number[] } }
         </Panel>
       )}
       {step >= 1 && (
-        <Panel ink={ink} title="🔮 Bu yıl 1 Haziran’da öğle sıcaklığı kaç °C olur?" className="animate-fade-up">
+        <Panel ink={ink} title="🔮 Bu yıl 1 Haziran’da öğle sıcaklığı kaç °C olur?" className="animate-fade-up">
           <DotPlot ink={ink} values={d.temps} view={[d.base - 7, d.base + 7]} unit="°C" marker={step === 1 ? { v: pred, label: 'tahmin', onChange: (v) => setPred(v), step: 0.5 } : { v: pred, label: 'tahmin', onChange: () => undefined }} />
           {step === 1 && (
             <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-              <Chip ink={ink} tone="info">Tahminin: {pred === null ? '—' : `${f(pred)} °C`}</Chip>
+              <Chip ink={ink} tone="info">Tahminin: {pred === null ? '—' : `${f(pred)} °C`}</Chip>
               <PrimaryBtn onClick={savePred}><Save size={18} />Tahminimi kaydet</PrimaryBtn>
             </div>
           )}
@@ -477,6 +477,7 @@ export function makeG6(): Mission[] {
   return [
     {
       key: 'g6-kule',
+      tool: { id: 'grafiklab', title: 'Grafik Lab: “Eşitle” ile ortalama' },
       title: 'Yağmur kuleleri',
       prompt: `${fair.city} istasyonu ${n} gün boyunca yağışı ölçtü. Bu günlerde ortalama kaç mm yağmur yağdı? İki yolla bul: kuleleri dengeleyerek ve hesaplayarak.`,
       hints: ['En uzun tüpten en kısa tüpe bir blok taşı. Toplam yağış değişti mi?', 'Bütün tüpler aynı boyda olunca her tüpte kaç blok var?', `Toplam yağışı ${n} güne eşit paylaştırmak hangi işlemle yazılır?`],
@@ -486,6 +487,7 @@ export function makeG6(): Mission[] {
     },
     {
       key: 'g6-ayni-ortalama',
+      tool: { id: 'grafiklab', title: 'Grafik Lab: ortalama çizgisi' },
       title: 'Aynı ortalama, farklı haftalar',
       prompt: `Örnek haftada her gün ${M} mm yağmur yağdı; ortalama ${M} mm. Ortalaması yine ${M} mm olan ama günleri birbirinden farklı 3 hafta tasarla.`,
       hints: [`Bir günden 1 mm alıp başka bir güne verirsen toplam değişir mi?`, 'Çizginin üstünde kalan fazlalık ile altındaki eksik eşit mi?', `5 günün toplamı kaç mm olmalı ki ortalama ${M} olsun?`],
@@ -496,6 +498,7 @@ export function makeG6(): Mission[] {
     },
     {
       key: 'g6-cizgi',
+      tool: { id: 'grafiklab', title: 'Grafik Lab: çizgi grafiği' },
       title: 'Haftalık sıcaklık çizgisi',
       prompt: `${week.city} istasyonunun bir haftalık en yüksek sıcaklıklarını çizgi grafiğe dök. Pembe noktaları sürükle ya da yüksekliğe dokun; sonra sıcaklığın en çok arttığı günleri bul.`,
       hints: ['Tablodaki ilk değer kaç? Pazartesi noktasını o çizgiye taşı.', 'Çizginin hangi parçası en dik yukarı çıkıyor?', 'Ardışık iki günün sıcaklıkları arasındaki farkı hesapla: en büyük artış hangisi?'],
@@ -505,6 +508,7 @@ export function makeG6(): Mission[] {
     },
     {
       key: 'g6-aciklik',
+      tool: { id: 'numberline', config: { min: 10, max: 32, step: 1 }, title: 'Sayı doğrusunda açıklık' },
       title: 'Hangi şehir daha değişken?',
       prompt: 'İzmir ve Konya’nın Nisan’daki 7 günlük en yüksek sıcaklıkları nokta grafiklerinde. İki şehrin ortalaması aynı. Peki havaları aynı mı? Uç değerleri bul, açıklığı hesapla ve kanıtla.',
       hints: ['Her şehrin en solda ve en sağda kalan noktası hangisi?', 'Açıklık = en yüksek değer − en düşük değer.', 'Noktalar bir yerde toplanmışsa sıcaklık az mı değişiyor, çok mu?'],
@@ -514,6 +518,7 @@ export function makeG6(): Mission[] {
     },
     {
       key: 'g6-eksen',
+      tool: { id: 'grafiklab', title: 'Grafik Lab: eksen başlangıcı' },
       title: 'Haber grafiği',
       prompt: 'Bir haber sitesi Van’ın yağış grafiğini paylaştı ve yağışın 3 katına çıktığını iddia etti. Grafiği incele: eksen nereden başlıyor? Dürüst hâle getir ve haberi değerlendir.',
       hints: ['Dikey eksendeki en küçük sayı kaç? Sütunlar 0’dan mı başlıyor?', 'Ekseni 0’a indirince sütunların boyları nasıl değişti?', `${ax.a} mm’nin 3 katı kaç mm eder? Şubat’ta bu kadar yağmış mı?`],
@@ -523,8 +528,9 @@ export function makeG6(): Mission[] {
     },
     {
       key: 'g6-tahmin',
+      tool: { id: 'grafiklab', title: 'Grafik Lab: nokta ve çizgi grafiği' },
       title: '1 Haziran tahmini',
-      prompt: 'Bu yıl 1 Haziran’da Ankara’da öğle sıcaklığı kaç °C olur? Önce son 10 yılın verisini uygun bir grafikle göster, sonra tahminini yap ve gerekçelendir.',
+      prompt: 'Bu yıl 1 Haziran’da Ankara’da öğle sıcaklığı kaç °C olur? Önce son 10 yılın verisini uygun bir grafikle göster, sonra tahminini yap ve gerekçelendir.',
       hints: ['Sıcaklıkları toplayıp bir bütün yapmak anlamlı mı? Hangi grafikler tek tek değerleri gösterir?', 'Noktaların en çok toplandığı yer neresi?', 'Ortalama ve en düşük–en yüksek değerler tahmini nasıl destekler?'],
       goal: 2,
       note: 'İyi bir tahmin tek bir yıla değil, verinin tamamına dayanır: ortalama, aralık ve noktaların toplandığı yer.',

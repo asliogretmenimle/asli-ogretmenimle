@@ -151,7 +151,7 @@ export function RailScene({ items, plate, board, pos, anim, moving, happy, varia
         .tren-bob{animation:tren-bob .35s ease-in-out infinite alternate}
         @keyframes tren-bob{to{transform:translateY(-2px)}}
         .tren-tap{cursor:pointer}
-        .tren-tap:focus-visible{outline:none}
+        .tren-tap:focus{outline:none}
         .tren-tap:focus-visible .tren-focus{stroke:#0ea5e9;stroke-width:5}
         @media (prefers-reduced-motion: reduce){.tren-cloud,.tren-spin,.tren-steam,.tren-steam-fast,.tren-blink,.tren-wobble,.tren-fresh,.tren-bob{animation:none}}
       `}</style>

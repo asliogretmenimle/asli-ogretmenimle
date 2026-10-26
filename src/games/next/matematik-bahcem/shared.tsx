@@ -124,6 +124,7 @@ export function SeedTray({ kinds, item, onPick, onDrop, title, help, disabled, s
           return (
             <DragSource
               key={k}
+              value={k}
               label={item === 'flower' ? `${KINDS[k].name} tohumu` : `${SHAPES[k].name} taşı`}
               onTap={() => onPick(k)}
               onDrop={(z) => onDrop(k, z)}

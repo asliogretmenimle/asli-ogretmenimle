@@ -3,7 +3,8 @@ import { Check, Droplets, Eye, Send, Shovel, ThumbsDown, ThumbsUp, X } from 'luc
 import { ZoomBox } from '../../../interactive/ZoomBox'
 import { SolutionList } from '../../kit2'
 import { GrowScene } from './GrowScene'
-import { growF } from './levels'
+import { ek } from '../../../lib/generators'
+import { growF, li } from './levels'
 import { Actions, BigStepper, Layout, ShareBox, type Api, type NudgeState } from './shared'
 
 const reduced = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
@@ -112,7 +113,7 @@ export function GrowBuildTask({ api }: { api: Api }) {
           )}
         </Panel>
       }
-      actions={<Actions api={api} primary={{ label: 'Sula ve kontrol et', icon: <Droplets size={20} />, onClick: check }} nudge={nudge} onCloseNudge={() => setNudge(null)} />}
+      actions={<Actions api={api} primary={{ label: 'Sula ve bak', icon: <Droplets size={20} />, onClick: check }} nudge={nudge} onCloseNudge={() => setNudge(null)} />}
     />
   )
 }
@@ -145,7 +146,7 @@ export function GrowTableTask({ api }: { api: Api }) {
       setNudge(
         v4 === 2 * f(3)
           ? { question: `3. adımı ikiye katladın. 2. adımdan 3. adıma kaç çiçek eklendi? 4. adımda da o kadar eklenir mi?`, misconception: MIS_DOUBLE }
-          : { question: `${f(2)}’den ${f(3)}’e nasıl gidiyoruz? Aynı şekilde devam et: 4. adımda kaç çiçek olur?` },
+          : { question: `${ek(f(2), 'abl')} ${ek(f(3), 'dat')} nasıl gidiyoruz? Aynı şekilde devam et: 4. adımda kaç çiçek olur?` },
       )
     } else if (v5 !== f(5)) setNudge({ question: `4. adım doğru! 4. adımdan 5. adıma kaç çiçek eklenir?`, misconception: v5 === 2 * f(4) ? MIS_DOUBLE : undefined })
     else setNudge({ question: `Tablodaki iki sayı arasındaki farkı bul: ${f(2)} − ${f(1)} kaç?` })
@@ -205,14 +206,13 @@ export function GrowRuleTask({ api }: { api: Api }) {
       api.ok()
       api.addSol(`${api.li}:${i}`, r.text)
       api.stats.rules.push(r.text)
-      api.strat(i === rules.findIndex((x) => x.ok && x.text.startsWith('Her adımda')) ? 'Kuralı sözle anlatma (her adımda ekle)' : 'Kuralı adım sayısıyla anlatma')
+      api.strat(r.text.startsWith('Her adımda') ? 'Kuralı sözle anlatma (her adımda ekle)' : 'Kuralı adım sayısıyla anlatma')
       const next = [...found, { key: String(i), label: r.text }]
       setFound(next)
-      if (next.length >= L.goal && !api.finished) {
-        api.complete(L.note, 0)
-        setNudge({ tone: 'ok', question: next.length < 3 ? 'İstersen üçüncü doğru kuralı da bul!' : 'Üç doğru kuralı da buldun!' })
-      } else if (!api.finished) setNudge({ tone: 'ok', question: 'Bu kural her adımda tutuyor! Başka bir doğru kural daha bul.' })
-      else api.addSol(`${api.li}:${i}`, r.text)
+      if (!api.finished && next.length >= L.goal) {
+        api.complete(L.note)
+        setNudge({ tone: 'ok', question: 'İki doğru kural buldun! İstersen üçüncüyü de ara.' })
+      } else setNudge({ tone: 'ok', question: api.finished ? 'Bir doğru kural daha! Aynı bahçe, farklı cümle.' : 'Bu kural her adımda tutuyor! Başka bir doğru kural daha bul.' })
       return
     }
     if (!api.finished) api.miss()
@@ -240,6 +240,7 @@ export function GrowRuleTask({ api }: { api: Api }) {
                   <button
                     key={i}
                     type="button"
+                    data-ok={r.ok ? '1' : '0'}
                     onClick={() => test(i)}
                     className={`min-h-14 rounded-2xl px-3 py-2 text-left ring-2 transition active:scale-[.98] ${good ? 'bg-emerald-50 ring-emerald-400' : t ? 'bg-amber-50 ring-amber-300' : 'bg-white ring-green-200 hover:bg-green-50'}`}
                   >
@@ -383,7 +384,7 @@ export function GrowDesignTask({ api }: { api: Api }) {
       return
     }
     api.miss()
-    setNudge({ question: `${N}. adımda ${N} tane ${d}’li lale sırası var. Saksıdaki ${c} ayçiçeğini de ekle.`, misconception: mine === 2 * f(3) ? MIS_PROP : undefined })
+    setNudge({ question: `${N}. adımda ${N} tane ${li(d)} lale sırası var. Saksıdaki ${c} ayçiçeğini de ekle.`, misconception: mine === 2 * f(3) ? MIS_PROP : undefined })
   }
   const win = () => {
     pour()
@@ -428,7 +429,7 @@ export function GrowDesignTask({ api }: { api: Api }) {
           </Panel>
         ) : (
           <Panel className="flex flex-wrap items-center gap-3">
-            <span className="text-3xl" aria-hidden>🐝</span>
+            <span className="text-3xl" aria-hidden data-ok={guess === f(N) ? '1' : '0'} data-ans={f(N)}>🐝</span>
             <p className="flex-1 text-base font-extrabold text-amber-900">
               {phase === 'friend' ? `Vız: “${N}. adımda ${guess} çiçek olur!” Doğru mu?` : phase === 'fix' ? `Vız: “Peki ${N}. adımda kaç çiçek olur?”` : `Vız: “${N}. adımda ${f(N)} çiçek. Ne güzel bir bahçe!”`}
             </p>

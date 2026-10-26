@@ -117,7 +117,7 @@ export function AllocBar({ segs, value, units, label, onChange, locked, onNoPool
         <span>0</span>
         <span>{units} blok</span>
       </div>
-      <div className={`mt-2 grid gap-2 ${segs.length > 3 ? 'grid-cols-2' : 'grid-cols-3'} max-sm:grid-cols-2`}>
+      <div className={`mt-2 grid gap-2 ${segs.length > 3 ? 'grid-cols-1 min-[440px]:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'}`}>
         {segs.map((m, i) => (
           <div key={m} className="flex items-center gap-1 rounded-2xl bg-slate-900/70 p-1 ring-1 ring-white/10">
             <button type="button" disabled={locked || value[i] <= 0} onClick={() => step(i, -1)} className="grid size-12 shrink-0 place-items-center rounded-xl bg-slate-800 text-white active:scale-95 disabled:opacity-30" aria-label={`${MODS[m].name} azalt`}><Minus size={18} /></button>

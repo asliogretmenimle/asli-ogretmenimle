@@ -228,7 +228,7 @@ export function PlantTask({ api }: { api: Api }) {
         />
       }
       actions={
-        <Actions api={api} primary={{ label: 'Sula ve kontrol et', icon: <Droplets size={20} />, onClick: check }} nudge={nudge} onCloseNudge={() => setNudge(null)}>
+        <Actions api={api} primary={{ label: 'Sula ve bak', icon: <Droplets size={20} />, onClick: check }} nudge={nudge} onCloseNudge={() => setNudge(null)}>
           {isRemake && <SolutionList list={found} goal={L.goal} />}
         </Actions>
       }
@@ -498,6 +498,7 @@ export function FamilyTask({ api }: { api: Api }) {
 
   const Card = ({ c }: { c: FamCard }) => (
     <DragSource
+      value={BOXES.indexOf(c.code)}
       label={`${c.item === 'flower' ? 'Çiçek' : 'Taş'} örüntü kartı`}
       onTap={() => {
         if (where[c.id]) put(c.id, null)
@@ -849,7 +850,7 @@ export function DesignTask({ api }: { api: Api }) {
         phase === 'build' ? (
           <SeedTray kinds={[0, 1, 2, 3]} item="flower" onPick={(k) => { if (!plot.plant(k)) setNudge({ question: 'Son 3 çukur Vız’ın! Bir çiçeğe dokunup değiştirebilirsin.' }); else setNudge(null) }} onDrop={(k, z) => { plot.plant(k, z === 'bed' ? undefined : z); setNudge(null) }} title="Tohum paketleri" help="Soldan başla. Son 3 çukuru Vız dolduracak." />
         ) : (
-          <div className="mt-3 flex items-center gap-3 rounded-3xl bg-amber-50 p-3 ring-1 ring-amber-200">
+          <div className="mt-3 flex items-center gap-3 rounded-3xl bg-amber-50 p-3 ring-1 ring-amber-200" data-wrongat={friend?.wrongAt ?? ''} data-s0={s0}>
             <span className="text-3xl" aria-hidden>🐝</span>
             <p className="text-base font-extrabold text-amber-900">
               {phase === 'friend' ? 'Vız: “Örüntünü devam ettirdim! Doğru mu?”' : phase === 'pick' ? 'Vız: “Hangi çiçeği yanlış diktim?”' : 'Vız: “Teşekkürler! Çok güzel bir bahçe.”'}

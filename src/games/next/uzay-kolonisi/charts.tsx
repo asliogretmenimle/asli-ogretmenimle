@@ -39,7 +39,7 @@ function SeriesLayer({ rows, s }: { rows: SimRow[]; s: Series }) {
           <rect x={0} width={sw} y={P.sy(cfg.safe[1])} height={Math.max(0, P.sy(cfg.safe[0]) - P.sy(cfg.safe[1]))} fill="#22c55e" opacity={0.1} />
           <line x1={0} x2={sw} y1={P.sy(cfg.safe[0])} y2={P.sy(cfg.safe[0])} stroke="#16a34a" strokeDasharray="6 5" strokeWidth={1.5} />
           {s === 'o2' && <line x1={0} x2={sw} y1={P.sy(cfg.safe[1])} y2={P.sy(cfg.safe[1])} stroke="#16a34a" strokeDasharray="6 5" strokeWidth={1.5} />}
-          <text x={sw - 8} y={P.sy(cfg.safe[0]) - 6} textAnchor="end" fontSize={11} fontWeight={900} fill="#15803d">güvenli bölge</text>
+          <text x={P.sx(0.25)} y={P.sy(cfg.safe[0]) - 6} fontSize={11} fontWeight={900} fill="#15803d">güvenli bölge</text>
         </g>
       )}
       {s === 'food' && <line x1={0} x2={sw} y1={P.sy(0)} y2={P.sy(0)} stroke="#dc2626" strokeWidth={1.5} strokeDasharray="4 4" />}
@@ -61,8 +61,9 @@ export function SimChart({ rows, series, sols, fail }: { rows: SimRow[]; series:
   const vals = rows.map((r) => r[series] ?? 0)
   const lo = Math.min(cfg.range[0], ...vals.map((v) => Math.floor(v - 1)))
   const hi = Math.max(cfg.range[1], ...vals.map((v) => Math.ceil(v + 1)))
+  const narrow = typeof window !== 'undefined' && window.innerWidth < 640
   return (
-    <Plane key={`${series}-${lo}-${hi}`} initial={{ xMin: -0.7, xMax: sols + 0.7, yMin: lo, yMax: hi }} aspect={0.44} equalUnits={false} controls={false} minSpan={2} maxSpan={30} fixedStep={1} xLabel="sol" yLabel={`${cfg.label} (${cfg.unit})`} label={`${cfg.label} grafiği`}>
+    <Plane key={`${series}-${lo}-${hi}`} initial={{ xMin: -0.7, xMax: sols + 0.7, yMin: lo, yMax: hi }} aspect={narrow ? 0.66 : 0.44} equalUnits={false} controls={false} minSpan={2} maxSpan={30} fixedStep={1} xLabel="sol" yLabel={`${cfg.label} (${cfg.unit})`} label={`${cfg.label} grafiği`}>
       {fail !== undefined && <FailBand sol={fail} />}
       <SeriesLayer rows={rows} s={series} />
     </Plane>

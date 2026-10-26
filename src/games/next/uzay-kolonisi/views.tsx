@@ -127,7 +127,7 @@ export function GridView({ m, core }: { m: M<'grid'>; core: Core }) {
 // ───────────────────────── Kaynak paylaştırma ─────────────────────────
 
 export function AllocView({ m, core }: { m: M<'alloc'>; core: Core }) {
-  const [v, setV] = useState<number[]>(() => m.segs.map(() => 0))
+  const [v, setV] = useState<number[]>(() => [...m.start])
   const [marks, setMarks] = useState<(boolean | null)[]>(() => m.rules.map(() => null))
   const pool = m.units - v.reduce((a, b) => a + b, 0)
   const change = (nv: number[]) => {
@@ -186,7 +186,7 @@ export function AllocView({ m, core }: { m: M<'alloc'>; core: Core }) {
 // ───────────────────────── Simülasyon ─────────────────────────
 
 export function SimView({ m, core }: { m: M<'sim'>; core: Core }) {
-  const [v, setV] = useState<number[]>(() => m.segs.map(() => 0))
+  const [v, setV] = useState<number[]>(() => [...m.start])
   const [run, setRun] = useState<SimResult | null>(null)
   const [shown, setShown] = useState(0)
   const [series, setSeries] = useState<Series>(m.cfg.temps ? 'inside' : 'o2')
@@ -253,6 +253,16 @@ export function SimView({ m, core }: { m: M<'sim'>; core: Core }) {
   const stage = (
     <>
       <ColonyScene segs={m.segs} plan={v} units={m.units} source={m.unit === 'L' ? 'su' : 'enerji'} pop={cur?.pop ?? m.cfg.p0} hud={hud} alarm={failNow !== undefined} dark={core.dark} temp={temp} />
+      {hud && (
+        <div className="-mt-1 grid grid-cols-4 gap-1.5 sm:hidden">
+          {hud.map((h) => (
+            <div key={h.label} className={`rounded-xl px-2 py-1 text-center ring-1 ${'tone' in h && h.tone === 'bad' ? 'bg-rose-500/20 ring-rose-400/40' : 'bg-slate-900/70 ring-white/10'}`}>
+              <p className="text-[10px] font-black text-slate-400 uppercase">{h.label}</p>
+              <p className="text-sm font-black text-white tabular-nums">{h.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
       <div className={card}>
         <p className="mb-2 text-[11px] font-black tracking-wide text-slate-400 uppercase">{m.resource} · {m.units} blok{m.unit === 'kWh' && m.units === 20 ? ' (her blok %5 = 15 kWh)' : m.units === 20 ? ' (her blok %5)' : ''}</p>
         <AllocBar segs={m.segs} value={v} units={m.units} label={m.label} onChange={(nv) => { setV(nv) }} locked={core.locked || running} onNoPool={() => core.say('Boşta blok kalmadı. Önce başka bir modülün bloğunu azalt.')} />

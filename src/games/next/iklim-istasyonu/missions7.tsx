@@ -31,7 +31,7 @@ function ThermoPath({ api, s, e }: { api: Api; s: number; e: number }) {
     const next = [...paths, key]
     setPaths(next)
     if (next.length >= 2) {
-      api.say(`Farklı yollar, aynı değişim: ${chg(e - s)} °C. Yani ${f(e)} − (${f(s)}) = ${f(e - s)}.`)
+      api.say(`Farklı yollar, aynı değişim: ${chg(e - s)} °C. Yani ${f(e)} − (${f(s)}) = ${f(e - s)}.`)
       api.complete()
     } else api.say('Bir yol buldun! Şimdi aynı yolculuğu başka duraklarla göster: “Yeni yol”a dokun.')
   }
@@ -97,7 +97,7 @@ function ThermoPath({ api, s, e }: { api: Api; s: number; e: number }) {
             />
           </Panel>
         )}
-        {typed && <div><Chip ink={ink} tone="ok"><Check size={16} />Değişim: {chg(e - s)} °C</Chip></div>}
+        {typed && <div><Chip ink={ink} tone="ok"><Check size={16} />Değişim: {chg(e - s)} °C</Chip></div>}
       </div>
     </div>
   )
@@ -124,7 +124,7 @@ function MapDiff({ api, d }: { api: Api; d: MapData }) {
   const thermo = step === 0 ? { a: er, b: an, la: `Erzurum ${deg(er)}`, lb: `Antalya ${deg(an)}` } : pair ? { a: d.temps[pair[0]], b: d.temps[pair[1]], la: `${CITIES[pair[0]].name} ${deg(d.temps[pair[0]])}`, lb: `${CITIES[pair[1]].name} ${deg(d.temps[pair[1]])}` } : null
   return (
     <div className="grid gap-3">
-      <StepBar ink={ink} steps={['Erzurum – Antalya', `Farkı ${d.D} °C olan çiftler`]} at={step} />
+      <StepBar ink={ink} steps={['Erzurum – Antalya', `Farkı ${d.D} °C olan çiftler`]} at={step} />
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_230px]">
         <Panel ink={ink} title="🗺️ Ocak sabahı, saat 07.00">
           <TurkeyMap ink={ink} pins={pins} sel={step === 0 ? ['erzurum', 'antalya'] : sel} onPick={step === 1 ? toggle : undefined} />
@@ -151,7 +151,7 @@ function MapDiff({ api, d }: { api: Api; d: MapData }) {
         <Panel ink={ink}>
           <Ask
             api={api}
-            q="Erzurum ile Antalya arasındaki sıcaklık farkı kaç °C?"
+            q="Erzurum ile Antalya arasındaki sıcaklık farkı kaç °C?"
             unit="°C"
             neg
             judge={(v) => {
@@ -169,7 +169,7 @@ function MapDiff({ api, d }: { api: Api; d: MapData }) {
           <Ask
             key={pk}
             api={api}
-            q={`${CITIES[pair[0]].name} (${deg(d.temps[pair[0]])}) ile ${CITIES[pair[1]].name} (${deg(d.temps[pair[1]])}) arasındaki fark kaç °C?`}
+            q={`${CITIES[pair[0]].name} (${deg(d.temps[pair[0]])}) ile ${CITIES[pair[1]].name} (${deg(d.temps[pair[1]])}) arasındaki fark kaç °C?`}
             unit="°C"
             judge={(v) => {
               const df = d.temps[pair[1]] - d.temps[pair[0]]
@@ -179,15 +179,15 @@ function MapDiff({ api, d }: { api: Api; d: MapData }) {
               return { q: 'Termometrede alttaki işaretten üstteki işarete kaç derece var? 0’ı ara durak yapmayı dene.' }
             }}
             onOk={(v) => {
-              if (v !== d.D) return api.nudge(`Doğru hesap! Bu çiftin farkı ${v} °C. Hedef ${d.D} °C: daha sıcak ya da daha soğuk bir şehirle dene.`, { tone: 'ok' })
+              if (v !== d.D) return api.nudge(`Doğru hesap! Bu çiftin farkı ${v} °C. Hedef ${d.D} °C: daha sıcak ya da daha soğuk bir şehirle dene.`, { tone: 'ok' })
               if (pairs.includes(pk)) return api.nudge('Bu çifti zaten buldun. Başka bir çift ara!', { tone: 'ok' })
-              api.found(pk, `${CITIES[pair[0]].name} ↔ ${CITIES[pair[1]].name}: ${d.D} °C`)
+              api.found(pk, `${CITIES[pair[0]].name} ↔ ${CITIES[pair[1]].name}: ${d.D} °C`)
               const nx = [...pairs, pk]
               setPairs(nx)
               if (nx.length >= 2) {
-                api.say(`İki çift buldun! Farkı ${d.D} °C olan başka çiftler de var mı?`)
+                api.say(`İki çift buldun! Farkı ${d.D} °C olan başka çiftler de var mı?`)
                 api.complete()
-              } else api.say(`Bir çift buldun! Farkı ${d.D} °C olan başka bir çift daha ara.`)
+              } else api.say(`Bir çift buldun! Farkı ${d.D} °C olan başka bir çift daha ara.`)
             }}
           />
         </Panel>
@@ -263,12 +263,12 @@ function Rates({ api, d }: { api: Api; d: RateData }) {
     api.check(false)
     setSegState((s) => ({ ...s, [k]: 'no' }))
     if (ch[k] <= 0) return api.nudge(`${hh(d.hours[k])}–${hh(d.hours[k + 1])} arasında sıcaklık ${ch[k] < 0 ? 'düştü' : 'değişmedi'}. Isınmanın olduğu parçalara bak.`)
-    if (k === big) return api.nudge(`Bu aralıkta sıcaklık ${chg(ch[k])} °C değişti ama kaç saatte? ${dt[k]} saatte ${ch[k]} derece ise 1 saatte kaç derece? Diğer aralıklarla karşılaştır.`, { misc: 'En büyük değişimi en hızlı değişim sandı' })
-    api.nudge(`Bu aralıkta ${dt[k]} saatte ${chg(ch[k])} °C. Saatte kaç derece eder? Daha dik bir parça var mı?`)
+    if (k === big) return api.nudge(`Bu aralıkta sıcaklık ${chg(ch[k])} °C değişti ama kaç saatte? ${dt[k]} saatte ${ch[k]} derece ise 1 saatte kaç derece? Diğer aralıklarla karşılaştır.`, { misc: 'En büyük değişimi en hızlı değişim sandı' })
+    api.nudge(`Bu aralıkta ${dt[k]} saatte ${chg(ch[k])} °C. Saatte kaç derece eder? Daha dik bir parça var mı?`)
   }
   return (
     <div className="grid gap-3">
-      <StepBar ink={ink} steps={['Eksik noktalar', 'En hızlı ısınma', 'Saatte kaç °C?']} at={step} />
+      <StepBar ink={ink} steps={['Eksik noktalar', 'En hızlı ısınma', 'Saatte kaç °C?']} at={step} />
       <Panel ink={ink} title="📟 Kars istasyonu · bir kış günü ölçümleri">
         <DataTable ink={ink} head={['Saat', ...d.hours.map(hh)]} rows={[['°C', ...d.temps.map((t) => f(t))]]} />
       </Panel>
@@ -296,11 +296,11 @@ function Rates({ api, d }: { api: Api; d: RateData }) {
         <Panel ink={ink} className="animate-fade-up">
           <Ask
             api={api}
-            q={`${hh(d.hours[fast])}–${hh(d.hours[fast + 1])} arasında sıcaklık saatte kaç °C arttı?`}
+            q={`${hh(d.hours[fast])}–${hh(d.hours[fast + 1])} arasında sıcaklık saatte kaç °C arttı?`}
             unit="°C/sa"
             dec
             judge={(v) => (Math.abs(v - rate[fast]) < 1e-9 ? true : v === ch[fast] && dt[fast] > 1 ? { q: `${ch[fast]} derece toplam değişim. Bu değişim ${dt[fast]} saatte oldu: 1 saate ne kadar düşer?`, misc: 'Değişim hızını toplam değişimle karıştırdı' } : { q: `${ekS(d.temps[fast], 'abl')} ${ekS(d.temps[fast + 1], 'dat')} kaç derece? Bu kaç saatte oldu?` })}
-            onOk={() => { api.say(`En hızlı ısınma: saatte ${f(rate[fast])} °C. En büyük değişim ise ${hh(d.hours[big])}–${hh(d.hours[big + 1])} arasındaydı!`); api.complete() }}
+            onOk={() => { api.say(`En hızlı ısınma: saatte ${f(rate[fast])} °C. En büyük değişim ise ${hh(d.hours[big])}–${hh(d.hours[big + 1])} arasındaydı!`); api.complete() }}
           />
         </Panel>
       )}
@@ -389,8 +389,8 @@ function Outlier({ api, d }: { api: Api; d: { vals: number[] } }) {
         )}
         {step >= 2 && (
           <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-            <Chip ink={ink} tone="mean">Ortalama: {f(meanOf(vals), 1)} °C</Chip>
-            <Chip ink={ink} tone="median">Ortanca: {f(medianOf(vals), 1)} °C</Chip>
+            <Chip ink={ink} tone="mean">Ortalama: {f(meanOf(vals), 1)} °C</Chip>
+            <Chip ink={ink} tone="median">Ortanca: {f(medianOf(vals), 1)} °C</Chip>
             <ToolBtn ink={ink} onClick={() => setVals(d.vals)} label="Başa al"><RotateCcw size={16} />Başa al</ToolBtn>
           </div>
         )}
@@ -400,7 +400,7 @@ function Outlier({ api, d }: { api: Api; d: { vals: number[] } }) {
         <Panel ink={ink} className="animate-fade-up">
           <Ask
             api={api}
-            q="Bu 7 günün ortalama sıcaklığı kaç °C?"
+            q="Bu 7 günün ortalama sıcaklığı kaç °C?"
             unit="°C"
             neg
             dec
@@ -513,7 +513,7 @@ function Trend({ api, d }: { api: Api; d: { t: number[] } }) {
     const last = d.t[5]
     if (july > last + 7) {
       api.check(false)
-      return api.nudge(`Nisan→Mayıs ${chg(inc[3])}, Mayıs→Haziran ${chg(inc[4])} °C değişti. Haziran→Temmuz artışı bunlardan çok mu büyük olur?`, { misc: 'Trendi abartarak sürdürdü' })
+      return api.nudge(`Nisan→Mayıs ${chg(inc[3])}, Mayıs→Haziran ${chg(inc[4])} °C değişti. Haziran→Temmuz artışı bunlardan çok mu büyük olur?`, { misc: 'Trendi abartarak sürdürdü' })
     }
     if (july < last) {
       api.check(false)
@@ -527,7 +527,7 @@ function Trend({ api, d }: { api: Api; d: { t: number[] } }) {
   const [cards] = useState<Opt[]>(() =>
     shuffle([
       { t: 'Ocak’tan Haziran’a ortalama sıcaklık her ay arttı.', ok: true, s: 'Her ay arttı' },
-      { t: `Artış yavaşlıyor: ${chg(inc[2])}, ${chg(inc[3])}, ${chg(inc[4])} °C.`, ok: true, s: 'Artış yavaşlıyor' },
+      { t: `Artış yavaşlıyor: ${chg(inc[2])}, ${chg(inc[3])}, ${chg(inc[4])} °C.`, ok: true, s: 'Artış yavaşlıyor' },
       { t: 'Çizgiyi son aylardaki eğimle uzatınca Temmuz noktası tahminime yakın geliyor.', ok: true, s: 'Çizgiyi uzattım' },
       { t: `Haziran ${deg(d.t[5])}; Temmuz bunun 2 katı olur.`, ok: false, fb: 'Sıcaklıklar her ay katlanarak mı artıyor, yoksa birkaç derece mi ekleniyor?', misc: 'Değişimi çarpımsal düşündü' },
       { t: `Ocak’tan Haziran’a ${d.t[5] - d.t[0]} derece arttı; Temmuz’da da o kadar artar.`, ok: false, fb: 'Bu artış 1 ayda mı oldu, 5 ayda mı?', misc: 'Toplam değişimi aylık değişim sandı' },
@@ -552,7 +552,7 @@ function Trend({ api, d }: { api: Api; d: { t: number[] } }) {
               if (v === b + a || v === Math.abs(Math.abs(b) - Math.abs(a))) return { q: `${ekS(a, 'abl')} 0’a kaç derece? 0’dan ${ekS(b, 'dat')} kaç derece?`, misc: 'Negatif sayının işaretini yok saydı' }
               return { q: `Termometrede ${ekS(a, 'abl')} ${ekS(b, 'dat')} kaç derece çıkılır?` }
             }}
-            onOk={() => { setStep(1); api.say(`Mart’tan Nisan’a ${chg(b - a)} °C! Şimdi Temmuz’u tahmin et.`) }}
+            onOk={() => { setStep(1); api.say(`Mart’tan Nisan’a ${chg(b - a)} °C! Şimdi Temmuz’u tahmin et.`) }}
           />
         </Panel>
       )}
@@ -595,6 +595,7 @@ export function makeG7(): Mission[] {
   return [
     {
       key: 'g7-termometre',
+      tool: { id: 'numberline', config: { min: -10, max: 10, step: 1 }, title: 'Sayı doğrusunda zıpla' },
       title: 'Termometrede yolculuk',
       prompt: `Erzurum’da sabah sıcaklık ${deg(s)}, öğlen ${deg(e)} oldu. Termometrede sıcaklığı zıplamalarla ${ekS(s, 'abl')} ${ekS(e, 'dat')} çıkar. Toplam değişim ne? Aynı yolculuğu başka duraklarla da göster.`,
       hints: ['Önce 0’a kadar kaç derece çıkman gerekir?', '0’dan sonra hedefe kaç derece kaldı?', 'Zıplama etiketlerini topladığında ne buluyorsun? Farklı duraklar toplamı değiştiriyor mu?'],
@@ -605,6 +606,7 @@ export function makeG7(): Mission[] {
     },
     {
       key: 'g7-harita',
+      tool: { id: 'numberline', config: { min: -16, max: 12, step: 1 }, title: 'Sayı doğrusunda fark' },
       title: 'Haritada sıcaklık farkı',
       prompt: `Ocak sabahı istasyonlardan gelen sıcaklıklar haritada. Önce Erzurum ile Antalya arasındaki farkı bul. Sonra sıcaklık farkı tam ${deg(map.D)} olan 2 şehir çifti keşfet.`,
       hints: ['Termometrede iki işaret arasında kaç derece var? 0’ı ara durak yap.', `0’ın altındaki bir şehir ile üstündeki bir şehir arasındaki fark: (0’a uzaklık) + (0’dan uzaklık).`, `Bir şehrin sıcaklığına ${map.D} ekle: o sıcaklıkta başka bir şehir var mı?`],
@@ -615,6 +617,7 @@ export function makeG7(): Mission[] {
     },
     {
       key: 'g7-hiz',
+      tool: { id: 'numberline', config: { min: -12, max: 10, step: 1 }, title: 'Sayı doğrusunda değişim' },
       title: 'En hızlı ısınma',
       prompt: 'Kars istasyonu gün boyunca ölçüm yaptı ama ölçümler arasındaki süreler eşit değil. Eksik noktaları grafiğe yerleştir, sonra sıcaklığın saatte en hızlı arttığı aralığı bul.',
       hints: ['Negatif değerler 0 çizgisinin altında. Noktayı doğru tarafa taşıdın mı?', 'Her aralıkta sıcaklık kaç derece değişti ve bu kaç saat sürdü?', 'Değişimi saat sayısına böl: 1 saate kaç derece düşüyor? En dik parça hangisi?'],
@@ -624,6 +627,7 @@ export function makeG7(): Mission[] {
     },
     {
       key: 'g7-aykiri',
+      tool: { id: 'grafiklab', title: 'Grafik Lab: ortalama ve ortanca' },
       title: 'Aykırı gün',
       prompt: 'Erzurum’da Ocak’ta bir hafta boyunca öğle sıcaklıkları ölçüldü. Bir gün lodos esti ve hava ılıdı! Ortancayı ve ortalamayı bul, sonra “tipik bir günü” hangisinin daha iyi anlattığına karar ver.',
       hints: ['Ortanca için noktaları iki uçtan birer birer ele: hangisi tek başına ortada kalıyor?', 'Ortalama için bütün sıcaklıkları topla (negatiflere dikkat!) ve 7’ye böl.', 'Ilık günü sürükle: ortalama mı daha çok oynuyor, ortanca mı?'],
@@ -633,6 +637,7 @@ export function makeG7(): Mission[] {
     },
     {
       key: 'g7-karsilastir',
+      tool: { id: 'numberline', config: { min: -18, max: 2, step: 1 }, title: 'Negatif sayıları karşılaştır' },
       title: 'Kars mı, Erzurum mu?',
       prompt: 'İki istasyon Şubat’ta 9 sabah ölçüm yaptı. Hangi şehir daha soğuk? Ortalama, ortanca ve açıklık araçlarını aç; sonucunu farklı ölçülerle kanıtla.',
       hints: ['−11 mi daha soğuk, −7 mi? Termometrede hangisi daha aşağıda?', 'Ortalama ve ortanca iki şehir için aynı yönü mü gösteriyor?', 'Açıklık neyi anlatır: soğukluğu mu, değişkenliği mi?'],
@@ -643,6 +648,7 @@ export function makeG7(): Mission[] {
     },
     {
       key: 'g7-trend',
+      tool: { id: 'numberline', config: { min: -10, max: 25, step: 1 }, title: 'Sayı doğrusunda değişim' },
       title: 'Temmuz tahmini',
       prompt: 'Erzurum’un Ocak–Haziran aylık ortalama sıcaklıkları elimizde. Önce bir değişimi hesapla, sonra çizgiyi sürdürerek Temmuz’u tahmin et ve tahminini gerekçelendir.',
       hints: ['Mart negatif, Nisan pozitif: 0’ı ara durak yap.', 'Son üç ayda sıcaklık her ay kaç derece arttı? Artış büyüyor mu, küçülüyor mu?', 'Haziran’dan Temmuz’a da benzer, belki biraz daha küçük bir artış olabilir mi?'],

@@ -492,6 +492,7 @@ export function makeG5(): Mission[] {
   return [
     {
       key: 'g5-takvim',
+      tool: { id: 'grafiklab', title: 'Grafik Çizim Laboratuvarı' },
       title: 'Günlükten grafiğe',
       prompt: `${cal.city} istasyonu ${cal.month} ayının ilk ${cal.days.length} gününün havasını kaydetti. Karışık günlüğü düzenle: günleri çeteleye işle, sonra sütun grafiğini çiz.`,
       hints: ['Takvimde kaç tane güneşli gün var? Saydığın günlere dokunursan çetele tablosuna işaretlenir.', 'Çetelede her çizgi bir gündür. Beşli demetleri saymak işini kolaylaştırır.', 'Sütunun tepesi hangi çizgiye ulaşıyor? Soldaki sayıyı oku ve çeteleyle karşılaştır.'],
@@ -500,6 +501,7 @@ export function makeG5(): Mission[] {
     },
     {
       key: 'g5-olcek',
+      tool: { id: 'grafiklab', title: 'Grafik Çizim Laboratuvarı' },
       title: 'Ölçek seç',
       prompt: '60 öğrenciye en sevdiği mevsim soruldu. Grafik kâğıdında yalnızca 10 kare var! Bir ölçek seç (1 kare kaç öğrenci?) ve grafiği çiz. Aynı veriyi 2 farklı ölçekle çizebilir misin?',
       hints: ['En kalabalık mevsimi kaç öğrenci seçti? 10 kare buna yetmeli.', 'Her kare 2 öğrenci olsa 10 kare kaç öğrenci eder? Yeterli mi?', 'Tablodaki bütün sayılar hangi sayılarla tam bölünüyor? Böyle bir ölçek sütunların tepesini çizgilere denk getirir.'],
@@ -510,6 +512,7 @@ export function makeG5(): Mission[] {
     },
     {
       key: 'g5-iki-sehir',
+      tool: { id: 'numberline', config: { min: 0, max: 20, step: 1 }, title: 'Sayı doğrusunda fark' },
       title: 'İki şehir, bir fark',
       prompt: 'Kasım ayında Trabzon ve İzmir istasyonları her günün havasını kaydetti. Grafiği incele: bir sütuna dokununca tepesinden karşılaştırma çizgisi çekilir.',
       hints: ['İki yağmurlu sütundan hangisi daha uzun?', 'Kısa sütuna dokun. Kesikli çizginin üstünde, uzun sütundan kaç kare kalıyor?', 'Küçük sayıdan büyük sayıya ileri sayabilir ya da büyükten küçüğü çıkarabilirsin.'],
@@ -519,6 +522,7 @@ export function makeG5(): Mission[] {
     },
     {
       key: 'g5-tahmin',
+      tool: { id: 'grafiklab', title: 'Grafik Çizim Laboratuvarı' },
       title: 'Yarın nasıl olacak?',
       prompt: 'Antalya istasyonu Temmuz ayının her gününü kaydetti. Yarın (1 Ağustos) hava nasıl olur? Tahminini seç, sonra en az 2 kanıtla destekle.',
       hints: ['31 günün kaçı güneşliydi? Bu, ayın çoğu mu?', '“Kesin” ile “olası” arasında ne fark var? Temmuz’da hiç farklı hava olmuş mu?', 'Bir kanıt, verilerden çıkan bir bilgi olmalı. Hangi kartlar takvime ya da grafiğe dayanıyor?'],
@@ -528,6 +532,7 @@ export function makeG5(): Mission[] {
     },
     {
       key: 'g5-yorum',
+      tool: { id: 'grafiklab', title: 'Grafik Çizim Laboratuvarı' },
       title: 'Yorum avcısı',
       prompt: 'Stajyerler Ankara’nın Mart grafiğine bakıp yorumlar yazdı. Her yorumu doğru kutuya yerleştir: Grafik destekliyor mu, desteklemiyor mu, yoksa grafikten bilemez miyiz?',
       hints: ['Yorumdaki sayıları grafikteki sütunlarla karşılaştır.', 'Grafikte yalnızca hava türleri ve gün sayıları var. Yorum başka bir şeyden mi söz ediyor?', '“Ayın yarısı” kaç gün eder? 31’i ikiye bölmeyi düşün.'],
@@ -536,6 +541,7 @@ export function makeG5(): Mission[] {
     },
     {
       key: 'g5-kayip',
+      tool: { id: 'grafiklab', title: 'Grafik Çizim Laboratuvarı' },
       title: 'Kayıp günlük',
       prompt: `İstasyonun bir günlüğü kayboldu, yalnızca ipuçları kaldı! İpuçlarının hepsine uyan bir sütun grafiği çiz. Bütün ipuçlarına uyan 2 farklı grafik bulabilir misin?`,
       hints: ['Önce bulutlu ve yağmurlu sütunları birlikte düşün: bulutlu 4 olsaydı yağmurlu kaç olurdu?', `Bulutlu ve yağmurlu günleri belirleyince ${total} günden geriye kaç gün kalır? Bunlar hangi havaya aittir?`, 'Güneşli sütun hâlâ en uzun mu? Bulutlu günleri artırıp azaltarak başka bir grafik dene.'],

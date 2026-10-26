@@ -276,6 +276,9 @@ function design(grade: Grade): Level {
 
 /* ───────────────────────────── 3. sınıf: büyüyen örüntüler ───────────────────────────── */
 
+/** 2 → “2’li”, 3 → “3’lü”, 6 → “6’lı” */
+export const li = (n: number) => `${n}’l${ek(n, 'acc', false).slice(-1)}`
+
 export const growF = (g: { c: number; d: number }, n: number) => g.c + g.d * n
 
 function growPick(): { c: number; d: number } {
@@ -287,7 +290,7 @@ function rulesFor(g: { c: number; d: number }): Rule[] {
   const ok: Rule[] = [
     { text: `Her adımda ${d} çiçek eklenir.`, f: (n) => c + d * n, ok: true },
     { text: c ? `Adım sayısının ${d} katına ${c} eklenir.` : `Adım sayısının ${d} katı kadar çiçek var.`, f: (n) => c + d * n, ok: true },
-    { text: c ? `Ortada ${c} ayçiçeği var; yanında adım sayısı kadar ${d}’li lale sırası var.` : `Adım sayısı kadar ${d}’li lale sırası var.`, f: (n) => c + d * n, ok: true },
+    { text: c ? `Ortada ${c} ayçiçeği var; yanında adım sayısı kadar ${li(d)} lale sırası var.` : `Adım sayısı kadar ${li(d)} lale sırası var.`, f: (n) => c + d * n, ok: true },
   ]
   const f1 = c + d
   const bad: Rule[] = [

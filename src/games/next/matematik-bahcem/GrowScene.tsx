@@ -186,7 +186,7 @@ export function GrowScene({ c, d, steps, build, big, watering, bee, ariaLabel }:
       ))}
       {steps.length > 1 &&
         xs.slice(1).map((p, i) => (
-          <text key={i} x={off + p.at - 18} y={TOP + smallH / 2 + 8} textAnchor="middle" fontSize={22} fontWeight={900} fill="#166534">›</text>
+          <path key={i} d={`M${off + p.at - 26} ${TOP + smallH / 2} h14 m-6 -7 l7 7 l-7 7`} stroke="#166534" strokeWidth={4} fill="none" strokeLinecap="round" strokeLinejoin="round" />
         ))}
       {bigCols > 0 && (
         <Plot

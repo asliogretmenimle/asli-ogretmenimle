@@ -351,7 +351,7 @@ function LinesRound({ grade, task, onComplete, footer, addSol }: RoundProps & { 
     if (bad.length) {
       const diag = bad.some((o) => o === 'd' || o === 'a')
       setNudge({
-        q: `${ORIENT_LABEL[bad[0]]} doğru boyunca katladığımızda mor gölge şeklin üstüne tam oturdu mu? Hangi kareler açıkta kaldı?`,
+        q: `${ORIENT_LABEL[bad[0]]} doğru boyunca katladığımızda sarı gölge şeklin üstüne tam oturdu mu? Hangi kareler açıkta kaldı?`,
         mis: diag && !symmetric.d && !symmetric.a ? 'Köşegeni (çapraz doğruyu) simetri doğrusu sandı' : 'Şekli ikiye bölen her doğruyu simetri doğrusu sandı',
         id: Date.now(),
       })
