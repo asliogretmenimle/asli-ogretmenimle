@@ -1,0 +1,83 @@
+import { useEffect, useState } from 'react'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Blocks, Volume2, VolumeX } from 'lucide-react'
+import { setSound, soundOn } from '../lib/feedback'
+
+export function Logo({ small }: { small?: boolean }) {
+  return (
+    <Link to="/" className="flex items-center gap-2.5" aria-label="Aslı Öğretmenimle ana sayfa">
+      <span className={`relative grid shrink-0 place-items-center rounded-2xl bg-brand text-white shadow-[0_3px_0_var(--color-brand-dark)] ${small ? 'size-9' : 'size-11'}`}>
+        <svg viewBox="0 0 32 32" className={small ? 'size-5' : 'size-6'} aria-hidden>
+          <path d="M9 16h14M16 9v14" stroke="currentColor" strokeWidth={4} strokeLinecap="round" />
+        </svg>
+        <span className="absolute -top-1 -right-1 size-3.5 rounded-full bg-amber-400 ring-2 ring-white" />
+      </span>
+      <span className="leading-none">
+        <span className={`block font-black tracking-tight text-ink ${small ? 'text-base' : 'text-lg sm:text-xl'}`}>Aslı Öğretmenimle</span>
+        {!small && <span className="mt-0.5 block text-[11px] font-bold text-ink-soft sm:text-xs">Matematik oyunla öğrenilir</span>}
+      </span>
+    </Link>
+  )
+}
+
+export function SoundToggle() {
+  const [on, setOn] = useState(soundOn)
+  return (
+    <button
+      type="button"
+      onClick={() => { setSound(!on); setOn(!on) }}
+      className="grid size-10 place-items-center rounded-xl text-ink-soft ring-1 ring-line transition hover:bg-white"
+      aria-label={on ? 'Sesi kapat' : 'Sesi aç'}
+      title={on ? 'Sesi kapat' : 'Sesi aç'}
+    >
+      {on ? <Volume2 size={19} /> : <VolumeX size={19} />}
+    </button>
+  )
+}
+
+export default function Layout() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo({ top: 0 })
+  }, [pathname])
+  const focusMode = pathname.startsWith('/etkinlik/')
+
+  return (
+    <div className="flex min-h-dvh flex-col">
+      {!focusMode && (
+        <header className="sticky top-0 z-30 border-b border-line/70 bg-paper/85 backdrop-blur-md">
+          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
+            <Logo />
+            <nav className="flex items-center gap-2">
+              <NavLink
+                to="/manipulatifler"
+                className={({ isActive }) => `inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-extrabold transition ${isActive ? 'bg-brand text-white' : 'text-ink hover:bg-white'}`}
+              >
+                <Blocks size={18} />
+                <span className="hidden sm:inline">Manipülatifler</span>
+              </NavLink>
+              <SoundToggle />
+            </nav>
+          </div>
+        </header>
+      )}
+      <main className="flex-1">
+        <Outlet />
+      </main>
+      {!focusMode && (
+        <footer className="mt-12 border-t border-line bg-white/60">
+          <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-6 text-center text-sm text-ink-soft sm:flex-row sm:text-left">
+            <p><span className="font-extrabold text-ink">Aslı Öğretmenimle</span> · 1–8. sınıf matematik etkinlikleri</p>
+            <p>Türkiye Yüzyılı Maarif Modeli öğretim programlarına uygun hazırlanmıştır.</p>
+          </div>
+        </footer>
+      )}
+    </div>
+  )
+}
+
+export function usePageTitle(title?: string) {
+  useEffect(() => {
+    document.title = title ? `${title} · Aslı Öğretmenimle` : 'Aslı Öğretmenimle — Matematik Oyunları ve Etkinlikleri'
+  }, [title])
+}
