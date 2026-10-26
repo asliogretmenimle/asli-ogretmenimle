@@ -308,9 +308,10 @@ function MissionView({ m, grade, step, total, road, built, onDone }: { m: Missio
 
   // ── panel ──
   const r = rect
+  const task = <TaskCard step={step} total={total}>{m.prompt}</TaskCard>
   const panel = (
     <aside className="flex min-w-0 flex-col gap-3">
-      <TaskCard step={step} total={total}>{m.prompt}</TaskCard>
+      <div className="hidden lg:block [&>div]:mb-0">{task}</div>
 
       {m.kind === 'road' && (
         <div className="grid grid-cols-2 gap-2">
@@ -443,7 +444,10 @@ function MissionView({ m, grade, step, total, road, built, onDone }: { m: Missio
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-      <div className="min-w-0">{plane}</div>
+      <div className="min-w-0">
+        <div className="lg:hidden [&>div]:mb-3">{task}</div>
+        {plane}
+      </div>
       {panel}
     </div>
   )

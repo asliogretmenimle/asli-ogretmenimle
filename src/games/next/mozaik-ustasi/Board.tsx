@@ -139,6 +139,7 @@ export function Board({ kind, world, units, frame, frameEdges, pieces, onPieces,
     if (!el) return
     const fit = () => {
       const w = el.clientWidth
+      if (w < 20) return
       const h = Math.min(w * (wh / ww), Math.max(260, window.innerHeight * maxH))
       setSize({ w, h })
     }
@@ -460,8 +461,8 @@ export function Board({ kind, world, units, frame, frameEdges, pieces, onPieces,
       {tray.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center justify-center gap-2 rounded-3xl bg-white/80 p-2 ring-1 ring-line" style={{ touchAction: 'none' }} aria-label="Parça tepsisi">
           {tray.map((t) => (
-            <button key={t} type="button" disabled={done} onPointerDown={(e) => spawn(t, e)} onClick={(e) => e.preventDefault()} className="flex min-h-16 min-w-16 flex-col items-center justify-center rounded-2xl bg-[#fbf6ee] px-2 pt-1 pb-0.5 ring-1 ring-[#eadcc3] transition active:scale-95 disabled:opacity-40" style={{ touchAction: 'none' }} aria-label={`${PIECES[t].name} ekle`}>
-              <PieceIcon type={t} size={t === 'rect' || t === 'trap' ? 64 : 52} />
+            <button key={t} type="button" disabled={done} onPointerDown={(e) => spawn(t, e)} onClick={(e) => e.preventDefault()} className="flex min-h-16 min-w-14 flex-col items-center justify-center rounded-2xl bg-[#fbf6ee] px-1.5 pt-1 pb-0.5 ring-1 ring-[#eadcc3] transition active:scale-95 disabled:opacity-40" style={{ touchAction: 'none' }} aria-label={`${PIECES[t].name} ekle`}>
+              <PieceIcon type={t} size={t === 'rect' || t === 'trap' ? 54 : 44} />
               <span className="text-[11px] font-extrabold text-ink-soft">{PIECES[t].name}</span>
             </button>
           ))}

@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react'
 export type PanItem = { kind: 'box'; label: string; neg?: boolean; hl?: boolean } | { kind: 'w'; label: string; size?: number; neg?: boolean; hl?: boolean }
 
 export const W = 640
-export const H = 360
+export const H = 304
 const PX = 320
 const PY = 74
 const ARM = 215
@@ -63,7 +63,7 @@ const dims = (it: PanItem): Dims => {
 /** Kefedeki pozitif nesneleri satırlara diz (alttan yukarı) */
 function layout(items: PanItem[]) {
   const rows: { items: PanItem[]; w: number; h: number }[] = []
-  const MAXW = 176
+  const MAXW = 194
   for (const it of items) {
     const d = dims(it)
     const r = rows[rows.length - 1]

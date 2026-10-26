@@ -85,8 +85,7 @@ export function FoldStage({ prep, t, dark, marks = {}, labels = {}, onFaceTap, h
   const [view, setView] = useState({ rx: 0, ry: 0 })
   const startTarget = useRef<EventTarget | null>(null)
   const bind = useDrag(
-    ({ delta: [dx, dy], tap, first, event }) => {
-      if (first) startTarget.current = event.target
+    ({ delta: [dx, dy], tap }) => {
       if (tap) {
         const el = (startTarget.current as Element | null)?.closest?.('[data-face]')
         if (el && onFaceTap) onFaceTap(Number(el.getAttribute('data-face')))
@@ -138,6 +137,7 @@ export function FoldStage({ prep, t, dark, marks = {}, labels = {}, onFaceTap, h
     <div
       ref={wrap}
       {...bind()}
+      onPointerDownCapture={(e) => (startTarget.current = e.target)}
       className={`relative w-full touch-none overflow-hidden rounded-2xl select-none ${dark ? 'bg-[radial-gradient(circle_at_50%_35%,#334155,#0f172a_75%)]' : 'bg-[radial-gradient(circle_at_50%_35%,#ffffff,#eef2f7_80%)]'} ${onFaceTap ? 'cursor-pointer' : 'cursor-grab'}`}
       style={{ height: H, perspective: 1300 }}
       aria-label="Açınım: sürükleyerek çevir"

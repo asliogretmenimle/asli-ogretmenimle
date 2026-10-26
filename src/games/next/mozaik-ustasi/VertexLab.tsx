@@ -14,9 +14,9 @@ export const POLY_INFO: Record<number, { name: string; fill: string; dark: strin
   12: { name: 'onikigen', fill: '#119fb4', dark: '#05666f' },
 }
 
-const L = 1.25
+const L0 = 1.25
 
-function polyAt(n: number, start: number) {
+function polyAt(n: number, start: number, L = L0) {
   const pts: [number, number][] = []
   let x = 0, y = 0, dir = start
   for (let k = 0; k < n; k++) {
@@ -41,6 +41,8 @@ export function PolyIcon({ n, size = 40 }: { n: number; size?: number }) {
 
 export function VertexLab({ ring, degrees }: { ring: number[]; degrees: boolean }) {
   const sum = ring.reduce((s, n) => s + interior(n), 0)
+  // En büyük çokgen tahtaya sığsın
+  const L = Math.min(L0, 2.85 * Math.sin(Math.PI / Math.max(3, ...ring)))
   let a = 0
   const shapes = ring.map((n, i) => {
     const start = a
@@ -67,7 +69,7 @@ export function VertexLab({ ring, degrees }: { ring: number[]; degrees: boolean 
       {sum < 360 && ring.length > 0 && <path d={arc(1.05, sum, 360)} fill="#fff" stroke="#f59e0b" strokeWidth={0.035} strokeDasharray="0.1 0.07" />}
       {shapes.map(({ n, start, over, i }) => (
         <g key={i} className="mz-pop" filter="url(#vl-sh)">
-          <polygon points={polyAt(n, start).map((q) => q.join(',')).join(' ')} fill={POLY_INFO[n].fill} fillOpacity={over ? 0.55 : 1} stroke={over ? '#dc2626' : POLY_INFO[n].dark} strokeWidth={over ? 0.07 : 0.045} strokeLinejoin="round" />
+          <polygon points={polyAt(n, start, L).map((q) => q.join(',')).join(' ')} fill={POLY_INFO[n].fill} fillOpacity={over ? 0.55 : 1} stroke={over ? '#dc2626' : POLY_INFO[n].dark} strokeWidth={over ? 0.07 : 0.045} strokeLinejoin="round" />
         </g>
       ))}
       {shapes.map(({ n, start, i }) => {

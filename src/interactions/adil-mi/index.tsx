@@ -132,18 +132,18 @@ function LastRound({ g, last, flick, look }: { g: Game; last: number | null; fli
 }
 
 /** Ayşe – Can yarış çubuğu */
-function Race({ look, a, c, points }: { look: Look; a: number; c: number; points?: boolean }) {
+function Race({ look, a, c, unit = 'tur' }: { look: Look; a: number; c: number; unit?: string }) {
   const t = a + c
   return (
     <div>
       <div className={`flex h-12 overflow-hidden rounded-2xl ring-1 ${look.dark ? 'ring-slate-600 bg-slate-700' : 'ring-line bg-slate-100'}`}>
-        <div className="grid place-items-center text-sm font-black text-white transition-[width] duration-150" style={{ width: t ? `${(a / t) * 100}%` : '50%', background: A.color, opacity: t ? 1 : 0.35 }}>{t && a / t > 0.12 ? `${A.name} ${fmtN((a / t) * 100, 0)}%` : ''}</div>
-        <div className="grid flex-1 place-items-center text-sm font-black text-white" style={{ background: C.color, opacity: t ? 1 : 0.35 }}>{t && c / t > 0.12 ? `${C.name} ${fmtN((c / t) * 100, 0)}%` : ''}</div>
+        <div className="grid place-items-center text-sm font-black text-white transition-[width] duration-150" style={{ width: t ? `${(a / t) * 100}%` : '50%', background: A.color, opacity: t ? 1 : 0.35 }}>{t && a / t > 0.12 ? `${A.name} %${fmtN((a / t) * 100, 0)}` : ''}</div>
+        <div className="grid flex-1 place-items-center text-sm font-black text-white" style={{ background: C.color, opacity: t ? 1 : 0.35 }}>{t && c / t > 0.12 ? `${C.name} %${fmtN((c / t) * 100, 0)}` : ''}</div>
       </div>
       <div className="relative mx-auto -mt-12 h-12 w-0.5 bg-white/90" aria-hidden />
       <div className={`mt-1 flex justify-between text-sm font-extrabold ${look.muted}`}>
-        <span style={{ color: A.color }}>{A.name}: {fmtN(a)}{points ? ' puan' : ' tur'}</span>
-        <span style={{ color: C.color }}>{C.name}: {fmtN(c)}{points ? ' puan' : ' tur'}</span>
+        <span style={{ color: A.color }}>{A.name}: {fmtN(a)} {unit}</span>
+        <span style={{ color: C.color }}>{C.name}: {fmtN(c)} {unit}</span>
       </div>
     </div>
   )
@@ -311,7 +311,7 @@ function GameTask({ g, grade, look, onDone }: { g: Game; grade: Grade; look: Loo
     if (!predOk && g.id === 'coins') track.misconception('İki parada “aynı”, “farklı” sonuçlarının eş olasılıklı olmadığını (YT ve TY’yi ayrı saymak gerektiğini) fark etmedi')
     if (!predOk && g.id === 'sumrange') track.misconception('İki zarın toplamlarını eş olasılıklı sandı')
     if (!predOk && g.id === 'spin') track.misconception('Çarkta dilim sayısını dilim büyüklüğüyle karıştırdı')
-    fb.say(`${g.why} ${predOk ? 'Tahminin de doğruydu!' : 'Tahminin farklıydı; liste/tablo bize nedenini gösterdi.'}${tr.n >= 100 ? ` Deneyde ${A.name} turların ${fmtN((a / tr.n) * 100, 0)}%’ini kazandı.` : ''}`, { tone: 'ok' })
+    fb.say(`${g.why} ${predOk ? 'Tahminin de doğruydu!' : 'Tahminin farklıydı; liste/tablo bize nedenini gösterdi.'}${tr.n >= 100 ? ` Deneyde ${A.name}’nin kazandığı turların oranı %${fmtN((a / tr.n) * 100, 0)} oldu.` : ''}`, { tone: 'ok' })
     if (g.redesign && truth !== 'fair') {
       setPhase('redesign')
       if (g.redesign === 'points') setPts([1, 1])
@@ -389,12 +389,12 @@ function GameTask({ g, grade, look, onDone }: { g: Game; grade: Grade; look: Loo
           ) : (
             <>
               <Model g={g} own={own} look={look} onTap={tap} bad={bad} editable={editable} />
-              {(phase === 'redesign' || phase === 'verdict' || phase === 'done') && g.redesign !== 'points' && (
-                <div className="mx-auto mt-3 max-w-md"><Race look={look} a={ra} c={tw - ra} />{g.view !== 'spinner' && <p className={`text-center text-xs font-bold ${look.muted}`}>Sonuç sayıları ({fmtN(tw)} eş olasılıklı sonuç)</p>}</div>
+              {(phase === 'verdict' || ((phase === 'redesign' || phase === 'done') && g.redesign !== 'points')) && (
+                <div className="mx-auto mt-3 max-w-md"><Race look={look} unit={g.view === 'spinner' ? 'parça' : 'sonuç'} a={ra} c={tw - ra} />{g.view !== 'spinner' && <p className={`text-center text-xs font-bold ${look.muted}`}>Sonuç sayıları ({fmtN(tw)} eş olasılıklı sonuç)</p>}</div>
               )}
               {g.redesign === 'points' && phase !== 'assign' && phase !== 'verdict' && (
                 <div className="mx-auto mt-3 max-w-md">
-                  <Race look={look} points a={3 * pts[0]} c={6 * pts[1]} />
+                  <Race look={look} unit="puan" a={3 * pts[0]} c={6 * pts[1]} />
                   <p className={`text-center text-xs font-bold ${look.muted}`}>9 turda beklenen puan</p>
                 </div>
               )}

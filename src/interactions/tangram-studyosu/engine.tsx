@@ -78,7 +78,11 @@ const TRAY: Record<PieceId, Piece> = {
   S1: { id: 'S1', x: 7.2, y: 11, r: 0, f: false },
   S2: { id: 'S2', x: 9, y: 11, r: 0, f: false },
 }
-export const trayPieces = (ids: PieceId[]): Piece[] => ids.map((id) => ({ ...TRAY[id] }))
+/** Az parçalı görevlerde parçalar tepsinin ortasına dizilir (görünüm de yakınlaşır) */
+export const trayPieces = (ids: PieceId[]): Piece[] =>
+  ids.length <= 3 ? ids.map((id, i) => ({ ...TRAY[id], x: 6 + (i - (ids.length - 1) / 2) * 2.4, y: 9.3 })) : ids.map((id) => ({ ...TRAY[id] }))
+/** Az parçalı görevler için yakın görünüm */
+export const viewFor = (n: number): [number, number, number, number] => (n <= 3 ? [1.5, 1.4, 9, 9.4] : [0, 0, WORLD.w, WORLD.h])
 
 function inPoly([x, y]: Pt, poly: Pt[]) {
   let ins = false
@@ -143,7 +147,7 @@ export interface BoardState {
   sel: PieceId | null
 }
 
-export function Board({ value, onChange, sil, areas, locked, solvedGlow, trayLabel = 'PARÇALAR', designLabel }: { value: BoardState; onChange: (v: BoardState) => void; sil?: Pt[][] | null; areas: boolean; locked?: boolean; solvedGlow?: boolean; trayLabel?: string; designLabel?: string }) {
+export function Board({ value, onChange, sil, areas, locked, solvedGlow, trayLabel = 'PARÇALAR', designLabel, view = [0, 0, WORLD.w, WORLD.h] }: { value: BoardState; onChange: (v: BoardState) => void; sil?: Pt[][] | null; areas: boolean; locked?: boolean; solvedGlow?: boolean; trayLabel?: string; designLabel?: string; view?: [number, number, number, number] }) {
   const svg = useRef<SVGSVGElement>(null)
   const [live, setLive] = useState<{ id: PieceId; ang: number } | null>(null)
   const ptrs = useRef(new Map<number, Pt>())
@@ -153,7 +157,7 @@ export function Board({ value, onChange, sil, areas, locked, solvedGlow, trayLab
     const s = svg.current
     if (!s) return [0, 0]
     const r = s.getBoundingClientRect()
-    return [((cx - r.left) / r.width) * WORLD.w, ((cy - r.top) / r.height) * WORLD.h]
+    return [view[0] + ((cx - r.left) / r.width) * view[2], view[1] + ((cy - r.top) / r.height) * view[3]]
   }
   const setPiece = (id: PieceId, patch: Partial<Piece>, sel?: PieceId | null) =>
     onChange({ sel: sel === undefined ? value.sel : sel, pieces: value.pieces.map((p) => (p.id === id ? { ...p, ...patch } : p)) })
@@ -169,8 +173,8 @@ export function Board({ value, onChange, sil, areas, locked, solvedGlow, trayLab
       }
     let { x, y } = p
     if (best) { x += best[0]; y += best[1] }
-    x = Math.min(WORLD.w - 0.3, Math.max(0.3, x))
-    y = Math.min(WORLD.h - 0.3, Math.max(0.3, y))
+    x = Math.min(view[0] + view[2] - 0.3, Math.max(view[0] + 0.3, x))
+    y = Math.min(view[1] + view[3] - 0.3, Math.max(view[1] + 0.3, y))
     return { ...p, x: Math.round(x * 1e4) / 1e4, y: Math.round(y * 1e4) / 1e4 }
   }
   const angle = () => {
@@ -246,7 +250,7 @@ export function Board({ value, onChange, sil, areas, locked, solvedGlow, trayLab
   return (
     <svg
       ref={svg}
-      viewBox={`0 0 ${WORLD.w} ${WORLD.h}`}
+      viewBox={view.join(' ')}
       className="block w-full select-none rounded-2xl bg-[#fbf7f6] ring-1 ring-line"
       style={{ touchAction: 'none' }}
       onPointerDown={onDown}
@@ -265,9 +269,9 @@ export function Board({ value, onChange, sil, areas, locked, solvedGlow, trayLab
           <stop offset="0.6" stopColor="#fff" stopOpacity={0} />
         </linearGradient>
       </defs>
-      <rect x={0} y={0} width={WORLD.w} height={WORLD.h} fill="url(#ts-dots)" />
-      <rect x={0.15} y={TRAY_Y} width={WORLD.w - 0.3} height={WORLD.h - TRAY_Y - 0.15} rx={0.35} fill="#fff" stroke="#e7e8f2" strokeWidth={0.03} />
-      <text x={0.4} y={TRAY_Y + 0.45} fontSize={0.32} fontWeight={800} fill="#8a8fb0">{trayLabel}</text>
+      <rect x={view[0]} y={view[1]} width={view[2]} height={view[3]} fill="url(#ts-dots)" />
+      <rect x={view[0] + 0.15} y={TRAY_Y} width={view[2] - 0.3} height={view[1] + view[3] - TRAY_Y - 0.15} rx={0.35} fill="#fff" stroke="#e7e8f2" strokeWidth={0.03} />
+      <text x={view[0] + 0.4} y={TRAY_Y + 0.45} fontSize={0.32} fontWeight={800} fill="#8a8fb0">{trayLabel}</text>
       {designLabel && <text x={0.4} y={0.55} fontSize={0.32} fontWeight={800} fill="#8a8fb0">{designLabel}</text>}
       {sil && (
         <g>

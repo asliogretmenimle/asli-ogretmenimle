@@ -131,7 +131,6 @@ export function SticksTask({ t: task, dark, footer, onSolved }: { t: Extract<Tas
     else if (rule === 'diff') setFb({ ok: false, text: 'Eşit çubuklarla da üçgen kurulur mu? 5, 5, 5 cm’lik çubukları düşün. Asıl önemli olan, kısa çubukların en uzuna yetip yetmemesi değil mi?' })
     else setFb({ ok: false, text: '2, 3 ve 7 cm’lik çubuklarda en uzun çubuk 8 cm’den kısa. Kapanır mı? Kısa çubukları en uzunla karşılaştır.' })
   }
-  const [x, y, z] = round
   return (
     <Split
       work={
@@ -151,7 +150,7 @@ export function SticksTask({ t: task, dark, footer, onSolved }: { t: Extract<Tas
           {!allDone ? (
             <>
               <Prompt step={`Deneme ${i + 1} / ${task.rounds.length}`}>
-                Çubuklar: <b className="text-sky-700">{x} cm</b>, <b className="text-emerald-700">{y} cm</b>, <b className="text-pink-700">{z} cm</b>. En uzun çubuk tabanda; diğer ikisini birbirine doğru indireceğiz. <b>Üçgen kapanır mı?</b>
+                Çubuklar: <b className="text-sky-600">{l} cm</b>, <b className="text-emerald-600">{r} cm</b> ve <b className="text-pink-600">{c} cm</b>. En uzun çubuk tabanda; diğer ikisini birbirine doğru indireceğiz. <b>Üçgen kapanır mı?</b>
               </Prompt>
               <Choices<'yes' | 'no'> options={[{ id: 'yes', label: 'Kapanır', sub: 'uçlar havada buluşur' }, { id: 'no', label: 'Kapanmaz', sub: 'uçlar buluşamaz' }]} value={pred} onPick={predict} disabled={!!pred} />
               {pred && !done && <Card dark={dark}><p className="flex items-center gap-2 font-extrabold"><Play size={18} />Çubuklar iniyor… uçların çizdiği yaylara dikkat et.</p></Card>}
@@ -419,7 +418,7 @@ export function RangeTask({ t: task, dark, footer, onSolved, sol }: { t: Extract
   const lo = Math.abs(a - b), hi = a + b
   const answer = 2 * Math.min(a, b) - 1
   const chk = useChecks()
-  const [theta, setTheta] = useState(60)
+  const [theta, setTheta] = useState(50)
   const [val, setVal] = useState('')
   const [fb, setFb] = useState<{ ok: boolean; text: string; mis?: string } | null>(null)
   const [visited, setVisited] = useState({ lo: false, hi: false })
@@ -434,13 +433,17 @@ export function RangeTask({ t: task, dark, footer, onSolved, sol }: { t: Extract
   const found = useMemo(() => new Set(mine.map((s) => Number(s.key.split('-')[1]))), [mine])
   const lastAdded = useRef<number | null>(null)
   const thetaFor = (n: number) => toDeg(Math.acos(Math.max(-1, Math.min(1, (a * a + b * b - n * n) / (2 * a * b)))))
-  const setFromTheta = (d: number) => {
+  /** drag: parmakla sürükleme (uzunlukta ±0,14 cm yapışma); step: düğme/kaydırıcı (açıda ±0,6° yapışma, takılmaz) */
+  const setFromTheta = (d: number, mode: 'drag' | 'step' = 'drag') => {
     let th = Math.max(0, Math.min(180, d))
-    if (th < 2.5) th = 0
-    if (th > 177.5) th = 180
+    if (mode === 'drag' && th < 2.5) th = 0
+    if (mode === 'drag' && th > 177.5) th = 180
     const cc = Math.sqrt(a * a + b * b - 2 * a * b * Math.cos((th * Math.PI) / 180))
     const n = Math.round(cc)
-    if (Math.abs(cc - n) < 0.14 && th > 0 && th < 180) th = thetaFor(n)
+    if (th > 0 && th < 180 && n > lo && n < hi) {
+      const tn = thetaFor(n)
+      if (mode === 'drag' ? Math.abs(cc - n) < 0.14 : Math.abs(tn - th) < 0.6) th = tn
+    }
     setTheta(th)
   }
   useEffect(() => {
@@ -482,7 +485,7 @@ export function RangeTask({ t: task, dark, footer, onSolved, sol }: { t: Extract
           <Prompt step="Önce düşün, sonra çevir">Bir üçgenin iki kenarı <b>{a} cm</b> ve <b>{b} cm</b>. Üçüncü kenar kaç santimetre olabilir? Mor ucu çevirerek bütün <b>tam sayı</b> değerlerini bul.</Prompt>
           <Card dark={dark}>
             <p className="mb-1 text-sm font-extrabold">Kolu çevir</p>
-            <Slider value={Math.round(theta)} onChange={(d) => setFromTheta(d)} min={0} max={180} step={1} format={(v) => `${v}°`} label="Menteşe açısı" dark={dark} />
+            <Slider value={Math.round(theta)} onChange={(d) => setFromTheta(d, 'step')} min={0} max={180} step={1} format={(v) => `${v}°`} label="Menteşe açısı" dark={dark} />
             <p className="mt-1 text-lg font-black tabular-nums">Üçüncü kenar ≈ {fmt(c, 2)} cm {degenerate && <span className="text-amber-500">· üçgen değil!</span>}</p>
           </Card>
           <SolutionList list={[...mine].sort((p, q) => Number(p.key.split('-')[1]) - Number(q.key.split('-')[1]))} />

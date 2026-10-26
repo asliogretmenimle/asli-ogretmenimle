@@ -264,7 +264,7 @@ function CompareTask({ t, grade, dark, footer, onSolved }: { t: Extract<Task, { 
   )
   return (
     <Split
-      work={<div className="grid gap-3 sm:grid-cols-2">{board('A', t.a)}{board('B', t.b)}</div>}
+      work={<div className="grid grid-cols-2 gap-2 sm:gap-3">{board('A', t.a)}{board('B', t.b)}</div>}
       panel={
         <>
           {phase === 'predict' && (
@@ -839,7 +839,7 @@ function ScaleTask({ t, dark, footer, onSolved }: { t: Extract<Task, { kind: 'sc
         <div className="grid gap-3 sm:grid-cols-[1fr_2fr]">
           <Stage dark={dark}>
             <p className={`text-center text-sm font-black ${dark ? 'text-slate-200' : 'text-ink'}`}>İlk kutu: {t.w} × {t.d} × {t.h} = {V0} cm³</p>
-            <Iso h={boxMap(t.w, t.d, t.h)} dark={dark} maxH={4} front={false} layerLabels={false} maxHeight={220} mono="#94a3b8" />
+            <Iso h={boxMap(t.w, t.d, t.h)} dark={dark} maxH={2} span={4} front={false} layerLabels={false} maxHeight={220} mono="#94a3b8" />
           </Stage>
           {phase === 'predict' ? (
             <Stage dark={dark} className="grid place-items-center"><p className={`p-6 text-center text-lg font-black ${dark ? 'text-slate-300' : 'text-ink-soft'}`}>Önce tahmin et, sonra yeni kutuyu kur.</p></Stage>

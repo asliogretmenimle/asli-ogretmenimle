@@ -265,7 +265,8 @@ function Piece({ s }: { s: PieceSpec }) {
         event?.stopPropagation?.()
         const m: PM = first || !memo ? { r: cur.current, d0: Math.max(1, d), a } : memo
         const f = d / m.d0
-        const c2 = Math.cos((m.a * Math.PI) / 180) ** 2
+        // use-gesture açıyı atan2(dx, dy) ile verir: yatay parmaklar ±90°
+        const c2 = Math.sin((m.a * Math.PI) / 180) ** 2
         const fw = 1 + (f - 1) * Math.min(1, 2 * c2)
         const fh = 1 + (f - 1) * Math.min(1, 2 * (1 - c2))
         const w = clamp(Math.round(m.r.w * fw), 1, MAP_W), h = clamp(Math.round(m.r.h * fh), 1, MAP_H)

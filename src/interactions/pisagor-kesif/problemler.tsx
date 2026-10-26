@@ -165,7 +165,7 @@ export function DistanceTask({ P, Q, footer, onSolved }: { P: Pt; Q: Pt } & Comm
     <Split
       work={
         <div className="mx-auto w-full max-w-[36rem] lg:max-w-[min(36rem,calc(100dvh-13rem))]">
-          <Plane initial={{ xMin: -7, xMax: 9, yMin: -6, yMax: 11 }} label="A ve B noktaları ile sürüklenebilir dik açı köşesi" xLabel="x" yLabel="y">
+          <Plane initial={{ xMin: -7, xMax: 9, yMin: -6, yMax: 11 }} fixedStep={1} label="A ve B noktaları ile sürüklenebilir dik açı köşesi" xLabel="x" yLabel="y">
             <Poly pts={[P, Q]} fill="none" stroke={COL.c} strokeWidth={4} />
             {formed && (
               <g className="animate-fade-up">

@@ -431,7 +431,7 @@ function RulerView({ task, grade, big, sol, onDone, footer }: ViewProps<RulerTas
   const track = useTracker()
   const fresh = useFresh(sol)
   const [wallRef, W] = useWidthOf<HTMLDivElement>()
-  const [pos, setPos] = useState(0.5 + 1 / 48) // biraz kaydırılmış başlangıç
+  const [pos, setPos] = useState(1 / 24) // hiçbir çizgide olmayan başlangıç
   const [found, setFound] = useState<{ key: string; label: string; x: number }[]>([])
   const [msg, setMsg] = useState<Msg>(null)
   const [complete, setComplete] = useState(false)
@@ -466,7 +466,10 @@ function RulerView({ task, grade, big, sol, onDone, footer }: ViewProps<RulerTas
 
   const evaluate = (p: number) => {
     const rows = aligned(p)
-    if (rows.length === 0) return
+    if (rows.length < 2) {
+      setMsg(null)
+      return
+    }
     const r = reduce(Math.round(p * rows[0]), rows[0])
     const names = rows.map((d) => fr(Math.round(p * d), d))
     const key = `${r.n}/${r.d}`

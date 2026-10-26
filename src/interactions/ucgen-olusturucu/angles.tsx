@@ -169,7 +169,7 @@ export function TwoAnglesTask({ t: task, dark, footer, onSolved, sol }: { t: Ext
       setSolvedOnce(true)
       onSolved(first)
     }
-    setFb({ ok: true, text: isNew ? (count >= task.goal ? `${count} dik üçgen! Hepsinde A + B = 90°. Neden?` : `Dik üçgen! ${al}° + ${be}° = 90°. Başka bir çift bul.`) : 'Bu çifti zaten buldun. Başka açılar dene.' })
+    setFb({ ok: true, text: isNew ? (count >= task.goal ? `${count} dik üçgen! Hepsinde A + B = 90°. Neden?` : `Dik üçgen! ${al}° + ${be}° = 90°. Başka bir çift bul.`) : `Bu üçgeni (ya da ayna görüntüsünü: ${be}° + ${al}°) zaten buldun. Başka açılar dene.` })
   }
   return (
     <Split

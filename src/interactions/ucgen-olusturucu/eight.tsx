@@ -200,7 +200,6 @@ export function CongruenceTask({ dark, footer, onSolved }: { t: Extract<Task, { 
 function Demo({ id, dark }: { id: CardId; dark: boolean }) {
   const th = theme(dark)
   const tris: { pts: P[]; dash?: boolean; col: string }[] = []
-  const extra: React.ReactNode[] = []
   if (id === 'KKK') {
     const A = pt(0, 0), B = pt(7, 0)
     const [c1, c2] = circleInter(A, 5, B, 6)
@@ -231,7 +230,6 @@ function Demo({ id, dark }: { id: CardId; dark: boolean }) {
       {tris.map((t, i) => (
         <polygon key={i} points={t.pts.map((p) => `${X(p.x)},${Y(p.y)}`).join(' ')} fill={t.col} fillOpacity={t.dash ? 0.08 : 0.2} stroke={t.col} strokeWidth={2.5} strokeDasharray={t.dash ? '6 5' : undefined} strokeLinejoin="round" />
       ))}
-      {extra}
     </svg>
   )
 }
@@ -300,7 +298,7 @@ export function SimilarTask({ t: task, dark, footer, onSolved }: { t: Extract<Ta
       }
       panel={
         <>
-          <Prompt step="Benzerlik"><MathText text={`Kenarları 3, 4 ve 5 cm olan üçgeni büyüt: en kısa kenarı **${fmt(target)} cm** olan benzer bir üçgen yap.`.replace(/\*\*/g, '')} /></Prompt>
+          <Prompt step="Benzerlik">Kenarları 3, 4 ve 5 cm olan üçgeni büyüt: en kısa kenarı <b>{fmt(target)} cm</b> olan benzer bir üçgen yap.</Prompt>
           <Card dark={dark}>
             <p className="mb-1 text-sm font-extrabold">Ölçek: {fmt(k)} kat</p>
             <Slider value={k} onChange={setScale} min={0.5} max={3} step={0.25} format={(v) => `×${fmt(v)}`} label="Ölçek" dark={dark} disabled={stage !== 'scale'} />

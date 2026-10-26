@@ -105,9 +105,8 @@ export function SquaresTask({ footer, onSolved, sol }: Common) {
             <Tag at={[a / 2, -a / 2]} color="#3730a3" size={a >= 2 ? 15 : 11}>a² = {a * a}</Tag>
             <Tag at={[-b / 2, b / 2]} color="#115e59" size={b >= 2 ? 15 : 11}>b² = {b * b}</Tag>
             <Tag at={[s / 2 + 0.3, s / 2 + 0.3]} color="#9d174d" size={16}>{seen ? `c² = ${c2}` : 'c² = ?'}</Tag>
-            {decomp && <Tag at={[s / 2, s + 0.7]} color="#334155" size={13}>{`${s} × ${s} − 4 × (${a} × ${b} ÷ 2) = ${c2}`}</Tag>}
-            <Tag at={[a / 2, 0.5]} color="#1f2340" size={13}>a</Tag>
-            <Tag at={[-0.5, b / 2]} color="#1f2340" size={13}>b</Tag>
+            <Tag at={[Math.max(a / 2, 0.8), 0.4]} color="#1f2340" size={13}>a</Tag>
+            <Tag at={[0.25, Math.min(b / 2, b - 0.6)]} color="#1f2340" size={13} anchor="start">b</Tag>
             <DragPoint x={a} y={0} color={COL.a} snapStep={1} constrain={(p) => ({ x: Math.max(1, Math.min(6, p.x)), y: 0 })} onChange={(p) => setLegs(p.x, b)} disabled={phase === 'done'} />
             <DragPoint x={0} y={b} color={COL.b} snapStep={1} constrain={(p) => ({ x: 0, y: Math.max(1, Math.min(6, p.y)) })} onChange={(p) => setLegs(a, p.y)} disabled={phase === 'done'} />
           </Plane>
@@ -136,7 +135,12 @@ export function SquaresTask({ footer, onSolved, sol }: Common) {
                     <GhostButton dark active={decomp} onClick={() => { setDecomp(!decomp); setSeen(true); setFb(null) }}>{decomp ? <EyeOff size={18} /> : <Eye size={18} />}Eğik kareyi say</GhostButton>
                     <GhostButton dark onClick={save}><Plus size={18} />Tabloya ekle</GhostButton>
                   </div>
-                  {decomp && <p className="mt-2 text-sm font-bold text-amber-200">Eğik kare = çevreleyen büyük kare − 4 sarı üçgen</p>}
+                  {decomp && (
+                    <div className="mt-2 rounded-xl bg-slate-900/70 p-2 text-sm font-bold text-amber-200 animate-fade-up">
+                      <p>Eğik kare = çevreleyen büyük kare − 4 sarı üçgen</p>
+                      <p className="mt-1 text-base font-black text-white tabular-nums">{s} × {s} − 4 × ({a} × {b} ÷ 2) = {c2}</p>
+                    </div>
+                  )}
                 </Card>
               )}
               <Card>
@@ -275,9 +279,10 @@ export function ProofTask({ footer, onSolved }: Common) {
               <g key={k}>
                 <rect x={ox} y={0} width={W} height={W} fill="#0f172a" stroke="#94a3b8" strokeWidth={2} />
                 <text x={ox + W / 2} y={-12} textAnchor="middle" fontSize={15} fontWeight={900} fill="#e2e8f0">{k === 0 ? '1. diziliş' : '2. diziliş (dokun ve taşı)'}</text>
-                <text x={ox + (a * U) / 2} y={W + 20} textAnchor="middle" fontSize={14} fontWeight={900} fill="#cbd5e1">{k === 0 ? 'a' : 'a'}</text>
-                <text x={ox + a * U + (b * U) / 2} y={W + 20} textAnchor="middle" fontSize={14} fontWeight={900} fill="#cbd5e1">b</text>
-                <line x1={ox + a * U} x2={ox + a * U} y1={W + 4} y2={W + 12} stroke="#cbd5e1" strokeWidth={2} />
+                <line x1={ox + 2} x2={ox + a * U - 3} y1={W + 9} y2={W + 9} stroke="#a5b4fc" strokeWidth={3} strokeLinecap="round" />
+                <line x1={ox + a * U + 3} x2={ox + W - 2} y1={W + 9} y2={W + 9} stroke="#5eead4" strokeWidth={3} strokeLinecap="round" />
+                <text x={ox + (a * U) / 2} y={W + 28} textAnchor="middle" fontSize={15} fontWeight={900} fill="#a5b4fc">a</text>
+                <text x={ox + a * U + (b * U) / 2} y={W + 28} textAnchor="middle" fontSize={15} fontWeight={900} fill="#5eead4">b</text>
               </g>
             ))}
             {/* 1. diziliş */}
@@ -296,7 +301,7 @@ export function ProofTask({ footer, onSolved }: Common) {
             {src.map((t, i) => {
               const m = moved(t, dst[i], prog[i])
               return (
-                <g key={i} role="button" tabIndex={0} aria-label={`${i + 1}. üçgeni taşı`} onClick={() => move(i)} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && move(i)} style={{ cursor: prog[i] < 1 ? 'pointer' : 'default' }}>
+                <g key={i} role="button" tabIndex={0} aria-label={`${i + 1}. üçgeni taşı`} onClick={() => move(i)} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && move(i)} style={{ cursor: prog[i] < 1 ? 'pointer' : 'default', outline: 'none' }}>
                   <polygon points={pts(m, X2)} fill={TRI_FILL[i]} stroke={prog[i] < 1 ? '#fff' : '#78350f'} strokeWidth={prog[i] < 1 ? 3 : 1.5} strokeLinejoin="round" />
                   {prog[i] === 0 && (() => {
                     const cx = (m[0][0] + m[1][0] + m[2][0]) / 3, cy = (m[0][1] + m[1][1] + m[2][1]) / 3

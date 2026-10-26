@@ -210,7 +210,7 @@ export interface GraphPlaneProps {
 
 export function GraphPlane(props: GraphPlaneProps) {
   const { axes: a, aspect = 0.62, mode, label } = props
-  const initial = { xMin: -a.xMax * 0.075, xMax: a.xMax * 1.05, yMin: -a.yMax * 0.1, yMax: a.yMax * 1.1 }
+  const initial = { xMin: -a.xMax * 0.075, xMax: a.xMax * 1.05, yMin: -a.yMax * 0.24, yMax: a.yMax * 1.1 }
   const add = (raw: Pt) => {
     if (mode === 'pick') return props.onPick?.(raw)
     if (mode !== 'sketch' || !props.onChange) return
@@ -271,7 +271,6 @@ function Layer({ axes: a, pts, onChange, mode, sel, onSel, highlight, segLabels,
     <g>
       {/* eksen okları */}
       <path d={`M${P.sx(0) - 5} ${P.sy(a.yMax * 1.08) + 9} L${P.sx(0)} ${P.sy(a.yMax * 1.08)} L${P.sx(0) + 5} ${P.sy(a.yMax * 1.08) + 9}`} fill="none" stroke="#1f2340" strokeWidth={1.8} />
-      <path d={`M${P.sx(a.xMax * 1.03) - 9} ${P.sy(0) - 5} L${P.sx(a.xMax * 1.03)} ${P.sy(0)} L${P.sx(a.xMax * 1.03) - 9} ${P.sy(0) + 5}`} fill="none" stroke="#1f2340" strokeWidth={1.8} />
       {ghosts?.map((g, k) => (
         <g key={k}>
           <path d={path(g.pts)} fill="none" stroke={g.color} strokeWidth={3.5} strokeDasharray={g.dashed === false ? undefined : '8 6'} strokeLinejoin="round" strokeLinecap="round" opacity={0.85} />
@@ -322,7 +321,7 @@ export function MiniGraph({ pts, xMax, yMax, xLabel = 'zaman', yLabel, xTicks, y
   const sy = (y: number) => H - B - (y / yMax) * (H - B - T)
   const fmt = (v: number) => v.toLocaleString('tr-TR')
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={height} className="block" aria-hidden>
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" className="block h-auto w-full" style={{ maxHeight: height }} aria-hidden>
       {yTicks?.map((t) => <line key={`gy${t}`} x1={L} x2={W - R} y1={sy(t)} y2={sy(t)} stroke="#eef0f6" />)}
       {xTicks?.map((t) => <line key={`gx${t}`} y1={T} y2={H - B} x1={sx(t)} x2={sx(t)} stroke="#eef0f6" />)}
       <line x1={L} y1={H - B} x2={W - R + 4} y2={H - B} stroke="#1f2340" strokeWidth={1.6} />

@@ -532,3 +532,55 @@ export function MiniPoly({ pts, color = '#db2777', size = 34 }: { pts: Pt[]; col
     </svg>
   )
 }
+
+// ─── Birim kare tahtası ───────────────────────────────────────────────────
+
+/**
+ * Kare ızgara: (0..cols) × (0..rows), her kare 1×1. Dokun → aç/kapa; parmağını gezdir → aynı işlemi sürdür.
+ * İçerik (children) dünya biriminde, karelerin üstünde çizilir.
+ */
+export function CellBoard({ cols, rows, cells, onPaint, canPaint, fill = '#db2777', cellFill, children, under, locked, bg = '#ffffff', label = 'Kare ızgara', pad = 0.25, gridColor = '#e3e7f2' }: { cols: number; rows: number; cells: string[]; onPaint?: (key: string, add: boolean) => void; canPaint?: (x: number, y: number) => boolean; fill?: string; cellFill?: (key: string) => string | undefined; children?: ReactNode; under?: ReactNode; locked?: boolean; bg?: string; label?: string; pad?: number; gridColor?: string }) {
+  const svg = useRef<SVGSVGElement>(null)
+  const set = new Set(cells)
+  const cur = useRef(set)
+  cur.current = set
+  const lastK = useRef('')
+  const at = (p: Pt) => {
+    const x = Math.floor(p[0]), y = Math.floor(p[1])
+    if (x < 0 || y < 0 || x >= cols || y >= rows) return null
+    if (canPaint && !canPaint(x, y)) return null
+    return ck(x, y)
+  }
+  useGridGesture<{ add: boolean } | null>(svg, {
+    disabled: locked || !onPaint,
+    onStart: (p) => {
+      const k = at(p)
+      if (!k) return null
+      const add = !cur.current.has(k)
+      lastK.current = k
+      onPaint?.(k, add)
+      return { add }
+    },
+    onMove: (p, m) => {
+      if (!m) return
+      const k = at(p)
+      if (!k || k === lastK.current) return
+      lastK.current = k
+      if (cur.current.has(k) !== m.add) onPaint?.(k, m.add)
+    },
+  })
+  return (
+    <svg ref={svg} viewBox={`${-pad} ${-pad} ${cols + 2 * pad} ${rows + 2 * pad}`} className="block w-full select-none rounded-2xl ring-1 ring-line" style={{ touchAction: 'none', background: bg }} role="img" aria-label={label}>
+      {under}
+      {cells.map((k) => {
+        const [x, y] = pk(k)
+        return <rect key={k} x={x + 0.04} y={y + 0.04} width={0.92} height={0.92} rx={0.12} fill={cellFill?.(k) ?? fill} />
+      })}
+      <g stroke={gridColor} strokeWidth={0.03}>
+        {Array.from({ length: cols + 1 }, (_, i) => <line key={`v${i}`} x1={i} x2={i} y1={0} y2={rows} />)}
+        {Array.from({ length: rows + 1 }, (_, i) => <line key={`h${i}`} y1={i} y2={i} x1={0} x2={cols} />)}
+      </g>
+      {children}
+    </svg>
+  )
+}

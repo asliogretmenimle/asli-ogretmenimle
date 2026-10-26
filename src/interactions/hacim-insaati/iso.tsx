@@ -276,7 +276,7 @@ export function Iso({ h: h0, rot = 0, explode = false, onTap, onRotate, dark, gl
 
   const glassStroke = dark ? '#7dd3fc' : '#0ea5e9'
   return (
-    <svg ref={ref} viewBox={`${minX} ${minY} ${maxX - minX} ${maxY - minY}`} className="mx-auto block w-full select-none" style={{ touchAction: 'none', maxHeight }} role="img" aria-label={label}>
+    <svg ref={ref} viewBox={`${minX} ${minY} ${maxX - minX} ${maxY - minY}`} className="mx-auto block w-full select-none" style={{ touchAction: 'none', maxHeight: `min(${maxHeight}px, 52vh)` }} role="img" aria-label={label}>
       {floor}
       {glass && (
         <g pointerEvents="none">

@@ -82,7 +82,7 @@ export function ObtuseTask({ footer, onSolved, sol }: Common) {
     <Split
       work={
         <div className="mx-auto w-full max-w-[38rem] lg:max-w-[min(38rem,calc(100dvh-12rem))]">
-          <Plane initial={{ xMin: -2.5, xMax: 12.5, yMin: -1.5, yMax: 9.5 }} fixedStep={1} label="A ve B sabit, C köşesi sürüklenebilen üçgen">
+          <Plane initial={{ xMin: -2.5, xMax: 12.5, yMin: -3, yMax: 9.5 }} fixedStep={1} label="A ve B sabit, C köşesi sürüklenebilen üçgen">
             {phase === 'done' && <Thales />}
             <Poly pts={[A, B, C]} fill={KIND_COLOR[kind]} fillOpacity={0.18} stroke="#1f2340" strokeWidth={3} strokeLinejoin="round" />
             {kind === 'dik' ? <RightMark p={A} q={C} r={B} size={0.55} color="#16a34a" /> : <Arc at={C} from={A} to={B} color={KIND_COLOR[kind]} />}

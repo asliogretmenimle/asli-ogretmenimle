@@ -99,11 +99,18 @@ function FollowBox({ f, onPick }: { f: Follow; onPick: (i: number) => void }) {
   )
 }
 
-function Shell({ board, panel }: { board: ReactNode; panel: ReactNode }) {
+/** Yatay tablette tahta solda, panel sağda; dikeyde görev kartı tahtanın üstünde */
+function Shell({ board, panel, task }: { board: ReactNode; panel: ReactNode; task: ReactNode }) {
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-      <div className="min-w-0">{board}</div>
-      <aside className="flex min-w-0 flex-col gap-3">{panel}</aside>
+      <div className="min-w-0">
+        <div className="lg:hidden [&>div]:mb-3">{task}</div>
+        {board}
+      </div>
+      <aside className="flex min-w-0 flex-col gap-3">
+        <div className="hidden lg:block [&>div]:mb-0">{task}</div>
+        {panel}
+      </aside>
     </div>
   )
 }
@@ -494,7 +501,6 @@ function BoardMission({ m, grade, step, total, onDone }: { m: BM; grade: Grade; 
 
   const panel = (
     <>
-      <TaskCard step={step} total={total}>{m.prompt}</TaskCard>
       {m.kind === 'fill' && m.estimate && estimate === null && (
         <div className="rounded-2xl bg-white p-3 ring-1 ring-line">
           <p className="mb-2 text-sm font-black">{m.estimate.q}</p>
@@ -538,6 +544,7 @@ function BoardMission({ m, grade, step, total, onDone }: { m: BM; grade: Grade; 
     <Shell
       board={<Board kind={kind} world={geo.world} units={geo.units} frame={geo.frame} frameEdges={geo.edges} pieces={pieces} onPieces={onPieces} tray={m.tray} bad={an.bad} done={locked} under={under} overlay={overlay} staging={geo.staging} complete={an.complete && m.kind !== 'free'} />}
       panel={panel}
+      task={<TaskCard step={step} total={total}>{m.prompt}</TaskCard>}
     />
   )
 }
@@ -649,7 +656,6 @@ function LabMission({ m, grade, step, total, onDone }: { m: Extract<MMission, { 
 
   const panel = (
     <>
-      <TaskCard step={step} total={total}>{m.prompt}</TaskCard>
       <div className="rounded-2xl bg-white p-3 text-center ring-1 ring-line">
         <p className="text-xs font-black tracking-wide text-ink-soft uppercase">Köşedeki açılar</p>
         <p className={`text-xl font-black tabular-nums ${full ? 'text-emerald-700' : over ? 'text-rose-600' : ''}`}>
@@ -698,5 +704,5 @@ function LabMission({ m, grade, step, total, onDone }: { m: Extract<MMission, { 
       </div>
     </div>
   )
-  return <Shell board={board} panel={panel} />
+  return <Shell board={board} panel={panel} task={<TaskCard step={step} total={total}>{m.prompt}</TaskCard>} />
 }

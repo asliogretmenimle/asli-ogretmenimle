@@ -253,6 +253,7 @@ function WhichTask({ t, dark, footer, onSolved }: { t: Extract<Task, { kind: 'wh
   const [focus, setFocus] = useState(0)
   const [ans, setAns] = useState<(boolean | null)[]>(t.items.map(() => null))
   const [checked, setChecked] = useState<boolean[] | null>(null)
+  const [everChecked, setEverChecked] = useState(false)
   const [done, setDone] = useState(false)
   const [fb, setFb] = useState<{ text: string; mis?: string } | null>(null)
   const fold = useFold()
@@ -274,6 +275,7 @@ function WhichTask({ t, dark, footer, onSolved }: { t: Extract<Task, { kind: 'wh
   const check = () => {
     const res = t.items.map((it, i) => ans[i] === it.ok)
     setChecked(res)
+    setEverChecked(true)
     if (res.every(Boolean)) {
       setDone(true)
       setFb(null)
@@ -292,7 +294,7 @@ function WhichTask({ t, dark, footer, onSolved }: { t: Extract<Task, { kind: 'wh
     else setFb({ text: `Turuncu çerçeveli açınımı seç ve katla. Kapalı bir ${noun} oluşuyor mu? Alışık olmadığın biçimler de ${noun} olabilir.` })
   }
   const prep = preps[focus]
-  const canFold = checked !== null
+  const canFold = everChecked
   const folded = fold.t > 0.97
   return (
     <Split
@@ -302,7 +304,7 @@ function WhichTask({ t, dark, footer, onSolved }: { t: Extract<Task, { kind: 'wh
             <span className="pointer-events-none absolute top-3 left-3 rounded-full bg-pink-600 px-3 py-1 text-sm font-black text-white shadow">{String.fromCharCode(65 + focus)}</span>
           </FoldStage>
           {canFold ? <FoldControls {...fold} dark={dark} /> : <p className={`mt-2 text-center text-sm font-black ${dark ? 'text-slate-300' : 'text-ink-soft'}`}>Önce her açınım için tahmin et; sonra katlayarak kontrol edeceksin.</p>}
-          {folded && checked && (
+          {folded && everChecked && (
             <p className={`mt-2 rounded-xl px-3 py-2 text-center text-sm font-black ${colls[focus].length || !t.items[focus].ok ? 'bg-red-50 text-red-800' : 'bg-green-50 text-green-800'}`}>
               {t.items[focus].ok ? `${String.fromCharCode(65 + focus)}: kapandı, bu bir ${noun} açınımı.` : colls[focus].length ? `${String.fromCharCode(65 + focus)}: iki yüz üst üste geldi, ${noun} olmadı.` : `${String.fromCharCode(65 + focus)}: yüzler birbirine uymadı, boşluk kaldı.`}
             </p>
