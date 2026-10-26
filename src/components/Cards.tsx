@@ -15,7 +15,7 @@ export function ActivityCard({ a, grade, showTheme, step }: { a: Activity; grade
     >
       <span className="absolute inset-y-0 left-0 w-1.5" style={{ background: g.color }} aria-hidden />
       {step !== undefined && (
-        <span className="absolute top-3 right-3 grid size-6 place-items-center rounded-full text-[11px] font-black text-white" style={{ background: stageMeta[a.stage]?.color ?? g.color }} aria-label={`${step}. adım`}>{step}</span>
+        <span className="absolute top-3 right-3 grid size-6 place-items-center rounded-full text-[11px] font-black text-white" style={{ background: (a.stage && stageMeta[a.stage].color) || g.color }} aria-label={`${step}. adım`}>{step}</span>
       )}
       <div className="flex items-center justify-between gap-2">
         <span className="flex flex-wrap items-center gap-1">

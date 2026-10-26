@@ -244,11 +244,12 @@ interface ActivityBase {
   instructions: string
   /** 1: kolay, 2: orta, 3: zor */
   level?: 1 | 2 | 3
-  stage: Stage
+  /** İçerik geçişi bitene kadar opsiyonel; zorunluluğu `pnpm validate` denetler */
+  stage?: Stage
   /** Başlarken (Önce) */
-  launch: Launch
+  launch?: Launch
   /** Düşün ve Paylaş (Sonra): tek, açık uçlu soru */
-  reflect: string
+  reflect?: string
 }
 
 export interface QuizActivity extends ActivityBase {

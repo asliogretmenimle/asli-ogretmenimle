@@ -108,12 +108,12 @@ for (const [gStr, list] of Object.entries(activitiesByGrade)) {
     if (!a.title?.trim()) err(a, 'title boş')
     if (!a.instructions?.trim()) err(a, 'instructions boş')
     if (!a.outcomes?.length) err(a, 'outcomes boş')
-    if (!STAGES.includes(a.stage)) err(a, `stage şunlardan biri olmalı: ${STAGES.join(', ')}`)
+    if (!a.stage || !STAGES.includes(a.stage)) err(a, `stage şunlardan biri olmalı: ${STAGES.join(', ')}`)
     if (!a.launch?.text?.trim()) err(a, 'launch.text (Başlarken) boş')
     if (!a.reflect?.trim()) err(a, 'reflect (Düşün ve Paylaş) boş')
     for (const code of a.outcomes ?? []) {
       if (!stagesByOutcome.has(code)) stagesByOutcome.set(code, new Set())
-      stagesByOutcome.get(code)!.add(a.stage)
+      if (a.stage) stagesByOutcome.get(code)!.add(a.stage)
     }
     if (a.type === 'quiz' && a.anyCorrect) {
       const th = outcomeByCode.get(a.outcomes[0])?.theme

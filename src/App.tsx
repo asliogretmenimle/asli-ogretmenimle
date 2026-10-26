@@ -8,6 +8,7 @@ import NotFound from './pages/NotFound'
 const ThemePage = lazy(() => import('./pages/ThemePage'))
 const ActivityPage = lazy(() => import('./pages/ActivityPage'))
 const ManipulativesIndex = lazy(() => import('./pages/Manipulatives').then((m) => ({ default: m.ManipulativesIndex })))
+const Approach = lazy(() => import('./pages/Approach'))
 const ManipulativePage = lazy(() => import('./pages/Manipulatives').then((m) => ({ default: m.ManipulativePage })))
 
 function GradeRedirect() {
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="etkinlik/:id" element={<ActivityPage />} />
           <Route path="manipulatifler" element={<ManipulativesIndex />} />
           <Route path="manipulatif/:tool" element={<ManipulativePage />} />
+          <Route path="yaklasim" element={<Approach />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

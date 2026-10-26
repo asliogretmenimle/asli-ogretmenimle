@@ -76,7 +76,7 @@ export default function ThemePage() {
         {theme.outcomes.map((o) => {
           const list = forOutcome(all ?? [], o.code)
             .filter((a) => !seen.has(a.id))
-            .sort((x, y) => STAGE_ORDER.indexOf(x.stage) - STAGE_ORDER.indexOf(y.stage))
+            .sort((x, y) => STAGE_ORDER.indexOf(x.stage!) - STAGE_ORDER.indexOf(y.stage!))
           list.forEach((a) => seen.add(a.id))
           return (
             <section key={o.code}>

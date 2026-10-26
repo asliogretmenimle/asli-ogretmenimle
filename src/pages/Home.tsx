@@ -8,7 +8,8 @@ import { ActivityCard, ThemeHeader } from '../components/Cards'
 import { usePageTitle } from '../components/Layout'
 import { toolMeta as toolList } from '../manipulatives/meta'
 import { searchKey } from '../lib/format'
-import { typeMeta } from '../components/meta'
+import { stageMeta, typeMeta } from '../components/meta'
+import { STAGE_ORDER } from '../data/activityStore'
 
 const GRADE_KEY = 'ao-grade'
 
@@ -171,9 +172,13 @@ function GradeContent({ grade }: { grade: Grade }) {
   const all = useGradeActivities(grade)
   const total = all?.length ?? 0
   const [filter, setFilter] = useState<string>('all')
+  const [stage, setStage] = useState<string>('all')
   const types = useMemo(() => [...new Set((all ?? []).map((a) => a.type))], [all])
 
-  useEffect(() => setFilter('all'), [grade])
+  useEffect(() => {
+    setFilter('all')
+    setStage('all')
+  }, [grade])
 
   return (
     <section className="mx-auto mt-8 max-w-6xl px-4" key={grade}>
@@ -187,7 +192,17 @@ function GradeContent({ grade }: { grade: Grade }) {
       {/* Tema kısayolları + tür filtresi */}
       <div className="sticky top-16 z-20 -mx-4 mb-6 border-b border-line/60 bg-paper/90 px-4 py-2.5 backdrop-blur-md">
         <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
-          <button type="button" onClick={() => setFilter('all')} className={`chip shrink-0 px-3 py-1.5 text-sm ${filter === 'all' ? 'bg-ink text-white' : 'bg-white text-ink ring-1 ring-line'}`}>Hepsi</button>
+          <button type="button" onClick={() => { setFilter('all'); setStage('all') }} className={`chip shrink-0 px-3 py-1.5 text-sm ${filter === 'all' && stage === 'all' ? 'bg-ink text-white' : 'bg-white text-ink ring-1 ring-line'}`}>Hepsi</button>
+          {STAGE_ORDER.map((st) => {
+            const m = stageMeta[st]
+            const on = stage === st
+            return (
+              <button key={st} type="button" onClick={() => setStage(on ? 'all' : st)} className="chip shrink-0 border px-3 py-1.5 text-sm transition" style={{ background: on ? m.color : m.bg, color: on ? '#fff' : m.color, borderColor: `${m.color}40` }}>
+                <m.icon size={14} />{m.label}
+              </button>
+            )
+          })}
+          <span className="mx-1 w-px shrink-0 bg-line" />
           {types.map((t) => {
             const m = typeMeta[t]
             const on = filter === t
@@ -208,8 +223,8 @@ function GradeContent({ grade }: { grade: Grade }) {
       <div className={`space-y-10 ${all ? '' : 'hidden'}`}>
         {all && themes.map((t) => {
           const codes = t.outcomes.map((o) => o.code)
-          const list = all.filter((a) => a.outcomes.some((c) => codes.includes(c)) && activityTheme(a)?.slug === t.slug && (filter === 'all' || a.type === filter))
-          if (filter !== 'all' && list.length === 0) return null
+          const list = all.filter((a) => a.outcomes.some((c) => codes.includes(c)) && activityTheme(a)?.slug === t.slug && (filter === 'all' || a.type === filter) && (stage === 'all' || a.stage === stage))
+          if ((filter !== 'all' || stage !== 'all') && list.length === 0) return null
           return (
             <div key={t.slug} id={t.slug} className="scroll-mt-36">
               <ThemeHeader theme={t} count={list.length} linkTo={`/sinif/${grade}/${t.slug}`} />

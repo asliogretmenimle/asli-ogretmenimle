@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Blocks, Volume2, VolumeX } from 'lucide-react'
+import { Blocks, GraduationCap, Volume2, VolumeX } from 'lucide-react'
 import { setSound, soundOn } from '../lib/feedback'
 
 export function Logo({ small }: { small?: boolean }) {
@@ -50,7 +50,15 @@ export default function Layout() {
         <header className="sticky top-0 z-30 border-b border-line/70 bg-paper/85 backdrop-blur-md">
           <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
             <Logo />
-            <nav className="flex items-center gap-2">
+            <nav className="flex items-center gap-1 sm:gap-2">
+              <NavLink
+                to="/yaklasim"
+                className={({ isActive }) => `inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-extrabold transition ${isActive ? 'bg-brand text-white' : 'text-ink hover:bg-white'}`}
+                aria-label="Yaklaşımımız"
+              >
+                <GraduationCap size={18} />
+                <span className="hidden md:inline">Yaklaşımımız</span>
+              </NavLink>
               <NavLink
                 to="/manipulatifler"
                 className={({ isActive }) => `inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-extrabold transition ${isActive ? 'bg-brand text-white' : 'text-ink hover:bg-white'}`}
@@ -70,7 +78,7 @@ export default function Layout() {
         <footer className="mt-12 border-t border-line bg-white/60">
           <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-6 text-center text-sm text-ink-soft sm:flex-row sm:text-left">
             <p><span className="font-extrabold text-ink">Aslı Öğretmenimle</span> · 1–8. sınıf matematik etkinlikleri</p>
-            <p>Türkiye Yüzyılı Maarif Modeli öğretim programlarına uygun hazırlanmıştır.</p>
+            <p>Maarif Modeli öğretim programlarına uygun, Van de Walle’ün gelişimsel yaklaşımıyla hazırlanmıştır. <Link to="/yaklasim" className="font-extrabold text-brand hover:underline">Yaklaşımımız</Link></p>
           </div>
         </footer>
       )}
