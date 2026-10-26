@@ -239,7 +239,7 @@ export default function Battleship({ grade, onFinish }: GameProps) {
         </div>
       )}
       {over === 'out' && <p className="mt-3 text-center font-extrabold text-ink-soft">Atışların bitti! Kalan gemiler kesik çizgiyle gösterildi.</p>}
-      {over === 'win' && <p className="mt-3 text-center text-lg font-black text-green-700">Tüm filoyu batırdın! ⚓🎉</p>}
+      {over === 'win' && <p className="mt-3 text-center text-lg font-black text-ok">Tüm filoyu batırdın! ⚓🎉</p>}
     </div>
   )
 }

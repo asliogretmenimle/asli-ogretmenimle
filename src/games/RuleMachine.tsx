@@ -192,7 +192,7 @@ function MachineSvg({ color, feed, last }: { color: string; feed: { x: number; s
           <g transform="translate(36 34)" opacity={0.85}><Ball v={last.x} fill="#f97316" /></g>
           <path d="M60 34 h56" stroke="#f97316" strokeWidth={2} strokeDasharray="4 4" />
           <g key={`${last.x}`} transform="translate(292 168)">
-            <g style={spin} className="animate-pop"><Ball v={last.y} fill="#16a34a" /></g>
+            <g style={spin} className="animate-pop"><Ball v={last.y} fill="#db2777" /></g>
           </g>
         </>
       )}
@@ -376,7 +376,7 @@ export default function RuleMachine({ grade, onFinish }: GameProps) {
                 <tr key={k}>
                   <th className="sticky left-0 bg-white px-2 text-left text-xs font-extrabold text-ink-soft uppercase">{g === 8 ? k : k === 'x' ? 'Giren' : 'Çıkan'}</th>
                   {sorted.map((r) => (
-                    <td key={r.x} className={`min-w-11 rounded-lg px-2 py-1 text-lg font-black ${k === 'x' ? 'bg-orange-50 text-orange-700' : 'bg-green-50 text-green-700'} ${r.src === 'challenge' ? 'ring-2 ring-pink-300' : ''}`}>
+                    <td key={r.x} className={`min-w-11 rounded-lg px-2 py-1 text-lg font-black ${k === 'x' ? 'bg-orange-50 text-orange-700' : 'bg-pink-50 text-pink-700'} ${r.src === 'challenge' ? 'ring-2 ring-pink-300' : ''}`}>
                       {show(r[k])}
                     </td>
                   ))}

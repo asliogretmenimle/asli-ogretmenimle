@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
+import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { ArrowRight, Check } from 'lucide-react'
 import type { Grade } from '../data/types'
 import { gcd, pick, randInt } from '../lib/random'
 import { sfx } from '../lib/feedback'
 import { fmt } from '../lib/format'
 import { MathText } from '../components/MathText'
-import { Hud, signed, type GameProps } from './kit'
+import { Hud, signed, useWidth, type GameProps } from './kit'
 
 interface Item {
   /** MathText gösterimi: "37", "[[3/4]]", "√{50}" */
@@ -161,20 +161,6 @@ function makeItems(cfg: Cfg): Item[] {
   }
   while (out.length < ROUNDS) out.push(cfg.gen())
   return out
-}
-
-function useWidth<T extends HTMLElement>() {
-  const ref = useRef<T>(null)
-  const [w, setW] = useState(340)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const ro = new ResizeObserver(() => setW(el.clientWidth))
-    ro.observe(el)
-    setW(el.clientWidth)
-    return () => ro.disconnect()
-  }, [])
-  return [ref, w] as const
 }
 
 export default function NumberLineGuess({ grade, onFinish }: GameProps) {

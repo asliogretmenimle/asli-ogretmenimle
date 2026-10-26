@@ -79,6 +79,21 @@ export function useFrame(cb: (dt: number) => void, running: boolean) {
   }, [running])
 }
 
+/** Öğenin genişliğini izler (SVG çizimlerini ölçeklemek için) */
+export function useWidth<T extends HTMLElement>() {
+  const ref = useRef<T>(null)
+  const [w, setW] = useState(340)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const ro = new ResizeObserver(() => setW(el.clientWidth))
+    ro.observe(el)
+    setW(el.clientWidth)
+    return () => ro.disconnect()
+  }, [])
+  return [ref, w] as const
+}
+
 /** Kısa süre görünen geri bildirim balonu */
 export function Toast({ text, tone }: { text: string; tone: 'ok' | 'bad' | 'info' }) {
   const cls = tone === 'ok' ? 'bg-ok-soft text-green-800 ring-green-200' : tone === 'bad' ? 'bg-orange-50 text-orange-800 ring-orange-200' : 'bg-white text-ink ring-line'

@@ -1,10 +1,10 @@
-import { useEffect, useReducer, useRef, useState } from 'react'
+import { useReducer, useState } from 'react'
 import { ArrowRight, RotateCcw, Undo2 } from 'lucide-react'
 import type { Grade } from '../data/types'
 import { pick, randInt } from '../lib/random'
 import { sfx } from '../lib/feedback'
 import { fmt } from '../lib/format'
-import { Hud, Toast, starsFor, useFrame, type GameProps } from './kit'
+import { Hud, Toast, starsFor, useFrame, useWidth, type GameProps } from './kit'
 
 interface Level {
   max: number
@@ -106,20 +106,6 @@ const term = (c: number) => `${c > 0 ? '+' : '−'} ${fmt(Math.abs(c))}`
 const expr = (start: number, jumps: number[]) => [fmt(start), ...jumps.map(term)].join(' ')
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2)
 const hopHeight = (dx: number) => Math.min(58, Math.max(16, 12 + Math.abs(dx) * 0.35))
-
-function useWidth<T extends HTMLElement>() {
-  const ref = useRef<T>(null)
-  const [w, setW] = useState(340)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const ro = new ResizeObserver(() => setW(el.clientWidth))
-    ro.observe(el)
-    setW(el.clientWidth)
-    return () => ro.disconnect()
-  }, [])
-  return [ref, w] as const
-}
 
 function Pad({ x, r, fill = '#4ade80' }: { x: number; r: number; fill?: string }) {
   const k = 0.36

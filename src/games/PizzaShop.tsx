@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { ConciergeBell } from 'lucide-react'
 import type { Grade } from '../data/types'
-import { pick, randInt, shuffle } from '../lib/random'
+import { gcd, pick, randInt, shuffle } from '../lib/random'
 import { sfx } from '../lib/feedback'
 import { MathText } from '../components/MathText'
 import { Hud, starsFor, useCountdown, type GameProps } from './kit'
@@ -41,6 +41,9 @@ const WORDS: Record<string, { label: string; say: (t: string) => string }> = {
   '1/1': { label: 'bütün', say: (t) => `Bütün pizza ${t} olsun lütfen!` },
 }
 
+/** d ile aralarında asal 1..2d sayıları (sadeleşmiş kesirler için) */
+const coprime = (d: number) => Array.from({ length: 2 * d }, (_, i) => i + 1).filter((x) => gcd(x, d) === 1)
+
 function makeOrders(grade: Grade): Order[] {
   const tops = shuffle(TOPPINGS)
   const who = shuffle(CUSTOMERS)
@@ -56,7 +59,7 @@ function makeOrders(grade: Grade): Order[] {
   }
   if (grade === 3) {
     const units = shuffle([2, 3, 4, 6, 8]).slice(0, 3).map((d) => [1, d])
-    const proper = shuffle([3, 4, 6, 8]).slice(0, 3).map((d) => [randInt(2, d - 1), d])
+    const proper = shuffle([3, 4, 6, 8]).slice(0, 3).map((d) => [pick(coprime(d).filter((x) => x > 1 && x < d)), d])
     return [...units, ...proper].map(([num, den], i) => {
       const b = base(i)
       return { ...b, num, den, pizzas: 1, knives: [2, 3, 4, 6, 8], text: `Pizzanın ${frac(num, den)} kadarı ${b.topping.name} olsun lütfen!`, label: frac(num, den) }
@@ -79,11 +82,11 @@ function makeOrders(grade: Grade): Order[] {
     const b = base(i)
     const den = pick([2, 3, 4, 6, 8])
     if (form === 'mixed') {
-      const a = randInt(1, den - 1)
+      const a = pick(coprime(den).filter((x) => x < den))
       return { ...b, num: den + a, den, pizzas: 2, knives: [2, 3, 4, 6, 8, 10, 12], text: `[[1 ${a}/${den}]] pizza ${b.topping.name} olsun lütfen!`, label: `[[1 ${a}/${den}]]` }
     }
     if (form === 'improper') {
-      const num = randInt(den + 1, 2 * den - 1)
+      const num = den + pick(coprime(den).filter((x) => x < den))
       return { ...b, num, den, pizzas: 2, knives: [2, 3, 4, 6, 8, 10, 12], text: `${frac(num, den)} pizza ${b.topping.name} olsun lütfen!`, label: frac(num, den) }
     }
     let k = randInt(2, 2 * den - 1)
@@ -272,7 +275,7 @@ export default function PizzaShop({ grade, onFinish }: GameProps) {
           </div>
         </div>
         <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-line" role="progressbar" aria-label="Müşterinin sabrı" aria-valuenow={left} aria-valuemin={0} aria-valuemax={patience}>
-          <div className={`h-full rounded-full transition-all duration-1000 ease-linear ${ratio < 0.3 ? 'bg-rose-500' : ratio < 0.6 ? 'bg-amber-400' : 'bg-ok'}`} style={{ width: `${phase === 'order' ? ratio * 100 : phase === 'gone' ? 0 : ratio * 100}%` }} />
+          <div className={`h-full rounded-full transition-all duration-1000 ease-linear ${ratio < 0.3 ? 'bg-rose-500' : ratio < 0.6 ? 'bg-amber-400' : 'bg-sky-500'}`} style={{ width: `${phase === 'order' ? ratio * 100 : phase === 'gone' ? 0 : ratio * 100}%` }} />
         </div>
       </div>
 

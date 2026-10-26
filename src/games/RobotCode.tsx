@@ -169,7 +169,7 @@ export default function RobotCode({ grade, onFinish }: GameProps) {
   const maxScore = levels.reduce((s, l) => s + 15 + l.gems.length * 5 + (grade === 4 ? 3 : 0), 0)
   const unit = grade === 2 ? 'adım' : grade === 4 ? 'blok' : 'komut'
   const len = grade === 4 ? blockCount(prog) : expand(prog).length
-  const full = len >= (rel ? 16 : 20)
+  const full = len >= (rel ? 22 : 24)
   const running = !!run && run.i < run.t.frames.length - 1
 
   // Robotu kare kare yürüt

@@ -130,7 +130,7 @@ export const gameMeta: GameMeta[] = [
       3: 'Kodlama ile yol bulma',
       4: 'Tekrar eden komutlarla kodlama',
     },
-    howTo: ['Ok düğmeleriyle robotun komut listesini yaz.', '“Çalıştır”a bas ve robotu izle.', 'Engellere çarparsa programını düzelt. Yıldızları toplamayı unutma!'],
+    howTo: ['Ok düğmeleriyle robotun komut listesini yaz.', '“Çalıştır”a bas ve robotu izle.', 'Engellere çarparsa programını düzelt. Yolda elmasları toplamayı unutma!'],
   },
   {
     id: 'tahmin',

@@ -121,7 +121,7 @@ function countUp(from: number, to: number) {
   }
   marks.push(to)
   const parts = marks.slice(1).map((m, i) => m - marks[i])
-  return `${marks.map(short).join(' → ')}: ${parts.map(tl).join(' + ')} = ${tl(to - from)}`
+  return `${marks.map(short).join(' → ')}: ${parts.length > 1 ? `${parts.map(tl).join(' + ')} = ` : ''}${tl(to - from)}`
 }
 
 const insightFor = (grade: Grade) =>

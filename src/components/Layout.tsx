@@ -5,18 +5,18 @@ import { setSound, soundOn } from '../lib/feedback'
 
 export function Logo({ small }: { small?: boolean }) {
   return (
-    <Link to="/" className="flex items-center gap-2.5" aria-label="Aslı Öğretmenimle ana sayfa">
+    <Link to="/" className="flex min-w-0 items-center gap-2 sm:gap-2.5" aria-label="Aslı Öğretmenimle ana sayfa">
       <img
         src="/logo-96.png"
         srcSet="/logo-96.png 1x, /logo-192.png 2x"
         alt=""
         width={small ? 36 : 44}
         height={small ? 36 : 44}
-        className={`shrink-0 drop-shadow-sm ${small ? 'size-9' : 'size-11'}`}
+        className={`shrink-0 drop-shadow-sm ${small ? 'size-9' : 'size-10 sm:size-11'}`}
       />
       <span className="leading-none">
-        <span className={`block font-black tracking-tight text-ink ${small ? 'text-base' : 'text-lg sm:text-xl'}`}>Aslı Öğretmenimle</span>
-        {!small && <span className="mt-0.5 block text-[11px] font-bold text-ink-soft sm:text-xs">Matematik oyunla öğrenilir</span>}
+        <span className={`block font-black tracking-tight whitespace-nowrap text-ink ${small ? 'text-base' : 'text-base sm:text-xl'}`}>Aslı Öğretmenimle</span>
+        {!small && <span className="mt-0.5 hidden text-xs font-bold text-ink-soft sm:block">Matematik oyunla öğrenilir</span>}
       </span>
     </Link>
   )
@@ -48,12 +48,12 @@ export default function Layout() {
     <div className="flex min-h-dvh flex-col">
       {!focusMode && (
         <header className="sticky top-0 z-30 border-b border-line/70 bg-paper/85 backdrop-blur-md">
-          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
+          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-4">
             <Logo />
             <nav className="flex items-center gap-1 sm:gap-2">
               <NavLink
                 to="/yaklasim"
-                className={({ isActive }) => `inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-extrabold transition ${isActive ? 'bg-brand text-white' : 'text-ink hover:bg-white'}`}
+                className={({ isActive }) => `inline-flex min-h-10 items-center gap-1.5 rounded-xl px-2 text-sm font-extrabold transition sm:px-3 ${isActive ? 'bg-brand text-white' : 'text-ink hover:bg-white'}`}
                 aria-label="Yaklaşımımız"
               >
                 <GraduationCap size={18} />
@@ -61,17 +61,19 @@ export default function Layout() {
               </NavLink>
               <NavLink
                 to="/oyunlar"
-                className={({ isActive }) => `inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-extrabold transition ${isActive ? 'bg-brand text-white' : 'text-ink hover:bg-white'}`}
+                aria-label="Oyunlar"
+                className={({ isActive }) => `inline-flex min-h-10 items-center gap-1.5 rounded-xl px-2 text-sm font-extrabold transition sm:px-3 ${isActive ? 'bg-brand text-white' : 'text-ink hover:bg-white'}`}
               >
                 <Gamepad2 size={18} />
-                <span className="hidden sm:inline">Oyunlar</span>
+                <span className="hidden md:inline">Oyunlar</span>
               </NavLink>
               <NavLink
                 to="/manipulatifler"
-                className={({ isActive }) => `inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-extrabold transition ${isActive ? 'bg-brand text-white' : 'text-ink hover:bg-white'}`}
+                aria-label="Manipülatifler"
+                className={({ isActive }) => `inline-flex min-h-10 items-center gap-1.5 rounded-xl px-2 text-sm font-extrabold transition sm:px-3 ${isActive ? 'bg-brand text-white' : 'text-ink hover:bg-white'}`}
               >
                 <Blocks size={18} />
-                <span className="hidden sm:inline">Manipülatifler</span>
+                <span className="hidden md:inline">Manipülatifler</span>
               </NavLink>
               <SoundToggle />
             </nav>

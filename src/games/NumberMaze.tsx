@@ -160,7 +160,7 @@ function rulesFor(grade: Grade): Rule[] {
 /** Sol üstten sağ alta, kendine değmeyen rastgele yol */
 function makePath(n: number): Pt[] {
   const minLen = 2 * n + 1
-  const maxLen = Math.floor(n * n * 0.6)
+  const maxLen = Math.floor(n * n * 0.52)
   for (let tries = 0; tries < 200; tries++) {
     let budget = 4000
     const path: Pt[] = [[0, 0]]

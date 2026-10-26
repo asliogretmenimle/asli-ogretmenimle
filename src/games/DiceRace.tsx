@@ -55,7 +55,7 @@ function makeQuestions(grade: Grade, all: number[]): Question[] {
     const s = pick([3, 4, 5, 6])
     return [
       {
-        text: `${x} numaralı at mı, ${y} numaralı at mı kazanmaya daha yakın?`,
+        text: `Hangisinin kazanma olasılığı daha yüksek: ${x} numaralı at mı, ${y} numaralı at mı?`,
         options: opts(`${x} numaralı at`, [`${y} numaralı at`, 'İkisi eşit olası']),
         explain: `${x} toplamı ${ways(x)} farklı şekilde gelir (${pairs(x)}). ${y} ise yalnızca ${ways(y)} şekilde gelir (${pairs(y)}). Bu yüzden ${x} daha olası.`,
         grid: x,
@@ -398,7 +398,7 @@ export default function DiceRace({ grade, onFinish }: GameProps) {
               disabled={s.phase !== 'bet'}
               aria-pressed={isBet}
               aria-label={`${h} numaralı at, ${p} adım`}
-              className={`flex h-11 w-full items-center gap-2 rounded-xl px-1.5 ring-1 transition disabled:cursor-default ${won ? 'bg-ok-soft ring-ok' : isBet ? 'bg-amber-50 ring-amber-400' : moved ? 'bg-sky-50 ring-sky-200' : 'bg-white ring-line'}`}
+              className={`flex h-11 w-full items-center gap-2 rounded-xl px-1.5 ring-1 transition disabled:cursor-default ${won ? 'bg-yellow-100 ring-2 ring-yellow-400' : isBet ? 'bg-amber-50 ring-amber-400' : moved ? 'bg-sky-50 ring-sky-200' : 'bg-white ring-line'}`}
             >
               <span className="grid size-8 shrink-0 place-items-center rounded-full text-sm font-black text-white" style={{ background: COLORS[h] }}>{h}</span>
               <span className="relative h-full flex-1">
