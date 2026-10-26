@@ -264,12 +264,15 @@ function VesselArt({ v, p, amt, selected, tilt, pivotRight, prediction, badge, h
           <g pointerEvents="none">
             <rect x={-8} y={-h - 12} width={w + 16} height={11} rx={4} fill="url(#sm-steel)" />
             <rect x={-8} y={2} width={w + 16} height={11} rx={4} fill="url(#sm-steel)" />
-            {Array.from({ length: Math.max(2, Math.floor(w / 26)) }, (_, i, a) => (
-              <g key={i}>
-                <circle cx={-2 + ((w + 4) * (i + 0.5)) / a.length} cy={-h - 6.5} r={1.8} fill="#334155" />
-                <circle cx={-2 + ((w + 4) * (i + 0.5)) / a.length} cy={7.5} r={1.8} fill="#334155" />
-              </g>
-            ))}
+            {Array.from({ length: Math.max(2, Math.floor(w / 26)) }, (_, i) => {
+              const x = -2 + ((w + 4) * (i + 0.5)) / Math.max(2, Math.floor(w / 26))
+              return (
+                <g key={i}>
+                  <circle cx={x} cy={-h - 6.5} r={1.8} fill="#334155" />
+                  <circle cx={x} cy={7.5} r={1.8} fill="#334155" />
+                </g>
+              )
+            })}
           </g>
         )}
         {!steel && <rect x={-6} y={-h - 9} width={w + 12} height={7} rx={3.5} fill={color} opacity=".9" pointerEvents="none" />}
@@ -314,6 +317,7 @@ export interface WorksProps {
   anim: Anim | null
   /** Musluğu açık olan kaplar (akış çizgisi) */
   flowing?: string[]
+  draining?: string
   selected?: string | null
   drain?: boolean
   canDrag?: (id: string) => boolean
@@ -335,7 +339,7 @@ export interface WorksProps {
 }
 
 export function Works(props: WorksProps) {
-  const { vessels, amounts, anim, flowing = [], selected, drain = false, canDrag, predictions, badges, hideMarks, readout, dim, gauge = 0, label, big = false } = props
+  const { vessels, amounts, anim, flowing = [], draining, selected, drain = false, canDrag, predictions, badges, hideMarks, readout, dim, gauge = 0, label, big = false } = props
   const svgRef = useRef<SVGSVGElement>(null)
   const places = layout(vessels, drain)
   const P = (id: string) => places.find((p) => p.id === id)!
@@ -430,6 +434,10 @@ export function Works(props: WorksProps) {
     const p = P(anim.id)
     if (anim.t < 0.9) streams.push(<path key="sd" d={`M${p.x + p.w / 2} ${p.y + 10} Q${(p.x + p.w / 2 + 744) / 2} ${p.y + 10} 744 ${FLOOR + 18}`} stroke="#38bdf8" strokeWidth="8" fill="none" strokeLinecap="round" opacity=".85" strokeDasharray="14 8"><animate attributeName="stroke-dashoffset" from="44" to="0" dur=".4s" repeatCount="indefinite" /></path>)
   }
+  if (draining) {
+    const p = P(draining)
+    streams.push(<path key="sh" d={`M${p.x + p.w / 2} ${p.y + 10} Q${(p.x + p.w / 2 + 744) / 2} ${p.y + 10} 744 ${FLOOR + 18}`} stroke="#38bdf8" strokeWidth="8" fill="none" strokeLinecap="round" opacity=".85" strokeDasharray="14 8"><animate attributeName="stroke-dashoffset" from="44" to="0" dur=".4s" repeatCount="indefinite" /></path>)
+  }
   const pose = anim?.kind === 'pour' ? pourPose(anim.from) : null
   if (pose && anim?.kind === 'pour' && anim.t > 0.4 && anim.t < 0.8) {
     const b = P(anim.to)
@@ -469,7 +477,7 @@ export function Works(props: WorksProps) {
           />
         )
       })}
-      {drain && <Drain active={anim?.kind === 'drain'} hot={drag?.over === 'drain'} />}
+      {drain && <Drain active={draining !== undefined || anim?.kind === 'drain'} hot={drag?.over === 'drain'} />}
       {streams}
       {ordered.map((v) => {
         const p = P(v.id)

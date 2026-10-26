@@ -251,6 +251,7 @@ function FillView({ level, grade, step, total, onDone, onCarry }: ViewProps & { 
       amounts={w.amounts}
       anim={w.anim}
       flowing={filling ? [level.tank.id] : []}
+      draining={draining ? level.tank.id : undefined}
       drain
       big={big}
       gauge={tank.amt / cap}

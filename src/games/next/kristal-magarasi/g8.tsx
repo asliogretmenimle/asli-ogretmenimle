@@ -5,7 +5,7 @@ import { MathText } from '../../../components/MathText'
 import { DragPoint, Plane, usePlane } from '../../../interactive/Plane'
 import { ek } from '../../../lib/generators'
 import type { Ctl, MissionDef } from './mission'
-import { CaveBox, Chip, Gem, GemCanvas, GEMS, Label, NumPad, Pick, Readout, Stepper, darkBtn, gemBtn, nf, padNum, type GemName } from './ui'
+import { CaveBox, Chip, Gem, GemCanvas, GEMS, Label, NumPad, Pick, Readout, Stepper, darkBtn, gemBtn, nf, padNum } from './ui'
 import { pick, useTask } from './shared'
 
 /** SVG içinde üslü yazı: 2³ */
