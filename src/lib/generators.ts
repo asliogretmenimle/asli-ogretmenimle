@@ -140,7 +140,7 @@ export const generators = {
       return {
         text: seq.map((v, i) => (idx.includes(i) ? '__' : fmt(v))).join(', '),
         answers: idx.map((i) => String(seq[i])),
-        hint: `${s}'er ${down ? 'geriye' : 'ileriye'} say.`,
+        hint: `${ek(s, 'dist')} ${down ? 'geriye' : 'ileriye'} say.`,
       }
     }, (x) => x.text)
   }),
@@ -710,6 +710,191 @@ export const generators = {
     }, (x) => x.text)
   }),
 
+  // ─── Van de Walle: strateji ve sayı duyusu üreteçleri ──────────────────
+
+  /** 10'a tamamlama stratejisi (8 + 5 = 10 + 3). params: split=false (ara adımı da sor) */
+  makeTen: fill('10’a tamamla', (p, count) => {
+    const split = bool(p, 'split', false)
+    return unique(count, () => {
+      const a = randInt(6, 9), b = randInt(11 - a, 9)
+      const r = a + b
+      const visual: Visual = { kind: 'tenframe', filled: a, add: b, size: 20 }
+      const hints = [`${ek(a, 'acc')} 10’a tamamlamak için kaç gerekir?`, `${ek(b, 'abl')} ${10 - a} tanesini ${ek(a, 'dat')} ver. Geriye kaç kaldı?`]
+      const explain = `${a} + ${b} = ${a} + ${10 - a} + ${b - (10 - a)} = 10 + ${r - 10} = ${r}`
+      if (split) return { text: `${a} + ${b} = 10 + __ = __`, answers: [String(r - 10), String(r)], visual, hints, explain }
+      return { text: `${a} + ${b} = __`, answers: [String(r)], visual, hints, explain }
+    }, (x) => x.text)
+  }),
+
+  /** İkizler ve ikizlere yakın toplamlar. params: max=10, near=true */
+  doubles: fill('İkizler ve ikizlere yakın', (p, count) => {
+    const max = num(p, 'max', 10), near = bool(p, 'near', true)
+    return unique(count, () => {
+      const a = randInt(2, max)
+      const isNear = near && Math.random() < 0.6
+      const b = isNear ? a + (Math.random() < 0.5 ? 1 : -1) : a
+      const visual: Visual = { kind: 'emojiGroups', groups: [{ emoji: '🔵', count: a }, { emoji: isNear ? '🟠' : '🔵', count: b }], separator: '+' }
+      if (!isNear) return { text: `${a} + ${a} = __`, answers: [String(2 * a)], visual, hints: ['İkizler! Aynı sayıyı iki kez topluyoruz.', `${ek(a, 'gen')} iki katı kaçtır?`] }
+      const small = Math.min(a, b)
+      return {
+        text: `${a} + ${b} = __`,
+        answers: [String(a + b)],
+        visual,
+        hints: [`${small} + ${small} kaç eder?`, `Sonuca 1 ekle.`],
+        explain: `${small} + ${small} = ${2 * small}, bir fazlası ${a + b}.`,
+      }
+    }, (x) => x.text)
+  }),
+
+  /** Çıkarmada "toplamayı düşün" (13 − 8 → 8 + ? = 13). params: maxWhole=18 */
+  thinkAddition: fill('Toplamayı düşünerek çıkar', (p, count) => {
+    const maxW = num(p, 'maxWhole', 18)
+    return unique(count, () => {
+      const b = randInt(3, 9), a = randInt(Math.max(b + 2, 11), Math.min(maxW, b + 9))
+      return {
+        text: `${a} − ${b} = __`,
+        answers: [String(a - b)],
+        visual: { kind: 'tape', parts: [{ label: String(b), value: b }, { label: '?', value: a - b }], total: String(a) } as Visual,
+        hints: [`${ek(b, 'dat')} kaç eklersen ${a} olur?`, `Önce ${ek(b, 'abl')} 10’a, sonra 10’dan ${ek(a, 'dat')} kaç adım var?`],
+        explain: `${b} + ${a - b} = ${a} olduğu için ${a} − ${b} = ${a - b}.`,
+      }
+    }, (x) => x.text)
+  }),
+
+  /** Çarpmada türetilmiş stratejiler (dizi modeliyle). params: tables=[2..9] */
+  multStrategy: fill('Çarpma stratejileri', (p, count) => {
+    const tables = arr<number>(p, 'tables', [2, 3, 4, 5, 6, 7, 8, 9])
+    const tip: Record<number, (b: number) => [string, string]> = {
+      2: (b) => [`İkizler: ${b} + ${b} kaç eder?`, `${ek(b, 'gen')} iki katı`],
+      3: (b) => [`Önce 2 × ${ek(b, 'acc')} bul, sonra bir ${b} daha ekle.`, `2 × ${b} = ${2 * b}`],
+      4: (b) => [`İki katının iki katı: 2 × ${b} = ${2 * b}. Bunun iki katı?`, `${2 * b} + ${2 * b}`],
+      5: (b) => [`10 × ${ek(b, 'gen')} yarısı kaçtır?`, `Saat yelkovanı gibi 5’er say.`],
+      6: (b) => [`5 × ${b} = ${5 * b}. Bir ${b} daha ekle.`, `${5 * b} + ${b}`],
+      7: (b) => [`5 × ${b} ile 2 × ${ek(b, 'acc')} topla.`, `${5 * b} + ${2 * b}`],
+      8: (b) => [`4 × ${ek(b, 'gen')} iki katı.`, `4 × ${b} = ${4 * b}`],
+      9: (b) => [`10 × ${b} = ${10 * b}. Bir ${b} çıkar.`, `${10 * b} − ${b}`],
+    }
+    return unique(count, () => {
+      const a = pick(tables), b = randInt(2, 9)
+      const split = a === 6 || a === 7 ? 5 : a === 3 ? 2 : undefined
+      return {
+        text: `${a} × ${b} = __`,
+        answers: [String(a * b)],
+        visual: { kind: 'array', rows: a, cols: b, splitRow: split } as Visual,
+        hints: (tip[a] ?? ((x: number) => [`${a} tane ${ek(x, 'acc')} topla.`, '']))(b).filter(Boolean),
+      }
+    }, (x) => x.text)
+  }),
+
+  /** Şipşak sayma (hızlı bakış). params: min=1, max=10, arrangement='mix'|'dice'|'five'|'scatter', flash=1500 */
+  subitize: quiz('Hızlı bakış: kaç nokta?', (p, count) => {
+    const min = num(p, 'min', 1), max = num(p, 'max', 10), ms = num(p, 'flash', 1500), arrP = str(p, 'arrangement', 'mix')
+    return unique(count, () => {
+      const n = randInt(min, max)
+      const arrangement = (arrP === 'mix' ? pick(n <= 6 ? ['dice', 'five', 'scatter'] : ['five', 'five', 'scatter']) : arrP) as 'dice' | 'five' | 'scatter'
+      const opts = shuffle([...new Set([n, n + 1, Math.max(1, n - 1), n + 2])]).slice(0, 4)
+      if (!opts.includes(n)) opts[0] = n
+      const list = shuffle(opts)
+      return {
+        prompt: { text: 'Kaç nokta gördün?', visual: { kind: 'dots', count: n, arrangement } },
+        choices: list.map(String),
+        answer: list.indexOf(n),
+        flash: ms,
+        explain: n > 5 ? `${n} = 5 + ${n - 5}. 5’li grubu görmek saymayı hızlandırır.` : undefined,
+      }
+    }, (q) => JSON.stringify(q.prompt) + q.choices.join())
+  }),
+
+  /** Saklı parça (parça-parça-bütün). params: min=4, max=10, emoji */
+  hiddenPart: fill('Bardağın altında kaç tane?', (p, count) => {
+    const min = num(p, 'min', 4), max = num(p, 'max', 10), emoji = str(p, 'emoji', '🔵')
+    return unique(count, () => {
+      const t = randInt(min, max), h = randInt(1, t - 1)
+      return {
+        text: `Toplam ${t} tane var. Bardağın altında __ tane saklı.`,
+        answers: [String(h)],
+        visual: { kind: 'hidden', shown: t - h, emoji, total: t } as Visual,
+        hints: [`Kaç tane görüyorsun?`, `${ek(t - h, 'abl')} ${ek(t, 'dat')} kaç eksik?`],
+        explain: `${t - h} + ${h} = ${t}`,
+      }
+    }, (x) => x.text)
+  }),
+
+  /** Esnek basamak değeri: "3 onluk 14 birlik = __", "52 = 4 onluk __ birlik". params: hundreds=false */
+  placeFlex: fill('Esnek basamak değeri', (p, count) => {
+    const H = bool(p, 'hundreds', false)
+    return unique(count, () => {
+      if (H && Math.random() < 0.5) {
+        const h = randInt(2, 8), t = randInt(10, 19), o = randInt(0, 9)
+        return { text: `${h} yüzlük ${t} onluk ${o} birlik = __`, answers: [String(h * 100 + t * 10 + o)], hints: ['10 onluk kaç yüzlük eder?'], visual: { kind: 'blocks', hundreds: h, tens: t, ones: o } as Visual }
+      }
+      const t = randInt(2, 8), o = randInt(10, 19)
+      if (Math.random() < 0.5) return { text: `${t} onluk ${o} birlik = __`, answers: [String(t * 10 + o)], hints: ['10 birlik kaç onluk eder?'], visual: { kind: 'blocks', tens: t, ones: Math.min(o, 19) } as Visual }
+      const n = t * 10 + o
+      return { text: `${n} = ${t} onluk __ birlik`, answers: [String(o)], hints: [`${t} onluk kaç eder? ${ek(n, 'dat')} ulaşmak için kaç birlik gerekir?`], explain: `${t} onluk = ${t * 10}; ${n} − ${t * 10} = ${o}` }
+    }, (x) => x.text)
+  }),
+
+  /** Kesrin 0, ½ ve 1 referanslarından hangisine yakın olduğu (activity'de fixedOrder: true kullanın). params: dens */
+  benchmark: quiz('0’a mı, yarıma mı, 1’e mi yakın?', (p, count) => {
+    const dens = arr<number>(p, 'dens', [5, 6, 8, 10, 12])
+    return unique(count, () => {
+      let nu = 1, d = 8
+      for (let k = 0; k < 50; k++) {
+        d = pick(dens); nu = randInt(1, d - 1)
+        const v = nu / d
+        const dist = [v, Math.abs(v - 0.5), 1 - v].sort((x, y) => x - y)
+        if (dist[1] - dist[0] > 0.05) break
+      }
+      const v = nu / d
+      const ds = [v, Math.abs(v - 0.5), 1 - v]
+      const ans = ds.indexOf(Math.min(...ds))
+      const half = d / 2
+      return {
+        prompt: { text: `[[${nu}/${d}]] hangisine daha yakın?`, visual: { kind: 'fraction', num: nu, den: d, shape: 'bar' } },
+        choices: ['0', '[[1/2]]', '1'],
+        answer: ans,
+        explain: `${d} parçanın yarısı ${fmt(half)} parça eder. ${nu} parça ${nu < half ? 'yarımdan az' : nu > half ? 'yarımdan fazla' : 'tam yarım'}.`,
+        feedback: [0, 1, 2].map((i) => (i === ans ? null : i === 1 ? Number.isInteger(half) ? `Yarım = [[${half}/${d}]]. ${nu} parça buna ne kadar uzak?` : `${d} parçanın yarısı ${fmt(half)} parça. ${nu} parça buna ne kadar uzak?` : i === 0 ? 'Boyalı kısım neredeyse hiç yok mu? Modele tekrar bak.' : 'Bütüne ne kadar kaldı? Boş parçaları say.')),
+      }
+    }, (q) => JSON.stringify(q.prompt))
+  }),
+
+  /** Sayı doğrusunda kesir (uzunluk modeli). params: dens=[2,3,4,5,6,8], improper=false */
+  fractionOnLine: quiz('Sayı doğrusunda kesir', (p, count) => {
+    const dens = arr<number>(p, 'dens', [2, 3, 4, 5, 6, 8]), improper = bool(p, 'improper', false)
+    return unique(count, () => {
+      const d = pick(dens), max = improper ? 2 : 1
+      const k = randInt(1, d * max - 1)
+      if (k % d === 0) return null as unknown as QuizQuestion
+      const correct = `[[${k}/${d}]]`
+      const wrong = [`[[${k}/${d * max === d ? d + 1 : d * max}]]`, `[[${d}/${k}]]`, `[[${k + 1}/${d}]]`, `[[${k}/${d * 2}]]`].filter((w) => w !== correct)
+      const list = shuffle([correct, ...[...new Set(wrong)].slice(0, 3)])
+      return {
+        prompt: { text: 'Nokta hangi kesri gösteriyor?', visual: { kind: 'numberline', min: 0, max, step: 1 / d, points: [k / d], labels: false, integerLabels: true } as Visual },
+        choices: list,
+        answer: list.indexOf(correct),
+        explain: `0 ile 1 arası ${d} eş parçaya bölünmüş. Nokta 0’dan ${k} parça ilerde: [[${k}/${d}]].`,
+        feedback: list.map((c) => (c === correct ? null : c === `[[${d}/${k}]]` ? 'Pay ve paydanın yeri karışmış olabilir: payda, bütünün kaç eş parçaya bölündüğünü söyler.' : c.includes(`/${d * 2}]]`) || c.includes(`/${d + 1}]]`) ? 'Çentikleri değil, aralıkları say: 0 ile 1 arasında kaç eş parça var?' : 'Noktaya kadar kaç parça ilerlediğini tekrar say.')),
+      }
+    }, (q) => (q ? JSON.stringify(q.prompt) : `x${Math.random()}`)).filter(Boolean)
+  }),
+
+  /** Telafi stratejisi: 49 + 26 = 50 + __ ; 83 − 29 = 84 − __. params: hundreds=false */
+  compensation: fill('Telafi stratejisi', (p, count) => {
+    const H = bool(p, 'hundreds', false)
+    return unique(count, () => {
+      const base = H ? pick([100, 200, 300, 400, 500]) : pick([20, 30, 40, 50, 60, 70, 80, 90])
+      const off = pick([1, 2])
+      const a = base - off, b = randInt(H ? 21 : 12, H ? 99 : 39)
+      if (Math.random() < 0.5) {
+        return { text: `${a} + ${b} = ${base} + __ = __`, answers: [String(b - off), String(a + b)], hints: [`${ek(a, 'acc')} ${base} yapmak için ${ek(b, 'abl')} ${off} ödünç al.`], explain: `${a} + ${b} = (${a} + ${off}) + (${b} − ${off}) = ${base} + ${b - off}` }
+      }
+      const c = b + base
+      return { text: `${c} − ${a} = ${c + off} − __ = __`, answers: [String(base), String(c - a)], hints: [`İki sayıya da ${off} eklersen fark değişmez.`], explain: `${c} − ${a} = (${c} + ${off}) − (${a} + ${off}) = ${c + off} − ${base}` }
+    }, (x) => x.text)
+  }),
+
   /** Çok basamaklı sayı okunuşu ↔ yazılışı eşleştirme. params: digits=7 */
   numberWords: match('Sayıların okunuşu', (p, count) => {
     const d = num(p, 'digits', 4)
@@ -749,23 +934,37 @@ export function numberToWords(n: number): string {
 
 const lastVowel = (w: string) => [...w].reverse().find((c) => 'aıoueiöü'.includes(c)) ?? 'e'
 const endsWithVowel = (w: string) => 'aıoueiöü'.includes(w[w.length - 1])
+const hardEnd = (w: string) => 'çfhkpsşt'.includes(w[w.length - 1])
 const lastWord = (n: number) => numberToWords(Math.abs(n)).split(' ').pop() ?? ''
 
-/** Tamlayan eki: 20 → "20'nin", 40 → "40'ın", 100 → "100'ün" */
-export function gen(n: number): string {
+/**
+ * Sayılara Türkçe hâl eki: ek(9, 'acc') → "9’u", ek(7, 'dat') → "7’ye", ek(3, 'abl') → "3’ten", ek(20, 'gen') → "20’nin"
+ * acc: belirtme (-ı), dat: yönelme (-a), abl: ayrılma (-dan), loc: bulunma (-da), gen: tamlayan (-ın), poss: iyelik (-ı, yalnız ek), dist: üleştirme (-er)
+ */
+export function ek(n: number, kind: 'acc' | 'dat' | 'abl' | 'loc' | 'gen' | 'poss' | 'dist', withNumber = true): string {
   const w = lastWord(n)
   const v = lastVowel(w)
-  const vowel = 'aı'.includes(v) ? 'ı' : 'ei'.includes(v) ? 'i' : 'ou'.includes(v) ? 'u' : 'ü'
-  return `${fmt(n)}'${endsWithVowel(w) ? 'n' : ''}${vowel}n`
+  const back = 'aıou'.includes(v)
+  const i4 = 'aı'.includes(v) ? 'ı' : 'ei'.includes(v) ? 'i' : 'ou'.includes(v) ? 'u' : 'ü'
+  const a2 = back ? 'a' : 'e'
+  const vowelEnd = endsWithVowel(w)
+  const d = hardEnd(w) ? 't' : 'd'
+  const suffix = {
+    acc: (vowelEnd ? 'y' : '') + i4,
+    dat: (vowelEnd ? 'y' : '') + a2,
+    abl: d + a2 + 'n',
+    loc: d + a2,
+    gen: (vowelEnd ? 'n' : '') + i4 + 'n',
+    poss: (vowelEnd ? 's' : '') + i4,
+    dist: (vowelEnd ? 'ş' : '') + a2 + 'r',
+  }[kind]
+  return `${withNumber ? fmt(n) : ''}’${suffix}`
 }
 
-/** İyelik eki (3. tekil): 25 → "'i", 50 → "'si", 10 → "'u" */
-export function poss(n: number): string {
-  const w = lastWord(n)
-  const v = lastVowel(w)
-  const vowel = 'aı'.includes(v) ? 'ı' : 'ei'.includes(v) ? 'i' : 'ou'.includes(v) ? 'u' : 'ü'
-  return `'${endsWithVowel(w) ? 's' : ''}${vowel}`
-}
+/** Tamlayan eki: 20 → "20’nin" */
+export const gen = (n: number) => ek(n, 'gen')
+/** İyelik eki (yalnız ek): 50 → "’si" */
+export const poss = (n: number) => ek(n, 'poss', false)
 
 export function runGenerator(id: string, params: Record<string, unknown> = {}, count = 8): unknown[] {
   const g = (generators as Record<string, Gen<unknown>>)[id]

@@ -70,7 +70,7 @@ export default function Quiz({ activity, onProgress, onFinish }: EngineProps<Qui
               disabled={status !== 'idle'}
               className={`relative flex min-h-16 items-center justify-center rounded-2xl border-2 px-4 py-3 text-lg font-extrabold transition sm:text-xl ${
                 state === 'idle'
-                  ? 'border-line bg-white shadow-[0_3px_0_var(--color-line)] hover:border-brand hover:bg-indigo-50 active:translate-y-[2px] active:shadow-none'
+                  ? 'border-line bg-white shadow-[0_3px_0_var(--color-line)] hover:border-brand hover:bg-brand-soft active:translate-y-[2px] active:shadow-none'
                   : state === 'right'
                     ? 'border-ok bg-ok-soft text-green-800 animate-pop'
                     : state === 'wrong'

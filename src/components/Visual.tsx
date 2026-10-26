@@ -6,8 +6,8 @@ const C = {
   ink: '#1f2340',
   soft: '#8a8fb0',
   line: '#d9dbea',
-  fill: '#6366f1',
-  fillSoft: '#e0e7ff',
+  fill: '#3f8a4f',
+  fillSoft: '#dcefdc',
   orange: '#f97316',
   green: '#22c55e',
   yellow: '#facc15',
@@ -38,7 +38,15 @@ function render(v: Visual): ReactNode {
         </div>
       )
     case 'tenframe':
-      return <TenFrameSvg filled={v.filled} size={v.size ?? 10} />
+      return <TenFrameSvg filled={v.filled} add={v.add} size={v.size ?? ((v.filled + (v.add ?? 0)) > 10 ? 20 : 10)} />
+    case 'dots':
+      return <DotsSvg count={v.count} arrangement={v.arrangement ?? 'dice'} color={v.color} />
+    case 'array':
+      return <ArraySvg rows={v.rows} cols={v.cols} emoji={v.emoji} splitCol={v.splitCol} splitRow={v.splitRow} />
+    case 'tape':
+      return <TapeSvg parts={v.parts} total={v.total} compare={v.compare} />
+    case 'hidden':
+      return <HiddenSvg shown={v.shown} emoji={v.emoji ?? '🔵'} total={v.total} />
     case 'blocks':
       return <BlocksSvg {...v} />
     case 'fraction':
@@ -62,7 +70,7 @@ function render(v: Visual): ReactNode {
         <div className="overflow-x-auto">
           <table className="mx-auto min-w-[200px] border-collapse overflow-hidden rounded-xl text-sm">
             <thead>
-              <tr>{v.headers.map((h, i) => <th key={i} className="border border-line bg-indigo-50 px-3 py-1.5 font-extrabold">{h}</th>)}</tr>
+              <tr>{v.headers.map((h, i) => <th key={i} className="border border-line bg-brand-soft px-3 py-1.5 font-extrabold">{h}</th>)}</tr>
             </thead>
             <tbody>
               {v.rows.map((r, i) => (
@@ -105,6 +113,128 @@ function render(v: Visual): ReactNode {
 
 // ───────────────────────────────────────────────────────────────────────────
 
+/** Sayıya göre sabit, tekrarlanabilir "rastgele" dağılım */
+function seeded(n: number) {
+  let x = (n * 9301 + 49297) % 233280
+  return () => (x = (x * 9301 + 49297) % 233280) / 233280
+}
+
+const DICE: Record<number, [number, number][]> = {
+  1: [[1, 1]], 2: [[0, 0], [2, 2]], 3: [[0, 0], [1, 1], [2, 2]], 4: [[0, 0], [2, 0], [0, 2], [2, 2]],
+  5: [[0, 0], [2, 0], [1, 1], [0, 2], [2, 2]], 6: [[0, 0], [2, 0], [0, 1], [2, 1], [0, 2], [2, 2]],
+}
+
+export function DotsSvg({ count, arrangement, color = C.fill }: { count: number; arrangement: 'dice' | 'five' | 'scatter' | 'line'; color?: string }) {
+  const pts: [number, number][] = []
+  let W = 120, H = 120
+  if (arrangement === 'dice' && count <= 6) {
+    DICE[count].forEach(([x, y]) => pts.push([24 + x * 36, 24 + y * 36]))
+  } else if (arrangement === 'dice' || arrangement === 'five') {
+    // 5'li gruplar hâlinde iki sıra (onluk çerçeve gibi)
+    const groups = Math.ceil(count / 10)
+    W = 5 * 26 + 14
+    H = groups * 64 + 10
+    for (let i = 0; i < count; i++) {
+      const g = Math.floor(i / 10), k = i % 10
+      pts.push([19 + (k % 5) * 26, 20 + g * 64 + Math.floor(k / 5) * 26])
+    }
+  } else if (arrangement === 'line') {
+    W = Math.max(60, count * 24 + 16)
+    H = 40
+    for (let i = 0; i < count; i++) pts.push([20 + i * 24 + (i >= 5 ? 6 : 0) * Math.floor(i / 5), 20])
+    W += Math.floor(count / 5) * 6
+  } else {
+    const r = seeded(count + 7)
+    W = H = 140
+    let guard = 0
+    while (pts.length < count && guard++ < 2000) {
+      const p: [number, number] = [16 + r() * 108, 16 + r() * 108]
+      if (pts.every(([x, y]) => (x - p[0]) ** 2 + (y - p[1]) ** 2 > 22 ** 2)) pts.push(p)
+    }
+  }
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${count} nokta`} style={{ maxHeight: 200 }}>
+      <rect x={1} y={1} width={W - 2} height={H - 2} rx={12} fill="#fff" stroke={C.line} strokeWidth={2} />
+      {pts.map(([x, y], i) => <circle key={i} cx={x} cy={y} r={9} fill={color} />)}
+    </svg>
+  )
+}
+
+export function ArraySvg({ rows, cols, emoji, splitCol, splitRow }: { rows: number; cols: number; emoji?: string; splitCol?: number; splitRow?: number }) {
+  const u = Math.min(28, 260 / Math.max(rows, cols))
+  const gx = splitCol ? 10 : 0, gy = splitRow ? 10 : 0
+  const W = cols * u + gx + 8, H = rows * u + gy + 8
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${rows} sıra, ${cols} sütun`} style={{ maxHeight: 240 }}>
+      {Array.from({ length: rows }).map((_, r) =>
+        Array.from({ length: cols }).map((_, c) => {
+          const x = 4 + c * u + (splitCol && c >= splitCol ? gx : 0) + u / 2
+          const y = 4 + r * u + (splitRow && r >= splitRow ? gy : 0) + u / 2
+          const second = (splitCol && c >= splitCol) || (splitRow && r >= splitRow)
+          return emoji ? (
+            <text key={`${r}-${c}`} x={x} y={y + u * 0.3} textAnchor="middle" fontSize={u * 0.8}>{emoji}</text>
+          ) : (
+            <circle key={`${r}-${c}`} cx={x} cy={y} r={u * 0.36} fill={second ? C.orange : C.fill} />
+          )
+        }),
+      )}
+      {splitCol ? <line x1={4 + splitCol * u + gx / 2} x2={4 + splitCol * u + gx / 2} y1={2} y2={H - 2} stroke={C.ink} strokeWidth={2} strokeDasharray="4 3" /> : null}
+      {splitRow ? <line y1={4 + splitRow * u + gy / 2} y2={4 + splitRow * u + gy / 2} x1={2} x2={W - 2} stroke={C.ink} strokeWidth={2} strokeDasharray="4 3" /> : null}
+    </svg>
+  )
+}
+
+export function TapeSvg({ parts, total, compare }: { parts: { label: string; value: number; color?: string }[]; total?: string; compare?: { label: string; value: number }[] }) {
+  const sum = Math.max(1, parts.reduce((a, p) => a + p.value, 0), compare?.reduce((a, p) => a + p.value, 0) ?? 0)
+  const W = 320, L = 10, scale = (W - 2 * L) / sum
+  const row = (items: { label: string; value: number; color?: string }[], y: number, base: string) => {
+    let x = L
+    return items.map((p, i) => {
+      const w = p.value * scale
+      const el = (
+        <g key={i}>
+          <rect x={x} y={y} width={w} height={34} rx={4} fill={p.label === '?' ? '#fff' : p.color ?? (i % 2 ? '#c7e3c9' : base)} stroke={C.ink} strokeWidth={2} strokeDasharray={p.label === '?' ? '5 3' : undefined} />
+          <text x={x + w / 2} y={y + 22} textAnchor="middle" fontSize={14} fontWeight={900} fill={p.label === '?' ? C.fill : C.ink}>{p.label}</text>
+        </g>
+      )
+      x += w
+      return el
+    })
+  }
+  const hasTotal = !!total
+  const yTop = hasTotal ? 30 : 6
+  const H = yTop + 34 + (compare ? 48 : 0) + 8
+  const partsW = parts.reduce((a, p) => a + p.value, 0) * scale
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Şerit modeli">
+      {hasTotal && (
+        <g>
+          <path d={`M${L} ${yTop - 4} v-8 h${partsW} v8`} fill="none" stroke={C.ink} strokeWidth={1.6} />
+          <text x={L + partsW / 2} y={yTop - 16} textAnchor="middle" fontSize={14} fontWeight={900} fill={total === '?' ? C.fill : C.ink}>{total}</text>
+        </g>
+      )}
+      {row(parts, yTop, '#a7d3ab')}
+      {compare && row(compare.map((c) => ({ ...c, color: '#fde2b8' })), yTop + 48, '#fde2b8')}
+    </svg>
+  )
+}
+
+function HiddenSvg({ shown, emoji, total }: { shown: number; emoji: string; total?: number }) {
+  return (
+    <div className="flex flex-wrap items-end justify-center gap-3">
+      <div className="flex max-w-56 flex-wrap justify-center gap-0.5 text-2xl sm:text-3xl">
+        {Array.from({ length: shown }).map((_, i) => <span key={i}>{emoji}</span>)}
+      </div>
+      <svg viewBox="0 0 90 80" width={90} aria-label="Bardağın altında saklı nesneler">
+        <path d="M14 76 L24 8 H66 L76 76 Z" fill="#f59e0b" stroke={C.ink} strokeWidth={3} strokeLinejoin="round" />
+        <path d="M24 8 H66" stroke="#fff" strokeWidth={3} opacity={0.5} />
+        <text x={45} y={52} textAnchor="middle" fontSize={30} fontWeight={900} fill="#fff">?</text>
+      </svg>
+      {total !== undefined && <span className="self-center rounded-xl bg-ink px-3 py-1 text-lg font-black text-white">Toplam: {total}</span>}
+    </div>
+  )
+}
+
 function EmojiSet({ emoji, count, group }: { emoji: string; count: number; group?: number }) {
   const items = Array.from({ length: count })
   if (group && group > 0) {
@@ -127,7 +257,7 @@ function EmojiSet({ emoji, count, group }: { emoji: string; count: number; group
   )
 }
 
-export function TenFrameSvg({ filled, size, onCell }: { filled: number; size: 10 | 20; onCell?: (i: number) => void }) {
+export function TenFrameSvg({ filled, size, onCell, add = 0 }: { filled: number; size: 10 | 20; onCell?: (i: number) => void; add?: number }) {
   const frames = size / 10
   const cell = 36
   const W = 5 * cell + 8
@@ -145,7 +275,7 @@ export function TenFrameSvg({ filled, size, onCell }: { filled: number; size: 10
               return (
                 <g key={i} onClick={onCell ? () => onCell(idx) : undefined} style={onCell ? { cursor: 'pointer' } : undefined}>
                   <rect x={x} y={y} width={cell} height={cell} fill="transparent" stroke={C.ink} strokeWidth={1.5} />
-                  {idx < filled && <circle cx={x + cell / 2} cy={y + cell / 2} r={cell * 0.36} fill={idx < 10 ? C.red : C.blue} />}
+                  {idx < filled + add && <circle cx={x + cell / 2} cy={y + cell / 2} r={cell * 0.36} fill={add ? (idx < filled ? C.red : C.blue) : idx < 10 ? C.red : C.blue} />}
                 </g>
               )
             })}
@@ -463,7 +593,7 @@ export function AngleSvg({ degrees, showMeasure }: { degrees: number; showMeasur
   )
 }
 
-export function NumberLineSvg({ min, max, step, points = [], hidden = [], labels = true, jumps = [] }: { min: number; max: number; step: number; points?: number[]; hidden?: number[]; labels?: boolean; jumps?: number[] }) {
+export function NumberLineSvg({ min, max, step, points = [], hidden = [], labels = true, integerLabels = false, jumps = [] }: { min: number; max: number; step: number; points?: number[]; hidden?: number[]; labels?: boolean; integerLabels?: boolean; jumps?: number[] }) {
   const n = Math.round((max - min) / step)
   const W = 340, pad = 20
   const x = (v: number) => pad + ((v - min) / (max - min)) * (W - 2 * pad)
@@ -478,7 +608,7 @@ export function NumberLineSvg({ min, max, step, points = [], hidden = [], labels
       {ticks.map((t, i) => (
         <g key={i}>
           <line x1={x(t)} y1={43} x2={x(t)} y2={57} stroke={C.ink} strokeWidth={i % labelEvery === 0 ? 2 : 1} />
-          {labels && i % labelEvery === 0 && !hidden.some((h) => Math.abs(h - t) < 1e-9) && (
+          {((labels && i % labelEvery === 0) || (integerLabels && Math.abs(t - Math.round(t)) < 1e-9)) && !hidden.some((h) => Math.abs(h - t) < 1e-9) && (
             <text x={x(t)} y={76} textAnchor="middle" fontSize={12} fontWeight={700} fill={C.ink}>{fmt(t)}</text>
           )}
         </g>
@@ -535,7 +665,7 @@ export function BarsSvg({ data, title, unit }: { data: { label: string; value: n
 function Pictograph({ data, icon, unit, title }: { data: { label: string; value: number }[]; icon: string; unit: number; title?: string }) {
   return (
     <div className="overflow-hidden rounded-xl ring-1 ring-line">
-      {title && <div className="bg-indigo-50 px-3 py-1.5 text-center text-sm font-extrabold">{title}</div>}
+      {title && <div className="bg-brand-soft px-3 py-1.5 text-center text-sm font-extrabold">{title}</div>}
       {data.map((d, i) => (
         <div key={i} className="flex items-center border-t border-line bg-white first:border-t-0">
           <div className="w-24 shrink-0 border-r border-line px-2 py-1.5 text-sm font-bold">{d.label}</div>

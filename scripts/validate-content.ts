@@ -2,10 +2,10 @@
  * İçerik doğrulama:  pnpm validate            (tüm sınıflar)
  *                    pnpm validate -- 3       (sadece 3. sınıf)
  */
-import { allOutcomes, outcomeByCode } from '../src/data/curriculum.ts'
-import { activitiesByGrade } from '../src/data/activities/index.ts'
+import { allOutcomes, outcomeByCode, themesByGrade } from '../src/data/curriculum.ts'
+import { activitiesByGrade, notesByGrade } from '../src/data/activities/index.ts'
 import { generatorKind, runGenerator } from '../src/lib/generators.ts'
-import type { Activity, Content, FillItem, Grade, MatchPair, QuizQuestion, SortRound } from '../src/data/types.ts'
+import type { Activity, Content, FillItem, Grade, MatchPair, QuizQuestion, SortRound, Stage } from '../src/data/types.ts'
 
 const onlyGrade = Number(process.argv[2]) || null
 const errors: string[] = []
@@ -42,6 +42,7 @@ function checkMath(a: Activity, s: string) {
 
 function checkFill(a: Activity, items: FillItem[], generated = false) {
   items.forEach((it, i) => {
+    if (it.flash && !it.visual) err(a, `fill #${i}: flash için visual gerekli`)
     const blanks = it.text.split('__').length - 1
     if (blanks === 0) err(a, `fill #${i}: "__" boşluğu yok: "${it.text}"`)
     if (blanks !== it.answers.length) err(a, `fill #${i}: ${blanks} boşluk ama ${it.answers.length} cevap: "${it.text}"`)
@@ -60,6 +61,12 @@ function checkFill(a: Activity, items: FillItem[], generated = false) {
 
 function checkQuiz(a: Activity, qs: QuizQuestion[]) {
   qs.forEach((q, i) => {
+    if (q.feedback) {
+      if (q.feedback.length !== q.choices.length) err(a, `quiz #${i}: feedback uzunluğu (${q.feedback.length}) seçenek sayısına (${q.choices.length}) eşit olmalı`)
+      if (q.feedback[q.answer]) warn(a, `quiz #${i}: doğru seçeneğin feedback'i null olmalı`)
+    }
+    if (a.type === 'quiz' && a.anyCorrect && (!q.reasons || q.reasons.length !== q.choices.length)) err(a, `quiz #${i}: anyCorrect için her seçeneğe bir gerekçe (reasons) yazılmalı`)
+    if (q.flash && (typeof q.prompt === 'string' || !q.prompt.visual)) err(a, `quiz #${i}: flash için prompt'ta görsel olmalı`)
     if (q.choices.length < 2) err(a, `quiz #${i}: en az 2 seçenek olmalı`)
     if (q.answer < 0 || q.answer >= q.choices.length || !Number.isInteger(q.answer)) err(a, `quiz #${i}: geçersiz answer ${q.answer}`)
     const ks = q.choices.map(key)
@@ -86,6 +93,9 @@ function checkSort(a: Activity, rs: SortRound[]) {
 
 const seen = new Set<string>()
 const covered = new Set<string>()
+const STAGES: Stage[] = ['somut', 'model', 'sembol', 'problem']
+const stagesByOutcome = new Map<string, Set<Stage>>()
+const oddByTheme = new Map<string, number>()
 
 for (const [gStr, list] of Object.entries(activitiesByGrade)) {
   const g = Number(gStr) as Grade
@@ -98,6 +108,17 @@ for (const [gStr, list] of Object.entries(activitiesByGrade)) {
     if (!a.title?.trim()) err(a, 'title boş')
     if (!a.instructions?.trim()) err(a, 'instructions boş')
     if (!a.outcomes?.length) err(a, 'outcomes boş')
+    if (!STAGES.includes(a.stage)) err(a, `stage şunlardan biri olmalı: ${STAGES.join(', ')}`)
+    if (!a.launch?.text?.trim()) err(a, 'launch.text (Başlarken) boş')
+    if (!a.reflect?.trim()) err(a, 'reflect (Düşün ve Paylaş) boş')
+    for (const code of a.outcomes ?? []) {
+      if (!stagesByOutcome.has(code)) stagesByOutcome.set(code, new Set())
+      stagesByOutcome.get(code)!.add(a.stage)
+    }
+    if (a.type === 'quiz' && a.anyCorrect) {
+      const th = outcomeByCode.get(a.outcomes[0])?.theme
+      if (th) oddByTheme.set(`${th.grade}/${th.slug}`, (oddByTheme.get(`${th.grade}/${th.slug}`) ?? 0) + 1)
+    }
     for (const code of a.outcomes ?? []) {
       const o = outcomeByCode.get(code)
       if (!o) err(a, `bilinmeyen öğrenme çıktısı ${code}`)
@@ -195,6 +216,20 @@ for (const [gStr, list] of Object.entries(activitiesByGrade)) {
 }
 
 const relevant = allOutcomes.filter((o) => !onlyGrade || o.theme.grade === onlyGrade)
+for (const o of relevant) {
+  const st = stagesByOutcome.get(o.code)
+  if (st && st.size < 3) err(null, `${o.code} (${o.short}): en az 3 farklı aşama (stage) olmalı, şu an: ${[...st].join(', ')}`)
+}
+for (const g of [1, 2, 3, 4, 5, 6, 7, 8] as Grade[]) {
+  if (onlyGrade && g !== onlyGrade) continue
+  const notes = notesByGrade[g]
+  for (const th of themesByGrade(g)) {
+    const n = notes[th.slug]
+    if (!n || n.bigIdeas.length < 2) err(null, `grade${g}Notes["${th.slug}"]: en az 2 büyük fikir (bigIdeas) yazılmalı`)
+    if (!oddByTheme.get(`${g}/${th.slug}`)) err(null, `${g}. sınıf "${th.title}": en az bir "Hangisi farklı?" (anyCorrect) etkinliği olmalı`)
+  }
+  for (const slug of Object.keys(notes)) if (!themesByGrade(g).some((t) => t.slug === slug)) err(null, `grade${g}Notes: bilinmeyen tema "${slug}"`)
+}
 const missing = relevant.filter((o) => !covered.has(o.code))
 for (const o of missing) err(null, `Etkinliği olmayan öğrenme çıktısı: ${o.code} (${o.short})`)
 

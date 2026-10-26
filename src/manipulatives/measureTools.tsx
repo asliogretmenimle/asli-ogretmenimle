@@ -46,7 +46,7 @@ export const fractions: ToolDef<F> = {
                 key={i}
                 type="button"
                 onClick={() => toggle(i)}
-                className={`flex-1 border-r-2 border-ink text-sm font-black last:border-r-0 transition ${on ? 'bg-brand text-white' : 'bg-white text-ink-soft hover:bg-indigo-50'}`}
+                className={`flex-1 border-r-2 border-ink text-sm font-black last:border-r-0 transition ${on ? 'bg-brand text-white' : 'bg-white text-ink-soft hover:bg-brand-soft'}`}
                 aria-label={`${i + 1}. parça`}
                 aria-pressed={on}
               >

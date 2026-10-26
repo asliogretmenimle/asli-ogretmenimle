@@ -42,7 +42,7 @@ export default function ManipulativeTask({ activity, onProgress, onFinish }: Eng
 
   return (
     <div className="animate-fade-up" key={idx}>
-      <div className="mb-5 rounded-2xl bg-indigo-50 px-4 py-3 text-center text-lg font-extrabold text-indigo-900 sm:text-xl">
+      <div className="mb-5 rounded-2xl bg-brand-soft px-4 py-3 text-center text-lg font-extrabold text-brand-ink sm:text-xl">
         <MathText text={task.prompt} />
       </div>
       <Comp value={value} onChange={setValue} config={config} target={task.target} locked={status === 'correct' || status === 'revealed'} />

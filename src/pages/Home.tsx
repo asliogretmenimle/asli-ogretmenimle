@@ -59,7 +59,7 @@ export default function Home() {
       {/* Karşılama */}
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 opacity-70" aria-hidden>
-          <div className="absolute -top-24 -left-20 size-72 rounded-full bg-indigo-200/50 blur-3xl" />
+          <div className="absolute -top-24 -left-20 size-72 rounded-full bg-lime-200/50 blur-3xl" />
           <div className="absolute -top-10 right-0 size-64 rounded-full bg-amber-200/50 blur-3xl" />
         </div>
         <div className="mx-auto max-w-6xl px-4 pt-8 pb-6 sm:pt-12">

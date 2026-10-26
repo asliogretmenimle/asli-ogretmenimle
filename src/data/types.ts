@@ -48,8 +48,16 @@ export type Visual =
   | { kind: 'emoji'; emoji: string; count: number; group?: number }
   /** Birden çok emoji grubu yan yana: [🍎×3] + [🍐×2] */
   | { kind: 'emojiGroups'; groups: { emoji: string; count: number }[]; separator?: string }
-  /** Onluk çerçeve */
-  | { kind: 'tenframe'; filled: number; size?: 10 | 20 }
+  /** Onluk çerçeve. `add` verilirse filled kırmızı sayaçtan sonra add kadar mavi sayaç çizilir (8 + 5 gibi) */
+  | { kind: 'tenframe'; filled: number; size?: 10 | 20; add?: number }
+  /** Nokta kartı (şipşak sayma). arrangement: zar düzeni, 5'li sıralar, dağınık ya da tek sıra */
+  | { kind: 'dots'; count: number; arrangement?: 'dice' | 'five' | 'scatter' | 'line'; color?: string }
+  /** Dizi modeli (çarpma): rows × cols nokta/emoji. splitCol verilirse o sütundan sonra ayırıcı çizilir (6×7 = 5×7 + 1×7) */
+  | { kind: 'array'; rows: number; cols: number; emoji?: string; splitCol?: number; splitRow?: number }
+  /** Parça-parça-bütün / şerit modeli. Değeri bilinmeyen parça için label: '?' */
+  | { kind: 'tape'; parts: { label: string; value: number; color?: string }[]; total?: string; compare?: { label: string; value: number }[] }
+  /** Saklı parça: total nesnenin bir kısmı bardağın altında */
+  | { kind: 'hidden'; shown: number; emoji?: string; total?: number }
   /** Onluk taban blokları */
   | { kind: 'blocks'; thousands?: number; hundreds?: number; tens?: number; ones?: number }
   /** Kesir modeli */
@@ -61,8 +69,8 @@ export type Visual =
   | { kind: 'shape'; shape: ShapeName; color?: string; label?: string }
   /** Açı (derece). showMeasure: ölçü yazılsın mı */
   | { kind: 'angle'; degrees: number; showMeasure?: boolean }
-  /** Sayı doğrusu. `points` işaretlenen noktalar, `labels: false` ise sayılar gizlenir, `hidden` soru işaretiyle gösterilen değerler */
-  | { kind: 'numberline'; min: number; max: number; step: number; points?: number[]; hidden?: number[]; labels?: boolean; jumps?: number[] }
+  /** Sayı doğrusu. `points` işaretlenen noktalar, `labels: false` ise sayılar gizlenir (integerLabels: true ise yalnız tam sayılar yazılır), `hidden` soru işaretiyle gösterilen değerler */
+  | { kind: 'numberline'; min: number; max: number; step: number; points?: number[]; hidden?: number[]; labels?: boolean; integerLabels?: boolean; jumps?: number[] }
   /** Sütun grafiği */
   | { kind: 'bars'; data: { label: string; value: number }[]; title?: string; unit?: string }
   /** Resim grafiği (her simge `unit` değerinde) */
@@ -99,8 +107,14 @@ export interface QuizQuestion {
   choices: Content[]
   /** Doğru seçeneğin indeksi (0'dan başlar) */
   answer: number
-  /** Yanlış cevaptan sonra gösterilen kısa açıklama */
+  /** Yanlış cevaptan sonra gösterilen kısa açıklama (neden doğru?) */
   explain?: string
+  /** Seçenek başına kavram yanılgısı geri bildirimi (choices ile aynı sırada; doğru seçenek için null) */
+  feedback?: (string | null)[]
+  /** "Hangisi farklı?" için: her seçeneğin farklı olma gerekçesi (anyCorrect ile) */
+  reasons?: string[]
+  /** Hızlı bakış: prompt görseli bu kadar milisaniye gösterilip gizlenir */
+  flash?: number
 }
 
 export interface FillItem {
@@ -111,7 +125,14 @@ export interface FillItem {
   visual?: Visual
   /** Verilirse klavye yerine kelime/sayı çipleri gösterilir */
   choices?: string[]
+  /** Tek ipucu (eski biçim) */
   hint?: string
+  /** Kademeli ipuçları: soru sorar, cevabı söylemez */
+  hints?: string[]
+  /** Yanlıştan sonra gösterilen "neden" açıklaması */
+  explain?: string
+  /** Hızlı bakış: görsel bu kadar milisaniye gösterilip gizlenir */
+  flash?: number
 }
 
 export interface MatchPair {
@@ -125,12 +146,16 @@ export interface SortRound {
   items: Content[]
   /** Uçlardaki etiketler, ör. ["En küçük", "En büyük"] */
   ends?: [string, string]
+  hints?: string[]
+  explain?: string
 }
 
 export interface CategorizeItem {
   content: Content
   /** categories içindeki id */
   category: string
+  /** Yanlış gruba bırakılınca gösterilen açıklama */
+  explain?: string
 }
 
 export type ManipulativeTool =
@@ -158,6 +183,9 @@ export type ManipulativeTool =
 export interface ManipulativeTask {
   prompt: string
   target: Record<string, unknown>
+  hints?: string[]
+  /** Görev tamamlanınca gösterilen kısa "ne keşfettik?" notu */
+  explain?: string
 }
 
 export interface ManipulativeConfig {
@@ -191,6 +219,21 @@ export interface GeneratorSpec {
   count?: number
 }
 
+/**
+ * Van de Walle'ün somuttan soyuta ilerleyişi:
+ *  somut   → sanal manipülatifle yaparak
+ *  model   → resim/model üzerinden düşünerek
+ *  sembol  → sembollerle, stratejiyle akıcılık
+ *  problem → gerçek yaşam, gerekçelendirme, açık uçlu
+ */
+export type Stage = 'somut' | 'model' | 'sembol' | 'problem'
+
+/** Başlarken: etkinlik öncesi kısa problem/durum */
+export interface Launch {
+  text: string
+  visual?: Visual
+}
+
 interface ActivityBase {
   /** Tüm sitede benzersiz, URL'de kullanılır: "g3-sayilari-cozumle" (küçük harf, Türkçe karakter yok) */
   id: string
@@ -201,6 +244,11 @@ interface ActivityBase {
   instructions: string
   /** 1: kolay, 2: orta, 3: zor */
   level?: 1 | 2 | 3
+  stage: Stage
+  /** Başlarken (Önce) */
+  launch: Launch
+  /** Düşün ve Paylaş (Sonra): tek, açık uçlu soru */
+  reflect: string
 }
 
 export interface QuizActivity extends ActivityBase {
@@ -209,6 +257,8 @@ export interface QuizActivity extends ActivityBase {
   generator?: GeneratorSpec
   /** true ise seçenekler karıştırılmaz (ör. "imkânsız / olabilir / kesin" sıralı ölçek) */
   fixedOrder?: boolean
+  /** "Hangisi farklı?" gibi açık uçlu sorular: her seçenek kabul edilir, reasons gösterilir */
+  anyCorrect?: boolean
 }
 export interface FillActivity extends ActivityBase {
   type: 'fill'
@@ -249,6 +299,9 @@ export type Activity =
   | ManipulativeActivity
 
 export type ActivityType = Activity['type']
+
+/** Tema notları (her sınıf dosyası tema slug'ına göre yazar) */
+export type ThemeNotes = Record<string, { bigIdeas: string[] }>
 
 /** Aslı Hoca'nın eklediği dış bağlantılar */
 export interface ExternalLink {

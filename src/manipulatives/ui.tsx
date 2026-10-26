@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Minus, Plus } from 'lucide-react'
 
-export function Stepper({ label, value, onDec, onInc, disabled, color = '#6366f1' }: { label: ReactNode; value: ReactNode; onDec: () => void; onInc: () => void; disabled?: boolean; color?: string }) {
+export function Stepper({ label, value, onDec, onInc, disabled, color = '#3f8a4f' }: { label: ReactNode; value: ReactNode; onDec: () => void; onInc: () => void; disabled?: boolean; color?: string }) {
   return (
     <div className="flex flex-col items-center gap-1.5">
       <span className="text-xs font-extrabold tracking-wide text-ink-soft uppercase">{label}</span>

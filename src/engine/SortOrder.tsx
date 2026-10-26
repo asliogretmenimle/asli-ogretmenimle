@@ -142,7 +142,7 @@ function SortCard({ id, pos, content, disabled, picked, onTap, state }: { id: nu
       onClick={onTap}
       aria-label={`${pos + 1}. sıradaki kart`}
       className={`relative flex min-h-16 items-center justify-center gap-2 rounded-2xl border-2 px-3 py-3 text-center text-lg font-extrabold select-none sm:text-xl ${
-        isDragging ? 'z-20 scale-105 border-brand bg-indigo-50 shadow-[var(--shadow-lift)]' : state === 'right' ? 'border-ok bg-ok-soft' : state === 'wrong' ? 'border-bad bg-bad-soft animate-shake' : picked ? 'border-brand bg-indigo-50 shadow-[0_0_0_4px_rgb(99_102_241/0.18)]' : 'border-line bg-white shadow-[0_3px_0_var(--color-line)]'
+        isDragging ? 'z-20 scale-105 border-brand bg-brand-soft shadow-[var(--shadow-lift)]' : state === 'right' ? 'border-ok bg-ok-soft' : state === 'wrong' ? 'border-bad bg-bad-soft animate-shake' : picked ? 'border-brand bg-brand-soft shadow-[0_0_0_4px_rgb(63_138_79/0.18)]' : 'border-line bg-white shadow-[0_3px_0_var(--color-line)]'
       } ${disabled ? '' : 'cursor-grab active:cursor-grabbing'}`}
     >
       <span className="absolute top-1.5 left-2 text-[11px] font-black text-ink-soft/60">{pos + 1}</span>

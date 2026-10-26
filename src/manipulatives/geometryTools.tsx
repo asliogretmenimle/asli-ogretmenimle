@@ -199,8 +199,8 @@ export const angle: ToolDef<number> = {
           })}
           <path d={`M${cx + 40} ${cy} A40 40 0 0 0 ${cx + 40 * Math.cos(rad)} ${cy - 40 * Math.sin(rad)}`} fill="none" stroke="#f97316" strokeWidth={4} />
           <line x1={cx} y1={cy} x2={cx + R + 10} y2={cy} stroke="#1f2340" strokeWidth={4} strokeLinecap="round" />
-          <line x1={cx} y1={cy} x2={cx + (R + 10) * Math.cos(rad)} y2={cy - (R + 10) * Math.sin(rad)} stroke="#6366f1" strokeWidth={5} strokeLinecap="round" />
-          <circle cx={cx + (R + 10) * Math.cos(rad)} cy={cy - (R + 10) * Math.sin(rad)} r={11} fill="#6366f1" stroke="#fff" strokeWidth={3} />
+          <line x1={cx} y1={cy} x2={cx + (R + 10) * Math.cos(rad)} y2={cy - (R + 10) * Math.sin(rad)} stroke="#3b82f6" strokeWidth={5} strokeLinecap="round" />
+          <circle cx={cx + (R + 10) * Math.cos(rad)} cy={cy - (R + 10) * Math.sin(rad)} r={11} fill="#3b82f6" stroke="#fff" strokeWidth={3} />
           <circle cx={cx} cy={cy} r={5} fill="#1f2340" />
         </svg>
         <p className="-mt-1 text-sm font-bold text-ink-soft">Mavi ışının ucunu sürükle.</p>
@@ -361,7 +361,7 @@ export const nets: ToolDef<NetsV> = {
           <p className="font-bold text-ink-soft">Bu açınım katlanınca hangi cisim oluşur?</p>
           <div className="grid w-full grid-cols-3 gap-2 sm:grid-cols-6">
             {SOLIDS.map((so) => (
-              <button key={so.id} type="button" disabled={locked} onClick={() => onChange({ ...value, pick: so.id })} className={`flex flex-col items-center rounded-2xl border-2 p-2 text-xs font-extrabold transition ${value.pick === so.id ? 'border-brand bg-indigo-50' : 'border-line bg-white hover:border-indigo-300'}`}>
+              <button key={so.id} type="button" disabled={locked} onClick={() => onChange({ ...value, pick: so.id })} className={`flex flex-col items-center rounded-2xl border-2 p-2 text-xs font-extrabold transition ${value.pick === so.id ? 'border-brand bg-brand-soft' : 'border-line bg-white hover:border-brand/40'}`}>
                 <div className="w-16"><ShapeSvg shape={so.id as ShapeName} /></div>
                 {so.name}
               </button>
@@ -384,7 +384,7 @@ export const nets: ToolDef<NetsV> = {
         {value.solid === 'cube' && (
           <label className="flex w-full max-w-sm items-center gap-3 font-bold">
             <span className="text-sm text-ink-soft">Aç</span>
-            <input type="range" min={0} max={1} step={0.01} value={value.fold} onChange={(e) => onChange({ ...value, fold: Number(e.target.value) })} className="flex-1 accent-indigo-500" aria-label="Katla" />
+            <input type="range" min={0} max={1} step={0.01} value={value.fold} onChange={(e) => onChange({ ...value, fold: Number(e.target.value) })} className="flex-1 accent-[#3f8a4f]" aria-label="Katla" />
             <span className="text-sm text-ink-soft">Katla</span>
           </label>
         )}

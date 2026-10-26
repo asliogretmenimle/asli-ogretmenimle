@@ -142,7 +142,7 @@ export default function FillBlank({ activity, onProgress, onFinish }: EngineProp
                         : status === 'wrong' && wrongMask[i]
                           ? 'border-bad bg-bad-soft text-rose-700 animate-shake'
                           : active === i
-                            ? 'border-brand bg-indigo-50 text-brand shadow-[0_0_0_4px_rgb(99_102_241/0.15)]'
+                            ? 'border-brand bg-brand-soft text-brand shadow-[0_0_0_4px_rgb(63_138_79/0.15)]'
                             : 'border-dashed border-slate-300 bg-white'
                   }`}
                 >
@@ -197,7 +197,7 @@ export default function FillBlank({ activity, onProgress, onFinish }: EngineProp
 
 function Keypad({ onKey, comma, minus, slash }: { onKey: (k: string) => void; comma: boolean; minus: boolean; slash: boolean }) {
   const extra = [comma && ',', minus && '-', slash && '/'].filter(Boolean) as string[]
-  const key = 'h-14 rounded-2xl bg-white text-2xl font-extrabold shadow-[0_3px_0_var(--color-line)] ring-1 ring-line transition active:translate-y-[2px] active:shadow-none hover:bg-indigo-50 sm:h-16'
+  const key = 'h-14 rounded-2xl bg-white text-2xl font-extrabold shadow-[0_3px_0_var(--color-line)] ring-1 ring-line transition active:translate-y-[2px] active:shadow-none hover:bg-brand-soft sm:h-16'
   return (
     <div className="mx-auto grid max-w-sm grid-cols-5 gap-2 sm:max-w-md" role="group" aria-label="Sayı tuşları">
       {['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].map((d) => (

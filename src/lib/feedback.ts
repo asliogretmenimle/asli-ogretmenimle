@@ -8,7 +8,7 @@ export function celebrate(big = false) {
     particleCount: big ? 160 : 60,
     spread: big ? 100 : 70,
     origin: { y: big ? 0.6 : 0.7 },
-    colors: ['#6366f1', '#f97316', '#22c55e', '#eab308', '#ec4899'],
+    colors: ['#3f8a4f', '#a3c94a', '#f97316', '#eab308', '#ec4899', '#3b82f6'],
     disableForReducedMotion: true,
   })
 }

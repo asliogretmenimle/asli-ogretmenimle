@@ -124,7 +124,7 @@ export const bargraph: ToolDef<BG> = {
         {target && (
           <table className="overflow-hidden rounded-xl text-sm ring-1 ring-line">
             <tbody>
-              <tr>{data.map((d) => <th key={d.label} className="border border-line bg-indigo-50 px-3 py-1.5">{d.label}</th>)}</tr>
+              <tr>{data.map((d) => <th key={d.label} className="border border-line bg-brand-soft px-3 py-1.5">{d.label}</th>)}</tr>
               <tr>{data.map((d) => <td key={d.label} className="border border-line bg-white px-3 py-1.5 text-center font-black">{d.value}</td>)}</tr>
             </tbody>
           </table>
@@ -240,7 +240,7 @@ export const probability: ToolDef<Prob> = {
           <p className="mt-1 text-center text-xs font-bold text-ink-soft">Toplam deneme: {total}</p>
         </div>
         {target && (
-          <div className="w-full rounded-2xl bg-indigo-50 p-4">
+          <div className="w-full rounded-2xl bg-brand-soft p-4">
             <p className="mb-3 text-center font-extrabold"><MathText text={String(target.question ?? '')} /></p>
             <div className="flex flex-wrap justify-center gap-2">
               {choices.map((ch) => (

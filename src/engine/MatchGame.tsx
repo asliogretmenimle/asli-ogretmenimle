@@ -88,8 +88,8 @@ export default function MatchGame({ activity, onProgress, onFinish }: EngineProp
             : isFlash
               ? 'border-bad bg-bad-soft animate-shake'
               : isSel
-                ? 'border-brand bg-indigo-50 shadow-[0_0_0_4px_rgb(99_102_241/0.18)] -translate-y-0.5'
-                : 'border-line bg-white shadow-[0_3px_0_var(--color-line)] hover:border-indigo-300 active:translate-y-[2px] active:shadow-none'
+                ? 'border-brand bg-brand-soft shadow-[0_0_0_4px_rgb(63_138_79/0.18)] -translate-y-0.5'
+                : 'border-line bg-white shadow-[0_3px_0_var(--color-line)] hover:border-brand/40 active:translate-y-[2px] active:shadow-none'
         }`}
       >
         <ContentView c={c} size="sm" />
@@ -101,7 +101,7 @@ export default function MatchGame({ activity, onProgress, onFinish }: EngineProp
     <div className="animate-fade-up" key={round}>
       <Prompt>
         <span className="text-base font-bold text-ink-soft sm:text-lg">Bir karta, sonra eşine dokun.</span>
-        {rounds.length > 1 && <span className="ml-2 chip bg-indigo-50 text-brand">Tur {round + 1}/{rounds.length}</span>}
+        {rounds.length > 1 && <span className="ml-2 chip bg-brand-soft text-brand">Tur {round + 1}/{rounds.length}</span>}
       </Prompt>
       <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:gap-x-8">
         {current.flatMap((_, row) => [card('L', row), card('R', rightOrder[row])])}

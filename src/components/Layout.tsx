@@ -6,12 +6,14 @@ import { setSound, soundOn } from '../lib/feedback'
 export function Logo({ small }: { small?: boolean }) {
   return (
     <Link to="/" className="flex items-center gap-2.5" aria-label="Aslı Öğretmenimle ana sayfa">
-      <span className={`relative grid shrink-0 place-items-center rounded-2xl bg-brand text-white shadow-[0_3px_0_var(--color-brand-dark)] ${small ? 'size-9' : 'size-11'}`}>
-        <svg viewBox="0 0 32 32" className={small ? 'size-5' : 'size-6'} aria-hidden>
-          <path d="M9 16h14M16 9v14" stroke="currentColor" strokeWidth={4} strokeLinecap="round" />
-        </svg>
-        <span className="absolute -top-1 -right-1 size-3.5 rounded-full bg-amber-400 ring-2 ring-white" />
-      </span>
+      <img
+        src="/logo-96.png"
+        srcSet="/logo-96.png 1x, /logo-192.png 2x"
+        alt=""
+        width={small ? 36 : 44}
+        height={small ? 36 : 44}
+        className={`shrink-0 drop-shadow-sm ${small ? 'size-9' : 'size-11'}`}
+      />
       <span className="leading-none">
         <span className={`block font-black tracking-tight text-ink ${small ? 'text-base' : 'text-lg sm:text-xl'}`}>Aslı Öğretmenimle</span>
         {!small && <span className="mt-0.5 block text-[11px] font-bold text-ink-soft sm:text-xs">Matematik oyunla öğrenilir</span>}

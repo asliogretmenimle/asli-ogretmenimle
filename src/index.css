@@ -5,9 +5,12 @@
   --color-ink: #1f2340;
   --color-ink-soft: #5b6080;
   --color-line: #e7e8f2;
-  --color-paper: #f7f7fb;
-  --color-brand: #6366f1;
-  --color-brand-dark: #4f46e5;
+  --color-paper: #f8f7f2;
+  --color-brand: #3f8a4f;
+  --color-brand-dark: #2c6a3b;
+  --color-brand-soft: #e7f3e4;
+  --color-brand-ink: #1e4f2d;
+  --color-cream: #fdf6e3;
   --color-ok: #16a34a;
   --color-ok-soft: #dcfce7;
   --color-bad: #e11d48;

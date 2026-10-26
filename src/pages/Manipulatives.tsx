@@ -23,7 +23,7 @@ export function ManipulativesIndex() {
             <span>
               <span className="block text-lg font-black">{t.name}</span>
               <span className="mt-0.5 block text-sm font-semibold text-ink-soft">{t.description}</span>
-              <span className="chip mt-2 bg-indigo-50 text-brand">{t.grades}. sınıf</span>
+              <span className="chip mt-2 bg-brand-soft text-brand">{t.grades}. sınıf</span>
             </span>
           </Link>
         ))}
