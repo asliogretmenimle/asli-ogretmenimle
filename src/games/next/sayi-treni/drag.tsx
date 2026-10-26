@@ -8,7 +8,7 @@ import { createPortal } from 'react-dom'
  *  - 8 px’ten az hareket bir dokunuş sayılır → onTap (her sürüklemenin dokun alternatifi).
  * `data-handle` taşır: ZoomBox/Plane kaydırmayı tetiklemez.
  */
-export function DragSource({ children, ghost, onTap, onDrop, label, className = '', style, disabled }: {
+export function DragSource({ children, ghost, onTap, onDrop, label, className = '', style, disabled, value }: {
   children: ReactNode
   ghost?: ReactNode
   onTap?: () => void
@@ -17,6 +17,8 @@ export function DragSource({ children, ghost, onTap, onDrop, label, className = 
   className?: string
   style?: CSSProperties
   disabled?: boolean
+  /** test/otomasyon için değer (data-v) */
+  value?: number
 }) {
   const start = useRef<{ x: number; y: number; id: number } | null>(null)
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null)
@@ -32,6 +34,7 @@ export function DragSource({ children, ghost, onTap, onDrop, label, className = 
       <button
         type="button"
         data-handle
+        data-v={value}
         aria-label={label}
         disabled={disabled}
         className={className}

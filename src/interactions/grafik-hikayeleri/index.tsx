@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useDrag } from '@use-gesture/react'
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BookOpen, Check, Lightbulb, PenLine, RotateCcw } from 'lucide-react'
 import type { InteractionProps } from '../types'
@@ -53,11 +53,18 @@ export default function GrafikHikayeleri({ grade, onFinish }: InteractionProps) 
     })
   }
 
+  const topRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    // yeni görevde (telefonda sayfa aşağıdaysa) görevin başına dön
+    const el = topRef.current
+    if (S.idx > 0 && el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }, [S.idx])
   const footer = S.done && <NextButton isLast={S.isLast} onNext={S.next} onFinish={finish} />
   const icon = t.kind === 'match' ? <BookOpen size={22} /> : t.kind === 'write' ? <PenLine size={22} /> : <span className="text-xl" aria-hidden>📈</span>
 
   return (
     <Scene grade={grade}>
+      <div ref={topRef} className="scroll-mt-20" />
       <Header icon={icon} color={VIOLET} idx={S.idx} total={tasks.length} title={t.title} dark={dark} />
       {t.kind === 'match' && <MatchView key={S.idx} t={t} grade={grade} dark={dark} onDone={onDone} footer={footer} />}
       {t.kind === 'write' && <WriteView key={S.idx} t={t} idx={S.idx} dark={dark} sol={sol} onDone={onDone} footer={footer} />}

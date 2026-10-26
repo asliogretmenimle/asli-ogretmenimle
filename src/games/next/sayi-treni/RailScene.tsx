@@ -80,8 +80,8 @@ function Station({ board }: { board?: string[] }) {
       </g>
       {/* kural tabelası */}
       {board && (
-        <g transform="translate(520 118)">
-          <rect x={58} y={70} width={8} height={88} fill="#64748b" />
+        <g transform="translate(500 58)">
+          <rect x={58} y={70} width={8} height={170} fill="#64748b" />
           <rect x={0} y={0} width={124} height={78} rx={12} fill="#065f46" stroke="#fbbf24" strokeWidth={4} />
           {board.map((l, i) => (
             <text key={i} x={62} y={board.length === 1 ? 46 : 32 + i * 26} textAnchor="middle" fontSize={l.length > 11 ? 16 : 19} fontWeight={900} fill="#ecfdf5">
@@ -107,7 +107,7 @@ export function RailScene({ items, plate, board, pos, anim, moving, happy, varia
   const [motion] = useState(() => !reduced())
   const n = items.length
   const total = LOCO_W + GAP + n * (WAG_W + GAP)
-  const s = Math.min(1, (SW - TRAIN_X - 22) / total)
+  const s = Math.min(1.28, (SW - TRAIN_X - 22) / total)
   const dx = pos === 'right' ? SW + 40 - TRAIN_X : pos === 'left' ? -(total * s + TRAIN_X + 40) : 0
   const sky = ['#bae6fd', '#c7d2fe', '#fed7aa'][variant % 3]
   const ariaTrain = items.map((it, i) => (it.car ? it.label ?? `${i + 1}. vagon` : it.plus ? '' : `${i + 1}. boş yuva`)).filter(Boolean).join(', ')

@@ -511,7 +511,7 @@ function FindTask({ t, c }: { t: Extract<Task, { kind: 'find' }>; c: Ctx }) {
                   <line x1={api.sx(t.shape[0][0])} y1={api.sy(t.shape[0][1])} x2={api.sx(ghost[0][0])} y2={api.sy(ghost[0][1])} stroke={pal.img} strokeWidth={2.5} strokeDasharray="6 5" pointerEvents="none" />
                 )}
                 <Poly api={api} pts={ghost} color={pal.img} fill={0.28} labels prime width={2.5} />
-                {mode === 'O' && <><Dot api={api} p={center} color={pal.mirror} r={9} ring={pal.mirror} /><text x={api.sx(center[0]) + 14} y={api.sy(center[1]) - 12} fontSize={13} fontWeight={900} fill={pal.mirror} pointerEvents="none">merkez</text></>}
+                {mode === 'O' && <><Dot api={api} p={center} color={pal.mirror} r={9} ring={pal.mirror} /><text x={api.sx(center[0])} y={api.sy(center[1]) + 34} fontSize={13} fontWeight={900} fill={pal.mirror} textAnchor="middle" stroke={dark ? '#0f172a' : '#fff'} strokeWidth={3} paintOrder="stroke" pointerEvents="none">merkez</text></>}
               </>
             )}
           </Board>

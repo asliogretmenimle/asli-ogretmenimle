@@ -213,7 +213,7 @@ export function GraphPlane(props: GraphPlaneProps) {
   // dar ekranda (telefon) daha yüksek düzlem: yakınlaştırma düğmeleri eksenin altında kalsın
   const narrow = typeof window !== 'undefined' && window.innerWidth < 640
   const aspect = props.aspect ?? (narrow ? 0.9 : 0.62)
-  const initial = { xMin: -a.xMax * (a.numbers ? 0.13 : 0.075), xMax: a.xMax * 1.05, yMin: -a.yMax * 0.24, yMax: a.yMax * 1.1 }
+  const initial = { xMin: -a.xMax * (a.numbers ? 0.13 : 0.075), xMax: a.xMax * 1.05, yMin: -a.yMax * (narrow ? 0.34 : 0.24), yMax: a.yMax * 1.1 }
   const add = (raw: Pt) => {
     if (mode === 'pick') return props.onPick?.(raw)
     if (mode !== 'sketch' || !props.onChange) return

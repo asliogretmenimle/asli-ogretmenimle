@@ -68,16 +68,21 @@ export function TileFace({ k, neg, g, selected, ghost, flip, dim, small }: { k: 
   )
 }
 
+/** Karoya dokunuştan hemen sonra gelen “click” olayı (düzen değişince) mata düşmesin */
+let lastTileTap = 0
+
 /** Sürüklenebilir karo (mattaki ya da kutudaki) */
 export function DragTile({ src, dnd, onTap, selected, dropKey, flip, small, label }: { src: Src; dnd: TileDnd; onTap: () => void; selected?: boolean; dropKey?: string; flip?: number; small?: boolean; label: string }) {
   const bind = useDrag(
     ({ tap, last, xy: [x, y], event }) => {
       event?.preventDefault?.()
       if (tap) {
+        lastTileTap = Date.now()
         onTap()
         return
       }
       if (last) {
+        lastTileTap = Date.now()
         const { target } = dnd.find(x, y)
         dnd.setDrag(null)
         dnd.setOver(null)
@@ -145,12 +150,12 @@ export function SideMat({ side, tiles, dnd, sel, onTapTile, onTapSide, dark, lab
   return (
     <div
       data-drop={key}
-      onClick={(e) => e.target === e.currentTarget && onTapSide()}
+      onClick={(e) => !(e.target as Element).closest('button') && Date.now() - lastTileTap > 400 && onTapSide()}
       className={`relative flex flex-col rounded-2xl p-2.5 transition ${dark ? 'bg-slate-900/60' : 'bg-white/90'} ${hot ? 'ring-4 ring-violet-400' : dark ? 'ring-1 ring-slate-600' : 'ring-1 ring-line'}`}
       style={{ minHeight: minH, touchAction: 'none' }}
     >
       {label && <p className={`pointer-events-none mb-1.5 text-[11px] font-black tracking-wide uppercase ${dark ? 'text-slate-400' : 'text-ink-soft'}`}>{label}</p>}
-      <div className="flex-1" onClick={(e) => e.target === e.currentTarget && onTapSide()}>
+      <div className="flex-1">
         {tiles.length ? body : <p className={`pointer-events-none py-6 text-center text-sm font-bold ${dark ? 'text-slate-500' : 'text-ink-soft/70'}`}>Karoları buraya sürükle</p>}
       </div>
     </div>

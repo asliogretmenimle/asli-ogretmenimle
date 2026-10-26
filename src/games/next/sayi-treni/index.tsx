@@ -536,7 +536,7 @@ export default function SayiTreni({ grade, onFinish }: GameProps) {
 
   return (
     <Scene grade={grade} className="!p-2 sm:!p-4">
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_330px] lg:items-start">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_330px] lg:items-start" data-kind={L.kind} data-target={L.target} data-range={L.range?.join(',')} data-answers={L.slots?.map((s) => s.answer ?? '').join(',')}>
         <header className="lg:col-start-2 lg:row-start-1">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2 px-1">
             <LevelDots current={li} total={levels.length} />
@@ -573,6 +573,7 @@ export default function SayiTreni({ grade, onFinish }: GameProps) {
                   {yard.map((c) => (
                     <DragSource
                       key={c.id}
+                      value={valueOf(c)}
                       label={`Vagon: ${repSpeak(c.rep)}`}
                       onTap={() => place(c)}
                       onDrop={(z) => place(c, z)}

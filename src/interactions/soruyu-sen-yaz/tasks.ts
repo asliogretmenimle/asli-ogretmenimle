@@ -107,16 +107,15 @@ const COUNT: Obj[] = [
 const things = (n = 3) => shuffle(COUNT).slice(0, n)
 
 const PLACES: Obj[] = [
-  obj('bahce', '🌳', 'bahçe', 'bahçesi', 'bahçeyi', ['büyük', 'küçük'], { u: 'm', fence: 'çit', verb: 'çekecek', past: 'çekti', cover: 'çim' }),
-  obj('oda', '🛋️', 'oda', 'odası', 'odayı', ['büyük', 'küçük'], { u: 'm', fence: 'süpürgelik', verb: 'döşeyecek', past: 'döşedi', cover: 'halı' }),
-  obj('pano', '📌', 'pano', 'panosu', 'panoyu', ['büyük', 'küçük'], { u: 'dm', fence: 'şerit', verb: 'yapıştıracak', past: 'yapıştırdı', cover: 'renkli kâğıt' }),
+  obj('bahce', '🌳', 'bahçe', 'bahçesi', 'bahçeyi', ['büyük', 'küçük'], { u: 'm', fence: 'çit', verb: 'çekecek', past: 'çekti', cover: 'çim', pg: 'bahçesinin' }),
+  obj('oda', '🛋️', 'oda', 'odası', 'odayı', ['büyük', 'küçük'], { u: 'm', fence: 'süpürgelik', verb: 'döşeyecek', past: 'döşedi', cover: 'halı', pg: 'odasının' }),
+  obj('pano', '📌', 'pano', 'panosu', 'panoyu', ['büyük', 'küçük'], { u: 'dm', fence: 'şerit', verb: 'yapıştıracak', past: 'yapıştırdı', cover: 'renkli kâğıt', pg: 'panosunun' }),
 ]
 
 const cap = (s: string) => s.charAt(0).toLocaleUpperCase('tr-TR') + s.slice(1)
 /** Kesir sözcüğünün iyelik eki (pay okunuşuna göre): 3/4 → “’ü”, 2/5 → “’si” */
 const FRAC_POSS: Record<number, [string, string]> = { 1: ['i', 'ini'], 2: ['si', 'sini'], 3: ['ü', 'ünü'], 4: ['ü', 'ünü'], 5: ['i', 'ini'], 6: ['sı', 'sını'], 7: ['si', 'sini'], 8: ['i', 'ini'], 9: ['u', 'unu'] }
 const fr = (n: number, d: number, acc = false) => `[[${n}/${d}]]’${FRAC_POSS[n][acc ? 1 : 0]}`
-const dec = (n: number) => String(n).replace('.', ',')
 
 // ───────────────────────── geri bildirim kalıpları ─────────────────────────
 
@@ -152,7 +151,7 @@ function joinResult(a: number, b: number, pic: boolean): Task {
     events: [
       { id: 'join', s: 'Ekleme', t: (c) => `${c.a.gen} ${a} ${c.o.poss} vardı. ${b} ${c.o.sg} daha aldı.`, ok: { total: s }, bad: { left: rel((c) => `Hikâyende ${c.o.sg} sayısı arttı mı, azaldı mı? “Kaç kaldı?” sorusu hangi olaya uyar?`, MIS_KEY), got: known() } },
       { id: 'pw', s: 'Parça-bütün', t: (c) => `${c.a.gen} ${a} ${c.o.adj[0]}, ${b} ${c.o.adj[1]} ${c.o.poss} var.`, ok: { total: s }, bad: { left: rel('Hikâyende bir şey verildi ya da yendi mi? Modelde iki parça birleşiyor.', MIS_KEY) } },
-      { id: 'cmp', s: 'Karşılaştırma', t: (c) => `${c.a.gen} ${a} ${c.o.poss} var. ${c.b.gen} ${c.a.abl} ${b} fazla ${c.o.poss} var.`, ok: { bHas: s }, bad: { total: rel((c) => `“Toplam” sorusu ${c.a.n} ile ${c.b.n}’nin hepsini birlikte sorar. Modelde “?” hangi miktarı gösteriyor?`, 'Karşılaştırma durumunda bütünü (iki kişinin toplamını) sordu') } },
+      { id: 'cmp', s: 'Karşılaştırma', t: (c) => `${c.a.gen} ${a} ${c.o.poss} var. ${c.b.gen} ${c.a.abl} ${b} fazla ${c.o.poss} var.`, ok: { bHas: s }, bad: { total: rel('“Toplam” sorusu iki kişinin hepsini birlikte sorar. Modelde “?” hangi miktarı gösteriyor?', 'Karşılaştırma durumunda bütünü (iki kişinin toplamını) sordu') } },
       { id: 'sep', s: 'Ayırma', t: (c) => `${c.a.gen} ${a} ${c.o.poss} vardı. ${b} tanesini ${c.b.dat} verdi.`, rel: { m: 'Modelde iki parça birleşip bir bütün oluyor (+). Bu hikâyede sayı artıyor mu, azalıyor mu?', mis: 'Modeldeki birleştirme (toplama) ilişkisini ayırma olayıyla anlattı' } },
       { id: 'num', s: 'Ekleme', t: (c) => `${c.a.gen} ${a} ${c.o.poss} vardı. ${b + 3} ${c.o.sg} daha aldı.`, nums: { m: `Hikâyedeki ${b + 3} sayısı modelde var mı? Modeldeki iki parça hangi sayılar?`, mis: 'Modeldeki sayıları hikâyeye doğru aktarmadı' } },
     ],
@@ -300,7 +299,7 @@ function multCompare(a: number, k: number): Task {
     who: people(),
     what: things(),
     events: [
-      { id: 'times', s: 'Kat karşılaştırma', t: (c) => `${c.a.gen} ${a} ${c.o.poss} var. ${c.b.gen} ${c.a.gen} ${k} katı kadar ${c.o.poss} var.`, ok: { bHas: p }, bad: { more: rel((c) => `Bu soru farkı soruyor. Modeldeki “?” ise ${c.b.gen} ${c.o.plg} tamamını gösteriyor.`), total: rel('“Toplam” iki kişinin hepsini birlikte sorar. Modeldeki “?” hangi şeridin uzunluğu?') } },
+      { id: 'times', s: 'Kat karşılaştırma', t: (c) => `${c.a.gen} ${a} ${c.o.poss} var. ${c.b.gen} ${c.a.gen} ${k} katı kadar ${c.o.poss} var.`, ok: { bHas: p }, bad: { more: rel('Bu soru farkı soruyor. Modeldeki “?” ise uzun şeridin tamamını gösteriyor.'), total: rel('“Toplam” iki kişinin hepsini birlikte sorar. Modeldeki “?” hangi şeridin uzunluğu?') } },
       { id: 'grp', s: 'Eş gruplar', t: (c) => `${c.a.n} ${k} kutuya ${ek(a, 'dist')} ${c.o.sg} koydu.`, ok: { total: p } },
       { id: 'diff', s: 'Fark', t: (c) => `${c.a.gen} ${a} ${c.o.poss} var. ${c.b.gen} ${c.a.abl} ${k} fazla ${c.o.poss} var.`, rel: { m: `“${k} fazla” ile “${k} katı” aynı mı? Modeldeki alt şerit, üsttekinin kaç tanesinden oluşuyor?`, mis: 'Kat karşılaştırmayı fark olarak yorumladı' } },
       { id: 'num', s: 'Kat karşılaştırma', t: (c) => `${c.a.gen} ${a} ${c.o.poss} var. ${c.b.gen} ${c.a.gen} ${k + 1} katı kadar ${c.o.poss} var.`, nums: { m: `Modelde kaç eş şerit parçası var? Hikâyedeki ${k + 1} modelle uyuşuyor mu?`, mis: 'Modeldeki sayıları hikâyeye doğru aktarmadı' } },
@@ -352,7 +351,7 @@ function perimeter(wd: number, h: number): Task {
       { id: 'fence', s: 'Kenarları sarma', t: (c) => `${c.a.gen} ${c.o.poss} ${wd} ${rectCtx(c).u} uzunluğunda, ${h} ${rectCtx(c).u} genişliğinde bir dikdörtgen. ${c.a.n} dört kenarı boyunca ${c.o.x.fence} ${c.o.x.verb}.`, ok: { fence: P }, bad: { cover: rel('Model içini dolduran kareleri mi, kenarların uzunluğunu mu gösteriyor?', 'Çevre ile alanı karıştırdı') } },
       { id: 'walk', s: 'Tur atma', t: (c) => `${c.a.gen} ${c.o.poss} ${wd} ${rectCtx(c).u} uzunluğunda, ${h} ${rectCtx(c).u} genişliğinde bir dikdörtgen. Bir karınca kenarları boyunca tam bir tur attı.`, ok: { walk: P }, bad: { cover: rel('Karınca içeriyi mi dolaştı, kenarları mı? Model hangisini gösteriyor?', 'Çevre ile alanı karıştırdı') } },
       { id: 'cover', s: 'Kaplama', t: (c) => `${c.a.gen} ${c.o.poss} ${wd} ${rectCtx(c).u} uzunluğunda, ${h} ${rectCtx(c).u} genişliğinde bir dikdörtgen. ${c.a.n} içini tamamen ${c.o.x.cover} ile kaplayacak.`, rel: { m: 'Modelde kalın çizilen ne: dikdörtgenin içi mi, kenarları mı? Kaplamak alan mı, çevre mi ister?', mis: 'Çevre ile alanı karıştırdı' } },
-      { id: 'num', s: 'Kenarları sarma', t: (c) => `${c.a.gen} ${c.o.poss} her kenarı ${wd} ${rectCtx(c).u} olan bir kare. ${c.a.n} dört kenarı boyunca ${c.o.x.fence} ${c.o.x.verb}.`, nums: { m: `Modeldeki şekil kare mi? Kısa kenarlar kaç ${'birim'}?`, mis: 'Modeldeki ölçüleri hikâyeye doğru aktarmadı' } },
+      { id: 'num', s: 'Kenarları sarma', t: (c) => `${c.a.gen} ${c.o.poss} her kenarı ${wd} ${rectCtx(c).u} olan bir kare. ${c.a.n} dört kenarı boyunca ${c.o.x.fence} ${c.o.x.verb}.`, nums: { m: 'Modeldeki şekil kare mi? Kısa kenarlar kaç birim?', mis: 'Modeldeki ölçüleri hikâyeye doğru aktarmadı' } },
     ],
     qs: [
       { id: 'fence', t: (c) => `Kaç ${c.o.x.u} ${c.o.x.fence} gerekir?`, short: 'Kenarlara ne kadar?', u: (c) => c.o.x.u },
@@ -396,10 +395,10 @@ function perimeterInverse(P: number, wd: number): Task {
     who: people(),
     what: shuffle(PLACES),
     events: [
-      { id: 'fence', s: 'Kenarları sarma', t: (c) => `${c.a.n} dikdörtgen biçimindeki ${c.o.acc} dört kenarı boyunca ${P} ${c.o.x.u} ${c.o.x.fence} ${c.o.x.past}. Uzun kenarı ${wd} ${c.o.x.u}.`, ok: { short: h }, bad: { area: rel('Güzel bir soru, ama iki adım ister. Modeldeki “?” işareti neyi gösteriyor?') } },
+      { id: 'fence', s: 'Kenarları sarma', t: (c) => `${c.a.n} dikdörtgen biçimindeki ${c.o.x.pg} dört kenarı boyunca ${P} ${c.o.x.u} ${c.o.x.fence} ${c.o.x.past}. Uzun kenarı ${wd} ${c.o.x.u}.`, ok: { short: h }, bad: { area: rel('Güzel bir soru, ama iki adım ister. Modeldeki “?” işareti neyi gösteriyor?') } },
       { id: 'walk', s: 'Tur atma', t: (c) => `Bir karınca, ${c.a.gen} dikdörtgen biçimindeki ${c.o.poss} kenarları boyunca bir tur atınca ${P} ${c.o.x.u} yürüdü. Uzun kenar ${wd} ${c.o.x.u}.`, ok: { short: h }, bad: { area: rel('Güzel bir soru, ama iki adım ister. Modeldeki “?” işareti neyi gösteriyor?') } },
       { id: 'area', s: 'Kaplama', t: (c) => `${c.a.gen} dikdörtgen biçimindeki ${c.o.poss} ${P} ${c.o.x.u}²’lik bir alan kaplıyor. Uzun kenarı ${wd} ${c.o.x.u}.`, rel: { m: `Modelde ${P} çevre mi, alan mı? Kenarlar boyunca mı ölçülüyor?`, mis: 'Çevre ile alanı karıştırdı' } },
-      { id: 'num', s: 'Kenarları sarma', t: (c) => `${c.a.n} dikdörtgen biçimindeki ${c.o.acc} dört kenarı boyunca ${P + 4} ${c.o.x.u} ${c.o.x.fence} ${c.o.x.past}. Uzun kenarı ${wd} ${c.o.x.u}.`, nums: { m: `Modelde çevre kaç? Hikâyedeki ${P + 4} modelde var mı?`, mis: 'Modeldeki ölçüleri hikâyeye doğru aktarmadı' } },
+      { id: 'num', s: 'Kenarları sarma', t: (c) => `${c.a.n} dikdörtgen biçimindeki ${c.o.x.pg} dört kenarı boyunca ${P + 4} ${c.o.x.u} ${c.o.x.fence} ${c.o.x.past}. Uzun kenarı ${wd} ${c.o.x.u}.`, nums: { m: `Modelde çevre kaç? Hikâyedeki ${P + 4} modelde var mı?`, mis: 'Modeldeki ölçüleri hikâyeye doğru aktarmadı' } },
     ],
     qs: [
       { id: 'short', t: (c) => `Kısa kenarı kaç ${c.o.x.u}?`, short: 'Kısa kenar kaç?', u: (c) => c.o.x.u },
@@ -482,7 +481,7 @@ function fractionOf(t: number, n: number, d: number): Task {
     who: people(),
     what: things(),
     events: [
-      { id: 'give', s: 'Kesir kadarını verme', t: (c) => `${c.a.gen} ${t} ${c.o.poss} vardı. Bunların ${fr(n, d, true)} ${c.o.plg.length ? c.b.dat : ''} verdi.`, ok: { given: ans }, bad: { left: rel(`Modelde “?” hangi parçada: verilen ${fr(n, d)} mi, kalan parça mı?`, 'Kesrin gösterdiği parça ile kalan parçayı karıştırdı'), total: known() } },
+      { id: 'give', s: 'Kesir kadarını verme', t: (c) => `${c.a.gen} ${t} ${c.o.poss} vardı. Bunların ${fr(n, d, true)} ${c.b.dat} verdi.`, ok: { given: ans }, bad: { left: rel(`Modelde “?” hangi parçada: verilen ${fr(n, d)} mi, kalan parça mı?`, 'Kesrin gösterdiği parça ile kalan parçayı karıştırdı'), total: known() } },
       { id: 'pw', s: 'Parça-bütün', t: (c) => `${c.a.gen} ${t} ${c.o.poss} var. Bunların ${fr(n, d)} ${c.o.adj[0]}, gerisi ${c.o.adj[1]}.`, ok: { adj0: ans }, bad: { adj1: rel(`Modelde boyalı parça (${fr(n, d)}) mı soruluyor, boyasız parça mı?`, 'Kesrin gösterdiği parça ile kalan parçayı karıştırdı'), total: known() } },
       { id: 'count', s: 'Tane olarak verme', t: (c) => `${c.a.gen} ${t} ${c.o.poss} vardı. ${n} tanesini ${c.b.dat} verdi.`, rel: { m: `Model “${fr(n, d)}” diyor. ${n} tane ile ${t} tanenin ${fr(n, d)} aynı mı?`, mis: 'Kesri doğal sayı (tane) gibi kullandı' } },
       { id: 'num', s: 'Kesir kadarını verme', t: (c) => `${c.a.gen} ${t} ${c.o.poss} vardı. Bunların ${fr(1, d, true)} ${c.b.dat} verdi.`, nums: { m: `Modelde ${d} eş parçanın kaç tanesi boyalı?`, mis: 'Kesrin payını modelden yanlış okudu' } },
@@ -647,7 +646,7 @@ function ebob(): Task {
   return {
     title: 'Ortak bölen',
     eq: 'EBOB(12, 18) = ?',
-    model: () => ({ k: 'vis', v: { kind: 'tape', parts: Array.from({ length: 12 }, () => ({ label: '', value: 1 })), compare: Array.from({ length: 18 }, () => ({ label: '', value: 1 })) } }),
+    model: () => ({ k: 'vis', v: { kind: 'tape', parts: [{ label: '12', value: 12 }], compare: [{ label: '18', value: 18 }] } }),
     who: people(),
     what: shuffle(G),
     events: [
@@ -780,7 +779,7 @@ function fracDiv(): Task {
     events: [
       { id: 'cups', s: 'Kaç tane sığar?', t: (c) => `${c.a.n} [[3/4]] L ${c.o.sg} ile [[1/8]] L’lik bardakları doldurdu.`, ok: { cups: 6 } },
       { id: 'cut', s: 'Eşit parçalara kesme', t: (c) => `${c.a.n} [[3/4]] m uzunluğundaki bir kurdeleyi [[1/8]] m’lik parçalara kesti.`, ok: { pieces: 6 } },
-      { id: 'of', s: 'Kesir kadarı', t: (c) => `${c.a.n}, [[3/4]] L ${c.o.sg} vardı; ${c.a.n} bunun ${fr(1, 8, true)} içti.`, rel: { m: `Model “[[3/4]]’ün içinde kaç tane [[1/8]] var?” diye soruyor. ${fr(1, 8, true)} içmek bu soru mu?`, mis: 'Bölmeyi “… kadarı” (çarpma) ile karıştırdı' } },
+      { id: 'of', s: 'Kesir kadarı', t: (c) => `${c.a.gen} [[3/4]] L ${c.o.poss} vardı. Bunun ${fr(1, 8, true)} içti.`, rel: { m: `Model “[[3/4]]’ün içinde kaç tane [[1/8]] var?” diye soruyor. ${fr(1, 8, true)} içmek bu soru mu?`, mis: 'Bölmeyi “… kadarı” (çarpma) ile karıştırdı' } },
       { id: 'num', s: 'Kaç tane sığar?', t: (c) => `${c.a.n} [[3/8]] L ${c.o.sg} ile [[1/8]] L’lik bardakları doldurdu.`, nums: { m: 'Modelde boyalı kısım bütünün kaçta kaçı? [[3/8]] mi, [[3/4]] mü?', mis: 'Modeldeki kesri hikâyeye doğru aktarmadı' } },
     ],
     qs: [
@@ -890,7 +889,7 @@ function powers(): Task {
       { id: 'num', s: 'Karenin alanı', t: (c) => `${c.a.n} bir kenarı 2^{6} cm olan kare biçiminde bir ${c.o.sg} kesti.`, nums: { m: 'Modeldeki karenin bir kenarı kaç cm?', mis: 'Modeldeki sayıları hikâyeye doğru aktarmadı' } },
     ],
     qs: [
-      { id: 'area', t: (c) => `${cap(c.o.sg)} alanı kaç cm²?`, short: 'Alanı kaç?', u: () => 'cm²' },
+      { id: 'area', t: () => 'Alanı kaç cm²?', short: 'Alanı kaç?', u: () => 'cm²' },
       { id: 'bact', t: () => 'Sonunda kaç bakteri oldu?', short: 'Kaç bakteri?', u: () => 'bakteri' },
       { id: 'squares', t: () => 'Tahtada kaç küçük kare var?', short: 'Kaç kare?', u: () => 'kare' },
       { id: 'per', t: () => 'Çevresi kaç cm?', short: 'Çevresi kaç?' },
@@ -956,4 +955,3 @@ export function tasksFor(grade: Grade): Task[] {
 }
 
 export const DEFAULT_HINTS = HINTS
-export { dec }

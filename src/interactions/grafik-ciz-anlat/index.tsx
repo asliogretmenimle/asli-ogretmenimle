@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Check, Eye, Lightbulb, PencilLine, Plus, Trash2, Undo2, X } from 'lucide-react'
 import type { InteractionProps } from '../types'
 import type { Grade } from '../../data/types'
@@ -46,9 +46,16 @@ export default function GrafikCizAnlat({ grade, onFinish }: InteractionProps) {
             : 'Sabit hızla değişen bir durum doğrusal fonksiyondur: y = mx + n’de m eğim (birim zamandaki değişim), n başlangıç değeridir. Soğuyan çay gibi durumlarda eğim değiştiği için grafik bir doğru değildir.',
     })
   }
+  const topRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    // yeni görevde (telefonda sayfa aşağıdaysa) görevin başına dön
+    const el = topRef.current
+    if (S.idx > 0 && el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  }, [S.idx])
   const footer = S.done && <NextButton isLast={S.isLast} onNext={S.next} onFinish={finish} />
   return (
     <Scene grade={grade}>
+      <div ref={topRef} className="scroll-mt-20" />
       <Header icon={<span className="text-xl" aria-hidden>{t.emoji}</span>} color={VIOLET} idx={S.idx} total={tasks.length} title={t.title} dark={dark} />
       {t.kind === 'sketch' && <SketchView key={S.idx} t={t} grade={grade} dark={dark} onDone={onDone} footer={footer} />}
       {t.kind === 'compare' && <CompareView key={S.idx} t={t} grade={grade} dark={dark} onDone={onDone} footer={footer} />}
