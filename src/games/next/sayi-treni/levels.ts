@@ -41,8 +41,6 @@ export interface Level {
   picker?: { q: string; options: string[] }
   /** başarıda otomatik yazılan strateji */
   auto?: string
-  /** en çok kaç vagon bağlanabilir */
-  max?: number
 }
 
 const rnd = (a: number, b: number) => a + Math.floor(Math.random() * (b - a + 1))
@@ -103,7 +101,6 @@ function g1Couple(n: number): Level {
     board: ['Lokomotif', `${n} istiyor`],
     note: `Rakam, nokta, çerçeve, çetele… Hepsi ${n}!`,
     picker: { q: 'Çerçevedeki sayıyı nasıl buldun?', options: ['Tek tek saydım', '5’ten devam ettim', 'Boş karelere baktım', 'Bakınca gördüm'] },
-    max: 6,
   }
 }
 
@@ -133,7 +130,6 @@ function g1Teen(n: number): Level {
     plate: String(n),
     board: ['Lokomotif', `${n} istiyor`],
     note: `${n} = 10 + ${o}. Bir onluk ve ${o} birlik!`,
-    max: 6,
   }
 }
 
@@ -156,16 +152,15 @@ function g1Range(): Level {
     board: [`${ek(lo, 'abl')} büyük`, `${ek(hi, 'abl')} küçük`],
     note: `${lo} ile ${hi} arasında ${hi - lo - 1} sayı var: ${Array.from({ length: hi - lo - 1 }, (_, i) => lo + 1 + i).join(', ')}.`,
     picker: { q: 'Nasıl karar verdin?', options: ['Sayı doğrusunu düşündüm', 'Saydım', '5 ve 10’a göre baktım'] },
-    max: 6,
   }
 }
 
 function g1FrameSeq(): Level {
-  const s = rnd(2, 4)
-  const seq = Array.from({ length: 6 }, (_, i) => s + i)
+  const s = rnd(2, 5)
+  const seq = Array.from({ length: 5 }, (_, i) => s + i)
   const gaps = [2, 4]
   const slots: Slot[] = seq.map((n, i) => (gaps.includes(i) ? { answer: n } : { fixed: car({ k: 'frame', n }, i) }))
-  const traps: Rep[] = [{ k: 'frame', n: s + 3 }, { k: 'frame', n: s + 7 }]
+  const traps: Rep[] = [{ k: 'frame', n: s + 3 }, { k: 'frame', n: s + 5 }]
   return {
     kind: 'missing',
     stage: 'Model',
@@ -185,7 +180,7 @@ function g1FrameSeq(): Level {
 
 function g1Back(): Level {
   const e = rnd(17, 20)
-  const seq = Array.from({ length: 6 }, (_, i) => e - i)
+  const seq = Array.from({ length: 5 }, (_, i) => e - i)
   const gaps = [2, 4]
   const slots: Slot[] = seq.map((n, i) => (gaps.includes(i) ? { answer: n } : { fixed: car({ k: 'num', n }, i + 2) }))
   const traps: Rep[] = [{ k: 'num', n: e + 1 }, { k: 'num', n: rev(e - 4) !== e - 4 ? rev(e - 4) : e - 7 }]
@@ -261,7 +256,6 @@ function g2Load(): Level {
     board: ['Lokomotif', `${n} istiyor`],
     note: `${t} onluk ${o} birlik = ${t - 1} onluk ${o + 10} birlik. Bir onluğu bozmak sayıyı değiştirmez!`,
     auto: 'Esnek basamak değeri (onluğu bozma)',
-    max: 4,
   }
 }
 
@@ -293,13 +287,12 @@ function g2Couple(): Level {
     board: ['Lokomotif', `${n} istiyor`],
     note: `${n} = ${t * 10} + ${o} = ${(t - 1) * 10} + ${o + 10}: aynı sayı, farklı yazılış!`,
     picker: { q: 'Vagonları nasıl tanıdın?', options: ['Onlukları 10’ar saydım', 'Onluk ve birlikleri ayırdım', 'Toplamı hesapladım', 'Rakamların yerine baktım'] },
-    max: 7,
   }
 }
 
 function g2Tens(): Level {
-  const s = rnd(1, 2) * 10 + rnd(1, 9)
-  const seq = Array.from({ length: 6 }, (_, i) => s + 10 * i)
+  const s = rnd(1, 4) * 10 + rnd(1, 9)
+  const seq = Array.from({ length: 5 }, (_, i) => s + 10 * i)
   const gaps = [2, 4]
   const slots: Slot[] = seq.map((n, i) =>
     gaps.includes(i) ? { answer: n } : { fixed: car(i % 2 === 0 ? { k: 'b10', t: Math.floor(n / 10), o: n % 10 } : { k: 'num', n }, i) },
@@ -328,17 +321,17 @@ function g2Tens(): Level {
 function g2Skip(): Level {
   const step = pick([5, 2])
   const s = step === 5 ? rnd(3, 8) * 5 : rnd(12, 30) * 2
-  const seq = Array.from({ length: 6 }, (_, i) => s + step * i)
-  const gaps = [2, 5]
+  const seq = Array.from({ length: 5 }, (_, i) => s + step * i)
+  const gaps = [1, 4]
   const slots: Slot[] = seq.map((n, i) => (gaps.includes(i) ? { answer: n } : { fixed: car({ k: 'num', n }, i + 1) }))
   const [a, b] = gaps.map((i) => seq[i])
-  const traps: Rep[] = [{ k: 'num', n: seq[1] + 1 }, { k: 'num', n: b + 1 }, { k: 'num', n: b + step }]
+  const traps: Rep[] = [{ k: 'num', n: seq[0] + 1 }, { k: 'num', n: b + 1 }, { k: 'num', n: b + step }]
   return {
     kind: 'missing',
     stage: 'Sembol',
     title: step === 5 ? 'Beşer beşer' : 'İkişer ikişer',
-    prompt: 'Bu tren ritmik sayıyor. Ortadaki boşluğu ve sıradaki vagonu bul!',
-    hints: ['İki vagon arasında kaç adım var?', `${seq[0]}, ${seq[1]}… Her seferinde ${step} ekleniyor mu?`],
+    prompt: 'Bu tren ritmik sayıyor. Boş vagonu ve sıradaki vagonu bul!',
+    hints: ['Yan yana iki vagon arasında kaç adım var?', `${seq[2]}, ${seq[3]}… Her seferinde ${step} ekleniyor mu?`],
     goal: 2,
     yard: cars([{ k: 'num', n: a }, { k: 'num', n: b }, ...traps]),
     slots,
@@ -402,7 +395,6 @@ function g2Range(): Level {
     plate: '?',
     board: [`${ek(lo, 'abl')} büyük`, `${ek(hi, 'abl')} küçük`],
     note: `${lo} ile ${hi} arasında ${hi - lo - 1} sayı var. ${lo} ve ${hi} binemez!`,
-    max: 6,
   }
 }
 

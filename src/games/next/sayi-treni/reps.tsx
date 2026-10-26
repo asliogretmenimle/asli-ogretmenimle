@@ -358,8 +358,8 @@ export function WagonBody({ color, children, spin, ghost }: { color: number; chi
       <rect x={2} y={4} width={WAG_W - 4} height={12} rx={6} fill={p.dark} />
       <rect x={5} y={10} width={WAG_W - 10} height={86} rx={10} fill={p.body} />
       <rect x={5} y={82} width={WAG_W - 10} height={14} rx={6} fill={p.dark} opacity={0.55} />
-      <rect x={9} y={13} width={WAG_W - 18} height={5} rx={2.5} fill={p.light} opacity={0.7} />
-      <rect x={12} y={20} width={WAG_W - 24} height={62} rx={8} fill="#fff" stroke={p.dark} strokeWidth={2.5} />
+      <rect x={9} y={12} width={WAG_W - 18} height={3} rx={1.5} fill={p.light} opacity={0.7} />
+      <rect x={10} y={17} width={WAG_W - 20} height={68} rx={8} fill="#fff" stroke={p.dark} strokeWidth={2.5} />
       <Wheel cx={34} cy={106} r={14} spin={spin} />
       <Wheel cx={WAG_W - 34} cy={106} r={14} spin={spin} />
       {children}
@@ -370,8 +370,8 @@ export function WagonBody({ color, children, spin, ghost }: { color: number; chi
 /** Vagonun beyaz panelinin içine temsil */
 export function WagonRep({ rep }: { rep: Rep }) {
   return (
-    <g transform="translate(14 22)">
-      <RepG rep={rep} w={WAG_W - 28} h={58} />
+    <g transform="translate(12 19)">
+      <RepG rep={rep} w={WAG_W - 24} h={64} />
     </g>
   )
 }

@@ -23,7 +23,7 @@ export interface Inv {
   answers: number[]
   unit?: string
   /** cont: aralık genişliği seçenekleri (eşit olmayan seçenek de olabilir) */
-  bins?: { id: string; label: string; edges: number[]; ok: boolean; why?: string }[]
+  bins?: { id: string; label: string; edges: number[]; ok: boolean; why?: string; mis?: string }[]
   displays: { id: DisplayId; ok: boolean; why?: string; mis?: string }[]
   /** resim grafiği anahtarı (1 simge = key öğrenci) */
   key: number

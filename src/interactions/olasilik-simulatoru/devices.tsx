@@ -3,7 +3,7 @@ import { useDrag } from '@use-gesture/react'
 import { DiceSvg } from '../../components/Visual'
 import { Plane, usePlane } from '../../interactive/Plane'
 import { clamp } from '../../interactive/axis'
-import { drawIndex, fmtN, useRaf, type Look } from '../veri-toplama/kit'
+import { drawIndex, fmtN, useBoxW, useRaf, type Look } from '../veri-toplama/kit'
 
 /**
  * Olasılık etkinlikleri (65, 66) için rastgele araçlar:
@@ -284,10 +284,11 @@ export function RunButtons({ look, t, sizes = [1, 10, 100, 1000], max = 20000 }:
 
 export interface Mark { id: string; v: number | null; color: string; label: string; drag?: boolean; ghost?: boolean }
 
-const PL = { L: 34, R: 34, W: 1000, Y: 84 }
-const vx = (v: number) => PL.L + v * (PL.W - PL.L - PL.R)
+const PL = { L: 34, R: 34, Y: 84 }
+const vxW = (W: number) => (v: number) => PL.L + v * (W - PL.L - PL.R)
 
-function MarkG({ m, onMove, svg, active, onPick, row = 0 }: { m: Mark; onMove?: (v: number) => void; svg: React.RefObject<SVGSVGElement | null>; active?: boolean; onPick?: () => void; row?: number }) {
+function MarkG({ m, onMove, svg, active, onPick, row = 0, W }: { m: Mark; onMove?: (v: number) => void; svg: React.RefObject<SVGSVGElement | null>; active?: boolean; onPick?: () => void; row?: number; W: number }) {
+  const vx = vxW(W)
   const ref = useRef<SVGGElement>(null)
   useDrag(
     ({ xy: [cx], tap, event }) => {
@@ -296,8 +297,8 @@ function MarkG({ m, onMove, svg, active, onPick, row = 0 }: { m: Mark; onMove?: 
       if (!onMove || !m.drag) return
       const r = svg.current?.getBoundingClientRect()
       if (!r) return
-      const px = ((cx - r.left) / r.width) * PL.W
-      onMove(clamp((px - PL.L) / (PL.W - PL.L - PL.R), 0, 1))
+      const px = ((cx - r.left) / r.width) * W
+      onMove(clamp((px - PL.L) / (W - PL.L - PL.R), 0, 1))
     },
     { target: ref, filterTaps: true, eventOptions: { passive: false } },
   )
@@ -308,7 +309,7 @@ function MarkG({ m, onMove, svg, active, onPick, row = 0 }: { m: Mark; onMove?: 
       <rect x={x - 34} y={4} width={68} height={100} fill="transparent" />
       <line x1={x} x2={x} y1={PL.Y - 30 - row * 26} y2={PL.Y + 2} stroke={m.color} strokeWidth={4} strokeDasharray={m.ghost ? '6 5' : undefined} />
       <circle cx={x} cy={PL.Y} r={active ? 17 : 14} fill={m.color} stroke="#fff" strokeWidth={4} />
-      <text x={clamp(x, 70, PL.W - 70)} y={PL.Y - 36 - row * 26} textAnchor="middle" fontSize={22} fontWeight={900} fill={m.color} style={{ paintOrder: 'stroke', stroke: '#fff', strokeWidth: 5 }}>{m.label}</text>
+      <text x={clamp(x, 70, W - 70)} y={PL.Y - 36 - row * 26} textAnchor="middle" fontSize={22} fontWeight={900} fill={m.color} style={{ paintOrder: 'stroke', stroke: '#fff', strokeWidth: 5 }}>{m.label}</text>
     </g>
   )
 }
@@ -317,15 +318,19 @@ function MarkG({ m, onMove, svg, active, onPick, row = 0 }: { m: Mark; onMove?: 
  * 0–1 olasılık doğrusu. Sürüklenebilir işaretler; doğruya dokununca seçili işaret oraya gider (dokunuş alternatifi).
  * words: 'simple' (imkânsız–kesin), 'five' (5 düzey)
  */
-export function ProbLine({ look, marks, onMove, selected, onSelect, words = 'five', numbers = false }: { look: Look; marks: Mark[]; onMove?: (id: string, v: number) => void; selected?: string | null; onSelect?: (id: string) => void; words?: 'five' | 'simple'; numbers?: boolean }) {
+export function ProbLine({ look, marks, onMove, selected, onSelect, words: wordsIn = 'five', numbers = false }: { look: Look; marks: Mark[]; onMove?: (id: string, v: number) => void; selected?: string | null; onSelect?: (id: string) => void; words?: 'five' | 'simple'; numbers?: boolean }) {
   const svg = useRef<SVGSVGElement>(null)
+  const [box, bw] = useBoxW(800)
+  const W = Math.round(clamp(bw * 1.45, 520, 1000))
+  const words = W < 760 ? 'simple' : wordsIn
+  const vx = vxW(W)
   const tapLine = (e: React.PointerEvent) => {
     if (!selected || !onMove) return
     if ((e.target as Element).closest('[data-handle]')) return
     const r = svg.current?.getBoundingClientRect()
     if (!r) return
-    const px = ((e.clientX - r.left) / r.width) * PL.W
-    onMove(selected, clamp((px - PL.L) / (PL.W - PL.L - PL.R), 0, 1))
+    const px = ((e.clientX - r.left) / r.width) * W
+    onMove(selected, clamp((px - PL.L) / (W - PL.L - PL.R), 0, 1))
   }
   const lab = words === 'five' ? [[0, 'İmkânsız'], [0.25, 'Olası değil'], [0.5, 'Yarı yarıya'], [0.75, 'Olası'], [1, 'Kesin']] : [[0, 'İmkânsız'], [0.5, 'Yarı yarıya'], [1, 'Kesin']]
   const ink = look.dark ? '#e2e8f0' : '#1f2340'
@@ -333,13 +338,14 @@ export function ProbLine({ look, marks, onMove, selected, onSelect, words = 'fiv
   const rows: Record<string, number> = {}
   const lastIn = [-9, -9]
   marks.filter((m) => m.v !== null).sort((a, b) => a.v! - b.v!).forEach((m) => {
-    const r = m.v! - lastIn[0] > 0.12 ? 0 : m.v! - lastIn[1] > 0.12 ? 1 : 0
+    const gap = 0.12 * (1000 / W)
+    const r = m.v! - lastIn[0] > gap ? 0 : m.v! - lastIn[1] > gap ? 1 : 0
     rows[m.id] = r
     lastIn[r] = m.v!
   })
   return (
-    <div style={{ touchAction: 'none' }} className="select-none">
-      <svg ref={svg} viewBox={`0 0 ${PL.W} ${numbers ? 168 : 146}`} className="block w-full" onPointerUp={tapLine} role="img" aria-label="Olasılık doğrusu">
+    <div ref={box} style={{ touchAction: 'none' }} className="select-none">
+      <svg ref={svg} viewBox={`0 0 ${W} ${numbers ? 168 : 146}`} className="block w-full" onPointerUp={tapLine} role="img" aria-label="Olasılık doğrusu">
         <defs>
           <linearGradient id="pl-g" x1="0" x2="1">
             <stop offset="0" stopColor="#94a3b8" />
@@ -347,16 +353,16 @@ export function ProbLine({ look, marks, onMove, selected, onSelect, words = 'fiv
             <stop offset="1" stopColor="#22c55e" />
           </linearGradient>
         </defs>
-        <rect x={PL.L} y={PL.Y - 7} width={PL.W - PL.L - PL.R} height={14} rx={7} fill="url(#pl-g)" />
-        <rect x={0} y={PL.Y - 30} width={PL.W} height={60} fill="transparent" />
+        <rect x={PL.L} y={PL.Y - 7} width={W - PL.L - PL.R} height={14} rx={7} fill="url(#pl-g)" />
+        <rect x={0} y={PL.Y - 30} width={W} height={60} fill="transparent" />
         {lab.map(([v, t]) => (
           <g key={t as string}>
             <line x1={vx(v as number)} x2={vx(v as number)} y1={PL.Y - 12} y2={PL.Y + 12} stroke={ink} strokeWidth={3} />
-            <text x={clamp(vx(v as number), 60, PL.W - 60)} y={PL.Y + 40} textAnchor="middle" fontSize={22} fontWeight={800} fill={ink}>{t as string}</text>
-            {numbers && <text x={clamp(vx(v as number), 20, PL.W - 20)} y={PL.Y + 66} textAnchor="middle" fontSize={20} fontWeight={800} fill={look.dark ? '#94a3b8' : '#5b6080'}>{fmtN(v as number)}</text>}
+            <text x={clamp(vx(v as number), 60, W - 60)} y={PL.Y + 40} textAnchor="middle" fontSize={22} fontWeight={800} fill={ink}>{t as string}</text>
+            {numbers && <text x={clamp(vx(v as number), 20, W - 20)} y={PL.Y + 66} textAnchor="middle" fontSize={20} fontWeight={800} fill={look.dark ? '#94a3b8' : '#5b6080'}>{fmtN(v as number)}</text>}
           </g>
         ))}
-        {marks.map((m) => <MarkG key={m.id} m={m} row={rows[m.id] ?? 0} svg={svg} active={selected === m.id} onPick={() => onSelect?.(m.id)} onMove={onMove ? (v) => onMove(m.id, v) : undefined} />)}
+        {marks.map((m) => <MarkG key={m.id} m={m} W={W} row={rows[m.id] ?? 0} svg={svg} active={selected === m.id} onPick={() => onSelect?.(m.id)} onMove={onMove ? (v) => onMove(m.id, v) : undefined} />)}
       </svg>
     </div>
   )
@@ -364,7 +370,7 @@ export function ProbLine({ look, marks, onMove, selected, onSelect, words = 'fiv
 
 // ───────────────────────── Göreli sıklık grafiği ─────────────────────────
 
-function Lines({ hist, focus, color, theoryV, guess }: { hist: number[][]; focus: number[]; color: string[]; theoryV?: (number | null)[]; guess?: number | null }) {
+function Lines({ hist, focus, color, theoryV, guess, complement }: { hist: number[][]; focus: number[]; color: string[]; theoryV?: (number | null)[]; guess?: number | null; complement?: { idx: number; color: string } }) {
   const P = usePlane()
   const xMax = P.view.xMax
   return (
@@ -375,6 +381,10 @@ function Lines({ hist, focus, color, theoryV, guess }: { hist: number[][]; focus
         </g>
       ))}
       {guess !== null && guess !== undefined && <line x1={P.sx(0)} x2={P.sx(xMax)} y1={P.sy(guess)} y2={P.sy(guess)} stroke="#f59e0b" strokeWidth={3} strokeDasharray="2 6" strokeLinecap="round" />}
+      {complement && (() => {
+        const pts = hist.filter((h) => h[0] > 0).map((h) => `${P.sx(h[0])},${P.sy(1 - h[complement.idx + 1] / h[0])}`).join(' ')
+        return <polyline points={pts} fill="none" stroke={complement.color} strokeWidth={3} strokeLinejoin="round" />
+      })()}
       {focus.map((fi, j) => {
         const pts = hist.filter((h) => h[0] > 0).map((h) => `${P.sx(h[0])},${P.sy(h[fi + 1] / h[0])}`).join(' ')
         const lastH = hist[hist.length - 1]
@@ -389,11 +399,11 @@ function Lines({ hist, focus, color, theoryV, guess }: { hist: number[][]; focus
   )
 }
 
-export function FreqChart({ t, focus, colors, theoryV, guess, label = 'Göreli sıklık grafiği' }: { t: Trials; focus: number[]; colors: string[]; theoryV?: (number | null)[]; guess?: number | null; label?: string }) {
+export function FreqChart({ t, focus, colors, theoryV, guess, label = 'Göreli sıklık grafiği', complement }: { t: Trials; focus: number[]; colors: string[]; theoryV?: (number | null)[]; guess?: number | null; label?: string; complement?: { idx: number; color: string } }) {
   const bucket = t.n <= 20 ? 20 : t.n <= 100 ? 100 : t.n <= 500 ? 500 : t.n <= 2000 ? 2000 : t.n <= 5000 ? 5000 : 20000
   return (
     <Plane key={bucket} initial={{ xMin: -bucket * 0.07, xMax: bucket * 1.03, yMin: -0.1, yMax: 1.08 }} equalUnits={false} aspect={0.42} xLabel="deneme" yLabel="göreli sıklık" label={label} minSpan={5} maxSpan={40000}>
-      <Lines hist={t.hist} focus={focus} color={colors} theoryV={theoryV} guess={guess} />
+      <Lines hist={t.hist} focus={focus} color={colors} theoryV={theoryV} guess={guess} complement={complement} />
     </Plane>
   )
 }

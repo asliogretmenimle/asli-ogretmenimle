@@ -94,18 +94,50 @@ function boardSize(shapes: Shape[]) {
   return { cols: Math.max(...ps.map((p) => p[0])) + 2, rows: Math.max(...ps.map((p) => p[1])) + 2 }
 }
 
-/** Çit çizimi: kenarlar + direkler */
-function FenceLines({ edges, color = FENCE, numbers }: { edges: Edge[]; color?: string; numbers?: boolean }) {
+/** Sınır kenarlarını çevre boyunca sıraya diz (numaralandırma için) */
+function orderEdges(edges: Edge[]): Edge[] {
+  const left = [...edges]
+  const out: Edge[] = []
+  while (left.length) {
+    let cur = left.shift()!
+    out.push(cur)
+    for (;;) {
+      const ex = cur[2], ey = cur[3]
+      const i = left.findIndex((e) => (e[0] === ex && e[1] === ey) || (e[2] === ex && e[3] === ey))
+      if (i < 0) break
+      const e = left.splice(i, 1)[0]
+      cur = e[0] === ex && e[1] === ey ? e : [e[2], e[3], e[0], e[1]]
+      out.push(cur)
+    }
+  }
+  return out
+}
+
+/** Çit çizimi: kenarlar + direkler; numaralar şeklin dışında */
+function FenceLines({ edges, color = FENCE, numbers, cells }: { edges: Edge[]; color?: string; numbers?: boolean; cells?: string[] }) {
   const posts = new Set<string>()
   edges.forEach(([a, b, c, d]) => { posts.add(`${a},${b}`); posts.add(`${c},${d}`) })
+  const set = new Set(cells ?? [])
+  const labelPos = (e: Edge): [number, number] => {
+    const mx = (e[0] + e[2]) / 2, my = (e[1] + e[3]) / 2
+    if (e[1] === e[3]) {
+      const below = set.has(ck(Math.floor(mx), e[1]))
+      return [mx, below || !cells ? e[1] - 0.17 : e[1] + 0.36]
+    }
+    const right = set.has(ck(e[0], Math.floor(my)))
+    return [right || !cells ? e[0] - 0.24 : e[0] + 0.24, my + 0.11]
+  }
   return (
     <g pointerEvents="none">
-      {edges.map((e, i) => (
-        <g key={edgeKey(e)}>
-          <line x1={e[0]} y1={e[1]} x2={e[2]} y2={e[3]} stroke={color} strokeWidth={0.13} strokeLinecap="round" />
-          {numbers && <text x={(e[0] + e[2]) / 2 + (e[1] === e[3] ? 0 : 0.28)} y={(e[1] + e[3]) / 2 + (e[1] === e[3] ? -0.17 : 0.12)} textAnchor="middle" fontSize={0.3} fontWeight={900} fill={color}>{i + 1}</text>}
-        </g>
-      ))}
+      {edges.map((e, i) => {
+        const [lx, ly] = labelPos(e)
+        return (
+          <g key={edgeKey(e)}>
+            <line x1={e[0]} y1={e[1]} x2={e[2]} y2={e[3]} stroke={color} strokeWidth={0.13} strokeLinecap="round" />
+            {numbers && <text x={lx} y={ly} textAnchor="middle" fontSize={0.28} fontWeight={900} fill={color} stroke="#fff" strokeWidth={0.06} paintOrder="stroke">{i + 1}</text>}
+          </g>
+        )
+      })}
       {[...posts].map((p) => { const [x, y] = p.split(',').map(Number); return <circle key={p} cx={x} cy={y} r={0.09} fill={color} /> })}
     </g>
   )
@@ -116,12 +148,12 @@ function ShapeUnder({ shapes, fillOp = 0.16 }: { shapes: Shape[]; fillOp?: numbe
     <g pointerEvents="none">
       {shapes.map((s) => {
         const ps = s.cells.map(pk)
-        const lx = Math.min(...ps.map((p) => p[0])), ly = Math.min(...ps.map((p) => p[1]))
+        const cx = ps.reduce((a, p) => a + p[0] + 0.5, 0) / ps.length, cy = ps.reduce((a, p) => a + p[1] + 0.5, 0) / ps.length
         const col = s.label === 'A' ? '#ea580c' : '#7c3aed'
         return (
           <g key={s.label}>
             {ps.map(([x, y]) => <rect key={`${x},${y}`} x={x} y={y} width={1} height={1} fill={col} fillOpacity={fillOp} />)}
-            <text x={lx + 0.12} y={ly < 0.6 ? ly + 0.42 : ly - 0.15} fontSize={0.45} fontWeight={900} fill={col}>{s.label}</text>
+            <text x={cx} y={cy + 0.25} textAnchor="middle" fontSize={0.75} fontWeight={900} fill={col} fillOpacity={0.35}>{s.label}</text>
           </g>
         )
       })}
@@ -196,7 +228,7 @@ function WalkRound({ grade, task, onComplete, footer, addSol }: RP & { task: Wal
                 </g>
                 <ShapeUnder shapes={task.shapes} fillOp={0.22} />
                 {edgesOf.flat().map((e) => <line key={`g${edgeKey(e)}`} x1={e[0]} y1={e[1]} x2={e[2]} y2={e[3]} stroke="#cbd5e1" strokeWidth={0.07} strokeDasharray="0.12 0.1" pointerEvents="none" />)}
-                {fenced.map((f, i) => <FenceLines key={i} edges={f} numbers />)}
+                {fenced.map((f, i) => <FenceLines key={i} edges={f} cells={task.shapes[i].cells} numbers />)}
               </svg>
             </ZoomBox>
           </div>
@@ -206,10 +238,10 @@ function WalkRound({ grade, task, onComplete, footer, addSol }: RP & { task: Wal
       panel={
         <>
           {two ? (
-            <Card title="Önce tahmin et">
+            <Card title="Önce tahmin et: hangisine daha çok?">
               <div className="grid grid-cols-3 gap-2">
                 {(['A', '=', 'B'] as const).map((v) => (
-                  <PickBtn key={v} big={age.big} on={pred === v} disabled={!!pred} onClick={() => { setPred(v); if (v === '=') track.misconception('Alanları eşit iki şeklin çevrelerinin de eşit olduğunu düşündü') }}>{v === '=' ? 'Eşit' : `${v} daha çok`}</PickBtn>
+                  <PickBtn key={v} big={age.big} on={pred === v} disabled={!!pred} onClick={() => { setPred(v); if (v === '=') track.misconception('Alanları eşit iki şeklin çevrelerinin de eşit olduğunu düşündü') }}>{v === '=' ? 'Eşit' : v}</PickBtn>
                 ))}
               </div>
             </Card>
@@ -290,10 +322,10 @@ function GrassRound({ grade, task, onComplete, footer, addSol }: RP & { task: Gr
       }
       panel={
         <>
-          <Card title="Önce tahmin et">
+          <Card title="Önce tahmin et: hangisinde daha çok?">
             <div className="grid grid-cols-3 gap-2">
               {(['A', '=', 'B'] as const).map((v) => (
-                <PickBtn key={v} big={age.big} on={pred === v} disabled={!!pred} onClick={() => { setPred(v); if (v === '=') track.misconception('Çevreleri eşit iki şeklin alanlarının da eşit olduğunu düşündü') }}>{v === '=' ? 'Eşit' : `${v} daha çok`}</PickBtn>
+                <PickBtn key={v} big={age.big} on={pred === v} disabled={!!pred} onClick={() => { setPred(v); if (v === '=') track.misconception('Çevreleri eşit iki şeklin alanlarının da eşit olduğunu düşündü') }}>{v === '=' ? 'Eşit' : v}</PickBtn>
               ))}
             </div>
           </Card>
@@ -398,7 +430,7 @@ function RopeRound({ grade, task, onComplete, footer, addSol }: RP & { task: Rop
             <p className="mb-2 text-[15px] font-bold">İp hep {task.P} birim. Dikdörtgenin biçimi değişince içindeki alan…</p>
             <div className="grid grid-cols-2 gap-2">
               {([['degismez', 'Değişmez'], ['degisir', 'Değişir']] as const).map(([v, t]) => (
-                <PickBtn key={v} big={age.big} on={pred === v} disabled={!!pred} onClick={() => { setPred(v); if (v === 'degismez') track.misconception('Çevre aynı kalınca alanın da aynı kalacağını düşündü') }}>{t}</PickBtn>
+                <PickBtn key={v} big={age.big} on={pred === v} disabled={!!pred} onClick={() => { setPred(v); setWidth(w); if (v === 'degismez') track.misconception('Çevre aynı kalınca alanın da aynı kalacağını düşündü') }}>{t}</PickBtn>
               ))}
             </div>
           </Card>
@@ -449,6 +481,7 @@ function SameRound({ grade, task, onComplete, footer, addSol }: RP & { task: Sam
   const cols = n >= 12 ? 10 : 8, rows = n >= 12 ? 8 : 6
   const [cells, setCells] = useState<string[]>([])
   const [slots, setSlots] = useState<{ max?: string[]; min?: string[] }>({})
+  const [ok, setOk] = useState<string | null>(null)
   const [nudge, setNudge] = useState<NS>(null)
   const [fails, setFails] = useState(0)
   const [done, setDone] = useState(false)
@@ -475,8 +508,9 @@ function SameRound({ grade, task, onComplete, footer, addSol }: RP & { task: Sam
     setNudge(null)
     addSol(got, `${n} kare, çevre ${P}`)
     setSlots(ns)
-    setCells([])
-    if (ns.max && ns.min) {
+    setOk(got === 'max' ? `Çevresi en uzun şekil: ${P} birim! Şimdi çevresi en kısa olanı yap.` : `Çevresi en kısa şekil: ${P} birim! Şimdi çevresi en uzun olanı yap.`)
+    if (!(ns.max && ns.min)) setCells([])
+    else {
       setDone(true)
       track.item(fails === 0)
       onComplete(fails === 0)
@@ -489,7 +523,7 @@ function SameRound({ grade, task, onComplete, footer, addSol }: RP & { task: Sam
         <div>
           <div style={fitWidth((cols + 0.5) / (rows + 0.5), 290)}>
             <ZoomBox>
-              <CellBoard cols={cols} rows={rows} cells={cells} fill={GRASS} onPaint={(k, add) => { setNudge(null); setCells((c) => (add ? (c.includes(k) ? c : [...c, k]) : c.filter((q) => q !== k))) }} locked={done} bg="#fbfdf7">
+              <CellBoard cols={cols} rows={rows} cells={cells} fill={GRASS} onPaint={(k, add) => { setNudge(null); setOk(null); setCells((c) => (add ? (c.includes(k) ? c : [...c, k]) : c.filter((q) => q !== k))) }} locked={done} bg="#fbfdf7">
                 <FenceLines edges={boundaryEdges(cells)} />
               </CellBoard>
             </ZoomBox>
@@ -519,6 +553,7 @@ function SameRound({ grade, task, onComplete, footer, addSol }: RP & { task: Sam
             ))}
           </div>
           {nudge && <Nudge key={nudge.id} question={nudge.q} misconception={nudge.mis} tool="alancevre" onClose={() => setNudge(null)} />}
+          {ok && !done && <Derived>{ok}</Derived>}
           {!done && <BigButton onClick={check} disabled={!cells.length} className="w-full"><Check size={20} />Kontrol et</BigButton>}
           {done && <Derived>{`İkisi de ${n} kare, ama çevreleri ${minP} ile ${maxP} birim! Kareler topaklaştıkça ortak kenarlar artar ve çevre kısalır.`}</Derived>}
           {footer}
@@ -578,7 +613,7 @@ function CornerRound({ grade, task, onComplete, footer, addSol }: RP & { task: C
           <div style={fitWidth((w + 2.5) / (h + 2.5), 300)}>
             <ZoomBox>
               <CellBoard cols={w + 2} rows={h + 2} cells={cells} fill={GRASS} onPaint={onPaint} locked={step !== 'cut1' && step !== 'cut2'} bg="#fbfdf7">
-                <FenceLines edges={boundaryEdges(cells)} numbers={step === 'p2' || step === 'done'} />
+                <FenceLines edges={orderEdges(boundaryEdges(cells))} cells={cells} numbers={step === 'p2' || step === 'done'} />
               </CellBoard>
             </ZoomBox>
           </div>

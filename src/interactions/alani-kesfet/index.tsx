@@ -137,8 +137,8 @@ function Tools({ tool, setTool, halves, big }: { tool: Cell; setTool: (c: Cell) 
 function BuildRound({ grade, task, onComplete, footer, addSol }: RP & { task: BuildTask }) {
   const track = useTracker()
   const age = useAge(grade)
-  const cols = task.n > 12 ? 10 : 8
-  const rows = task.n > 12 ? 8 : 6
+  const cols = task.rect ? 12 : task.n > 6 ? 10 : 8
+  const rows = task.rect ? 8 : task.n > 6 ? 7 : 6
   const [cells, setCells] = useState<Cells>({})
   const [tool, setTool] = useState<Cell>('F')
   const [found, setFound] = useState<{ key: string; cells: Cells; label: string }[]>([])

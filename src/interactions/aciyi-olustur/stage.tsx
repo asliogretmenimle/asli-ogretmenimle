@@ -22,7 +22,7 @@ export function arcPath(from: number, to: number, r: number) {
   return { d: `M0,0 L${x1},${y1} A${r},${r} 0 ${large} 0 ${x2},${y2} Z`, stroke: `M${x1},${y1} A${r},${r} 0 ${large} 0 ${x2},${y2}`, mid: from + sweep / 2 }
 }
 
-export function Stage({ rays, arcs = [], onRay, active, onActive, view, snap = 1, protractor, benchmarks, children, dark, under, locked }: { rays: Ray[]; arcs?: Arc[]; onRay: (id: string, deg: number) => void; active?: string; onActive?: (id: string) => void; view: [number, number, number, number]; snap?: number; protractor?: number | null; benchmarks?: boolean; children?: ReactNode; dark?: boolean; under?: ReactNode; locked?: boolean }) {
+export function Stage({ rays, arcs = [], onRay, active, onActive, view, snap = 1, protractor, benchmarks, children, dark, under, locked, hideVertex }: { rays: Ray[]; arcs?: Arc[]; onRay: (id: string, deg: number) => void; active?: string; onActive?: (id: string) => void; view: [number, number, number, number]; snap?: number; protractor?: number | null; benchmarks?: boolean; children?: ReactNode; dark?: boolean; under?: ReactNode; locked?: boolean; hideVertex?: boolean }) {
   const svg = useRef<SVGSVGElement>(null)
   const raysRef = useRef(rays)
   raysRef.current = rays
@@ -129,7 +129,7 @@ export function Stage({ rays, arcs = [], onRay, active, onActive, view, snap = 1
           </g>
         )
       })}
-      <circle cx={0} cy={0} r={0.03} fill={stroke} />
+      {!hideVertex && <circle cx={0} cy={0} r={0.03} fill={stroke} />}
       {children}
     </svg>
   )

@@ -60,7 +60,8 @@ export function WheelTask({ level }: { level: WheelLevel }) {
       const msg = multiTurn
         ? `Harika! Her turda ${cc} × ${ss} = ${p} kişi. ${level.turns} turda ${level.turns} × ${p} = ${num(total)} kişi: herkes bindi, hiç koltuk boş kalmadı.`
         : `Harika! ${cc} kabin × ${ss} koltuk = ${p} kişi. Dolap tam doldu!`
-      if (list.length >= level.goal) {
+      if (api.done) api.nudge(`${msg} Yeni bir tasarım daha!`, { tone: 'ok' })
+      else if (list.length >= level.goal) {
         if (level.cost) {
           setPhase('pick')
           api.nudge(`${msg} Şimdi maliyetleri düşün: kabin başı ${tl(level.cost.cabin)}, koltuk başı ${tl(level.cost.seat)}. Bulduğun tasarımlardan hangisi en ucuz? Aşağıdan seç.`, { tone: 'ok' })
@@ -79,7 +80,7 @@ export function WheelTask({ level }: { level: WheelLevel }) {
   }
 
   const run = () => {
-    if (running || phase !== 'design') return
+    if (running || (phase !== 'design' && !api.done)) return
     api.nudge(null)
     setRunning(true)
     let q = level.need
@@ -116,10 +117,10 @@ export function WheelTask({ level }: { level: WheelLevel }) {
 
   const addition = c <= 8 ? `${Array.from({ length: c }, () => s).join(' + ')} = ${per}` : `${c} tane ${s} = ${per}`
   const overlay = (
-    <div className="absolute top-[8%] right-[2%] flex max-w-[48%] flex-col items-end gap-1.5 text-[clamp(11px,2vw,17px)]">
+    <div className="absolute top-[8%] right-[2%] flex max-w-[48%] flex-col items-end gap-1.5 text-[clamp(10px,2vw,17px)]">
       {!multiTurn ? (
         <>
-          <Sign>{addition}</Sign>
+          <Sign className="whitespace-normal">{addition}</Sign>
           <Sign tone="dark">{c} kabin × {s} koltuk = {per} kişi</Sign>
         </>
       ) : (
@@ -141,7 +142,7 @@ export function WheelTask({ level }: { level: WheelLevel }) {
   const runLabel = multiTurn ? (level.turnWord === 'saat' ? '1 saati başlat' : 'Turları başlat') : 'Dolabı çalıştır'
   const controls = (
     <div className="flex flex-col gap-2">
-      {phase === 'design' && (
+      {(phase === 'design' || api.done) && (
         <>
           <Stepper label="Kabin sayısı" value={c} min={2} max={level.maxCabins} onChange={(v) => change(v, s)} big={api.big} />
           <Chips label="Bir kabindeki koltuk" options={level.seatOpts} value={s} onChange={(v) => change(c, v)} big={api.big} />
@@ -152,7 +153,7 @@ export function WheelTask({ level }: { level: WheelLevel }) {
           <BigButton onClick={run} disabled={running} className="w-full"><Play size={20} />{running ? 'Dolap dönüyor…' : runLabel}</BigButton>
         </>
       )}
-      {phase === 'pick' && level.cost && (
+      {phase === 'pick' && level.cost && !api.done && (
         <div className="rounded-2xl bg-sky-50 p-3 ring-1 ring-sky-200 animate-fade-up">
           <p className="mb-2 text-base font-black text-sky-950">Hangi tasarım en ucuz? (Kabin {tl(level.cost.cabin)}, koltuk {tl(level.cost.seat)})</p>
           <div className="grid grid-cols-2 gap-2">
@@ -274,16 +275,16 @@ export function LoadTask({ level }: { level: LoadLevel }) {
 
   const recent = ladder.slice(-4)
   const overlay = (
-    <div className="absolute top-[8%] right-[2%] flex max-w-[50%] flex-col items-end gap-1 text-[clamp(11px,1.9vw,16px)]">
+    <div className="absolute top-[8%] right-[2%] flex max-w-[50%] flex-col items-end gap-1 text-[clamp(10px,1.9vw,16px)]">
       {level.chunks.length === 1 ? (
         <>
-          {loaded > 0 && <Sign>{loaded <= 10 ? Array.from({ length: loaded }, (_, i) => Math.min(level.seats, level.people - i * level.seats)).join(' + ') : `${loaded} kabin`} = {level.people - remaining}</Sign>}
+          {loaded > 0 && <Sign className="whitespace-normal">{loaded <= 10 ? Array.from({ length: loaded }, (_, i) => Math.min(level.seats, level.people - i * level.seats)).join(' + ') : `${loaded} kabin`} = {level.people - remaining}</Sign>}
           <Sign tone="dark">Dolan kabin: {loaded}</Sign>
         </>
       ) : (
         <>
-          {ladder.length > recent.length && <Sign tone="pink">…</Sign>}
-          {recent.map((l, i) => <Sign key={ladder.length - recent.length + i}>{l.k} kabin → {num(l.ppl)} kişi</Sign>)}
+          {ladder.length > recent.length && <Sign tone="pink" className="max-sm:hidden">…</Sign>}
+          {recent.map((l, i) => <Sign key={ladder.length - recent.length + i} className={i < recent.length - 1 ? 'max-sm:hidden' : ''}>{l.k} kabin → {num(l.ppl)} kişi</Sign>)}
           <Sign tone="dark">Toplam: {loaded} kabin → {num(level.people - remaining)} kişi</Sign>
         </>
       )}

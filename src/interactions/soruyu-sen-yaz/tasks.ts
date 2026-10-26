@@ -101,7 +101,7 @@ const COUNT: Obj[] = [
   obj('kurabiye', '🍪', 'kurabiye', 'kurabiyesi', 'kurabiyeyi', ['çikolatalı', 'sade']),
   obj('balon', '🎈', 'balon', 'balonu', 'balonu', ['kırmızı', 'mavi']),
   obj('cilek', '🍓', 'çilek', 'çileği', 'çileği', ['büyük', 'küçük']),
-  obj('kart', '🃏', 'kart', 'kartı', 'kartı', ['kırmızı', 'mavi']),
+  obj('top', '⚽', 'top', 'topu', 'topu', ['büyük', 'küçük']),
   obj('yumurta', '🥚', 'yumurta', 'yumurtası', 'yumurtayı', ['beyaz', 'kahverengi']),
 ]
 const things = (n = 3) => shuffle(COUNT).slice(0, n)

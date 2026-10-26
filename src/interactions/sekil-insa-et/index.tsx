@@ -288,7 +288,7 @@ function Round({ grade, card, onAdd, onComplete, footer }: { grade: Grade; card:
       }
       panel={
         <>
-          <Card title={`Farklı şekiller: ${found.length} / ${card.need}`}>
+          {!card.impossible && <Card title={`Farklı şekiller: ${found.length} / ${card.need}`}>
             <div className="flex flex-wrap items-center gap-2">
               {Array.from({ length: card.need }, (_, i) => (
                 <span key={i} className={`grid size-14 place-items-center rounded-xl ring-1 ${found[i] ? 'bg-pink-50 ring-pink-200 animate-pop' : 'bg-paper ring-line'}`}>
@@ -296,7 +296,7 @@ function Round({ grade, card, onAdd, onComplete, footer }: { grade: Grade; card:
                 </span>
               ))}
             </div>
-          </Card>
+          </Card>}
           {props.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {props.map((p) => <span key={p} className="chip bg-white px-3 py-1 text-sm text-ink ring-1 ring-line">{p}</span>)}
@@ -374,7 +374,7 @@ function Marks({ s, grade }: { s: Shape; grade: Grade }) {
     p.forEach((q, i) => {
       if (s.angles[i] !== 'dik') return
       const a = unit(sub(p[(i + n - 1) % n], q)), b = unit(sub(p[(i + 1) % n], q))
-      const k = 0.28
+      const k = 0.46
       const d = `M${q[0] + a[0] * k},${q[1] + a[1] * k} L${q[0] + (a[0] + b[0]) * k},${q[1] + (a[1] + b[1]) * k} L${q[0] + b[0] * k},${q[1] + b[1] * k}`
       out.push(<path key={`r${i}`} d={d} fill="none" stroke="#1f2340" strokeWidth={0.045} />)
     })

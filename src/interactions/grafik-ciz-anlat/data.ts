@@ -85,7 +85,7 @@ function havuz(g: Grade): SketchTask {
     story: n
       ? 'Boş bir havuza dakikada 20 L akıtan bir hortumla 10 dakika su doldu. Sonra hortum 5 dakika kapatıldı. Ardından iki hortumla (dakikada 40 L) 10 dakika daha dolduruldu.'
       : 'Boş bir havuza bir hortumla su doluyor. Biraz sonra hortum bir süreliğine kapatılıyor. Sonra iki hortumla daha hızlı doldurulup havuz doluyor.',
-    axes: n ? { xMax: 30, yMax: 800, xStep: 1, yStep: 20, xGrid: 5, xLabel: 'Zaman (dk)', yLabel: 'Havuzdaki su (L)', numbers: true } : qual('Zaman', 'Havuzdaki su'),
+    axes: n ? { xMax: 30, yMax: 800, xStep: 1, yStep: 20, xLabel: 'Zaman (dk)', yLabel: 'Havuzdaki su (L)', numbers: true } : qual('Zaman', 'Havuzdaki su'),
     spec: {
       start: { y: 0, q: 'Havuz başta boştu. Başlangıçta havuzda ne kadar su var? İlk nokta nerede olmalı?', mis: 'Başlangıç değerini hikâyeden okuyamama' },
       phases: [
@@ -133,7 +133,7 @@ function bisiklet(g: Grade): SketchTask {
     story: n
       ? 'Deniz evden 2000 m uzaktaki parka bisikletle 20 dakikada gitti, parkta 10 dakika dinlendi, sonra 5 dakikada aynı yoldan eve döndü.'
       : 'Deniz parka bisikletle yavaş yavaş gitti, parkta bir süre dinlendi, sonra hızla aynı yoldan eve döndü.',
-    axes: n ? { xMax: 40, yMax: 3000, xStep: 1, yStep: 100, xGrid: 5, xLabel: 'Zaman (dk)', yLabel: 'Evden uzaklık (m)', numbers: true } : qual('Zaman', 'Evden uzaklık'),
+    axes: n ? { xMax: 40, yMax: 3000, xStep: 1, yStep: 100, xLabel: 'Zaman (dk)', yLabel: 'Evden uzaklık (m)', numbers: true } : qual('Zaman', 'Evden uzaklık'),
     spec: {
       start: { y: 0, q: 'Deniz yola evden başladı. Evdeyken evden uzaklığı ne kadardır?' },
       phases: [
@@ -192,7 +192,7 @@ function cay(g: Grade): SketchTask {
     story: n
       ? '90 °C’lik bir bardak çayı 20 °C’lik odada masada unuttun. Çay ilk 10 dakikada yaklaşık 40 °C soğur; sonra soğuması yavaşlar. Sıcaklığı 40 dakika boyunca çiz.'
       : 'Sıcacık bir bardak çayı masada unuttun. Oda serin ama soğuk değil. Çayın sıcaklığı zamanla nasıl değişir? Grafiğini çiz.',
-    axes: n ? { xMax: 40, yMax: 100, xStep: 1, yStep: 5, xGrid: 5, xLabel: 'Zaman (dk)', yLabel: 'Sıcaklık (°C)', numbers: true } : qual('Zaman', 'Çayın sıcaklığı'),
+    axes: n ? { xMax: 40, yMax: 100, xStep: 1, yStep: 5, xLabel: 'Zaman (dk)', yLabel: 'Sıcaklık (°C)', numbers: true } : qual('Zaman', 'Çayın sıcaklığı'),
     spec: {
       start: n ? { y: 90, tol: 5, q: 'Çay başta kaç derece? Grafiğin ilk noktası hangi değerde olmalı?' } : { min: 6, q: 'Çay başta sıcacıktı. Grafik yüksek bir yerden mi başlamalı?' },
       floor: n ? { y: 20, q: 'Çay odadan daha soğuk olabilir mi? Oda 20 °C; çayın sıcaklığı bunun altına iner mi?', mis: 'Soğuyan çayın sıcaklığının sıfıra ineceğini sanma' } : undefined,

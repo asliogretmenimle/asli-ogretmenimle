@@ -69,8 +69,8 @@ export function tasksFor(grade: Grade): Task[] {
 
   const fv = f({ o: 'v', c: 5 }, [[1, 2], [3, 1], [2, 5]], { o: 'v', c: 2 }, ['v', 'h'])
   const fh = f({ o: 'h', c: 4 }, [[2, 1], [5, 0], [6, 2]], { o: 'v', c: 5 }, ['v', 'h'])
-  const fd = f({ o: 'd', c: 0 }, [[2, 0], [5, 1], [4, 3]], { o: 'v', c: 4 }, ['v', 'h', 'd', 'a'], 8, 8)
-  const fa = f({ o: 'a', c: 8 }, [[0, 1], [3, 0], [2, 3]], { o: 'h', c: 4 }, ['v', 'h', 'd', 'a'], 8, 8)
+  const fd = f({ o: 'd', c: 0 }, [[2, 0], [5, 1], [4, 3]], { o: 'v', c: 6 }, ['v', 'h', 'd', 'a'], 8, 8)
+  const fa = f({ o: 'a', c: 8 }, [[0, 1], [3, 0], [2, 3]], { o: 'h', c: 2 }, ['v', 'h', 'd', 'a'], 8, 8)
 
   if (grade === 2) return [tree, L('A', ['v', 'h']), butterfly, L('H', ['v', 'h']), L('arti', ['v', 'h'])]
   if (grade === 3) return [tree, rocket, L('H', ['v', 'h', 'd', 'a']), L('arti', ['v', 'h', 'd', 'a']), L('E', ['v', 'h', 'd', 'a'])]

@@ -84,7 +84,7 @@ function Station({ board }: { board?: string[] }) {
           <rect x={58} y={70} width={8} height={170} fill="#64748b" />
           <rect x={0} y={0} width={124} height={78} rx={12} fill="#065f46" stroke="#fbbf24" strokeWidth={4} />
           {board.map((l, i) => (
-            <text key={i} x={62} y={board.length === 1 ? 46 : 32 + i * 26} textAnchor="middle" fontSize={l.length > 11 ? 16 : 19} fontWeight={900} fill="#ecfdf5">
+            <text key={i} x={62} y={board.length === 1 ? 46 : 32 + i * 26} textAnchor="middle" fontSize={Math.max(...board.map((x) => x.length)) > 11 ? 16 : 19} fontWeight={900} fill="#ecfdf5">
               {l}
             </text>
           ))}
@@ -128,7 +128,8 @@ export function RailScene({ items, plate, board, pos, anim, moving, happy, varia
           <stop offset="1" stopColor="#78716c" />
         </linearGradient>
         <clipPath id="tren-clip">
-          <rect x={44} y={0} width={SW} height={SH} />
+          <rect x={118} y={0} width={SW} height={SH} />
+          <path d={`M36 ${RAIL_Y + 30} L36 238 C 36 196, 118 196, 118 238 L118 ${RAIL_Y + 30} Z`} />
         </clipPath>
       </defs>
       <style>{`
@@ -237,9 +238,9 @@ export function RailScene({ items, plate, board, pos, anim, moving, happy, varia
                       <rect className="tren-focus" x={0} y={4} width={WAG_W} height={96} rx={14} fill="none" stroke="transparent" strokeWidth={0} />
                     </g>
                     {it.tag && (
-                      <g transform={`translate(${WAG_W / 2} -16)`}>
-                        <rect x={-Math.max(26, it.tag.length * 7.4)} y={-15} width={Math.max(52, it.tag.length * 14.8)} height={28} rx={14} fill={it.fixed ? '#1e3a8a' : '#fff'} stroke="#1e3a8a" strokeWidth={2} />
-                        <text y={5} textAnchor="middle" fontSize={16} fontWeight={900} fill={it.fixed ? '#fff' : '#1e3a8a'}>{it.tag}</text>
+                      <g transform={`translate(${WAG_W / 2} -19)`}>
+                        <rect x={-Math.min(WAG_W / 2 + 4, Math.max(28, it.tag.length * 8.6 + 6))} y={-17} width={Math.min(WAG_W + 8, Math.max(56, it.tag.length * 17.2 + 12))} height={34} rx={17} fill={it.fixed ? '#1e3a8a' : '#fff'} stroke="#1e3a8a" strokeWidth={2.5} />
+                        <text y={7} textAnchor="middle" fontSize={20} fontWeight={900} fill={it.fixed ? '#fff' : '#1e3a8a'}>{it.tag}</text>
                       </g>
                     )}
                     {it.flagged && (

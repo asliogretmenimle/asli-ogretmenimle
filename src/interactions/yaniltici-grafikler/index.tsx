@@ -395,7 +395,7 @@ function AspectTask({ grade, look, onDone }: { grade: Grade; look: Look; onDone:
         <Scene grade={grade}>
           <Headline text={head} tone={story === 'hot' ? 'hot' : 'calm'} />
           <div className={`mt-3 rounded-2xl p-2 ${look.dark ? 'bg-slate-900/60' : 'bg-white'}`}>
-            <DataChart look={look} data={BREAD} type="line" y0={y0} yMax={yMax} height={h} onHeight={phase === 'make' ? setH : undefined} onY0={phase === 'make' ? setY0 : undefined} y0Max={10} title="Ekmek fiyatı (TL)" unit="TL" />
+            <DataChart fixedW look={look} data={BREAD} type="line" y0={y0} yMax={yMax} height={h} onHeight={phase === 'make' ? setH : undefined} onY0={phase === 'make' ? setY0 : undefined} y0Max={10} title="Ekmek fiyatı (TL)" unit="TL" />
           </div>
           <p className={`mt-1 text-center text-sm font-bold ${look.muted}`}>Mavi tutamaçla ya da iki parmakla grafiği uzat/bastır; turuncu düğmeyle ekseni kaydır.</p>
         </Scene>

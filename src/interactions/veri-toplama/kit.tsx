@@ -189,6 +189,21 @@ export function useRaf() {
   }, [])
 }
 
+/** Kabın genişliğini izler (SVG viewBox’ını dar ekranlarda daraltıp yazıları okunur tutmak için) */
+export function useBoxW(fallback = 600) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [w, setW] = useState(fallback)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const ro = new ResizeObserver(() => setW(el.clientWidth || fallback))
+    ro.observe(el)
+    setW(el.clientWidth || fallback)
+    return () => ro.disconnect()
+  }, [fallback])
+  return [ref, w] as const
+}
+
 /** Küçük bilgi rozeti */
 export function Pill({ look, children, tone = 'plain' }: { look: Look; children: ReactNode; tone?: 'plain' | 'good' | 'warn' | 'info' }) {
   const c =

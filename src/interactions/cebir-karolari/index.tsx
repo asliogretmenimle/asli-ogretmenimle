@@ -209,7 +209,7 @@ function BuildView({ t, grade, dark, idx, sol, onDone, footer }: { t: BuildT } &
   }
   const work = (
     <div className="flex flex-col gap-3">
-      <SymLine dark={dark}><MathText text={tiles.length ? fmtRaw(tiles) : '…'} />{hasZeroPair(tiles) && <span className="text-lg opacity-70"><MathText text={`= ${fmtNet(n.a, n.b)}`} /></span>}</SymLine>
+      <SymLine dark={dark}>{tiles.length ? <MathText text={fmtRaw(tiles)} /> : <span className="text-xl opacity-60">Hedef: <MathText text={target} /></span>}{hasZeroPair(tiles) && <span className="text-lg opacity-70"><MathText text={`= ${fmtNet(n.a, n.b)}`} /></span>}</SymLine>
       <SideMat side="E" tiles={tiles} dnd={dnd} sel={mat.sel} onTapTile={(x) => !ok && mat.tapTile('E', x)} onTapSide={() => mat.tapSide('E')} dark={dark} label="Mat" sorted minH={200} />
       {!ok && <Bin kinds={kindsFor(grade)} dnd={dnd} picked={null} onPick={mat.pick} dark={dark} />}
       <Ghost dnd={dnd} />
@@ -753,7 +753,7 @@ function JudgeView({ t, dark, onDone, footer }: { t: JudgeT } & Common) {
       </SymLine>
       <div className="grid grid-cols-[1fr_auto_1fr] gap-2">
         <SideMat side="L" tiles={L} dnd={dnd} sel={null} onTapTile={() => undefined} onTapSide={() => undefined} dark={dark} label={flip !== undefined ? `Sol taraf = ${String(lv).replace('-', '−')}` : 'Sol taraf'} sorted flip={flip} minH={200} />
-        <span className="grid place-items-center text-3xl font-black text-violet-500">=</span>
+        <span className={`grid place-items-center text-3xl font-black ${flip !== undefined && !truth ? 'text-rose-500' : 'text-violet-500'}`}>{flip !== undefined && !truth ? '≠' : '='}</span>
         <SideMat side="R" tiles={R} dnd={dnd} sel={null} onTapTile={() => undefined} onTapSide={() => undefined} dark={dark} label={flip !== undefined ? `Sağ taraf = ${String(rv).replace('-', '−')}` : 'Sağ taraf'} sorted flip={flip} minH={200} />
       </div>
     </div>

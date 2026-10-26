@@ -93,7 +93,7 @@ export default function SayiTreni({ grade, onFinish }: GameProps) {
   const isSlotLevel = L.kind === 'missing' || L.kind === 'order'
   const used = new Set([...train.map((c) => c.id), ...slots.filter(Boolean).map((c) => c!.id)])
   const yard = L.yard.filter((c) => !used.has(c.id))
-  const maxCars = L.max ?? 6
+  const maxCars = L.goal + 2
 
   const tool = (): Pick<NudgeState, 'tool' | 'toolConfig'> => {
     if (L.kind === 'missing' && !g1) return { tool: 'yuzluk' }
@@ -261,16 +261,16 @@ export default function SayiTreni({ grade, onFinish }: GameProps) {
         return { question: `“${s.tag}” için ortadaki sayıya bir birlik ${up ? 'ekle' : 'çıkar'}. Onluklar değişir mi?`, misconception: 'Bir fazlası ile 10 fazlasını karıştırdı', tool: 'base10' }
       return { question: `Önce ortadaki blokları oku: kaç onluk, kaç birlik? Sonra onun ${acc} düşün.`, tool: 'base10' }
     }
+    const answers = L.slots!.map((x) => x.answer).filter((x): x is number => x !== undefined)
+    if (rev(v) !== v && answers.includes(rev(v))) return { question: `${v} ile ${rev(v)} aynı mı? Rakamların yerine bak: kaç onluk var?`, misconception: `Basamakları ters okudu (${rev(v)} ↔ ${v})`, ...tool() }
     if (step === -1) {
-      if (prev !== null && v > prev) return { question: `Tren geriye sayıyor: sayılar küçülüyor. ${ek(prev, 'abl')} bir eksiği kaç?`, misconception: 'Geriye saymada yönü karıştırdı', ...tool() }
-      if (rev(v) === a) return { question: `${v} ile ${a} aynı mı? Rakamların yerine bak.`, misconception: `Basamakları ters okudu (${a} ↔ ${v})`, ...tool() }
+      if (prev !== null && v === prev + 1) return { question: `Tren geriye sayıyor: sayılar küçülüyor. ${ek(prev, 'abl')} bir eksiği kaç?`, misconception: 'Geriye saymada yönü karıştırdı', ...tool() }
       return { question: prev !== null ? `${ek(prev, 'abl')} geriye bir adım say. Hangi sayıya gelirsin?` : 'Sağdaki vagona bak. Onun bir fazlası kaç?', tool: 'numberline', toolConfig: { min: 0, max: 20, step: 1 } }
     }
     if (step === 1) return { question: 'Soldaki vagonda kaç yolcu var? Bir yolcu daha binerse kaç olur?', tool: 'tenframe', toolConfig: { frames: 1 } }
     if (step === 10) {
       if (Math.abs(v - a) === 1 || (prev !== null && v === prev + 1))
         return { question: 'Yan yana vagonlara bak: her adımda onluklar mı değişiyor, birlikler mi?', misconception: 'Onar sayma yerine birer saydı', tool: 'yuzluk' }
-      if (rev(v) === a) return { question: `${v} ile ${a} aynı mı? Kaç onluk var?`, misconception: `Basamakları ters okudu (${a} ↔ ${v})`, tool: 'base10' }
       return { question: 'İki vagon arasında kaç onluk fark var? Bir önceki vagona bir onluk ekle.', tool: 'yuzluk' }
     }
     // beşer / ikişer
@@ -437,7 +437,7 @@ export default function SayiTreni({ grade, onFinish }: GameProps) {
     const label = `${b.t} onluk ${b.o} birlik`
     sol.add(`${li}:${key}`, label)
     stats.current.ways++
-    stats.current.loads.push(`${b.t * 10} + ${b.o}`)
+    stats.current.loads.push(b.t === 0 ? `${b.o} birlik` : b.o === 0 ? `${b.t} onluk` : `${b.t * 10} + ${b.o}`)
     stats.current.kinds.add(KIND_NAME.b10)
     strat(b.t < Math.floor(T / 10) ? 'Esnek basamak değeri (onluğu bozma)' : 'Onluk ve birliklere ayırma')
     const c: Car = { id: `ld${++loadUid}`, rep: { k: 'b10', t: b.t, o: b.o }, color: (train.length * 2 + 1) % 6 }
@@ -450,7 +450,7 @@ export default function SayiTreni({ grade, onFinish }: GameProps) {
       setNudge({ tone: 'ok', question: `${L.note} Tren yola çıkıyor!` })
       complete()
     } else {
-      setNudge({ tone: 'ok', question: `${b.t * 10} + ${b.o} = ${T}. Vagon bağlandı! ${L.goal - all.length} farklı yol daha bul.` })
+      setNudge({ tone: 'ok', question: `${b.t} onluk ${b.o} birlik = ${T}. Vagon bağlandı! ${L.goal - all.length} farklı yol daha bul.` })
     }
   }
 
@@ -478,7 +478,7 @@ export default function SayiTreni({ grade, onFinish }: GameProps) {
     let stars = starsFor(ratio)
     if (s.bonus >= 2 && stars < 3) stars = (stars + 1) as 1 | 2 | 3
     const kinds = [...s.kinds]
-    const kindsTxt = kinds.slice(0, 4).join(', ')
+    const kindsTxt = kinds.join(', ')
     onFinish({
       stars,
       score: s.ways * 10 + s.first * 5 + s.bonus * 5,
@@ -509,7 +509,7 @@ export default function SayiTreni({ grade, onFinish }: GameProps) {
       onTap: active && L.kind !== 'load' ? () => unplaceTrain(c) : undefined,
       label: `${i + 1}. vagon: ${repSpeak(c.rep)}${L.kind !== 'load' ? '. Çıkarmak için dokun.' : ''}`,
     }))
-    if (active && L.kind !== 'load' && train.length < maxCars) out.push({ key: 'plus', plus: true, drop: 'train', label: 'Bağlama yeri' })
+    if (active && L.kind !== 'load' && train.length < L.goal) out.push({ key: 'plus', plus: true, drop: 'train', label: 'Bağlama yeri' })
     if (L.kind === 'load' && phase !== 'depart' && phase !== 'done' && train.length < L.goal) out.push({ key: 'plus', plus: true })
     return out
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -585,7 +585,7 @@ export default function SayiTreni({ grade, onFinish }: GameProps) {
                   ))}
                 </div>
               ) : (
-                <p className="py-4 text-center text-sm font-bold text-orange-900/70">Depo boş. Trendeki vagonlara dokunursan geri gelir.</p>
+                <p className="py-4 text-center text-sm font-bold text-orange-900/70">{active ? 'Depo boş. Trendeki vagonlara dokunursan geri gelir.' : 'Bütün vagonlar trende!'}</p>
               )}
             </div>
           )}
@@ -703,11 +703,11 @@ function LoadBay({ t, o, active, onRod, onCube, onBreak, onGroup, onRemoveRod, o
         </div>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        <button type="button" onClick={onBreak} className="inline-flex min-h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-white px-4 text-base font-extrabold text-blue-900 ring-1 ring-blue-200 active:scale-95 disabled:opacity-50" disabled={t === 0}>
+        <button type="button" onClick={onBreak} className="inline-flex min-h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-white px-3 text-[15px] font-extrabold whitespace-nowrap text-blue-900 sm:px-4 sm:text-base ring-1 ring-blue-200 active:scale-95 disabled:opacity-50" disabled={t === 0}>
           <Scissors size={18} />Bir onluğu boz
         </button>
-        <button type="button" onClick={onGroup} className="inline-flex min-h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-white px-4 text-base font-extrabold text-blue-900 ring-1 ring-blue-200 active:scale-95 disabled:opacity-50" disabled={o < 10}>
-          <Link2 size={18} />10 birlik → 1 onluk
+        <button type="button" onClick={onGroup} className="inline-flex min-h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-white px-3 text-[15px] font-extrabold whitespace-nowrap text-blue-900 sm:px-4 sm:text-base ring-1 ring-blue-200 active:scale-95 disabled:opacity-50" disabled={o < 10}>
+          <Link2 size={18} />10 birlik → onluk
         </button>
         <button type="button" onClick={onClear} className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl bg-white px-4 text-base font-extrabold text-ink ring-1 ring-line active:scale-95">
           <Eraser size={18} />Boşalt

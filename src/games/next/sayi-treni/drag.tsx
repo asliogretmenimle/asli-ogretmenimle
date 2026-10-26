@@ -38,7 +38,7 @@ export function DragSource({ children, ghost, onTap, onDrop, label, className = 
         aria-label={label}
         disabled={disabled}
         className={className}
-        style={{ touchAction: 'none', ...style }}
+        style={{ touchAction: 'none', ...style, ...(pos ? { opacity: 0.4 } : null) }}
         onPointerDown={(e) => {
           if (disabled) return
           start.current = { x: e.clientX, y: e.clientY, id: e.pointerId }

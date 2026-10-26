@@ -33,22 +33,23 @@ export function useApi() {
 export function Shell({ scene, controls, overlay }: { scene: ReactNode; controls: ReactNode; overlay?: ReactNode }) {
   const c = useContext(LevelCtx)!
   return (
-    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-4">
-      <div className="min-w-0">
-        <div className="lg:hidden">{c.header}</div>
-        <ZoomBox className="overflow-hidden rounded-2xl shadow-[var(--shadow-card)] ring-1 ring-fuchsia-200">
-          <div className="relative" style={{ touchAction: 'none' }}>
-            {scene}
-            {overlay}
-          </div>
-        </ZoomBox>
+    <div>
+      {c.header}
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-4">
+        <div className="min-w-0">
+          <ZoomBox className="overflow-hidden rounded-2xl shadow-[var(--shadow-card)] ring-1 ring-fuchsia-200">
+            <div className="relative" style={{ touchAction: 'none' }}>
+              {scene}
+              {overlay}
+            </div>
+          </ZoomBox>
+        </div>
+        <aside className="flex min-w-0 flex-col gap-3">
+          {c.top}
+          {controls}
+          {c.footer}
+        </aside>
       </div>
-      <aside className="flex min-w-0 flex-col gap-3">
-        <div className="hidden lg:block">{c.header}</div>
-        {c.top}
-        {controls}
-        {c.footer}
-      </aside>
     </div>
   )
 }

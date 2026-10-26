@@ -20,7 +20,7 @@ export const meta: GameMeta = {
     'Aynı sayının farklı vagonlarını bul: her yeni görünüş yeni bir yol! Tren dolunca tünele girer.',
   ],
   launch: 'İstasyona bir tren geldi; lokomotifinde 8 yazıyor. Sadece 8 taşıyan vagonlar bağlanabilir. Ama vagonlarda rakam yok: kiminde noktalar, kiminde onluk çerçeve, kiminde çetele var! Hangi vagonlar bu trene ait?',
-  reflect: 'Onluk çerçevede 8 ile nokta kartında 8 aynı mı? Saymadan nasıl anladın? Bir arkadaşına anlat.',
+  reflect: 'Aynı trene bağladığın iki farklı vagonu düşün (ör. onluk çerçeve ile nokta kartı ya da 40 + 7 ile 4 onluk 7 birlik). İkisi neden aynı sayıyı gösteriyor? Saymadan nasıl anladın? Bir arkadaşına anlat.',
   bigIdea: 'Bir sayı pek çok biçimde gösterilebilir: rakam, sözcük, nokta deseni, onluk çerçeve, onluk-birlik blokları ve açılım (47 = 40 + 7 = 30 + 17). Temsiller arasında geçiş yapabilmek sayı duyusunun temelidir. 5 ve 10 çapaları sayıyı saymadan görmeyi sağlar; sayıların sırası “bir fazlası / bir eksiği” ve “10 fazlası / 10 eksiği” ilişkileriyle kurulur; iki basamaklı sayılar önce onluklarına göre karşılaştırılır.',
   strategies: [
     'Şipşak görme (saymadan)',

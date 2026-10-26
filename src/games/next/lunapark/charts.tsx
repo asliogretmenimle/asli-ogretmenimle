@@ -251,9 +251,9 @@ export function PeakTask({ level }: { level: PeakLevel }) {
         <pattern id="lp-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="rgb(255 255 255 / .25)" /><line x1="0" y1="0" x2="0" y2="8" stroke="#fff" strokeWidth="3" /></pattern>
       </defs>
       <line x1={L} x2={R} y1={capY} y2={capY} stroke="#e11d48" strokeWidth="3.5" strokeDasharray="12 7" pointerEvents="none" />
-      <g transform={`translate(${R} ${capY - 34})`} pointerEvents="none">
-        <rect x={-232} y={0} width={232} height={26} rx={8} fill="#e11d48" />
-        <text x={-116} y={18} textAnchor="middle" fontSize="13" fontWeight="900" fill="#fff">🎡 Kapasite: saatte {num(level.cap)} kişi</text>
+      <g transform={`translate(${L + 6} ${capY - 32})`} pointerEvents="none">
+        <rect x={0} y={0} width={150} height={26} rx={8} fill="#e11d48" />
+        <text x={75} y={18} textAnchor="middle" fontSize="13" fontWeight="900" fill="#fff">Kapasite: {num(level.cap)}</text>
       </g>
     </svg>
   )

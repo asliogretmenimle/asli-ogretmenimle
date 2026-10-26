@@ -484,7 +484,7 @@ function OpenView({ t, dark, sol, onDone, footer }: { t: OpenTask; dark: boolean
         axes={a}
         pts={sk.pts}
         mode="sketch"
-        onChange={(p) => { sk.setPts(p); setNudge(null) }}
+        onChange={sk.setPts}
         sel={sk.sel}
         onSel={sk.select}
         pins={[{ p: t.start, label: 'başlangıç' }, { p: t.end, label: '6. hafta' }]}

@@ -16,8 +16,6 @@ export interface Axes {
   /** Yapışma adımları */
   xStep: number
   yStep: number
-  /** x ızgara aralığı (çizgiler) */
-  xGrid?: number
   xLabel: string
   yLabel: string
   /** Sayılar gösterilsin mi (7–8) */
@@ -241,7 +239,6 @@ export function GraphPlane(props: GraphPlaneProps) {
         labels={a.numbers}
         xLabel={a.xLabel}
         yLabel={a.yLabel}
-        fixedStep={a.xGrid ?? a.xStep}
         minSpan={a.xMax * 0.15}
         maxSpan={a.xMax * 3}
         onTap={mode === 'sketch' || mode === 'pick' ? add : undefined}
@@ -279,7 +276,10 @@ function Layer({ axes: a, pts, onChange, mode, sel, onSel, highlight, segLabels,
       {ghosts?.map((g, k) => (
         <g key={k}>
           <path d={path(g.pts)} fill="none" stroke={g.color} strokeWidth={3.5} strokeDasharray={g.dashed === false ? undefined : '8 6'} strokeLinejoin="round" strokeLinecap="round" opacity={0.85} />
-          {g.label && g.pts.length > 0 && <text x={P.sx(g.pts[g.pts.length - 1].x) + 6} y={P.sy(g.pts[g.pts.length - 1].y) - 6} fontSize={12} fontWeight={900} fill={g.color}>{g.label}</text>}
+          {g.label && g.pts.length > 0 && (() => {
+            const top = g.pts.reduce((m, q) => (q.y > m.y ? q : m), g.pts[0])
+            return <text x={P.sx(top.x) + 6} y={P.sy(top.y) - 8} fontSize={13} fontWeight={900} fill={g.color}>{g.label}</text>
+          })()}
         </g>
       ))}
       {pins?.map((pin, k) => (

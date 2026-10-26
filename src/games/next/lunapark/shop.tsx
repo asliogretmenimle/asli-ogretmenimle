@@ -111,22 +111,22 @@ export function TicketTask({ level }: { level: TicketLevel }) {
   }
 
   // Çocuklara bilet dağıt: büyük paketler önce
-  const holders: { color: string; pack: number; g: number }[] = []
+  const holders: { color: string; pack: number; g: number; lb: string }[] = []
   const order = T.map((_, i) => i).sort((a, b) => T[b].n - T[a].n)
   let g = 0
   for (const i of order) for (let c = 0; c < counts[i]; c++) {
-    for (let k = 0; k < T[i].n; k++) holders.push({ color: T[i].color, pack: T[i].n, g })
+    for (let k = 0; k < T[i].n; k++) holders.push({ color: T[i].color, pack: T[i].n, g, lb: short(T[i]) })
     g++
   }
   const people = level.need
   const perRow = people <= 10 ? people : Math.ceil(people / 2)
   const rows = Math.ceil(people / perRow)
-  const sc = people <= 10 ? 1.7 : 1.05
-  const gap = Math.min(42, 420 / perRow)
+  const sc = people <= 10 ? 2.1 : 1.1
+  const gap = Math.min(62, 420 / perRow)
   const pos = (k: number) => {
     const r = Math.floor(k / perRow), cI = k % perRow
     const inRow = Math.min(perRow, people - r * perRow)
-    return { x: 570 - ((inRow - 1) * gap) / 2 + cI * gap, y: rows === 1 ? 452 : 380 + r * 82 }
+    return { x: 552 - ((inRow - 1) * gap) / 2 + cI * gap, y: rows === 1 ? 452 : 380 + r * 82 }
   }
   const extra = Math.max(0, holders.length - people)
 
@@ -162,9 +162,9 @@ export function TicketTask({ level }: { level: TicketLevel }) {
           <g key={k}>
             <Kid x={p.x} y={p.y} i={k + 3} s={sc} />
             {h ? (
-              <g transform={`translate(${p.x} ${top - 8})`} className="animate-pop">
-                <rect x={-9 * sc} y={-8 * sc} width={18 * sc} height={11 * sc} rx={2} fill={h.color} stroke="#fff" strokeWidth="1.5" />
-                <text y={1.5 * sc} textAnchor="middle" fontSize={7 * sc} fontWeight="900" fill="#fff">{h.pack === 1 ? '1' : `${h.pack}’`}</text>
+              <g transform={`translate(${p.x} ${top - 8})`}>
+                <rect x={-11 * sc} y={-8 * sc} width={22 * sc} height={11 * sc} rx={2} fill={h.color} stroke="#fff" strokeWidth="1.5" />
+                <text y={1 * sc} textAnchor="middle" fontSize={(h.lb.length > 3 ? 5.6 : 6.6) * sc} fontWeight="900" fill="#fff">{h.lb}</text>
               </g>
             ) : (
               <g transform={`translate(${p.x} ${top - 8})`}>
@@ -220,7 +220,7 @@ export function TicketTask({ level }: { level: TicketLevel }) {
       {found.length > 0 && (
         <div className="grid grid-cols-2 gap-2">
           <Stat label="Bulunan yol" value={`${found.length}${follow ? '' : ` / ${level.goal}`}`} tone="green" />
-          <Stat label="En ucuzun" value={tl(Math.min(...found.map((f) => f.cost)))} tone="amber" />
+          <Stat label="En ucuz yolun" value={tl(Math.min(...found.map((f) => f.cost)))} tone="amber" />
         </div>
       )}
       {follow && !api.done && (

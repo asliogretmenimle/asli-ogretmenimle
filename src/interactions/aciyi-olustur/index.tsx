@@ -93,10 +93,10 @@ function Turners({ value, set, steps, big }: { value: number; set: (d: number) =
   return (
     <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
       {[...steps].reverse().map((s) => (
-        <button key={`-${s}`} type="button" onClick={() => set(norm(value - s))} className={`inline-flex ${big ? 'min-h-14' : 'min-h-12'} min-w-12 items-center justify-center gap-1 rounded-xl bg-white px-2.5 text-sm font-extrabold text-ink ring-1 ring-line active:scale-95`} aria-label={`${s} derece kapat`}><RotateCw size={16} />{s}°</button>
+        <button key={`-${s}`} type="button" onClick={() => set(norm(value - s))} className={`inline-flex ${big ? 'min-h-14' : 'min-h-12'} min-w-12 items-center justify-center gap-1 rounded-xl bg-white px-2.5 text-sm font-extrabold text-ink ring-1 ring-line active:scale-95`} aria-label={`${s} derece kapat`}><RotateCw size={16} />−{s}°</button>
       ))}
       {steps.map((s) => (
-        <button key={`+${s}`} type="button" onClick={() => set(norm(value + s))} className={`inline-flex ${big ? 'min-h-14' : 'min-h-12'} min-w-12 items-center justify-center gap-1 rounded-xl bg-white px-2.5 text-sm font-extrabold text-ink ring-1 ring-line active:scale-95`} aria-label={`${s} derece aç`}><RotateCcw size={16} />{s}°</button>
+        <button key={`+${s}`} type="button" onClick={() => set(norm(value + s))} className={`inline-flex ${big ? 'min-h-14' : 'min-h-12'} min-w-12 items-center justify-center gap-1 rounded-xl bg-white px-2.5 text-sm font-extrabold text-ink ring-1 ring-line active:scale-95`} aria-label={`${s} derece aç`}><RotateCcw size={16} />+{s}°</button>
       ))}
     </div>
   )
@@ -642,7 +642,7 @@ function ParallelRound({ grade, onComplete, footer, addSol }: RP) {
     const col = isF ? '#16a34a' : bad.includes(i) ? '#f59e0b' : '#64748b'
     return (
       <g key={i}>
-        <path d={g.d} transform={`translate(${c[0]} ${c[1]})`} fill={col} fillOpacity={isF ? 0.3 : 0.12} />
+        {(isF || bad.includes(i)) && <path d={g.d} transform={`translate(${c[0]} ${c[1]})`} fill={col} fillOpacity={0.3} />}
         <g onClick={() => pick(i)} style={{ cursor: 'pointer' }} data-handle>
           <circle cx={lx} cy={ly} r={0.085} fill={dark ? '#1e293b' : '#fff'} stroke={col} strokeWidth={0.014} />
           <text x={lx} y={ly + 0.03} textAnchor="middle" fontSize={0.08} fontWeight={900} fill={col}>{i}</text>
@@ -658,7 +658,7 @@ function ParallelRound({ grade, onComplete, footer, addSol }: RP) {
       work={
         <div>
           <div style={fitWidth(1, 300)}>
-            <Stage rays={[{ id: 'm', deg: th, color: MOVE, line: true, len: 1.2, draggable: !done }]} onRay={(_, d) => setLine(d)} view={VIEW_FULL} dark={dark} locked={done} active="m"
+            <Stage rays={[{ id: 'm', deg: th, color: MOVE, line: true, len: 1.2, draggable: !done }]} onRay={(_, d) => setLine(d)} view={VIEW_FULL} dark={dark} locked={done} active="m" hideVertex
               under={<g><line x1={-1.3} x2={1.3} y1={-h} y2={-h} stroke={line} strokeWidth={0.026} /><line x1={-1.3} x2={1.3} y1={h} y2={h} stroke={line} strokeWidth={0.026} /></g>}>
               {[1, 2, 3, 4].map((i) => arcFor(i, P1))}
               {[5, 6, 7, 8].map((i) => arcFor(i, P2))}

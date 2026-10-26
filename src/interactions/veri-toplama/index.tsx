@@ -3,14 +3,13 @@ import { useDrag } from '@use-gesture/react'
 import { Check, ClipboardList, FastForward, Minus, Plus } from 'lucide-react'
 import type { Grade } from '../../data/types'
 import type { InteractionProps } from '../types'
-import { MathText } from '../../components/MathText'
 import { Scene, SolutionList, useSolutions } from '../../games/kit2'
 import { ZoomBox } from '../../interactive/ZoomBox'
 import { clamp } from '../../interactive/axis'
 import { useTracker } from '../../lib/trackerContext'
 import { sfx } from '../../lib/feedback'
 import { ek } from '../../lib/generators'
-import { Choice, LastTask, NextButton, Panel, Pill, Stepper, TopBar, Work, fmtN, shuffle, starsBy, useLook, useRaf, useSay, type Look } from './kit'
+import { Choice, LastTask, NextButton, Panel, Pill, Stepper, TopBar, Work, fmtN, shuffle, starsBy, useBoxW, useLook, useRaf, useSay, type Look } from './kit'
 import { DISPLAY_NAME, FACES, NAMES, invFor, type DisplayId, type Inv, type Q } from './data'
 
 /**
@@ -29,8 +28,6 @@ const STEPS = [
   { id: 'goster', label: 'Göster', emoji: '📊' },
   { id: 'yorumla', label: 'Yorumla', emoji: '💡' },
 ] as const
-
-const tally = (n: number) => n
 
 /** Çetele: 5’erli gruplar (dört dik + bir çapraz) */
 function Tally({ n, color, look }: { n: number; color: string; look: Look }) {
@@ -168,22 +165,22 @@ function ToplaStep({ inv, grade, look, onDone }: { inv: Inv; grade: Grade; look:
       return
     }
     sfx.ok()
+    fb.clear()
     record(cur)
   }
   const fastAll = () => {
     setFast(true)
     setCur(null)
     track.strategy('Kalan verileri hızlı kaydetti')
+    let left = rec.filter((x) => !x).length
     raf((f) => {
       if (f % 3) return true
-      let more = false
       setRec((r) => {
         const k = r.findIndex((x) => !x)
-        if (k < 0) return r
-        more = r.filter((x) => !x).length > 1
-        return r.map((x, j) => (j === k ? true : x))
+        return k < 0 ? r : r.map((x, j) => (j === k ? true : x))
       })
-      return more || f < 3
+      left--
+      return left > 0
     })
   }
   const cols = N <= 12 ? 'grid-cols-4 sm:grid-cols-6' : N <= 16 ? 'grid-cols-4 sm:grid-cols-8' : 'grid-cols-5 sm:grid-cols-8'
@@ -214,12 +211,12 @@ function ToplaStep({ inv, grade, look, onDone }: { inv: Inv; grade: Grade; look:
             ) : (
               <div className={`grid gap-1.5 rounded-2xl p-2 ${look.soft}`}>
                 {inv.cats.map((c, ci) => (
-                  <button key={c.id} type="button" onClick={() => tapCat(ci)} disabled={done} className={`flex ${big ? 'min-h-14' : 'min-h-12'} items-center gap-3 rounded-xl px-3 text-left transition active:scale-[0.99] ${look.dark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-white ring-1 ring-line hover:bg-violet-50'}`}>
+                  <button key={c.id} type="button" onClick={() => tapCat(ci)} disabled={done} aria-label={`${catLabel(inv, ci)} satırına işle`} className={`flex ${big ? 'min-h-14' : 'min-h-12'} items-center gap-3 rounded-xl px-3 text-left transition active:scale-[0.99] ${look.dark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-white ring-1 ring-line hover:bg-violet-50'}`}>
                     <span className={`flex w-28 shrink-0 items-center gap-1.5 font-black sm:w-36 ${look.strong}`}><span className="text-2xl" aria-hidden>{inv.kind === 'cat' ? c.emoji : '👪'}</span>{catLabel(inv, ci)}</span>
                     {grade <= 1 ? (
                       <span className="flex flex-wrap gap-0.5 text-2xl" aria-label={`${counts[ci]} tane`}>{Array.from({ length: counts[ci] }, (_, k) => <span key={k} className="animate-pop">{c.emoji}</span>)}</span>
                     ) : (
-                      <Tally n={tally(counts[ci])} color={c.color} look={look} />
+                      <Tally n={counts[ci]} color={c.color} look={look} />
                     )}
                   </button>
                 ))}
@@ -308,7 +305,7 @@ function DuzenleStep({ inv, grade, look, onDone }: { inv: Inv; grade: Grade; loo
         }
         panel={
           <Panel look={look} title="Verileri grupla" icon="🗂️">
-            <p className={`text-[15px] font-semibold ${look.muted}`}>{inv.answers.length} farklı değer var. Onları aralıklara ayıralım. Hangi aralık genişliği uygun? İki geçerli seçenek bul.</p>
+            <p className={`text-[15px] font-semibold ${look.muted}`}>{inv.answers.length} değer var; çoğu birbirinden farklı. Onları aralıklara ayıralım. Hangi aralık genişliği uygun? İki geçerli seçenek bul.</p>
             <div className="mt-3 grid grid-cols-2 gap-2">
               {bins.map((b) => <Choice key={b.id} look={look} className="!text-center" state={sols.list.some((s) => s.key === b.id) ? 'right' : binId === b.id ? 'on' : 'idle'} onClick={() => choose(b.id)}>{b.label}</Choice>)}
             </div>
@@ -349,7 +346,7 @@ function DuzenleStep({ inv, grade, look, onDone }: { inv: Inv; grade: Grade; loo
             {inv.cats.map((c, i) => (
               <div key={c.id} className={`grid grid-cols-[1.2fr_1.4fr_auto] items-center gap-2 border-t px-3 py-1.5 ${look.dark ? 'border-slate-700 bg-slate-900/40' : 'border-line bg-white'} ${bad.includes(i) ? 'outline-3 outline-amber-400 -outline-offset-2' : ''}`}>
                 <span className={`flex items-center gap-1.5 font-black ${look.strong}`}><span className="text-xl" aria-hidden>{inv.kind === 'cat' ? c.emoji : ''}</span>{catLabel(inv, i)}</span>
-                {grade <= 1 ? <span className="text-xl leading-tight">{Array.from({ length: truth[i] }, () => c.emoji).join('')}</span> : <Tally n={truth[i]} color={c.color} look={look} />}
+                {grade <= 1 ? <span className="text-xl leading-tight" aria-label={`${truth[i]} tane`}>{Array.from({ length: truth[i] }, () => c.emoji).join('')}</span> : <Tally n={truth[i]} color={c.color} look={look} />}
                 <div className="w-[150px]"><Stepper look={look} value={vals[i]} min={0} max={30} onChange={(v) => { setVals((a) => a.map((x, j) => (j === i ? v : x))); setBad((b) => b.filter((x) => x !== i)) }} compact /></div>
               </div>
             ))}
@@ -394,8 +391,9 @@ function Thumb({ id, look }: { id: DisplayId; look: Look }) {
 /** Sütun / histogram kurucu: sütun tepesini sürükle ya da ± düğmeleri */
 function BarBuilder({ look, labels, colors, vals, onChange, scale, maxV, adjacent, unit }: { look: Look; labels: string[]; colors: string[]; vals: number[]; onChange: (i: number, v: number) => void; scale: number; maxV: number; adjacent?: boolean; unit?: string }) {
   const svg = useRef<SVGSVGElement>(null)
+  const [box, boxW] = useBoxW(600)
   const n = labels.length
-  const W = 600, H = 300, L = 46, R = 12, T = 14, B = 44
+  const W = Math.round(Math.min(600, Math.max(400, boxW * 1.25))), H = Math.round(300 * Math.sqrt(W / 600)), L = 46, R = 12, T = 14, B = 44
   const pw = W - L - R, ph = H - T - B
   const top = Math.ceil(maxV / scale) * scale + scale
   const ys = (v: number) => T + ph * (1 - v / top)
@@ -412,7 +410,7 @@ function BarBuilder({ look, labels, colors, vals, onChange, scale, maxV, adjacen
   }, { eventOptions: { passive: false } })
   const ticksV = Array.from({ length: Math.floor(top / scale) + 1 }, (_, k) => k * scale)
   return (
-    <div>
+    <div ref={box}>
       <div style={{ touchAction: 'none' }} className="select-none">
         <svg ref={svg} viewBox={`0 0 ${W} ${H}`} className="block w-full" role="img" aria-label="Grafik kurucu">
           {ticksV.map((t) => (
@@ -479,12 +477,13 @@ function PictoBuilder({ look, inv, vals, onChange, big }: { look: Look; inv: Inv
 
 /** Nokta grafiği kurucu */
 function DotBuilder({ look, inv, vals, onChange }: { look: Look; inv: Inv; vals: number[]; onChange: (i: number, v: number) => void }) {
-  const W = 600, H = 300, L = 30, B = 46
+  const [box, boxW] = useBoxW(600)
+  const W = Math.round(Math.min(600, Math.max(400, boxW * 1.25))), H = 300, L = 30, B = 46
   const n = inv.cats.length
   const cw = (W - 2 * L) / n
   const ink = look.dark ? '#e2e8f0' : '#1f2340'
   return (
-    <div>
+    <div ref={box}>
       <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" role="img" aria-label="Nokta grafiği">
         <line x1={L} x2={W - L} y1={H - B} y2={H - B} stroke={ink} strokeWidth={2.5} />
         {inv.cats.map((c, i) => (
@@ -646,13 +645,12 @@ function statements(inv: Inv, grade: Grade, freq: number[], edges?: number[]): S
   const minUnique = freq.filter((f) => f === mnV).length === 1
   const mn = freq.indexOf(mnV)
   const second = freq.map((f, i) => ({ f, i })).filter((x) => x.i !== mx).sort((a, b) => b.f - a.f)[0].i
-  const other = freq.map((_, i) => i).filter((i) => i !== mx)[0]
   const half = freq.map((_, i) => i).find((i) => i !== mx && freq[i] * 2 !== freq[mx]) ?? second
   if (grade <= 2) {
     out.push({ t: `En çok “${L(mx)}” denmiş.`, ok: true })
     if (minUnique) out.push({ t: `En az “${L(mn)}” denmiş.`, ok: true })
     out.push({ t: `“${L(mx)}” diyenler, “${L(second)}” diyenlerden ${freq[mx] - freq[second]} kişi fazla.`, ok: true })
-    out.push({ t: `En çok “${L(other === mx ? second : (freq[other] === mxV ? second : other))}” denmiş.`, ok: false, why: 'Hangi satırda en çok nesne var? Sayıları karşılaştır.' })
+    out.push({ t: `En çok “${L(second)}” denmiş.`, ok: false, why: 'Hangi satırda en çok nesne var? Sayıları karşılaştır.' })
     out.push({ t: `Herkes “${L(mx)}” demiş.`, ok: false, why: 'Başka cevap veren arkadaşların da var mı? Tabloya bak.' })
     return out
   }

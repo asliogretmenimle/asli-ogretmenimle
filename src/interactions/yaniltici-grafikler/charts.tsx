@@ -1,7 +1,7 @@
 import { useRef, type ReactNode } from 'react'
 import { useDrag, useGesture } from '@use-gesture/react'
 import { clamp, niceStep, ticks } from '../../interactive/axis'
-import { fmtN, type Look } from '../veri-toplama/kit'
+import { fmtN, useBoxW, type Look } from '../veri-toplama/kit'
 
 /**
  * Yanıltıcı Grafikler için SVG grafikler:
@@ -30,7 +30,7 @@ export function yMap(v: number, y0: number, yMax: number, plotH: number, uneven?
   return plotH * (1 - clamp((v - y0) / (yMax - y0), 0, 1.02))
 }
 
-export function DataChart({ look, data, type, y0, yMax, height = 300, uneven, onY0, y0Step = 1, y0Max, onHeight, title, unit, colors = BAR_COLORS, ghostAll, xLabelEvery = 1, breakMark }: {
+export function DataChart({ look, data, type, y0, yMax, height = 300, uneven, onY0, y0Step = 1, y0Max, onHeight, title, unit, colors = BAR_COLORS, ghostAll, xLabelEvery = 1, breakMark, fixedW }: {
   look: Look
   data: Datum[]
   type: 'bar' | 'line'
@@ -48,12 +48,15 @@ export function DataChart({ look, data, type, y0, yMax, height = 300, uneven, on
   ghostAll?: boolean
   xLabelEvery?: number
   breakMark?: boolean
+  /** en-boy oranı ölçülen grafiklerde viewBox genişliği sabit kalsın */
+  fixedW?: boolean
 }) {
   const svg = useRef<SVGSVGElement>(null)
+  const [box, boxW] = useBoxW(600)
   const knob = useRef<SVGGElement>(null)
   const top = useRef<SVGGElement>(null)
-  const W = CHART_W
-  const H = height
+  const W = fixedW ? CHART_W : Math.round(Math.min(CHART_W, Math.max(420, boxW * 1.3)))
+  const H = fixedW ? height : Math.round(height * (W / CHART_W) ** 0.5)
   const plotW = W - M.L - M.R
   const plotH = H - M.T - M.B
   const ink = look.dark ? '#e2e8f0' : '#1f2340'
@@ -110,7 +113,7 @@ export function DataChart({ look, data, type, y0, yMax, height = 300, uneven, on
   const xs = (i: number) => M.L + bw * (i + 0.5)
 
   return (
-    <div style={{ touchAction: 'none' }} className="select-none">
+    <div ref={box} style={{ touchAction: 'none' }} className="select-none">
       <svg ref={svg} viewBox={`0 0 ${W} ${H}`} className="block w-full" role="img" aria-label={title ?? 'Grafik'}>
         {title && <text x={W / 2} y={16} textAnchor="middle" fontSize={15} fontWeight={900} fill={ink}>{title}</text>}
         {tickVals.map((t) => (
@@ -168,7 +171,8 @@ export function Brush({ look, data, i0, i1, onChange, minLen = 3 }: { look: Look
   const hA = useRef<SVGGElement>(null)
   const hB = useRef<SVGGElement>(null)
   const mid = useRef<SVGRectElement>(null)
-  const W = CHART_W, H = 110, L = 20, R = 20
+  const [box, boxW] = useBoxW(600)
+  const W = Math.round(Math.min(CHART_W, Math.max(420, boxW * 1.3))), H = 110, L = 20, R = 20
   const n = data.length
   const xs = (i: number) => L + ((W - L - R) * i) / (n - 1)
   const mn = Math.min(...data.map((d) => d.value)), mx = Math.max(...data.map((d) => d.value))
@@ -192,12 +196,12 @@ export function Brush({ look, data, i0, i1, onChange, minLen = 3 }: { look: Look
   }, { target: mid, eventOptions: { passive: false } })
   const ink = look.dark ? '#e2e8f0' : '#1f2340'
   return (
-    <div style={{ touchAction: 'none' }} className="select-none">
+    <div ref={box} style={{ touchAction: 'none' }} className="select-none">
       <svg ref={svg} viewBox={`0 0 ${W} ${H}`} className="block w-full" role="img" aria-label="Tüm veriler ve seçilen aralık">
         <rect ref={mid} x={xs(i0)} y={4} width={xs(i1) - xs(i0)} height={76} rx={10} fill="#f59e0b" opacity={0.18} style={{ cursor: 'grab' }} data-handle />
         <polyline points={data.map((d, i) => `${xs(i)},${ys(d.value)}`).join(' ')} fill="none" stroke={look.dark ? '#94a3b8' : '#94a3b8'} strokeWidth={2.5} />
         <polyline points={data.slice(i0, i1 + 1).map((d, i) => `${xs(i + i0)},${ys(d.value)}`).join(' ')} fill="none" stroke="#7c3aed" strokeWidth={3.5} />
-        {data.map((d, i) => <text key={i} x={xs(i)} y={H - 10} textAnchor="middle" fontSize={12} fontWeight={800} fill={i >= i0 && i <= i1 ? ink : '#94a3b8'}>{d.label}</text>)}
+        {data.map((d, i) => <text key={i} x={xs(i)} y={H - 10} textAnchor="middle" fontSize={13} fontWeight={800} fill={i >= i0 && i <= i1 ? ink : '#94a3b8'}>{d.label}</text>)}
         {[[hA, i0], [hB, i1]].map(([ref, i], k) => (
           <g key={k} ref={ref as React.RefObject<SVGGElement>} data-handle style={{ cursor: 'ew-resize', touchAction: 'none' }}>
             <rect x={xs(i as number) - 24} y={0} width={48} height={90} fill="transparent" />

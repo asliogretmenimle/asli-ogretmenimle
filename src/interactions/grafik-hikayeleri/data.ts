@@ -319,7 +319,7 @@ const E3: EditTask = {
   kind: 'edit',
   title: 'Sayılarla grafik',
   story: 'Kaan evden çıktı, 10 dakikada 500 m yürüyerek arkadaşına gitti. Orada 10 dakika kaldı. Sonra 5 dakikada koşarak eve döndü.',
-  axes: { xMax: 30, yMax: 1000, xStep: 1, yStep: 50, xGrid: 5, xLabel: 'Zaman (dk)', yLabel: 'Evden uzaklık (m)', numbers: true },
+  axes: { xMax: 30, yMax: 1000, xStep: 1, yStep: 50, xLabel: 'Zaman (dk)', yLabel: 'Evden uzaklık (m)', numbers: true },
   start: [{ x: 0, y: 0 }, { x: 8, y: 0 }, { x: 16, y: 0 }, { x: 24, y: 0 }],
   spec: {
     start: { y: 0, q: 'Kaan yola evden başladı. 0. dakikada evden uzaklığı kaç metre?' },
@@ -341,7 +341,7 @@ const E4: EditTask = {
   kind: 'edit',
   title: 'Depo dolarken',
   story: 'Bir depoda 200 L su var. Musluk açılınca depoya dakikada 40 L su doluyor. 10 dakika sonra musluk kapanıyor ve depo 5 dakika öyle kalıyor.',
-  axes: { xMax: 20, yMax: 800, xStep: 1, yStep: 20, xGrid: 2, xLabel: 'Zaman (dk)', yLabel: 'Su (L)', numbers: true },
+  axes: { xMax: 20, yMax: 800, xStep: 1, yStep: 20, xLabel: 'Zaman (dk)', yLabel: 'Su (L)', numbers: true },
   start: [{ x: 0, y: 0 }, { x: 8, y: 0 }, { x: 16, y: 0 }],
   spec: {
     start: { y: 200, q: 'Başlangıçta depoda kaç litre su var? Grafiğin ilk noktası 0. dakikada hangi değerde olmalı?', mis: 'Başlangıç değerini (y kesişimini) sıfır sanma' },

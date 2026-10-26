@@ -64,6 +64,7 @@ export default function Lunapark({ grade, onFinish }: GameProps) {
     nudge: (q, o) => setNudge(q ? { q, tone: o?.tone ?? 'think', mis: o?.mis, tool: o?.tool, id: ++nid.current } : null),
     strategy: (s) => track.strategy(s),
     complete: (text) => {
+      setNudge(null)
       setCompleted(text ?? '')
     },
   }

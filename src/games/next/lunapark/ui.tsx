@@ -102,5 +102,5 @@ export function useWide() {
 /** Sahne üstündeki tabela */
 export function Sign({ children, tone = 'pink', className = '' }: { children: ReactNode; tone?: 'pink' | 'dark' | 'green' | 'amber'; className?: string }) {
   const c = { pink: 'bg-white/95 text-fuchsia-900 ring-fuchsia-200', dark: 'bg-slate-900/85 text-white ring-slate-700', green: 'bg-emerald-50/95 text-emerald-900 ring-emerald-300', amber: 'bg-amber-50/95 text-amber-900 ring-amber-300' }[tone]
-  return <div className={`pointer-events-none rounded-2xl px-3 py-1.5 text-center font-black shadow-md ring-2 tabular-nums ${c} ${className}`}>{children}</div>
+  return <div className={`pointer-events-none rounded-xl px-2 py-0.5 text-center font-black whitespace-nowrap shadow-md ring-2 tabular-nums sm:rounded-2xl sm:px-3 sm:py-1.5 ${c} ${className}`}>{children}</div>
 }

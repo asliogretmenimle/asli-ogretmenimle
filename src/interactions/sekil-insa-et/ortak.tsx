@@ -158,17 +158,34 @@ export function Derived({ children, tone = 'ok' }: { children: ReactNode; tone?:
   )
 }
 
-/** Sayı girişi: büyük ± düğmeleri */
+/** Sayı girişi: büyük ± düğmeleri; ortadaki kutuya dokunup yazılabilir (sayısal klavye) */
 export function NumStepper({ value, onChange, min = 0, max = 99, step = 1, label, color = '#db2777', big, fmt }: { value: number | null; onChange: (v: number) => void; min?: number; max?: number; step?: number; label?: string; color?: string; big?: boolean; fmt?: (v: number) => string }) {
   const s = big ? 'size-14' : 'size-12'
-  const v = value ?? min
+  const [text, setText] = useState<string | null>(null)
+  const clampV = (v: number) => Math.max(min, Math.min(max, Math.round(v / step) * step))
+  const shown = text ?? (value === null ? '' : fmt ? fmt(value) : String(value))
   return (
     <div className="flex flex-col items-center gap-1">
       {label && <span className="text-xs font-extrabold tracking-wide text-ink-soft uppercase">{label}</span>}
       <div className="flex items-center gap-1 rounded-2xl bg-white p-1 ring-1 ring-line">
-        <button type="button" disabled={value !== null && v <= min} onClick={() => onChange(Math.max(min, value === null ? min : v - step))} className={`grid ${s} place-items-center rounded-xl bg-paper active:scale-95 disabled:opacity-30`} aria-label="Azalt"><Minus size={22} /></button>
-        <span className="min-w-16 text-center text-2xl font-black tabular-nums" style={{ color }}>{value === null ? '?' : fmt ? fmt(v) : v}</span>
-        <button type="button" disabled={v >= max} onClick={() => onChange(Math.min(max, value === null ? min : v + step))} className={`grid ${s} place-items-center rounded-xl bg-paper active:scale-95 disabled:opacity-30`} aria-label="Artır"><Plus size={22} /></button>
+        <button type="button" disabled={value !== null && value <= min} onClick={() => { setText(null); onChange(value === null ? min : clampV(value - step)) }} className={`grid ${s} place-items-center rounded-xl bg-paper active:scale-95 disabled:opacity-30`} aria-label="Azalt"><Minus size={22} /></button>
+        <input
+          type="text"
+          inputMode="decimal"
+          value={shown}
+          placeholder="?"
+          aria-label={label ?? 'Sayı'}
+          onChange={(e) => {
+            const raw = e.target.value.replace(/[^0-9,.]/g, '')
+            setText(raw)
+            const v = parseFloat(raw.replace(',', '.'))
+            if (!Number.isNaN(v)) onChange(clampV(v))
+          }}
+          onBlur={() => setText(null)}
+          className="h-12 w-20 rounded-xl bg-transparent text-center text-2xl font-black tabular-nums outline-none placeholder:text-ink-soft/40 focus:bg-paper"
+          style={{ color }}
+        />
+        <button type="button" disabled={value !== null && value >= max} onClick={() => { setText(null); onChange(value === null ? Math.min(max, min + step) : clampV(value + step)) }} className={`grid ${s} place-items-center rounded-xl bg-paper active:scale-95 disabled:opacity-30`} aria-label="Artır"><Plus size={22} /></button>
       </div>
     </div>
   )

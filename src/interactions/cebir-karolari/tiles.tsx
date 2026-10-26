@@ -47,7 +47,7 @@ export function TileFace({ k, neg, g, selected, ghost, flip, dim, small }: { k: 
     const n = Math.abs(flip)
     const vneg = neg !== flip < 0
     return (
-      <span className="inline-grid content-end gap-0.5 rounded-lg p-0.5 ring-2 ring-dashed" style={{ width: w, minHeight: h, gridTemplateColumns: 'repeat(2, 1fr)', boxShadow: `inset 0 0 0 2px ${color}55` }} aria-label={`x = ${flip}`}>
+      <span className="inline-grid content-end gap-0.5 rounded-lg p-1 animate-pop" style={{ width: w, minHeight: n ? undefined : w, gridTemplateColumns: 'repeat(2, 1fr)', boxShadow: `inset 0 0 0 2px ${color}` }} aria-label={`x = ${flip}`}>
         {Array.from({ length: n }, (_, i) => <span key={i} className="aspect-square rounded-[4px]" style={{ background: vneg ? RED : AMBER }} />)}
       </span>
     )
@@ -150,7 +150,7 @@ export function SideMat({ side, tiles, dnd, sel, onTapTile, onTapSide, dark, lab
   return (
     <div
       data-drop={key}
-      onClick={(e) => !(e.target as Element).closest('button') && Date.now() - lastTileTap > 400 && onTapSide()}
+      onClick={(e) => !(e.target as Element).closest('button') && Date.now() - lastTileTap > 150 && onTapSide()}
       className={`relative flex flex-col rounded-2xl p-2.5 transition ${dark ? 'bg-slate-900/60' : 'bg-white/90'} ${hot ? 'ring-4 ring-violet-400' : dark ? 'ring-1 ring-slate-600' : 'ring-1 ring-line'}`}
       style={{ minHeight: minH, touchAction: 'none' }}
     >

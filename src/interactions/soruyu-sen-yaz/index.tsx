@@ -90,11 +90,12 @@ export default function SoruyuSenYaz({ grade, onFinish }: InteractionProps) {
       setPhase('compose')
       setVal('')
     }
-    setSlot(ORDER.find((s) => !next[s]) ?? k)
     const c = ctxOf(next)
     const e = T.events.find((x) => x.id === next.ev)
     const qq = T.qs.find((x) => x.id === next.q)
     const r = evaluate(e, qq)
+    // olay modele uymuyorsa “Ne oldu?” yuvasında kal
+    setSlot(k === 'ev' && (e?.nums || e?.rel) ? 'ev' : (ORDER.find((s) => !next[s]) ?? k))
     const isFull = !!(c && e && qq)
     if (isFull) S.attempt(!r.fail)
     if (r.fail && c && (k === 'ev' || k === 'q' || isFull)) {
@@ -185,7 +186,7 @@ export default function SoruyuSenYaz({ grade, onFinish }: InteractionProps) {
   })()
 
   const card = dark ? 'bg-slate-800/80 ring-1 ring-slate-600 text-slate-100' : 'bg-white/95 ring-1 ring-line text-ink'
-  const emoji = ctx?.o.emoji ?? T.what[0].emoji
+  const emoji = ctx?.o.emoji ?? '🟠'
 
   const scene = (
     <div className="flex flex-col gap-3">

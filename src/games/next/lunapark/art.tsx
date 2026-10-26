@@ -25,7 +25,8 @@ export function useWheelAngle(idle = 7, speed = 220) {
   const onArrive = useRef<(() => void) | null>(null)
   const idleRef = useRef(idle)
   idleRef.current = idle
-  useFrame((dt) => {
+  useFrame((d) => {
+    const dt = Math.max(0, d)
     const t = target.current
     if (t === null) {
       if (!idleRef.current) return

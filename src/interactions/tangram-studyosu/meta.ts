@@ -11,7 +11,7 @@ export const meta: InteractionMeta = {
   grades: [1, 2, 3, 4, 5, 6],
   ready: true,
   launch: 'Bir kedi, bir kayık ve bir kare… Üçü de aynı yedi tangram parçasından yapılıyor. Peki hangisi daha çok yer kaplar? Bugün gölgeleri parçalarla dolduracak, parçalar arasındaki gizli ilişkileri bulacak ve sonunda kendi tasarımını galeriye ekleyeceksin.',
-  reflect: 'Yedi parçayla yaptığın kedi ile kare aynı alanda mı? Bunu, hiç ölçmeden bir arkadaşına nasıl kanıtlarsın?',
+  reflect: 'Aynı parçalarla yaptığın iki farklı şekil aynı yeri mi kaplar? Bunu hiç ölçmeden bir arkadaşına nasıl kanıtlarsın?',
   bigIdea: 'Bir şekil parçalanıp yeniden düzenlendiğinde biçimi değişir, alanı değişmez (alanın korunumu). Küçük üçgen gibi bir parça alan birimi olarak kullanılabilir: kare, orta üçgen ve paralelkenar 2, büyük üçgen 4 küçük üçgendir. Ortak birimle ölçmek, eş olmayan parçaları sayarak kesir yazma yanılgısını (7 parça → [[1/7]]) ortadan kaldırır; birim büyüyünce ölçü küçülür.',
   skills: {
     1: 'İki küçük üçgenle kare, üçgen ve paralelkenar yapma; biçim değişir, kapladığı yer değişmez',

@@ -276,8 +276,8 @@ function PredictTask({ t, grade, look, onDone }: { t: Extract<Task, { kind: 'pre
     }
   }
 
-  const colors = t.complement ? ['#7c3aed', '#0891b2'] : ['#7c3aed']
-  const focusIdx = t.complement ? [t.focus] : [t.focus]
+  const colors = ['#7c3aed']
+  const focusIdx = [t.focus]
 
   return (
     <Work
@@ -304,9 +304,9 @@ function PredictTask({ t, grade, look, onDone }: { t: Extract<Task, { kind: 'pre
           </div>
           {locked && (
             <div className="mt-3">
-              <FreqChart t={tr} focus={t.complement ? [t.focus] : focusIdx} colors={colors} theoryV={showTheory ? [th] : undefined} guess={guess} />
+              <FreqChart t={tr} focus={focusIdx} colors={colors} theoryV={showTheory ? [th] : undefined} guess={guess} complement={t.complement ? { idx: t.focus, color: '#0891b2' } : undefined} />
               {t.complement && tr.n > 0 && <ComplementOverlay look={look} k={notK} n={tr.n} />}
-              <Legend look={look} items={[{ color: '#7c3aed', label: `“${t.focusLabel}” göreli sıklığı` }, { color: '#f59e0b', label: 'tahminim', dash: '2 6' }, ...(showTheory ? [{ color: '#7c3aed', label: 'kuramsal olasılık', dash: '10 7' }] : [])]} />
+              <Legend look={look} items={[{ color: '#7c3aed', label: `“${t.focusLabel}” göreli sıklığı` }, ...(t.complement ? [{ color: '#0891b2', label: '“6 değil” göreli sıklığı' }] : []), { color: '#f59e0b', label: 'tahminim', dash: '2 6' }, ...(showTheory ? [{ color: '#7c3aed', label: 'kuramsal olasılık', dash: '10 7' }] : [])]} />
             </div>
           )}
         </Scene>
@@ -668,7 +668,7 @@ function CloudTask({ t, grade, look, onDone }: { t: Extract<Task, { kind: 'cloud
             <DeviceView d={t.device} t={{ last: null, flick: 0 }} size={64} />
             <p className={`text-sm font-extrabold ${look.muted}`}>Her nokta bir grubun bulduğu “{t.focusLabel}” oranı</p>
           </div>
-          <ZoomBox maxScale={3}>
+          <ZoomBox maxScale={3} controls={false}>
             <svg viewBox={`0 0 ${W} ${SIZES.length * rowH + 50}`} className="block w-full" role="img" aria-label="Grupların sonuçları">
               <line x1={xs(p)} x2={xs(p)} y1={6} y2={SIZES.length * rowH + 10} stroke="#16a34a" strokeWidth={2.5} strokeDasharray="8 6" />
               <text x={xs(p)} y={SIZES.length * rowH + 44} textAnchor="middle" fontSize={15} fontWeight={900} fill="#16a34a">kuram</text>

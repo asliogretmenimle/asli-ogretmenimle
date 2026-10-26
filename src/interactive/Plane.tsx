@@ -246,7 +246,7 @@ export function Plane({ initial, mode = 'xy', aspect, minSpan = 0.02, maxSpan = 
           </div>
         )}
       </div>
-      {!locked && <p className="mt-1.5 text-center text-xs font-bold text-ink-soft">İki parmakla yakınlaştır, boş alanı sürükleyerek kaydır.</p>}
+      {!locked && <p className="mt-1.5 text-center text-xs font-bold opacity-65">İki parmakla yakınlaştır, boş alanı sürükleyerek kaydır.</p>}
     </div>
   )
 }

@@ -53,8 +53,8 @@ export function BaseGrid({ cols, rows, cells, tool, onChange, locked, dark, high
     <svg
       ref={svgRef}
       viewBox={`0 0 ${W} ${H}`}
-      className="block h-auto w-full rounded-[22px]"
-      style={{ touchAction: 'none' }}
+      className="mx-auto block h-auto w-full rounded-[22px]"
+      style={{ touchAction: 'none', maxWidth: `calc(72vh * ${(W / H).toFixed(3)})` }}
       role="img"
       aria-label={`Üs alanı: ${cols} × ${rows} parsel`}
       onPointerDown={down}

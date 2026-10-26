@@ -7,7 +7,7 @@ import { fmt } from './util'
 /** Plane’i koyu sahnede bir "veri ekranı" çerçevesine koyar */
 export function Screen({ title, right, children }: { title: string; right?: ReactNode; children: ReactNode }) {
   return (
-    <div className="rounded-[22px] bg-slate-950/80 p-2 ring-1 ring-cyan-400/25 shadow-[0_0_30px_rgb(34_211_238/0.08)]">
+    <div className="rounded-[22px] bg-slate-950/80 p-2 text-ink [&_p.text-center]:text-slate-400 ring-1 ring-cyan-400/25 shadow-[0_0_30px_rgb(34_211_238/0.08)]">
       <div className="mb-1.5 flex items-center justify-between gap-2 px-2 pt-1">
         <p className="flex items-center gap-2 text-[11px] font-black tracking-widest text-cyan-300 uppercase"><span className="size-2 rounded-full bg-cyan-400 uk-pulse" />{title}</p>
         {right}
@@ -39,7 +39,7 @@ function SeriesLayer({ rows, s }: { rows: SimRow[]; s: Series }) {
           <rect x={0} width={sw} y={P.sy(cfg.safe[1])} height={Math.max(0, P.sy(cfg.safe[0]) - P.sy(cfg.safe[1]))} fill="#22c55e" opacity={0.1} />
           <line x1={0} x2={sw} y1={P.sy(cfg.safe[0])} y2={P.sy(cfg.safe[0])} stroke="#16a34a" strokeDasharray="6 5" strokeWidth={1.5} />
           {s === 'o2' && <line x1={0} x2={sw} y1={P.sy(cfg.safe[1])} y2={P.sy(cfg.safe[1])} stroke="#16a34a" strokeDasharray="6 5" strokeWidth={1.5} />}
-          <text x={8} y={P.sy(cfg.safe[1]) + 14} fontSize={11} fontWeight={900} fill="#15803d">güvenli bölge</text>
+          <text x={sw - 8} y={P.sy(cfg.safe[0]) - 6} textAnchor="end" fontSize={11} fontWeight={900} fill="#15803d">güvenli bölge</text>
         </g>
       )}
       {s === 'food' && <line x1={0} x2={sw} y1={P.sy(0)} y2={P.sy(0)} stroke="#dc2626" strokeWidth={1.5} strokeDasharray="4 4" />}
@@ -48,7 +48,7 @@ function SeriesLayer({ rows, s }: { rows: SimRow[]; s: Series }) {
         <g key={i}>
           <circle cx={P.sx(x)} cy={P.sy(y)} r={i === pts.length - 1 ? 6 : 4} fill={cfg.color} stroke="#fff" strokeWidth={2} />
           {i === pts.length - 1 && (
-            <text x={P.sx(x) + (x > 8 ? -8 : 8)} y={P.sy(y) - 10} textAnchor={x > 8 ? 'end' : 'start'} fontSize={13} fontWeight={900} fill={cfg.color} stroke="#fff" strokeWidth={3} paintOrder="stroke">{fmt(y, 1)} {cfg.unit}</text>
+            <text x={P.sx(x) + (x > 8 ? -8 : 8)} y={P.sy(y) - 10} textAnchor={x > 8 ? 'end' : 'start'} fontSize={13} fontWeight={900} fill={cfg.color} stroke="#fff" strokeWidth={3} paintOrder="stroke">{cfg.unit === '%' ? `%${fmt(y, 1)}` : `${fmt(y, 1)} ${cfg.unit}`}</text>
           )}
         </g>
       ))}
@@ -62,7 +62,7 @@ export function SimChart({ rows, series, sols, fail }: { rows: SimRow[]; series:
   const lo = Math.min(cfg.range[0], ...vals.map((v) => Math.floor(v - 1)))
   const hi = Math.max(cfg.range[1], ...vals.map((v) => Math.ceil(v + 1)))
   return (
-    <Plane key={`${series}-${lo}-${hi}`} initial={{ xMin: -0.7, xMax: sols + 0.7, yMin: lo, yMax: hi }} aspect={0.5} equalUnits={false} controls={false} minSpan={2} maxSpan={30} xLabel="sol" yLabel={`${cfg.label} (${cfg.unit})`} label={`${cfg.label} grafiği`}>
+    <Plane key={`${series}-${lo}-${hi}`} initial={{ xMin: -0.7, xMax: sols + 0.7, yMin: lo, yMax: hi }} aspect={0.44} equalUnits={false} controls={false} minSpan={2} maxSpan={30} fixedStep={1} xLabel="sol" yLabel={`${cfg.label} (${cfg.unit})`} label={`${cfg.label} grafiği`}>
       {fail !== undefined && <FailBand sol={fail} />}
       <SeriesLayer rows={rows} s={series} />
     </Plane>
@@ -85,7 +85,7 @@ export function BarBuilder({ values, onChange, max, unit, locked, names, marked 
     if (next[i] !== values[i]) onChange(next)
   }
   return (
-    <Plane initial={{ xMin: 0.3, xMax: n + 0.7, yMin: -1.6, yMax: max + 1 }} aspect={0.62} equalUnits={false} controls={false} locked={locked} minSpan={2} maxSpan={12} yLabel={unit} label="Sütun grafiği" onTap={(p) => {
+    <Plane initial={{ xMin: 0.3, xMax: n + 0.7, yMin: -1.6, yMax: max + 1 }} aspect={0.62} equalUnits={false} controls={false} locked={locked} minSpan={2} maxSpan={12} fixedStep={1} yLabel={unit} label="Sütun grafiği" onTap={(p) => {
       const i = Math.round(p.x) - 1
       if (i >= 0 && i < n && Math.abs(p.x - (i + 1)) < 0.45) set(i, p.y)
     }}>
@@ -124,7 +124,7 @@ export function LevelChart({ values, line, onLine, step, unit, locked, yRange }:
   const n = values.length
   const snapV = (v: number) => clamp(Math.round(v / step) * step, yRange[0], yRange[1])
   return (
-    <Plane initial={{ xMin: 0.2, xMax: n + 1.3, yMin: yRange[0], yMax: yRange[1] }} aspect={0.62} equalUnits={false} controls={false} minSpan={2} maxSpan={20} xLabel="sol" yLabel={unit} label="Ortalama grafiği" onTap={(p) => !locked && onLine(snapV(p.y))}>
+    <Plane initial={{ xMin: 0.2, xMax: n + 1.3, yMin: yRange[0], yMax: yRange[1] }} aspect={0.62} equalUnits={false} controls={false} minSpan={2} maxSpan={20} fixedStep={1} xLabel="sol" yLabel={unit} label="Ortalama grafiği" onTap={(p) => !locked && onLine(snapV(p.y))}>
       <LevelLayer values={values} line={line} />
       {!locked && <DragPoint x={n + 0.75} y={line} r={14} color="#f97316" onChange={(p) => onLine(snapV(p.y))} constrain={(p) => ({ x: n + 0.75, y: p.y })} />}
     </Plane>
@@ -149,6 +149,7 @@ function LevelLayer({ values, line }: { values: number[]; line: number }) {
               <rect x={x} y={a} width={bw} height={b - a} fill={over ? '#22c55e' : '#f59e0b'} opacity={over ? 0.85 : 0.35} stroke={over ? '#15803d' : '#b45309'} strokeDasharray={over ? undefined : '4 3'} strokeWidth={1.5} />
             )}
             <text x={P.sx(i + 1)} y={neg ? P.sy(v) + 16 : P.sy(v) - 6} textAnchor="middle" fontSize={12} fontWeight={900} fill="#1f2340">{fmt(v)}</text>
+            {neg && <text x={P.sx(i + 1)} y={P.sy(0) - 7} textAnchor="middle" fontSize={11} fontWeight={900} fill="#64748b">{i + 1}. sol</text>}
           </g>
         )
       })}

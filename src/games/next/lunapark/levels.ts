@@ -118,7 +118,7 @@ export const RIDES: Record<RideId, RideSpec> = {
 }
 
 /** Simülasyonda saat saat parka gelen ziyaretçi (10.00–18.00) */
-export const ARRIVALS = [240, 360, 480, 560, 520, 440, 320, 200]
+export const ARRIVALS = [300, 450, 620, 760, 720, 600, 420, 260]
 
 export const tl = (n: number) => `${n.toLocaleString('tr-TR')} TL`
 export const num = (n: number) => n.toLocaleString('tr-TR')

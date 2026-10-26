@@ -20,7 +20,7 @@ export function ModelView({ m, emoji, big }: { m: Model; emoji: string; big?: bo
       )
     case 'take':
       return (
-        <div className={`mx-auto flex max-w-[22rem] flex-wrap justify-center gap-1 ${em}`} aria-label={`${m.a} nesneden ${m.b} tanesi ayrılıyor`}>
+        <div className={`mx-auto grid w-fit gap-1 ${em}`} style={{ gridTemplateColumns: 'repeat(5, auto)' }} aria-label={`${m.a} nesneden ${m.b} tanesi ayrılıyor`}>
           {Array.from({ length: m.a }, (_, i) => {
             const gone = i >= m.a - m.b
             return (
@@ -39,7 +39,8 @@ export function ModelView({ m, emoji, big }: { m: Model; emoji: string; big?: bo
         </div>
       )
     case 'vis':
-      return <VisualView v={m.v} size="lg" zoom={false} />
+      if (m.v.kind === 'table') return <Table headers={m.v.headers} rows={m.v.rows} />
+      return <div className="pb-1"><VisualView v={m.v} size="lg" zoom={false} /></div>
     case 'frac':
       return <FracBar {...m} />
     case 'rect':
@@ -53,12 +54,14 @@ export function ModelView({ m, emoji, big }: { m: Model; emoji: string; big?: bo
     case 'square':
       return (
         <div className="flex justify-center py-2">
-          <div className="relative grid size-40 place-items-center rounded-md border-4 border-[#d6457a] bg-[#fde3ec] sm:size-44">
-            <span className="text-lg font-black text-ink"><MathText text={m.inside} /></span>
-            <span className="absolute -bottom-9 left-1/2 -translate-x-1/2 text-lg font-black whitespace-nowrap text-ink"><MathText text={m.side} /></span>
-            <span className="absolute top-1/2 -left-3 -translate-x-full -translate-y-1/2 text-lg font-black whitespace-nowrap text-ink"><MathText text={m.side} /></span>
+          <div className="grid grid-cols-[auto_auto] items-center gap-x-3 gap-y-1">
+            <span className="text-lg font-black whitespace-nowrap text-ink"><MathText text={m.side} /></span>
+            <div className="grid size-36 place-items-center rounded-md border-4 border-[#d6457a] bg-[#fde3ec] sm:size-44">
+              <span className="px-1 text-center text-lg font-black text-ink"><MathText text={m.inside} /></span>
+            </div>
+            <span />
+            <span className="text-center text-lg font-black whitespace-nowrap text-ink"><MathText text={m.side} /></span>
           </div>
-          <span className="h-10" />
         </div>
       )
   }
@@ -66,7 +69,7 @@ export function ModelView({ m, emoji, big }: { m: Model; emoji: string; big?: bo
 
 function Group({ n, emoji, cls }: { n: number; emoji: string; cls: string }) {
   return (
-    <div className={`flex max-w-[11rem] flex-wrap justify-center gap-0.5 rounded-2xl bg-paper p-2 ring-1 ring-line ${cls}`} aria-label={`${n} tane`}>
+    <div className={`grid justify-center gap-0.5 rounded-2xl bg-paper p-2 ring-1 ring-line ${cls}`} style={{ gridTemplateColumns: `repeat(${Math.min(5, n)}, auto)` }} aria-label={`${n} tane`}>
       {Array.from({ length: n }, (_, i) => <span key={i}>{emoji}</span>)}
     </div>
   )
@@ -91,10 +94,11 @@ function FracBar({ den, num, whole, part }: { den: number; num: number; whole: s
 function Rect({ w, h, grid, edge, inside, wl, hl }: { w: number; h: number; grid?: boolean; edge?: boolean; inside: string; wl: string; hl: string }) {
   const u = Math.min(30, 240 / Math.max(w, h))
   const RW = w * u, RH = h * u
-  const W = RW + 70, H = RH + 52
+  const LM = Math.max(30, hl.length * 9 + 16)
+  const W = RW + LM + 14, H = RH + 52
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto block w-full max-w-[420px]" role="img" aria-label={`${wl} ve ${hl} kenarlı dikdörtgen`}>
-      <g transform="translate(56 10)">
+      <g transform={`translate(${LM} 10)`}>
         <rect width={RW} height={RH} fill={SOFT} stroke={edge ? '#f97316' : PINK} strokeWidth={edge ? 6 : 3} />
         {grid && Array.from({ length: w - 1 }, (_, i) => <line key={`v${i}`} x1={(i + 1) * u} x2={(i + 1) * u} y1={0} y2={RH} stroke={PINK} strokeOpacity={0.45} />)}
         {grid && Array.from({ length: h - 1 }, (_, i) => <line key={`h${i}`} y1={(i + 1) * u} y2={(i + 1) * u} x1={0} x2={RW} stroke={PINK} strokeOpacity={0.45} />)}
@@ -172,5 +176,29 @@ function DoubleLine({ top, bot }: { top: string[]; bot: string[] }) {
         </g>
       ))}
     </svg>
+  )
+}
+
+function Table({ headers, rows }: { headers: string[]; rows: (string | number)[][] }) {
+  const cell = (c: string | number) => (typeof c === 'number' ? c.toLocaleString('tr-TR') : c)
+  return (
+    <div className="flex justify-center p-1">
+      <table className="border-separate border-spacing-0 overflow-hidden rounded-xl text-base ring-1 ring-line">
+        <thead>
+          <tr>{headers.map((h, i) => <th key={i} className="border-b border-line bg-brand-soft px-4 py-2 font-extrabold [&:not(:last-child)]:border-r"><MathText text={h} /></th>)}</tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i}>
+              {r.map((c, j) => (
+                <td key={j} className={`border-line bg-white px-4 py-1.5 text-center font-bold tabular-nums ${i < rows.length - 1 ? 'border-b' : ''} ${j < r.length - 1 ? 'border-r' : ''} ${c === '?' ? 'text-[#d6457a] font-black' : ''}`}>
+                  <MathText text={String(cell(c))} />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }

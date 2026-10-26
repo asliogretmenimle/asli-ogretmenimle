@@ -424,10 +424,8 @@ function EditView({ t, dark, onDone, footer }: { t: EditTask; dark: boolean; onD
   const a = t.axes
   const say = (q: string, mis?: string, tone?: 'ok') => setNudge((c) => ({ q, mis, tone, n: (c?.n ?? 0) + 1 }))
 
-  const change = (p: Pt[]) => {
-    setPts(p)
-    setNudge(null)
-  }
+  // not: sürüklerken Nudge’ı kapatmıyoruz; sayfa kısalınca (telefonda) düzlem kayıp sürüklemeyi bozuyordu
+  const change = (p: Pt[]) => setPts(p)
   const step = (dx: number, dy: number) => {
     if (sel === null) return
     const q = snapPt({ x: pts[sel].x + dx * a.xStep, y: pts[sel].y + dy * a.yStep }, a)
@@ -515,7 +513,7 @@ function EditView({ t, dark, onDone, footer }: { t: EditTask; dark: boolean; onD
         <>
           <Card dark={dark} title="Seçili nokta">
             <div className="flex items-center gap-2">
-              <span className="min-w-0 flex-1 text-sm font-extrabold">{sp ? (a.numbers ? `${num(sp.x)}. dakika · ${num(sp.y)} ${a.yLabel.match(/\((.+)\)/)?.[1] ?? ''}` : `${sel! + 1}. nokta`) : 'Bir noktayı sürükle ya da seç.'}</span>
+              <span className="min-w-0 flex-1 text-sm font-extrabold">{sp ? (a.numbers ? `${num(sp.x)}. dk · ${num(sp.y)} ${a.yLabel.match(/\((.+)\)/)?.[1] ?? ''}` : `${sel! + 1}. nokta`) : 'Nokta seç'}</span>
               {arrow(-1, 0, <ArrowLeft size={20} />, 'Sola')}
               {arrow(0, 1, <ArrowUp size={20} />, 'Yukarı')}
               {arrow(0, -1, <ArrowDown size={20} />, 'Aşağı')}
