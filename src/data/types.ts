@@ -86,7 +86,7 @@ export type Visual =
   /** Basit örüntü: emoji/şekil dizisi, '?' boşluk */
   | { kind: 'pattern'; items: string[] }
   /** Terazi: sol ve sağ kefelerdeki etiketler */
-  | { kind: 'balance'; left: string[]; right: string[] }
+  | { kind: 'balance'; left: string[]; right: string[]; /** -12…12: pozitifse sağ kefe ağır basar */ tilt?: number }
   /** Küp yapısı (yukarıdan görünüş ızgarası: her hücredeki küp sayısı) */
   | { kind: 'cubes'; heights: number[][] }
   /** Zar / çark */
@@ -244,12 +244,11 @@ interface ActivityBase {
   instructions: string
   /** 1: kolay, 2: orta, 3: zor */
   level?: 1 | 2 | 3
-  /** İçerik geçişi bitene kadar opsiyonel; zorunluluğu `pnpm validate` denetler */
-  stage?: Stage
+  stage: Stage
   /** Başlarken (Önce) */
-  launch?: Launch
+  launch: Launch
   /** Düşün ve Paylaş (Sonra): tek, açık uçlu soru */
-  reflect?: string
+  reflect: string
 }
 
 export interface QuizActivity extends ActivityBase {

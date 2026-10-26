@@ -142,7 +142,7 @@ export default function FillBlank({ activity, onProgress, onFinish }: EngineProp
                         : status === 'wrong' && wrongMask[i]
                           ? 'border-bad bg-bad-soft text-rose-700 animate-shake'
                           : active === i
-                            ? 'border-brand bg-brand-soft text-brand shadow-[0_0_0_4px_rgb(63_138_79/0.15)]'
+                            ? 'border-brand bg-brand-soft text-brand shadow-[0_0_0_4px_rgb(214_69_122/0.15)]'
                             : 'border-dashed border-slate-300 bg-white'
                   }`}
                 >

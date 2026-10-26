@@ -10,6 +10,8 @@ const ActivityPage = lazy(() => import('./pages/ActivityPage'))
 const ManipulativesIndex = lazy(() => import('./pages/Manipulatives').then((m) => ({ default: m.ManipulativesIndex })))
 const Approach = lazy(() => import('./pages/Approach'))
 const ManipulativePage = lazy(() => import('./pages/Manipulatives').then((m) => ({ default: m.ManipulativePage })))
+const GamesIndex = lazy(() => import('./pages/Games').then((m) => ({ default: m.GamesIndex })))
+const GamePage = lazy(() => import('./pages/Games').then((m) => ({ default: m.GamePage })))
 
 function GradeRedirect() {
   const { grade } = useParams()
@@ -34,6 +36,8 @@ export default function App() {
           <Route path="etkinlik/:id" element={<ActivityPage />} />
           <Route path="manipulatifler" element={<ManipulativesIndex />} />
           <Route path="manipulatif/:tool" element={<ManipulativePage />} />
+          <Route path="oyunlar" element={<GamesIndex />} />
+          <Route path="oyun/:id" element={<GamePage />} />
           <Route path="yaklasim" element={<Approach />} />
           <Route path="*" element={<NotFound />} />
         </Route>

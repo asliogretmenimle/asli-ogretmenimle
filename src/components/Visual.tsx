@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react'
 import type { ShapeName, Visual } from '../data/types'
 import { fmt } from '../lib/format'
+import { MathText } from './MathText'
 
 const C = {
   ink: '#1f2340',
   soft: '#8a8fb0',
   line: '#d9dbea',
-  fill: '#3f8a4f',
-  fillSoft: '#dcefdc',
+  fill: '#d6457a',
+  fillSoft: '#fde3ec',
   orange: '#f97316',
   green: '#22c55e',
   yellow: '#facc15',
@@ -70,11 +71,11 @@ function render(v: Visual): ReactNode {
         <div className="overflow-x-auto">
           <table className="mx-auto min-w-[200px] border-collapse overflow-hidden rounded-xl text-sm">
             <thead>
-              <tr>{v.headers.map((h, i) => <th key={i} className="border border-line bg-brand-soft px-3 py-1.5 font-extrabold">{h}</th>)}</tr>
+              <tr>{v.headers.map((h, i) => <th key={i} className="border border-line bg-brand-soft px-3 py-1.5 font-extrabold"><MathText text={h} /></th>)}</tr>
             </thead>
             <tbody>
               {v.rows.map((r, i) => (
-                <tr key={i}>{r.map((c, j) => <td key={j} className="border border-line bg-white px-3 py-1.5 text-center font-semibold">{typeof c === 'number' ? fmt(c) : c}</td>)}</tr>
+                <tr key={i}>{r.map((c, j) => <td key={j} className="border border-line bg-white px-3 py-1.5 text-center font-semibold">{typeof c === 'number' ? fmt(c) : <MathText text={c} />}</td>)}</tr>
               ))}
             </tbody>
           </table>
@@ -99,7 +100,7 @@ function render(v: Visual): ReactNode {
         </div>
       )
     case 'balance':
-      return <BalanceSvg left={v.left} right={v.right} />
+      return <BalanceSvg left={v.left} right={v.right} tilt={v.tilt} />
     case 'cubes':
       return <CubesSvg heights={v.heights} />
     case 'spinner':

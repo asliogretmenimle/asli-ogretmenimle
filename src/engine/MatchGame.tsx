@@ -88,7 +88,7 @@ export default function MatchGame({ activity, onProgress, onFinish }: EngineProp
             : isFlash
               ? 'border-bad bg-bad-soft animate-shake'
               : isSel
-                ? 'border-brand bg-brand-soft shadow-[0_0_0_4px_rgb(63_138_79/0.18)] -translate-y-0.5'
+                ? 'border-brand bg-brand-soft shadow-[0_0_0_4px_rgb(214_69_122/0.18)] -translate-y-0.5'
                 : 'border-line bg-white shadow-[0_3px_0_var(--color-line)] hover:border-brand/40 active:translate-y-[2px] active:shadow-none'
         }`}
       >

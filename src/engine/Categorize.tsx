@@ -101,7 +101,7 @@ function DraggableItem({ id, children, picked, shaking, visual, onTap }: { id: n
       onClick={onTap}
       style={{ transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined, touchAction: 'none' }}
       className={`flex items-center justify-center rounded-2xl border-2 px-4 py-2 text-lg font-extrabold select-none sm:text-xl ${visual ? 'min-h-20 min-w-24' : 'min-h-14 min-w-14'} ${
-        isDragging ? 'z-30 scale-110 border-brand bg-brand-soft shadow-[var(--shadow-lift)]' : shaking ? 'border-orange-400 bg-orange-50 animate-shake' : picked ? 'border-brand bg-brand-soft shadow-[0_0_0_4px_rgb(63_138_79/0.18)]' : 'border-line bg-white shadow-[0_3px_0_var(--color-line)]'
+        isDragging ? 'z-30 scale-110 border-brand bg-brand-soft shadow-[var(--shadow-lift)]' : shaking ? 'border-orange-400 bg-orange-50 animate-shake' : picked ? 'border-brand bg-brand-soft shadow-[0_0_0_4px_rgb(214_69_122/0.18)]' : 'border-line bg-white shadow-[0_3px_0_var(--color-line)]'
       } cursor-grab`}
     >
       {children}

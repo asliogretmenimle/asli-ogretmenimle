@@ -30,7 +30,7 @@ export default function Approach() {
         <div className="grid gap-3 sm:grid-cols-3">
           {[
             { icon: Sprout, t: 'Başlarken', d: 'Günlük hayattan kısa bir durum ya da merak uyandıran bir soru. Ne yapacağımızı ve neden önemli olduğunu hissettirir.', c: '#a16207', bg: '#fef3c7' },
-            { icon: Play, t: 'Keşfet', d: 'Oyun, model ve manipülatiflerle düşünme. Takılınca kademeli ipuçları, yanılınca açıklayıcı geri bildirim.', c: '#3f8a4f', bg: '#e7f3e4' },
+            { icon: Play, t: 'Keşfet', d: 'Oyun, model ve manipülatiflerle düşünme. Takılınca kademeli ipuçları, yanılınca açıklayıcı geri bildirim.', c: '#d6457a', bg: '#fde8ef' },
             { icon: MessageCircleQuestion, t: 'Düşün ve Paylaş', d: 'Açık uçlu tek bir soru: “Nasıl düşündün? Başka bir yolu var mı?” Sınıfta tartışma, evde sohbet başlatır.', c: '#7e22ce', bg: '#f3e8ff' },
           ].map((s) => (
             <div key={s.t} className="card p-5">

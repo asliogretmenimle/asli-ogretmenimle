@@ -87,7 +87,7 @@ export const numberline: ToolDef<NL> = {
   id: 'numberline',
   defaultConfig: { min: 0, max: 20, step: 1 },
   initial: () => ({ points: [] }),
-  check: (v, t) => v.points.length > 0 && Math.abs(v.points[v.points.length - 1] - n(t, 'value')) < 1e-9,
+  check: (v, t) => v.points.length > 0 && Math.abs(v.points[v.points.length - 1] - n(t, 'value')) < 1e-6,
   Component: ({ value, onChange, config, target, locked }) => {
     const min = config.min ?? 0, max = config.max ?? 20, step = config.step ?? 1
     const ticks = Math.round((max - min) / step)

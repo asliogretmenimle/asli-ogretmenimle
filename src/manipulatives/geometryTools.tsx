@@ -384,7 +384,7 @@ export const nets: ToolDef<NetsV> = {
         {value.solid === 'cube' && (
           <label className="flex w-full max-w-sm items-center gap-3 font-bold">
             <span className="text-sm text-ink-soft">Aç</span>
-            <input type="range" min={0} max={1} step={0.01} value={value.fold} onChange={(e) => onChange({ ...value, fold: Number(e.target.value) })} className="flex-1 accent-[#3f8a4f]" aria-label="Katla" />
+            <input type="range" min={0} max={1} step={0.01} value={value.fold} onChange={(e) => onChange({ ...value, fold: Number(e.target.value) })} className="flex-1 accent-[#d6457a]" aria-label="Katla" />
             <span className="text-sm text-ink-soft">Katla</span>
           </label>
         )}

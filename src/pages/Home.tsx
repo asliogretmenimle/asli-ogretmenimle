@@ -7,6 +7,7 @@ import type { Grade } from '../data/types'
 import { ActivityCard, ThemeHeader } from '../components/Cards'
 import { usePageTitle } from '../components/Layout'
 import { toolMeta as toolList } from '../manipulatives/meta'
+import { gameMeta, gamesForGrade } from '../games/meta'
 import { searchKey } from '../lib/format'
 import { stageMeta, typeMeta } from '../components/meta'
 import { STAGE_ORDER } from '../data/activityStore'
@@ -60,7 +61,7 @@ export default function Home() {
       {/* Karşılama */}
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 -z-10 opacity-70" aria-hidden>
-          <div className="absolute -top-24 -left-20 size-72 rounded-full bg-lime-200/50 blur-3xl" />
+          <div className="absolute -top-24 -left-20 size-72 rounded-full bg-rose-200/50 blur-3xl" />
           <div className="absolute -top-10 right-0 size-64 rounded-full bg-amber-200/50 blur-3xl" />
         </div>
         <div className="mx-auto max-w-6xl px-4 pt-8 pb-6 sm:pt-12">
@@ -119,6 +120,28 @@ export default function Home() {
         {q ? <SearchResults q={q} /> : grade ? <GradeContent grade={grade} /> : <Welcome />}
       </div>
 
+      {/* Oyunlar şeridi */}
+      {!q && (
+        <section className="mx-auto mt-14 max-w-6xl px-4">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <h2 className="text-2xl font-black">Oyunlar <span aria-hidden>🎮</span></h2>
+              <p className="text-sm font-semibold text-ink-soft">{grade ? `${gradeInfo[grade].label} seviyesinde oyna.` : 'Balon patlat, robotu kodla, gizli gemileri bul!'}</p>
+            </div>
+            <Link to={`/oyunlar${grade ? `?sinif=${grade}` : ''}`} className="inline-flex items-center gap-1 text-sm font-extrabold text-brand hover:underline">Tümü <ArrowRight size={16} /></Link>
+          </div>
+          <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-3 [scrollbar-width:thin]">
+            {(grade ? gamesForGrade(grade) : gameMeta).map((m) => (
+              <Link key={m.id} to={`/oyun/${m.id}${grade ? `?sinif=${grade}` : ''}`} className="card flex w-44 shrink-0 snap-start flex-col gap-1.5 p-4 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]">
+                <span className="grid size-12 place-items-center rounded-2xl text-3xl" style={{ background: `${m.color}18` }} aria-hidden>{m.emoji}</span>
+                <span className="leading-tight font-extrabold">{m.name}</span>
+                <span className="line-clamp-2 text-xs font-bold text-ink-soft">{(grade && m.skills[grade]) || m.description}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Manipülatifler şeridi */}
       {!q && (
         <section className="mx-auto mt-14 max-w-6xl px-4">
@@ -150,8 +173,8 @@ function Welcome() {
       <div className="card grid gap-4 p-5 sm:grid-cols-3 sm:p-6">
         {[
           { e: '👆', t: 'Sınıfını seç', d: 'Yukarıdan kendi sınıfına dokun.' },
-          { e: '🎯', t: 'Etkinliği aç', d: 'Konulara göre sıralanmış oyunlardan birini seç.' },
-          { e: '⭐', t: 'Yıldızları topla', d: 'Soruları çöz, sonunda yıldızlarını gör!' },
+          { e: '🧩', t: 'Keşfet', d: 'Her konu, yaparak keşfetmekten problem çözmeye uzanan bir yolla ilerler.' },
+          { e: '💬', t: 'Düşün ve paylaş', d: 'Sonunda nasıl düşündüğünü bir arkadaşına anlat.' },
         ].map((s) => (
           <div key={s.t} className="flex items-start gap-3">
             <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-paper text-2xl">{s.e}</span>
@@ -162,6 +185,9 @@ function Welcome() {
           </div>
         ))}
       </div>
+      <p className="mt-3 text-center text-sm font-semibold text-ink-soft">
+        Öğretmen ya da veli misiniz? <Link to="/yaklasim" className="font-extrabold text-brand hover:underline">Etkinliklerin arkasındaki yaklaşımı okuyun →</Link>
+      </p>
     </section>
   )
 }
@@ -264,12 +290,18 @@ function SearchResults({ q }: { q: string }) {
     })
   }, [key, allActivities])
   const tools = toolList.filter((t) => searchKey(`${t.name} ${t.description}`).includes(key))
+  const games = gameMeta.filter((m) => searchKey(`${m.name} ${m.description} ${Object.values(m.skills).join(' ')} oyun`).includes(key))
 
   return (
     <section className="mx-auto mt-8 max-w-6xl px-4">
-      <h2 className="mb-4 text-xl font-black">“{q}” için {allActivities ? `${results.length + tools.length} sonuç` : 'aranıyor…'}</h2>
-      {tools.length > 0 && (
+      <h2 className="mb-4 text-xl font-black">“{q}” için {allActivities ? `${results.length + tools.length + games.length} sonuç` : 'aranıyor…'}</h2>
+      {(tools.length > 0 || games.length > 0) && (
         <div className="mb-6 flex flex-wrap gap-2">
+          {games.map((m) => (
+            <Link key={m.id} to={`/oyun/${m.id}`} className="card flex items-center gap-2 px-3 py-2 font-extrabold hover:shadow-[var(--shadow-lift)]">
+              <span aria-hidden>{m.emoji}</span>{m.name}<span className="chip bg-paper text-ink-soft">Oyun</span>
+            </Link>
+          ))}
           {tools.map((t) => (
             <Link key={t.id} to={`/manipulatif/${t.id}`} className="card flex items-center gap-2 px-3 py-2 font-extrabold hover:shadow-[var(--shadow-lift)]">
               <span aria-hidden>{t.emoji}</span>{t.name}
@@ -277,7 +309,7 @@ function SearchResults({ q }: { q: string }) {
           ))}
         </div>
       )}
-      {!allActivities ? <Spinner /> : results.length === 0 && tools.length === 0 ? (
+      {!allActivities ? <Spinner /> : results.length === 0 && tools.length === 0 && games.length === 0 ? (
         <div className="card p-8 text-center">
           <p className="text-4xl">🔍</p>
           <p className="mt-2 font-extrabold">Bir şey bulamadık.</p>

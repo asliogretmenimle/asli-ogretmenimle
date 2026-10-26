@@ -29,6 +29,8 @@ export default function ActivityPage() {
   usePageTitle(a?.title ?? (list || !gradeFromId(id) ? 'Etkinlik bulunamadı' : undefined))
   if (!a) {
     if (!list && gradeFromId(id)) return <div className="grid h-[60vh] place-items-center"><span className="size-10 animate-spin rounded-full border-4 border-line border-t-brand" aria-label="Yükleniyor" /></div>
+    const g = gradeFromId(id)
+    if (g && list) return <MovedActivity grade={g} />
     return <NotFound />
   }
   return <ActivityView key={a.id} a={a} list={list!} />
@@ -139,8 +141,7 @@ function ActivityView({ a, list }: { a: Activity; list: Activity[] }) {
 }
 
 function LaunchScreen({ a, onStart }: { a: Activity; onStart: () => void }) {
-  if (!a.launch) return null
-  return (
+    return (
     <div className="flex flex-1 flex-col items-center justify-center py-6 animate-fade-up">
       <div className="w-full max-w-2xl rounded-3xl bg-white p-6 text-center shadow-[var(--shadow-card)] ring-1 ring-line sm:p-8">
         <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
@@ -226,6 +227,17 @@ function Finish({ a, result, onRestart, next, nextStep, prevStep, backTo, gradeC
         )}
       </div>
       {next && <Link to={backTo} className="mt-4 text-sm font-extrabold text-ink-soft hover:text-ink">Tema sayfasına dön</Link>}
+    </div>
+  )
+}
+
+function MovedActivity({ grade }: { grade: number }) {
+  return (
+    <div className="mx-auto flex max-w-md flex-col items-center px-4 py-20 text-center">
+      <p className="text-6xl" aria-hidden>🌱</p>
+      <h1 className="mt-4 text-2xl font-black">Bu etkinlik yenilendi</h1>
+      <p className="mt-2 font-semibold text-ink-soft">Etkinlikleri daha iyi bir öğrenme yolu için yeniden düzenledik. Aynı konuyu {grade}. sınıf sayfasında bulabilirsin.</p>
+      <Link to={`/?sinif=${grade}`} className="btn-primary mt-6">{grade}. sınıf etkinlikleri</Link>
     </div>
   )
 }

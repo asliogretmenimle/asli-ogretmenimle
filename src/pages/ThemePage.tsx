@@ -7,6 +7,7 @@ import { ActivityCard, LinkCard } from '../components/Cards'
 import { stageMeta, themeIcon } from '../components/meta'
 import { usePageTitle } from '../components/Layout'
 import { ShareButton } from '../components/ShareButton'
+import { MathText } from '../components/MathText'
 import NotFound from './NotFound'
 
 export default function ThemePage() {
@@ -55,7 +56,7 @@ export default function ThemePage() {
           <ul className="grid gap-2 sm:grid-cols-2">
             {themeNotes(g, theme.slug)!.bigIdeas.map((b) => (
               <li key={b} className="flex items-start gap-2 rounded-2xl bg-paper p-3 text-sm font-semibold text-ink">
-                <span className="mt-1.5 size-2 shrink-0 rounded-full" style={{ background: info.color }} />{b}
+                <span className="mt-1.5 size-2 shrink-0 rounded-full" style={{ background: info.color }} /><MathText text={b} />
               </li>
             ))}
           </ul>

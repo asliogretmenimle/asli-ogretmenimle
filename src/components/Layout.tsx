@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Blocks, GraduationCap, Volume2, VolumeX } from 'lucide-react'
+import { Blocks, Gamepad2, GraduationCap, Volume2, VolumeX } from 'lucide-react'
 import { setSound, soundOn } from '../lib/feedback'
 
 export function Logo({ small }: { small?: boolean }) {
@@ -42,7 +42,7 @@ export default function Layout() {
   useEffect(() => {
     window.scrollTo({ top: 0 })
   }, [pathname])
-  const focusMode = pathname.startsWith('/etkinlik/')
+  const focusMode = pathname.startsWith('/etkinlik/') || pathname.startsWith('/oyun/')
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -58,6 +58,13 @@ export default function Layout() {
               >
                 <GraduationCap size={18} />
                 <span className="hidden md:inline">Yaklaşımımız</span>
+              </NavLink>
+              <NavLink
+                to="/oyunlar"
+                className={({ isActive }) => `inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-extrabold transition ${isActive ? 'bg-brand text-white' : 'text-ink hover:bg-white'}`}
+              >
+                <Gamepad2 size={18} />
+                <span className="hidden sm:inline">Oyunlar</span>
               </NavLink>
               <NavLink
                 to="/manipulatifler"
