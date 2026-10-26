@@ -214,7 +214,7 @@ export default function SayiyiParcala({ grade, onFinish }: InteractionProps) {
     )
     side = (
       <>
-        <NumberBond whole={t.n} parts={[r, t.n - r]} big />
+        <NumberBond whole={t.n} parts={[r, t.n - r]} big colors={['#ef4444', '#eab308']} />
         <button type="button" onClick={saveCounters} className="btn-primary min-h-14 w-full text-lg"><Save size={20} />Bu yolu kaydet</button>
         {sol.list.length >= 2 && (
           <div className="rounded-2xl bg-white/95 p-3 ring-1 ring-line">
@@ -236,7 +236,10 @@ export default function SayiyiParcala({ grade, onFinish }: InteractionProps) {
     model = (
       <div>
         <Tape total={t.n} step={t.step} cuts={cuts} maxCuts={t.parts - 1} onChange={setCuts} />
-        <p className="text-center text-sm font-bold text-ink-soft">Şeride dokun: kesik ekle · Kesiği sürükle: taşı · Kesiğe dokun: kaldır</p>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <p className="text-center text-sm font-bold text-ink-soft">Şeride dokun: kesik ekle ya da taşı · Kesiği sürükle: kaydır</p>
+          {cuts.length > 0 && <button type="button" onClick={() => setCuts([])} className="btn-ghost min-h-12 px-3 text-sm">Kesikleri kaldır</button>}
+        </div>
         <p className="mt-2 text-center text-3xl font-black">{tr(t.n)} = {parts.map((p, i) => <span key={i}>{i > 0 && ' + '}<span style={{ color: SEG[i % 3] }}>{tr(p)}</span></span>)}</p>
       </div>
     )

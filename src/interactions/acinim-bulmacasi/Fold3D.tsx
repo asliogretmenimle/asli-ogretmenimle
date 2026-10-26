@@ -57,8 +57,10 @@ const LIGHT: V3 = (() => {
   const l = Math.hypot(...v)
   return v.map((x) => x / l) as V3
 })()
-function viewRotate([x, y, z]: V3, rx: number, ry: number): V3 {
-  // CSS: rotateX(rx) rotateY(ry) → önce Y, sonra X
+function viewRotate([x0, y0, z]: V3, rx: number, ry: number, rz: number): V3 {
+  // CSS: rotateX(rx) rotateY(ry) rotateZ(rz) → önce Z, sonra Y, sonra X
+  const c = (rz * Math.PI) / 180
+  const x = x0 * Math.cos(c) - y0 * Math.sin(c), y = x0 * Math.sin(c) + y0 * Math.cos(c)
   const a = (ry * Math.PI) / 180, b = (rx * Math.PI) / 180
   const x1 = x * Math.cos(a) + z * Math.sin(a), z1 = -x * Math.sin(a) + z * Math.cos(a)
   const y2 = y * Math.cos(b) - z1 * Math.sin(b), z2 = y * Math.sin(b) + z1 * Math.cos(b)
@@ -70,7 +72,7 @@ const MARK_STROKE: Record<Mark, string> = { star: '#be185d', pick: '#2563eb', ok
 
 /* ───────────── 3B sahne ───────────── */
 
-export function FoldStage({ prep, t, dark, marks = {}, labels = {}, onFaceTap, height, tilt = true, children }: { prep: Prepared; t: number; dark?: boolean; marks?: Record<number, Mark>; labels?: Record<number, string>; onFaceTap?: (i: number) => void; height?: number; tilt?: boolean; children?: ReactNode }) {
+export function FoldStage({ prep, t, dark, marks = {}, labels = {}, onFaceTap, height, pose = [-26, -34, 0], children }: { prep: Prepared; t: number; dark?: boolean; marks?: Record<number, Mark>; labels?: Record<number, string>; onFaceTap?: (i: number) => void; height?: number; /** tam katlanınca görünüm: [rotateX, rotateY, rotateZ] derece */ pose?: [number, number, number]; children?: ReactNode }) {
   const wrap = useRef<HTMLDivElement>(null)
   const [W, setW] = useState(600)
   useEffect(() => {
@@ -103,17 +105,18 @@ export function FoldStage({ prep, t, dark, marks = {}, labels = {}, onFaceTap, h
   const avg = F.reduce((a, f) => [a[0] + f.c[0] / F.length, a[1] + f.c[1] / F.length, a[2] + f.c[2] / F.length], [0, 0, 0])
   const bc: V3 = [(bbox.x0 + bbox.x1) / 2, (bbox.y0 + bbox.y1) / 2, 0]
   const center = bc.map((v, i) => v + (avg[i] - v) * t) as V3
-  const rx = view.rx + (tilt ? -26 * t : 0)
-  const ry = view.ry + (tilt ? -34 * t : 0)
+  const rx = view.rx + pose[0] * t
+  const ry = view.ry + pose[1] * t
+  const rz = pose[2] * t
 
   const W3 = useMemo(() => worlds(prep, t), [prep, t])
   const tone = (i: number) => {
     const n3 = W3[i]
-    const n = viewRotate([n3[2], n3[6], n3[10]], rx, ry)
+    const n = viewRotate([n3[2], n3[6], n3[10]], rx, ry, rz)
     const back = n[2] < 0
     const m = back ? (n.map((x) => -x) as V3) : n
     const d = Math.max(0, m[0] * LIGHT[0] + m[1] * LIGHT[1] + m[2] * LIGHT[2])
-    return { f: (back ? 0.72 : 0.82) + 0.3 * d, back }
+    return { f: (back ? 0.6 : 0.7) + 0.5 * d, back }
   }
 
   const renderFace = (i: number): ReactNode => {
@@ -152,7 +155,7 @@ export function FoldStage({ prep, t, dark, marks = {}, labels = {}, onFaceTap, h
           top: 0,
           transformStyle: 'preserve-3d',
           transformOrigin: '0 0',
-          transform: `translate3d(${W / 2}px, ${H / 2}px, 0) rotateX(${rx}deg) rotateY(${ry}deg) translate3d(${-center[0] * s}px, ${-center[1] * s}px, ${-center[2] * s}px)`,
+          transform: `translate3d(${W / 2}px, ${H / 2}px, 0) rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg) translate3d(${-center[0] * s}px, ${-center[1] * s}px, ${-center[2] * s}px)`,
         }}
       >
         {renderFace(0)}

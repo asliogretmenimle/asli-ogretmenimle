@@ -286,7 +286,7 @@ export function candidateLines(shape: Pt[], opts: { axisOnly?: boolean; offCente
 
 /* ───────────── tahmin seçenekleri ───────────── */
 
-export type OptKind = 'dogru' | 'tek' | 'kaydir' | 'sonKat' | 'ilkKat' | 'eksik'
+export type OptKind = 'dogru' | 'tek' | 'kaydir' | 'sonKat' | 'ilkKat' | 'eksik' | 'eksen'
 const roundKey = (holes: Pt[][]) => holes.map((h) => h.map((p) => `${Math.round(p[0])},${Math.round(p[1])}`).sort().join(';')).sort().join('|')
 
 export function predictOptions(folds: Line[], piece: Pt[], n: number, r: () => number) {
@@ -307,6 +307,7 @@ export function predictOptions(folds: Line[], piece: Pt[], n: number, r: () => n
     cands.push({ kind: 'sonKat', holes: [piece, reflectPoly(folds[folds.length - 1], piece)] })
     cands.push({ kind: 'ilkKat', holes: unfoldImages([piece], folds.slice(1)) })
   }
+  cands.push({ kind: 'eksen', holes: unfoldImages([piece], folds.map((l) => ({ p: l.p, d: [-l.d[1], l.d[0]] as Pt }))) })
   const all = cands[0].holes
   if (all.length >= 3) cands.push({ kind: 'eksik', holes: all.slice(0, all.length - 1) })
   const seen = new Set<string>()

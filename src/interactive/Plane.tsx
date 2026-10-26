@@ -73,9 +73,13 @@ export interface PlaneProps {
   tickPx?: number
   /** xy modunda false ise y ekseni x’ten bağımsız ölçeklenir (ör. deneme sayısı–olasılık grafikleri) */
   equalUnits?: boolean
+  /** ± ve ⤢ düğmeleri (varsayılan: açık). Kapalıyken iki parmakla yakınlaştırma sürer. */
+  controls?: boolean
+  /** ± düğmeleri bu noktaya (matematik koordinatı) odaklanarak yakınlaştırır (ör. sürüklenen işaretçi) */
+  zoomFocus?: { x: number; y?: number }
 }
 
-export function Plane({ initial, mode = 'xy', aspect, minSpan = 0.02, maxSpan = 2000, grid = true, axes = true, labels = true, xLabel, yLabel, locked, onTap, children, className = '', label = 'Etkileşimli grafik', fixedStep, tickPx, equalUnits = true }: PlaneProps) {
+export function Plane({ initial, mode = 'xy', aspect, minSpan = 0.02, maxSpan = 2000, grid = true, axes = true, labels = true, xLabel, yLabel, locked, onTap, children, className = '', label = 'Etkileşimli grafik', fixedStep, tickPx, equalUnits = true, controls = true, zoomFocus }: PlaneProps) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
   const [width, setWidth] = useState(360)
@@ -143,6 +147,14 @@ export function Plane({ initial, mode = 'xy', aspect, minSpan = 0.02, maxSpan = 
   )
 
   const reset = () => setView(initialRef.current)
+  /** Düğmeyle yakınlaştırma: zoomFocus varsa o noktayı sabit tutar */
+  const zoomButton = (f: number) => {
+    const r = svgRef.current?.getBoundingClientRect()
+    if (!zoomFocus || !r) return zoomAt(f)
+    const px = r.left + (sx(zoomFocus.x) / width) * r.width
+    const py = r.top + ((zoomFocus.y === undefined ? height / 2 : sy(zoomFocus.y)) / height) * r.height
+    zoomAt(f, px, py)
+  }
   const lastPinch = useRef(1)
 
   useGesture(
@@ -226,10 +238,10 @@ export function Plane({ initial, mode = 'xy', aspect, minSpan = 0.02, maxSpan = 
           )}
           <PlaneCtx.Provider value={api}>{children}</PlaneCtx.Provider>
         </svg>
-        {!locked && (
+        {!locked && controls && (
           <div className={`absolute right-2 flex gap-1 ${mode === 'x' ? 'top-2' : 'bottom-2'}`}>
-            <button type="button" onClick={() => zoomAt(1.5)} className="grid size-10 place-items-center rounded-xl bg-white/90 shadow ring-1 ring-line active:scale-95" aria-label="Yakınlaştır"><Plus size={18} /></button>
-            <button type="button" onClick={() => zoomAt(1 / 1.5)} className="grid size-10 place-items-center rounded-xl bg-white/90 shadow ring-1 ring-line active:scale-95" aria-label="Uzaklaştır"><Minus size={18} /></button>
+            <button type="button" onClick={() => zoomButton(1.5)} className="grid size-10 place-items-center rounded-xl bg-white/90 shadow ring-1 ring-line active:scale-95" aria-label="Yakınlaştır"><Plus size={18} /></button>
+            <button type="button" onClick={() => zoomButton(1 / 1.5)} className="grid size-10 place-items-center rounded-xl bg-white/90 shadow ring-1 ring-line active:scale-95" aria-label="Uzaklaştır"><Minus size={18} /></button>
             <button type="button" onClick={reset} className="grid size-10 place-items-center rounded-xl bg-white/90 shadow ring-1 ring-line active:scale-95" aria-label="Başlangıç görünümü"><Maximize2 size={16} /></button>
           </div>
         )}

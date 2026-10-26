@@ -205,7 +205,8 @@ export function useGridGesture<M>(svgRef: RefObject<SVGSVGElement | null>, h: { 
         if (tap) {
           // dokunuş: tek olayda başla + bitir
           if (memo.current?.active) memo.current.active = false
-          hr.current.onEnd?.(p, hr.current.onStart(p), true)
+          const m = hr.current.onStart(p)
+          hr.current.onEnd?.(p, m, true)
           return
         }
         if (first) memo.current = { m: hr.current.onStart(p), active: true, id: e?.pointerId ?? 0 }

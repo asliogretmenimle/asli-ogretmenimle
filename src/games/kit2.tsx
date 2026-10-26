@@ -112,7 +112,7 @@ export function StrategyPicker({ options, onPick, question = 'Nasıl düşündü
             }}
             className={`min-h-11 rounded-xl px-3 text-sm font-extrabold ring-1 transition ${picked === o ? 'bg-sky-600 text-white ring-sky-600' : 'bg-white text-sky-900 ring-sky-200 hover:bg-sky-100'} disabled:cursor-default`}
           >
-            {o}
+            <MathText text={o} />
           </button>
         ))}
       </div>

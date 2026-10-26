@@ -77,7 +77,7 @@ export function makeTasks(grade: Grade): Task[] {
       { kind: 'order', title: 'Duvarla sırala', items: [f(2, 3), f(3, 5), f(3, 4), f(5, 12)], prompt: 'Bu kesirleri en büyükten en küçüğe sırala. [[1/2]] ve 1’e uzaklık sana yardım edebilir.' },
     ]
   return [
-    { kind: 'cover', title: 'Beşte iki', target: f(2, 5), tray: [3, 4, 10, 15], goal: 2, prompt: '[[2/5]]’yi aynı büyüklükte çubuklarla 2 yolla ört. Onda birlik çubukta ondalık adı da var!' },
+    { kind: 'cover', title: 'Beşte iki', target: f(2, 5), tray: [3, 4, 10, 15], goal: 2, prompt: '[[2/5]]’i aynı büyüklükte çubuklarla 2 yolla ört. Onda birlik çubukta ondalık adı da var!' },
     { kind: 'ruler', title: 'Duvar cetveli', rows: [2, 3, 4, 5, 6, 8, 10, 12], minRows: 3, goal: 5, prompt: 'Cetveli kaydır: en az 3 sıranın buluştuğu 5 yer bul. Ondalık adı olanlar hangileri?' },
     { kind: 'cover', title: 'En az çubukla', target: f(7, 12), tray: [2, 3, 4, 6, 12], goal: 2, mixed: true, maxPieces: 2, prompt: '[[7/12]]’yi **yalnızca 2 çubukla** ört. 2 farklı yol var!', strategy: true },
     { kind: 'cover', title: 'Altıda beş', target: f(5, 6), tray: [2, 3, 4, 6, 12], goal: 3, mixed: true, needMixed: true, prompt: '[[5/6]]’yı 3 farklı yolla ört; en az biri karışık olsun.' },

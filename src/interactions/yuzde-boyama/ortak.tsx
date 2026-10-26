@@ -114,7 +114,7 @@ export function Header({ emoji, kicker, title, idx, total, right, dark }: { emoj
 /** Yatay tablette çalışma alanı solda, panel sağda; dikeyde alt alta */
 export function Split({ work, panel }: { work: ReactNode; panel: ReactNode }) {
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+    <div className="grid gap-4 text-ink lg:grid-cols-[minmax(0,1fr)_340px]">
       <div className="min-w-0">{work}</div>
       <div className="flex min-w-0 flex-col gap-3">{panel}</div>
     </div>

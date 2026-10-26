@@ -27,6 +27,8 @@ export function ZoomBox({ children, maxScale = 4, className = '', controls = tru
     {
       onPinch: ({ offset: [s], first, origin: [ox, oy], memo, event }) => {
         event?.preventDefault?.()
+        if (first && (event?.target as Element | null)?.closest?.('[data-handle]')) return 'skip'
+        if (memo === 'skip') return memo
         if (first) {
           const r = ref.current!.getBoundingClientRect()
           memo = { s0: t.s, x0: t.x, y0: t.y, cx: ox - r.left - r.width / 2, cy: oy - r.top - r.height / 2, p0: s }

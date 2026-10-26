@@ -39,9 +39,11 @@ const CHEAP: [string, string][] = [
   ['🍎', 'Elma'], ['🍌', 'Muz'], ['🥛', 'Süt'], ['🍞', 'Ekmek'], ['🥚', 'Yumurta'], ['🧃', 'Meyve suyu'], ['🍫', 'Çikolata'],
   ['🍬', 'Şeker'], ['✏️', 'Kalem'], ['📒', 'Defter'], ['🧀', 'Peynir'], ['🍪', 'Kurabiye'], ['🧁', 'Kek'], ['🍉', 'Karpuz'],
 ]
-const BIG: [string, string][] = [
-  ['👟', 'Ayakkabı'], ['🎒', 'Okul çantası'], ['⚽', 'Futbol topu'], ['🧸', 'Oyuncak ayı'], ['📚', 'Kitap seti'],
-  ['🎧', 'Kulaklık'], ['🧥', 'Mont'], ['🎲', 'Kutu oyunu'], ['🛹', 'Kaykay'], ['🪁', 'Uçurtma'],
+/** 4. sınıf kırtasiye/oyuncak: [emoji, ad, en düşük TL, en yüksek TL] — gerçekçi fiyat aralıkları */
+const BIG: [string, string, number, number][] = [
+  ['📚', 'Hikâye kitabı', 90, 190], ['🖍️', 'Boya seti', 60, 160], ['🧩', 'Yapboz', 80, 190], ['🪁', 'Uçurtma', 70, 150],
+  ['⚽', 'Plastik top', 40, 120], ['🧴', 'Su matarası', 90, 190], ['📏', 'Cetvel seti', 25, 60], ['✂️', 'Makas', 20, 55],
+  ['🎨', 'Suluboya', 45, 120], ['🧸', 'Peluş oyuncak', 110, 190], ['🚗', 'Oyuncak araba', 60, 170], ['📓', 'Ajanda', 50, 130],
 ]
 const PEOPLE = ['👧', '👦', '👩', '👨', '👵', '👴', '🧑', '👱‍♀️', '🧔', '👩‍🦱']
 
@@ -143,6 +145,7 @@ function makeCustomer(grade: Grade, who: string, i: number): Customer {
   for (let t = 0; t < 800; t++) {
     let prices: number[]
     let paid: number[] = []
+    let bigPicks: typeof BIG = []
     if (grade === 1) {
       const total = randInt(6, 20) * 100
       prices = split(total, total >= 600 && Math.random() < 0.55 ? 2 : 1, 100)
@@ -160,7 +163,8 @@ function makeCustomer(grade: Grade, who: string, i: number): Customer {
       if (!notes.length || notes[0] - total < 150) continue
       paid = [notes[0]]
     } else {
-      prices = Array.from({ length: randInt(2, 3) }, () => randInt(8, 190) * 100)
+      bigPicks = shuffle(BIG).slice(0, randInt(2, 3))
+      prices = bigPicks.map(([, , lo, hi]) => randInt(lo, hi) * 100)
       const total = sumOf(prices)
       if (total < 10000 || total > 45000 || total % 10000 === 0) continue
       let sum = Math.ceil(total / 10000) * 10000
@@ -171,7 +175,7 @@ function makeCustomer(grade: Grade, who: string, i: number): Customer {
     const paidSum = sumOf(paid)
     const est = makeEstimate(grade, i, total, paidSum)
     if (!est) continue
-    const pool = shuffle(grade === 4 ? BIG : CHEAP)
+    const pool = grade === 4 ? bigPicks : shuffle(CHEAP)
     const items = prices.map((price, j) => ({ emoji: pool[j][0], name: pool[j][1], price }))
     return grade === 1
       ? { who, items, total, paid, paidSum, start: 0, end: total, target: total, est }

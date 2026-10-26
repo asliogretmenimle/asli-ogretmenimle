@@ -31,6 +31,7 @@ Her oyun ve manipülatif için zorunlu standartlar:
   - Matematiksel eksenler (sayı doğrusu, koordinat düzlemi, grafik) için `<Plane>`: iki parmakla anlamsal yakınlaştırma (çentikler 1 → 0,5 → 0,1… yeniden hesaplanır), boş alanda sürükleyerek kaydırma, ± ve ⤢ düğmeleri.
   - Nesneler: `<DragPoint>` (sürüklenebilir nokta, ızgaraya yapışma), `<Pinchable>` (nesne üzerinde iki parmak: ölçekle/döndür; tek parmak: taşı). Örnek: bir doğru parçası iki parmakla uzayıp kısalır.
   - Resim/sahne türü içerik için `<ZoomBox>`: görsel yakınlaştırma + kaydırma.
+  - `@use-gesture` pinch açısını atan2(dx, dy) olarak verir: yan yana duran iki parmak ±90° okur; döndürmede açının *değişimini* kullanın.
   - Sürüklenebilir öğeler `data-handle` niteliği taşımalı (kaydırmayı tetiklemesin), `touch-action: none` olmalı. Chrome’da `touch-action` SVG alt öğelerinde dikkate alınmaz; `<svg>` ya da onu saran HTML öğesine verin.
 - Sürükle-bırak için `@use-gesture/react` (`useDrag`, `useGesture`) ya da `@dnd-kit` kullanın; her sürüklemenin bir dokun-dokun alternatifi olsun.
 - Animasyonlar kısa ve anlamlı; `prefers-reduced-motion` saygı görür (global CSS hallediyor).

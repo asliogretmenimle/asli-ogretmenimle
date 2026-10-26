@@ -182,7 +182,7 @@ export function makeTasks(grade: Grade): Task[] {
     return [
       solve('İki kefede kutu', S(2, 5), S(1, 9), [xo(-1), n(-5), n(-9), xo(1), dv(2)], { multi: true, verify: true }),
       solve('Balonlar', S(3, -2), S(0, 13), [n(2), n(-2), dv(3), n(13), xo(-1)], { verify: true, story: 'Balon kefeyi 2 birim yukarı çekiyor (−2). Balondan nasıl kurtulursun?' }),
-      solve('Farklı sıralar', S(4, 2), S(2, 12), [xo(-2), n(-2), dv(2), xo(-1), n(-12)], { multi: true, verify: true, story: 'Bu dengeyi en az iki farklı sırayla çöz.' }),
+      solve('Farklı sıralar', S(4, 2), S(2, 12), [xo(-2), n(-2), dv(2), xo(-1), n(-1), n(-12)], { multi: true, verify: true, story: 'Bu dengeyi en az iki farklı sırayla çöz.' }),
       { kind: 'solve', title: 'Eğik terazi', story: 'Bu terazi dengede değil: sol kefe ağır basıyor (>). İki kefeye aynı işlemi yaparsan hangi kefe ağır kalır?', L: S(1, 3), R: S(0, 7), rel: '>', xv: 4, cards: [n(-3), n(3), n(-7), xo(-1), n(-1)] },
       solve('Balon ve kutu', S(5, -4), S(2, 5), [xo(-2), n(4), n(-4), dv(3), n(-5)], { multi: true, verify: true }),
     ]

@@ -433,17 +433,28 @@ export function RangeTask({ t: task, dark, footer, onSolved, sol }: { t: Extract
   const found = useMemo(() => new Set(mine.map((s) => Number(s.key.split('-')[1]))), [mine])
   const lastAdded = useRef<number | null>(null)
   const thetaFor = (n: number) => toDeg(Math.acos(Math.max(-1, Math.min(1, (a * a + b * b - n * n) / (2 * a * b)))))
-  /** drag: parmakla sürükleme (uzunlukta ±0,14 cm yapışma); step: düğme/kaydırıcı (açıda ±0,6° yapışma, takılmaz) */
+  /**
+   * drag: parmakla/kaydırıcıyla sürükleme (uzunlukta ±0,14 cm’de tam sayıya yapışır)
+   * step: ± düğmesi; yol üzerinde bir tam sayı uzunluk varsa orada durur (atlamaz, takılmaz)
+   */
   const setFromTheta = (d: number, mode: 'drag' | 'step' = 'drag') => {
     let th = Math.max(0, Math.min(180, d))
-    if (mode === 'drag' && th < 2.5) th = 0
-    if (mode === 'drag' && th > 177.5) th = 180
+    if (mode === 'step') {
+      const from = theta
+      let best: number | null = null
+      for (let n = lo + 1; n < hi; n++) {
+        const tn = thetaFor(n)
+        const between = th > from ? tn > from + 1e-6 && tn <= th : tn < from - 1e-6 && tn >= th
+        if (between && (best === null || Math.abs(tn - from) < Math.abs(best - from))) best = tn
+      }
+      setTheta(best ?? th)
+      return
+    }
+    if (th < 2.5) th = 0
+    if (th > 177.5) th = 180
     const cc = Math.sqrt(a * a + b * b - 2 * a * b * Math.cos((th * Math.PI) / 180))
     const n = Math.round(cc)
-    if (th > 0 && th < 180 && n > lo && n < hi) {
-      const tn = thetaFor(n)
-      if (mode === 'drag' ? Math.abs(cc - n) < 0.14 : Math.abs(tn - th) < 0.6) th = tn
-    }
+    if (th > 0 && th < 180 && n > lo && n < hi && Math.abs(cc - n) < 0.14) th = thetaFor(n)
     setTheta(th)
   }
   useEffect(() => {
@@ -485,7 +496,7 @@ export function RangeTask({ t: task, dark, footer, onSolved, sol }: { t: Extract
           <Prompt step="Önce düşün, sonra çevir">Bir üçgenin iki kenarı <b>{a} cm</b> ve <b>{b} cm</b>. Üçüncü kenar kaç santimetre olabilir? Mor ucu çevirerek bütün <b>tam sayı</b> değerlerini bul.</Prompt>
           <Card dark={dark}>
             <p className="mb-1 text-sm font-extrabold">Kolu çevir</p>
-            <Slider value={Math.round(theta)} onChange={(d) => setFromTheta(d, 'step')} min={0} max={180} step={1} format={(v) => `${v}°`} label="Menteşe açısı" dark={dark} />
+            <Slider value={Math.round(theta)} onChange={(d) => setFromTheta(theta + (d - Math.round(theta)), Math.abs(d - Math.round(theta)) === 1 ? 'step' : 'drag')} min={0} max={180} step={1} format={(v) => `${v}°`} label="Menteşe açısı" dark={dark} />
             <p className="mt-1 text-lg font-black tabular-nums">Üçüncü kenar ≈ {fmt(c, 2)} cm {degenerate && <span className="text-amber-500">· üçgen değil!</span>}</p>
           </Card>
           <SolutionList list={[...mine].sort((p, q) => Number(p.key.split('-')[1]) - Number(q.key.split('-')[1]))} />

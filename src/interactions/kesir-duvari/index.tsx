@@ -28,8 +28,8 @@ const reduce = (n: number, d: number): Frac => {
   const g = gcd(n, d) || 1
   return { n: n / g, d: d / g }
 }
-/** Kesirden sonra gelen ek okunuşun son sözcüğüne (paya) göre: [[1/2]]’yi değil “ikide bir” → ’i */
-const after = (x: Frac, kind: 'acc' | 'dat' | 'abl' | 'loc') => (x.d === 1 ? ek(x.n, kind) : `${fr(x.n, x.d)}${ek(x.n, kind, false)}`)
+/** Kesirden sonra gelen ek (sitedeki yazım: paydaya göre — [[1/2]]’yi, [[1/4]]’ü, [[2/5]]’i) */
+const after = (x: Frac, kind: 'acc' | 'dat' | 'abl' | 'loc') => (x.d === 1 ? ek(x.n, kind) : `${fr(x.n, x.d)}${ek(x.d, kind, false)}`)
 const fname = (x: Frac) => (x.d === 1 ? String(x.n) : fr(x.n, x.d))
 
 /** Basit **kalın** desteği + MathText */
@@ -284,7 +284,7 @@ function CoverView({ task, grade, big, sol, onDone, footer }: ViewProps<CoverTas
             </div>
           </>
         )}
-        <p className="mt-3 mb-1 text-xs font-black tracking-wide text-teal-800 uppercase">Senin sıran — {fname(task.target)} uzunluğunu tam ört</p>
+        <p className="mt-3 mb-1 text-xs font-black tracking-wide text-teal-800"><span className="uppercase">Senin sıran</span> — <MathText text={fname(task.target)} /> uzunluğunu tam ört</p>
         <div ref={rowRef} data-testid="build-row" className="relative rounded-xl" style={{ height: H + 8, width: W }}>
           <div className="absolute inset-y-0 left-0 rounded-xl border-[3px] border-dashed border-teal-500/80 bg-teal-50/80" style={{ width: targetPx }} />
           <div className="absolute inset-y-0 rounded-r-xl bg-slate-200/40" style={{ left: targetPx, right: 0 }} />
@@ -677,7 +677,7 @@ function OrderView({ task, grade, big, onDone, footer }: ViewProps<OrderTask>) {
         <div className="mt-1 space-y-1">
           {chosen.map((i, k) => {
             const it = items[i]
-            const bad = shown && (k === badPair || k === badPair + 1)
+            const bad = shown && badPair >= 0 && (k === badPair || k === badPair + 1)
             return (
               <div key={k} className="flex items-center gap-2 animate-fade-up">
                 {shown ? (
@@ -707,8 +707,8 @@ function OrderView({ task, grade, big, onDone, footer }: ViewProps<OrderTask>) {
         <p className="text-base leading-snug font-extrabold sm:text-lg"><Rich text={task.prompt} /></p>
       </Card>
       <div className="flex gap-2">
-        <button type="button" onClick={reset} disabled={!chosen.length || ok} className="btn-ghost min-h-12 flex-1"><RotateCcw size={18} />Yeniden sırala</button>
-        <button type="button" data-testid="order-check" onClick={check} disabled={!allChosen || shown} className="btn-primary min-h-12 flex-1"><BrickWall size={18} />Duvarda göster</button>
+        <button type="button" onClick={reset} disabled={!chosen.length || ok} className="btn-ghost min-h-12 flex-1 px-3 whitespace-nowrap"><RotateCcw size={18} />Yeniden sırala</button>
+        <button type="button" data-testid="order-check" onClick={check} disabled={!allChosen || shown} className="btn-primary min-h-12 flex-1 px-3 whitespace-nowrap"><BrickWall size={18} />Duvarda göster</button>
       </div>
       {ok && <Derived><MathText text={chosen.map((i) => fname(items[i])).join(' > ')} /></Derived>}
       {msg && <Nudge key={msg.q} question={msg.q} tone={msg.tone} misconception={msg.mis} tool={msg.tool ? 'fractions' : undefined} toolConfig={{ dens: [1, 2, 3, 4, 5, 6, 8, 10, 12] }} onClose={ok ? undefined : reset} />}

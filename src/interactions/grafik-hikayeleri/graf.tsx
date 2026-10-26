@@ -209,8 +209,11 @@ export interface GraphPlaneProps {
 }
 
 export function GraphPlane(props: GraphPlaneProps) {
-  const { axes: a, aspect = 0.62, mode, label } = props
-  const initial = { xMin: -a.xMax * 0.075, xMax: a.xMax * 1.05, yMin: -a.yMax * 0.24, yMax: a.yMax * 1.1 }
+  const { axes: a, mode, label } = props
+  // dar ekranda (telefon) daha yüksek düzlem: yakınlaştırma düğmeleri eksenin altında kalsın
+  const narrow = typeof window !== 'undefined' && window.innerWidth < 640
+  const aspect = props.aspect ?? (narrow ? 0.9 : 0.62)
+  const initial = { xMin: -a.xMax * (a.numbers ? 0.13 : 0.075), xMax: a.xMax * 1.05, yMin: -a.yMax * 0.24, yMax: a.yMax * 1.1 }
   const add = (raw: Pt) => {
     if (mode === 'pick') return props.onPick?.(raw)
     if (mode !== 'sketch' || !props.onChange) return
@@ -230,7 +233,7 @@ export function GraphPlane(props: GraphPlaneProps) {
     props.onSel?.(pts.indexOf(p))
   }
   return (
-    <div data-testid="graph">
+    <div data-testid="graph" className="text-ink">
       <Plane
         initial={initial}
         aspect={aspect}
@@ -269,6 +272,8 @@ function Layer({ axes: a, pts, onChange, mode, sel, onSel, highlight, segLabels,
   }
   return (
     <g>
+      {/* negatif y bölgesindeki sayıları gizle (zaman grafiklerinde anlamsız) */}
+      {a.numbers && <rect x={0} y={P.sy(0) + 22} width={Math.max(0, P.sx(0) - 1)} height={P.height} fill="#fff" />}
       {/* eksen okları */}
       <path d={`M${P.sx(0) - 5} ${P.sy(a.yMax * 1.08) + 9} L${P.sx(0)} ${P.sy(a.yMax * 1.08)} L${P.sx(0) + 5} ${P.sy(a.yMax * 1.08) + 9}`} fill="none" stroke="#1f2340" strokeWidth={1.8} />
       {ghosts?.map((g, k) => (
@@ -280,7 +285,7 @@ function Layer({ axes: a, pts, onChange, mode, sel, onSel, highlight, segLabels,
       {pins?.map((pin, k) => (
         <g key={k}>
           <circle cx={P.sx(pin.p.x)} cy={P.sy(pin.p.y)} r={13} fill="none" stroke="#0ea5e9" strokeWidth={3} strokeDasharray="4 3" />
-          <text x={P.sx(pin.p.x) + (pin.p.x > a.xMax * 0.7 ? -16 : 16)} y={P.sy(pin.p.y) - 14} textAnchor={pin.p.x > a.xMax * 0.7 ? 'end' : 'start'} fontSize={12} fontWeight={900} fill="#0369a1">{pin.label}</text>
+          <text x={P.sx(pin.p.x) + (pin.p.x > a.xMax * 0.7 ? -16 : 16)} y={P.sy(pin.p.y) - 19} textAnchor={pin.p.x > a.xMax * 0.7 ? 'end' : 'start'} fontSize={12} fontWeight={900} fill="#0369a1">{pin.label}</text>
         </g>
       ))}
       {pts.length > 1 && <path d={path(pts)} fill="none" stroke={color} strokeWidth={4.5} strokeLinejoin="round" strokeLinecap="round" />}

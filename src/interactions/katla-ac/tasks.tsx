@@ -159,7 +159,7 @@ export function CreaseTask({ t, grade, dark, footer, onSolved, sol, colors, tag 
             )}
             {canFold && <LineTargets shape={f.shape} cands={cands} onPick={pick} color="#db2777" />}
           </PaperSvg>
-          <p className={`mt-1 text-center text-xs font-bold ${dark ? 'text-slate-300' : 'text-ink-soft'}`}>{f.level > 0 && phase === 'fold' ? `${f.level}. kat tamam · ${2 ** f.level} kat kalınlık` : 'Kesikli çizgilerden birine dokun.'}</p>
+          <p className={`mt-1 text-center text-xs font-bold ${dark ? 'text-slate-300' : 'text-ink-soft'}`}>{phase === 'show' ? 'Kesikli çizgiler kat izleri.' : f.level > 0 ? `${f.level}. kat tamam · ${2 ** f.level} kat kalınlık` : 'Kesikli çizgilerden birine dokun.'}</p>
         </Stage>
       }
       panel={
@@ -186,7 +186,7 @@ export function CreaseTask({ t, grade, dark, footer, onSolved, sol, colors, tag 
           )}
           {phase === 'show' && fb && <Nudge tone={fb.ok ? 'ok' : 'think'} question={fb.text} />}
           {phase === 'show' && <GhostButton onClick={again} dark={dark} className="w-full"><RotateCcw size={18} />Yeni bir yol dene</GhostButton>}
-          <SolutionList list={sol.list.filter((s) => s.key.startsWith(`${tag}-`))} goal={t.folds === 1 ? (t.paper === 'kare' ? 4 : 2) : 4} />
+          <SolutionList list={sol.list.filter((s) => s.key.startsWith(`${tag}-`))} goal={t.folds === 1 ? (t.paper === 'kare' ? 4 : 2) : t.folds === 2 ? 4 : undefined} />
           {footer}
         </>
       }
@@ -328,7 +328,7 @@ export function EquivTask({ t, grade, dark, footer, onSolved, colors }: { t: Equ
             </>
           )}
           {phase === 'pick' && <Prompt step="3. Bir kez daha">Katlanmış şeridi bir kez daha katla: kesikli çizgilerden birine dokun.</Prompt>}
-          {phase === 'pick' && <Card dark={dark}><LineButtons shape={f.shape} cands={cands} onPick={pick} disabled={f.busy} dark={dark} /></Card>}
+          {(phase === 'pick' || phase === 'start') && <Card dark={dark}><LineButtons shape={f.shape} cands={cands} onPick={pick} disabled={f.busy} dark={dark} /></Card>}
           {phase === 'count' && (
             <>
               <Prompt step="4. Say">Kâğıdı açtık. Şimdi kaç eş parça var? Kaçı boyalı?</Prompt>
@@ -366,6 +366,7 @@ const optNudge: Record<Exclude<OptKind, 'dogru'>, { q: string; m: string }> = {
   kaydir: { q: 'Açınca kesik yana kayıyor mu, yoksa kat izine göre ayna görüntüsü gibi ters mi dönüyor? Üçgenin sivri ucuna bak.', m: 'Katlayıp açmayı yansıma yerine öteleme gibi düşündü' },
   sonKat: { q: 'Kâğıdı kaç kez katlamıştın? Her katlama kesik sayısını ne yapar?', m: 'Birden çok katlamada her katın kesikleri ikiye katladığını hesaba katmadı' },
   ilkKat: { q: 'Kâğıdı kaç kez katlamıştın? Her katlama kesik sayısını ne yapar?', m: 'Birden çok katlamada her katın kesikleri ikiye katladığını hesaba katmadı' },
+  eksen: { q: 'Kesik, kat izinin hangi yanına yansır? Kat izine olan uzaklığı açınca nasıl olur? Kat izini parmağınla göster.', m: 'Katlayıp açmada yansımayı yanlış doğruya göre yaptı' },
   eksik: { q: 'Katlı kâğıt kaç kat kalınlığındaydı? Açınca kaç kesik olmalı?', m: 'Katlı kâğıttaki kat sayısını eksik saydı' },
 }
 
@@ -457,7 +458,7 @@ export function NotchTask({ t, grade, dark, footer, onSolved, colors }: { t: Not
     <Split
       work={
         <Stage dark={dark}>
-          <PaperSvg viewBox={viewBoxOf(paper, 12)} label="Katlanan kâğıt" svgRef={svgRef} onTap={place}>
+          <PaperSvg viewBox={(phase === 'cut' || phase === 'predict') && !f.busy && f.level > 0 ? zoomBox(f.shape) : viewBoxOf(paper, 12)} label="Katlanan kâğıt" svgRef={svgRef} onTap={place}>
             <FoldContent f={f} colors={colors} foldMarks />
             {phase === 'fold' && !f.busy && !f.bad && <LineTargets shape={f.shape} cands={cands} onPick={pick} color="#db2777" />}
             {phase === 'cut' && <CutDragger svgRef={svgRef} onMove={place} />}
@@ -531,6 +532,14 @@ export function NotchTask({ t, grade, dark, footer, onSolved, colors }: { t: Not
       }
     />
   )
+}
+
+/** Katlı küçük kâğıda yakınlaş (en çok 2×), kesik koymak kolaylaşsın */
+function zoomBox(shape: Pt[]) {
+  const xs = shape.map((p) => p[0]), ys = shape.map((p) => p[1])
+  const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2
+  const s = Math.max(62, Math.max(...xs) - Math.min(...xs) + 24, Math.max(...ys) - Math.min(...ys) + 24)
+  return `${cx - s / 2} ${cy - s / 2} ${s} ${s}`
 }
 
 /** Kesik konumunu parmakla sürükleyerek de ayarlamak için şeffaf katman */

@@ -252,7 +252,7 @@ function WhichTask({ t, dark, footer, onSolved }: { t: Extract<Task, { kind: 'wh
   const colls = useMemo(() => preps.map((p) => collisions(p)), [preps])
   const [focus, setFocus] = useState(0)
   const [ans, setAns] = useState<(boolean | null)[]>(t.items.map(() => null))
-  const [checked, setChecked] = useState<boolean[] | null>(null)
+  const [checked, setChecked] = useState<(boolean | null)[] | null>(null)
   const [everChecked, setEverChecked] = useState(false)
   const [done, setDone] = useState(false)
   const [fb, setFb] = useState<{ text: string; mis?: string } | null>(null)
@@ -268,7 +268,7 @@ function WhichTask({ t, dark, footer, onSolved }: { t: Extract<Task, { kind: 'wh
   const setA = (i: number, v: boolean) => {
     if (done) return
     setAns((a) => a.map((x, j) => (j === i ? v : x)))
-    setChecked(null)
+    setChecked((c) => (c ? c.map((x, j) => (j === i ? null : x)) : null))
     setFb(null)
     show(i)
   }
@@ -317,14 +317,14 @@ function WhichTask({ t, dark, footer, onSolved }: { t: Extract<Task, { kind: 'wh
             {isBox ? <>Hangi açınımlar katlanınca bu <b className="text-pink-700">kutuyu</b> oluşturur?</> : <>Hangi açınımlar katlanınca <b className="text-pink-700">kapalı bir küp</b> olur?</>}
           </Prompt>
           {t.box && <Card dark={dark}><BoxPic a={t.box[0]} b={t.box[1]} c={t.box[2]} dark={dark} /></Card>}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2">
             {t.items.map((it, i) => {
-              const ring = checked ? (checked[i] ? 'ring-green-500' : 'ring-amber-500') : focus === i ? 'ring-pink-500' : dark ? 'ring-slate-600' : 'ring-line'
+              const ring = checked && checked[i] !== null ? (checked[i] ? 'ring-green-500' : 'ring-amber-500') : focus === i ? 'ring-pink-500' : dark ? 'ring-slate-600' : 'ring-line'
               return (
                 <div key={i} className={`rounded-2xl p-2 ring-2 ${ring} ${dark ? 'bg-slate-800' : 'bg-white'}`}>
                   <button type="button" onClick={() => show(i)} className="relative grid h-24 w-full place-items-center rounded-xl" aria-label={`${String.fromCharCode(65 + i)} açınımını göster`}>
                     <span className="absolute top-0 left-0 rounded-md bg-pink-600 px-1.5 text-xs font-black text-white">{String.fromCharCode(65 + i)}</span>
-                    {checked && <span className={`absolute top-0 right-0 grid size-6 place-items-center rounded-full text-white ${checked[i] ? 'bg-green-500' : 'bg-amber-500'}`}>{checked[i] ? <Check size={14} strokeWidth={3} /> : '?'}</span>}
+                    {checked && checked[i] !== null && <span className={`absolute top-0 right-0 grid size-6 place-items-center rounded-full text-white ${checked[i] ? 'bg-green-500' : 'bg-amber-500'}`}>{checked[i] ? <Check size={14} strokeWidth={3} /> : '?'}</span>}
                     <NetThumb faces={it.faces} size={88} dark={dark} />
                   </button>
                   <div className="mt-1 grid grid-cols-2 gap-1">
@@ -517,7 +517,7 @@ function DiceTask({ t, grade, dark, footer, onSolved, sol }: { t: Extract<Task, 
               {free.map((n) => {
                 const used = Object.values(nums).includes(n)
                 return (
-                  <button key={n} type="button" onClick={() => setChip(chip === n ? null : n)} aria-pressed={chip === n} className={`grid size-14 place-items-center rounded-2xl text-2xl font-black ring-2 transition active:scale-95 ${chip === n ? 'bg-pink-600 text-white ring-pink-800' : used ? 'bg-slate-200 text-slate-500 ring-slate-300' : 'bg-white text-ink ring-line'}`}>
+                  <button key={n} type="button" onClick={() => setChip(n)} aria-pressed={chip === n} className={`grid size-14 place-items-center rounded-2xl text-2xl font-black ring-2 transition active:scale-95 ${chip === n ? 'bg-pink-600 text-white ring-pink-800' : used ? 'bg-slate-200 text-slate-500 ring-slate-300' : 'bg-white text-ink ring-line'}`}>
                     {n}
                   </button>
                 )
@@ -713,6 +713,7 @@ const SOLID_FACTS: Record<SolidId, string> = {
   box: 'Kare prizma: 2 eş kare taban + 4 eş dikdörtgen yan yüz.',
 }
 const solidFaces = (s: SolidId): Face[] => (s === 'tri' ? triPrismFaces(2, 3) : s === 'pyr' ? pyramidFaces(2, 2) : s === 'cyl' ? cylinderFaces(1.5, 3, 9) : s === 'cone' ? coneFaces(2, 4) : boxFaces(2, 2, 3, { color: '#86efac' }).map((f, i) => (i === 0 || i === 2 ? { ...f, color: '#a78bfa' } : f)))
+const POSES: Record<SolidId, [number, number, number]> = { tri: [-24, -38, 0], box: [-112, 0, 32], pyr: [-112, 0, 32], cyl: [-30, 160, 0], cone: [10, 0, 0] }
 const round = (s: SolidId) => s === 'cyl' || s === 'cone'
 const pointy = (s: SolidId) => s === 'pyr' || s === 'cone'
 
@@ -761,7 +762,7 @@ function SolidsTask({ t, dark, footer, onSolved }: { t: Extract<Task, { kind: 's
     <Split
       work={
         <>
-          <FoldStage key={cur} prep={prep} t={fold.t} dark={dark} />
+          <FoldStage key={cur} prep={prep} t={fold.t} dark={dark} pose={POSES[cur]} />
           {(right || fb) && <FoldControls {...fold} dark={dark} />}
         </>
       }
@@ -781,6 +782,34 @@ function SolidsTask({ t, dark, footer, onSolved }: { t: Extract<Task, { kind: 's
 
 /* ───────────────────────── 8. silindiri sar ───────────────────────── */
 
+/** Üstten bakış: kapak çemberi ve etrafına sarılan w uzunluğundaki şerit (boşluk / taşma görünür) */
+function TopView({ w, C, dark }: { w: number; C: number; dark: boolean }) {
+  const R = 38, cx = 60, cy = 52
+  const arc = (rad: number, a0: number, a1: number) => {
+    const p = (a: number) => `${cx + rad * Math.cos(a)},${cy + rad * Math.sin(a)}`
+    const large = a1 - a0 > Math.PI ? 1 : 0
+    return `M${p(a0)} A${rad},${rad} 0 ${large} 1 ${p(a1)}`
+  }
+  const frac = w / C
+  const start = Math.PI / 2
+  const first = Math.min(frac, 0.9999) * 2 * Math.PI
+  const over = frac > 1 ? (frac - 1) * 2 * Math.PI : 0
+  const diff = Math.abs(C - w)
+  return (
+    <div className={`flex items-center gap-3 rounded-2xl p-2 ring-1 ${dark ? 'bg-slate-800 ring-slate-600 text-slate-100' : 'bg-white ring-line text-ink'}`}>
+      <svg viewBox="0 0 120 104" className="w-28 shrink-0" aria-label="Üstten bakış">
+        <circle cx={cx} cy={cy} r={R} fill="#fda4af" stroke="#1e293b" strokeWidth={1.5} />
+        <path d={arc(R + 5, start, start + first)} fill="none" stroke="#38bdf8" strokeWidth={7} strokeLinecap="butt" />
+        {over > 0 && <path d={arc(R + 12, start, start + Math.min(over, 2 * Math.PI - 0.01))} fill="none" stroke="#ef4444" strokeWidth={6} />}
+        {frac < 1 && <path d={arc(R + 5, start + first, start + 2 * Math.PI)} fill="none" stroke="#f59e0b" strokeWidth={3} strokeDasharray="3 3" />}
+      </svg>
+      <p className="text-sm font-bold">
+        <b>Üstten bakış.</b> {frac < 1 ? <>Şerit {w} cm, taban çevresi {C} cm: <b className="text-amber-500">{diff} cm boşluk</b> kaldı.</> : frac > 1 ? <>Şerit {w} cm, taban çevresi {C} cm: <b className="text-red-500">{diff} cm üst üste</b> bindi.</> : <>Şerit {w} cm, taban çevresi {C} cm: <b className="text-green-500">tam oturdu</b>.</>}
+      </p>
+    </div>
+  )
+}
+
 function CylinderTask({ t, dark, footer, onSolved }: { t: Extract<Task, { kind: 'cylinder' }> } & Common) {
   const { r, h } = t
   const C = 2 * PI3 * r
@@ -794,9 +823,11 @@ function CylinderTask({ t, dark, footer, onSolved }: { t: Extract<Task, { kind: 
   const chkW = useChecks()
   const chk = useChecks()
   const firstW = useRef(true)
+  const [tried, setTried] = useState<number | null>(null)
   const test = () => {
     setWfb(null)
     fold.animateTo(1, () => {
+      setTried(w)
       if (w === C) {
         firstW.current = chkW.fails === 0
         setPhase('area')
@@ -830,7 +861,7 @@ function CylinderTask({ t, dark, footer, onSolved }: { t: Extract<Task, { kind: 
     <Split
       work={
         <>
-          <FoldStage prep={prep} t={fold.t} dark={dark} />
+          <FoldStage prep={prep} t={fold.t} dark={dark} pose={POSES.cyl} />
           <FoldControls {...fold} dark={dark} />
         </>
       }
@@ -840,9 +871,10 @@ function CylinderTask({ t, dark, footer, onSolved }: { t: Extract<Task, { kind: 
             <Prompt step="1. Uzunluğu ayarla">Kapakların yarıçapı <b>{r} cm</b>, silindirin yüksekliği <b>{h} cm</b>. Yan yüz dikdörtgeni <b className="text-pink-700">kaç cm uzunlukta</b> olmalı ki kapakların çevresini tam sarsın?</Prompt>
             <Card dark={dark}>
               <p className="mb-1 text-sm font-bold">Dikdörtgenin uzunluğu: <b className="text-lg">{w} cm</b> <span className="opacity-70">(π ≈ 3)</span></p>
-              <Slider value={w} onChange={(v) => { setW(v); fold.setT(0); setWfb(null) }} min={2 * r} max={10 * r} step={1} format={(v) => `${v}`} label="Dikdörtgenin uzunluğu" dark={dark} />
+              <Slider value={w} onChange={(v) => { setW(v); fold.setT(0); setWfb(null); setTried(null) }} min={2 * r} max={10 * r} step={1} format={(v) => `${v}`} label="Dikdörtgenin uzunluğu" dark={dark} />
             </Card>
             <CheckButton onClick={test} disabled={fold.moving}>Sar ve dene</CheckButton>
+            {tried !== null && <TopView w={tried} C={C} dark={dark} />}
             {wfb && <Nudge key={chkW.tries} question={wfb.text} misconception={wfb.mis} tool="nets" />}
           </>
         ) : (

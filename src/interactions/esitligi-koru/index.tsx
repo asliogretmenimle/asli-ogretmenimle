@@ -235,7 +235,7 @@ function SolveView({ t, grade, dark, idx, sol, onDone, footer }: { t: SolveT } &
   }
 
   // eşitsizlik: kutunun olası ağırlıkları
-  const choices = Array.from({ length: 10 }, (_, i) => i)
+  const choices = Array.from({ length: 10 }, (_, i) => i + 1)
   const fits = (k: number) => (t.rel === '>' ? weight(t.L, k) > weight(t.R, k) : weight(t.L, k) < weight(t.R, k))
   const checkPicks = () => {
     const want = choices.filter(fits)
@@ -246,7 +246,7 @@ function SolveView({ t, grade, dark, idx, sol, onDone, footer }: { t: SolveT } &
       setIneqDone(true)
       if (!itemDone.current) itemDone.current = true
       onDone(first.current)
-      say(`Evet! ${base.s} ve ondan ${t.rel === '>' ? 'küçük' : 'büyük'} sayılar olmaz. Arada 4,5 gibi ondalık ağırlıklar da olabilir mi?`, { tone: 'ok' })
+      say(`Evet! ${base.s} ve ondan ${t.rel === '>' ? 'küçük' : 'büyük'} sayılar olmaz. Peki ${t.rel === '>' ? `${base.s},5` : `${base.s - 1},5`} gibi ondalık bir ağırlık da olabilir mi?`, { tone: 'ok' })
       return
     }
     first.current = false

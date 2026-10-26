@@ -143,10 +143,10 @@ export function useFolder(paper: Pt[]) {
 
 export type PaperColors = { front: string; back: string; paint: string; edge: string }
 export const paperColors = (grade: number): PaperColors =>
-  grade <= 3 ? { front: '#fcd34d', back: '#fffbeb', paint: '#f97316', edge: '#b45309' } : grade <= 6 ? { front: '#7dd3fc', back: '#f8fafc', paint: '#2563eb', edge: '#0369a1' } : { front: '#f9a8d4', back: '#f8fafc', paint: '#be185d', edge: '#64748b' }
+  grade <= 3 ? { front: '#fcd34d', back: '#fff7dd', paint: '#f97316', edge: '#b45309' } : grade <= 6 ? { front: '#7dd3fc', back: '#eef7fd', paint: '#2563eb', edge: '#0369a1' } : { front: '#f9a8d4', back: '#f8fafc', paint: '#be185d', edge: '#64748b' }
 
 /** Kesikli (delikli), boyalı, katmanlı tek bir kâğıt yüzü */
-export function Face({ poly, holes = [], fill, paint, paintColor = '#f97316', transform, layers = 1, edge = '#64748b', opacity = 1, outline }: { poly: Pt[]; holes?: Pt[][]; fill: string; paint?: Pt[][]; paintColor?: string; transform?: string; layers?: number; edge?: string; opacity?: number; outline?: string }) {
+export function Face({ poly, holes = [], fill, paint, paintColor = '#f97316', transform, layers = 1, edge = '#64748b', opacity = 1, outline, shadow }: { shadow?: boolean; poly: Pt[]; holes?: Pt[][]; fill: string; paint?: Pt[][]; paintColor?: string; transform?: string; layers?: number; edge?: string; opacity?: number; outline?: string }) {
   const id = useId().replace(/[^a-zA-Z0-9]/g, '')
   if (poly.length < 3) return null
   const pts = toPoints(poly)
@@ -163,9 +163,11 @@ export function Face({ poly, holes = [], fill, paint, paintColor = '#f97316', tr
         {paint && paint.length > 0 && <clipPath id={`c${id}`}><polygon points={pts} /></clipPath>}
       </defs>
       <g mask={holes.length ? `url(#m${id})` : undefined}>
+        {shadow && extra > 0 && <polygon points={pts} transform={`translate(${extra * 1.1 + 1.6} ${extra * 1.3 + 2.2})`} fill="#0f172a" fillOpacity={0.14} />}
         {Array.from({ length: extra }, (_, j) => extra - j).map((j) => (
           <polygon key={j} points={pts} transform={`translate(${j * 1.1} ${j * 1.3})`} fill={fill} stroke={edge} strokeOpacity={0.5} strokeWidth={0.5} strokeLinejoin="round" />
         ))}
+        {shadow && extra === 0 && <polygon points={pts} transform="translate(1.6 2.2)" fill="#0f172a" fillOpacity={0.14} />}
         <polygon points={pts} fill={fill} stroke={outline ?? edge} strokeWidth={outline ? 1.2 : 0.7} strokeDasharray={outline ? '3 2' : undefined} strokeLinejoin="round" />
         {paint && paint.length > 0 && (
           <g clipPath={`url(#c${id})`}>
@@ -192,7 +194,7 @@ export function FoldContent({ f, colors, paint, creases = true, foldMarks = fals
       const fl = clipHalf(base, line, 1)
       return (
         <g>
-          <Face poly={st} fill={L === 0 ? front : back} paint={L === 0 ? paint : undefined} paintColor={colors.paint} layers={lay(L)} edge={colors.edge} />
+          <Face shadow poly={st} fill={L === 0 ? front : back} paint={L === 0 ? paint : undefined} paintColor={colors.paint} layers={lay(L)} edge={colors.edge} />
           <Face poly={fl} transform={foldMatrix(line, c)} fill={L === 0 && c > 0 ? front : back} paint={L === 0 && c > 0 ? paint : undefined} paintColor={colors.paint} layers={lay(L)} edge={colors.edge} opacity={bad && !anim ? 0.92 : 1} outline={bad && !anim ? '#d97706' : undefined} />
         </g>
       )
@@ -201,7 +203,7 @@ export function FoldContent({ f, colors, paint, creases = true, foldMarks = fals
     const fl = clipHalf(shapes[L], line, 1)
     return (
       <g>
-        <Face poly={shapes[L + 1]} holes={H} fill={L === 0 ? front : back} paint={L === 0 ? paint : undefined} paintColor={colors.paint} layers={lay(L)} edge={colors.edge} />
+        <Face shadow poly={shapes[L + 1]} holes={H} fill={L === 0 ? front : back} paint={L === 0 ? paint : undefined} paintColor={colors.paint} layers={lay(L)} edge={colors.edge} />
         <Face poly={fl} holes={H.map((h) => reflectPoly(line, h))} transform={foldMatrix(line, c)} fill={L === 0 && c > 0 ? front : back} paint={L === 0 && c > 0 ? paint : undefined} paintColor={colors.paint} layers={lay(L)} edge={colors.edge} />
       </g>
     )
@@ -211,7 +213,7 @@ export function FoldContent({ f, colors, paint, creases = true, foldMarks = fals
   const holes = unfoldImages(pieces, folds, L)
   return (
     <g>
-      <Face poly={shapes[L]} holes={holes} fill={L === 0 ? front : back} paint={L === 0 ? paint : undefined} paintColor={colors.paint} layers={lay(L)} edge={colors.edge} />
+      <Face shadow poly={shapes[L]} holes={holes} fill={L === 0 ? front : back} paint={L === 0 ? paint : undefined} paintColor={colors.paint} layers={lay(L)} edge={colors.edge} />
       {L === 0 && creases && creaseSegments(shapes[0], folds).map(([p, q], i) => (
         <line key={i} x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} stroke={colors.edge} strokeWidth={0.8} strokeDasharray="2.5 2" strokeOpacity={0.9} pointerEvents="none" />
       ))}

@@ -131,7 +131,7 @@ export function Handle({ id, p, onMove, color, label, away, snap = 0.5, clampTo,
   const selected = B.sel === id
   return (
     <g {...bind()} data-handle style={{ cursor: disabled ? 'default' : 'grab', touchAction: 'none' }} aria-label={label ? `${label} köşesi` : 'köşe'}>
-      <circle cx={x} cy={y} r={26} fill="transparent" />
+      <circle cx={x} cy={y} r={30} fill="transparent" />
       {selected && <circle cx={x} cy={y} r={20} fill="none" stroke={color} strokeWidth={3} strokeDasharray="5 4" />}
       <circle cx={x} cy={y} r={disabled ? 6 : 12} fill={color} stroke={t.halo} strokeWidth={3} />
       {label && <text x={lx} y={ly + 6} textAnchor="middle" fontSize={18} fontWeight={900} fill={color} stroke={t.halo} strokeWidth={4} paintOrder="stroke" pointerEvents="none">{label}</text>}

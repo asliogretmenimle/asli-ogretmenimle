@@ -157,6 +157,7 @@ export function ClassifyTask({ items, footer, onSolved }: { items: TriItem[] } &
   const [checked, setChecked] = useState(false)
   const [done, setDone] = useState(false)
   const [fb, setFb] = useState<{ ok: boolean; text: string; mis?: string } | null>(null)
+  const prompt = <Prompt step="Çizmeden tanı">Kenar uzunlukları verilen üçgenler <b>dar, dik</b> ya da <b>geniş</b> açılı mı? Çizim yok, ölçü aleti yok — yalnızca sayılar.</Prompt>
   const chk = useChecks()
   const check = () => {
     setChecked(true)
@@ -175,12 +176,14 @@ export function ClassifyTask({ items, footer, onSolved }: { items: TriItem[] } &
     setFb({
       ok: false,
       mis: usedWrongSide ? 'Kenarlar tam sayı diye üçgeni dik sandı' : undefined,
-      text: `${wrong + 1}. üçgen: en uzun kenar ${r}. ${p}² + ${q}² = ${sum}, ${r}² = ${r * r}. Hangisi büyük? Bu, en uzun kenarın karşısındaki açı için ne söyler?`,
+      text: `${wrong + 1}. üçgen: en uzun kenar ${r}. ${p}² + ${q}² = ${sum}, ${r}² = ${r * r}. Biri büyük mü, yoksa eşitler mi? Bu, en uzun kenarın karşısındaki açı için ne söyler?`,
     })
   }
   return (
     <Split
       work={
+        <>
+        <div className="mb-3 lg:hidden">{prompt}</div>
         <div className="grid gap-3 sm:grid-cols-3">
           {items.map((it, i) => {
             const pts = triPts(it.s)
@@ -217,10 +220,11 @@ export function ClassifyTask({ items, footer, onSolved }: { items: TriItem[] } &
             )
           })}
         </div>
+        </>
       }
       panel={
         <>
-          <Prompt step="Çizmeden tanı">Kenar uzunlukları verilen üçgenler <b>dar, dik</b> ya da <b>geniş</b> açılı mı? Çizim yok, ölçü aleti yok — yalnızca sayılar.</Prompt>
+          <div className="hidden lg:block">{prompt}</div>
           <Card dark><p className="text-sm font-bold text-slate-300">İpucu yerine soru: En uzun kenarın karşısındaki açı en büyük açıdır. O açı 90°’den büyük mü, küçük mü?</p></Card>
           {!done && <CheckButton disabled={ans.some((x) => !x)} onClick={check} />}
           {fb && (fb.ok ? <Nudge tone="ok" question={fb.text} /> : <Nudge key={chk.tries} question={fb.text} misconception={fb.mis} tool="dinamikucgen" />)}

@@ -8,7 +8,7 @@ export const SEG = ['#fb7185', '#60a5fa', '#34d399']
 export const SEG_SOFT = ['#ffe4e6', '#dbeafe', '#d1fae5']
 
 /** Sayı bağı: bütün üstte, parçalar altta */
-export function NumberBond({ whole, parts, active, onPart, big }: { whole: number; parts: (number | null)[]; active?: number; onPart?: (i: number) => void; big?: boolean }) {
+export function NumberBond({ whole, parts, active, onPart, big, colors = SEG }: { whole: number; parts: (number | null)[]; active?: number; onPart?: (i: number) => void; big?: boolean; colors?: string[] }) {
   const n = parts.length
   const W = 300, H = 150
   const xs = parts.map((_, i) => (n === 2 ? [80, 220][i] : [55, 150, 245][i]))
@@ -23,7 +23,7 @@ export function NumberBond({ whole, parts, active, onPart, big }: { whole: numbe
       </div>
       {parts.map((p, i) => {
         const cls = 'absolute grid place-items-center rounded-full border-4 font-black shadow-sm transition'
-        const style = { left: `${(xs[i] / W) * 100}%`, top: `${((H - 38) / H) * 100}%`, width: r * 2.2, height: r * 2.2, transform: 'translate(-50%,-50%)', borderColor: SEG[i], background: active === i ? SEG_SOFT[i] : '#fff' }
+        const style = { left: `${(xs[i] / W) * 100}%`, top: `${((H - 38) / H) * 100}%`, width: r * 2.2, height: r * 2.2, transform: 'translate(-50%,-50%)', borderColor: colors[i], background: active === i ? SEG_SOFT[i] : '#fff' }
         const body = <span className={`text-xl sm:text-2xl ${p === null ? 'text-ink-soft' : ''}`}>{p === null ? '?' : tr(p)}</span>
         return onPart ? (
           <button key={i} type="button" onClick={() => onPart(i)} className={`${cls} ${active === i ? 'scale-110 ring-4 ring-ink/20' : ''}`} style={style} aria-label={`${i + 1}. parça`}>
@@ -89,10 +89,7 @@ export function Tape({ total, step, cuts, maxCuts, onChange }: { total: number; 
   const bindCut = useDrag(
     ({ args: [i], tap, xy: [x], event }) => {
       event?.preventDefault?.()
-      if (tap) {
-        onChange(cuts.filter((_, k) => k !== i))
-        return
-      }
+      if (tap) return
       const v = toVal(x)
       if (cuts.some((c, k) => k !== i && c === v)) return
       onChange(cuts.map((c, k) => (k === i ? v : c)))
@@ -130,7 +127,7 @@ export function Tape({ total, step, cuts, maxCuts, onChange }: { total: number; 
             {...bindCut(i)}
             className="absolute top-[-10px] z-10 flex h-[calc(100%+20px)] w-12 -translate-x-1/2 cursor-ew-resize justify-center"
             style={{ left: `${(c / total) * 100}%`, touchAction: 'none' }}
-            aria-label={`${tr(c)} noktasındaki kesik (kaldırmak için dokun)`}
+            aria-label={`${tr(c)} noktasındaki kesik (taşımak için sürükle)`}
           >
             <span className="h-full w-1.5 rounded-full bg-ink" />
             <span className="absolute -bottom-9 grid size-9 place-items-center rounded-full bg-ink text-white shadow"><Scissors size={16} /></span>
@@ -173,7 +170,7 @@ export function BlockBuilder({ places, counts, onChange, big }: { places: Place[
           <BlocksSvg thousands={counts.th} hundreds={counts.h} tens={counts.t} ones={counts.o} />
         )}
       </div>
-      <div className={`grid gap-2 ${places.length === 4 ? 'sm:grid-cols-2' : places.length === 3 ? 'sm:grid-cols-3' : 'grid-cols-2'}`}>
+      <div className={`grid gap-2 ${places.length === 3 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2'}`}>
         {places.map((p) => {
           const l = lower(p)
           return (

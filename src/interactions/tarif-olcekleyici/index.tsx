@@ -151,15 +151,15 @@ function pathType(cols: Col[], i: number): { key: string; label: string } {
 }
 
 function DoubleLine({ cols, base, target, ing, unit }: { cols: Col[]; base: { p: number; a: number }; target: number; ing: string; unit: string }) {
-  const W = 620, x0 = 30, x1 = W - 24, yT = 46, yB = 128
+  const W = 520, x0 = 26, x1 = W - 22, yT = 50, yB = 132
   const maxP = Math.max(target, ...cols.map((c) => c.p)) * 1.1
   const rate = base.a / base.p
   const X = (p: number) => x0 + (p / maxP) * (x1 - x0)
   const XA = (a: number) => x0 + (a / (maxP * rate)) * (x1 - x0)
   return (
-    <svg viewBox={`0 0 ${W} 170`} className="block w-full" role="img" aria-label="Çift sayı doğrusu">
-      <text x={x0} y={20} fontSize={14} fontWeight={900} fill={C_P}>Kişi</text>
-      <text x={x0} y={164} fontSize={14} fontWeight={900} fill={C_A}>{ing[0].toLocaleUpperCase('tr') + ing.slice(1)} ({unit})</text>
+    <svg viewBox={`0 0 ${W} 176`} className="block w-full" role="img" aria-label="Çift sayı doğrusu">
+      <text x={x0} y={18} fontSize={16} fontWeight={900} fill={C_P}>Kişi</text>
+      <text x={x0} y={172} fontSize={16} fontWeight={900} fill={C_A}>{ing[0].toLocaleUpperCase('tr') + ing.slice(1)} ({unit})</text>
       {[yT, yB].map((y, i) => (
         <g key={i}>
           <line x1={x0} x2={x1} y1={y} y2={y} stroke="#1f2340" strokeWidth={3} />
@@ -170,16 +170,16 @@ function DoubleLine({ cols, base, target, ing, unit }: { cols: Col[]; base: { p:
       <text x={X(target)} y={yT - 26} textAnchor="middle" fontSize={12} fontWeight={900} fill={C_P}>hedef</text>
       <g>
         <line x1={X(0)} x2={X(0)} y1={yT - 9} y2={yB + 9} stroke="#1f2340" strokeWidth={2} />
-        <text x={X(0)} y={yT - 12} textAnchor="middle" fontSize={14} fontWeight={900}>0</text>
-        <text x={X(0)} y={yB + 24} textAnchor="middle" fontSize={14} fontWeight={900}>0</text>
+        <text x={X(0)} y={yT - 13} textAnchor="middle" fontSize={17} fontWeight={900}>0</text>
+        <text x={X(0)} y={yB + 26} textAnchor="middle" fontSize={17} fontWeight={900}>0</text>
       </g>
       {cols.map((c, i) => (
         <g key={i} style={{ transition: 'opacity 300ms' }}>
           <line x1={X(c.p)} x2={XA(c.a)} y1={yT} y2={yB} stroke={c.bad ? '#e11d48' : '#16a34a'} strokeWidth={c.bad ? 3 : 2} strokeDasharray={c.bad ? '0' : '6 4'} />
           <line x1={X(c.p)} x2={X(c.p)} y1={yT - 9} y2={yT + 9} stroke={C_P} strokeWidth={3} />
           <line x1={XA(c.a)} x2={XA(c.a)} y1={yB - 9} y2={yB + 9} stroke={c.bad ? '#e11d48' : C_A} strokeWidth={3} />
-          <text x={X(c.p)} y={yT - 12} textAnchor="middle" fontSize={14} fontWeight={900} fill={C_P}>{fmt(c.p)}</text>
-          <text x={XA(c.a)} y={yB + 24} textAnchor="middle" fontSize={14} fontWeight={900} fill={c.bad ? '#e11d48' : C_A}>{fmt(c.a)}</text>
+          <text x={X(c.p)} y={yT - 13} textAnchor="middle" fontSize={17} fontWeight={900} fill={C_P}>{fmt(c.p)}</text>
+          <text x={XA(c.a)} y={yB + 26} textAnchor="middle" fontSize={17} fontWeight={900} fill={c.bad ? '#e11d48' : C_A}>{fmt(c.a)}</text>
         </g>
       ))}
     </svg>

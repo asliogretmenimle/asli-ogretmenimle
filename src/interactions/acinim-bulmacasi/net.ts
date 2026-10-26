@@ -345,7 +345,7 @@ export function cylinderFaces(r: number, h: number, w: number, N = 21): Face[] {
   const R0 = (6 * r) / N / (2 * Math.sin(Math.PI / N))
   const rl = R0 * Math.cos(Math.PI / N)
   const xm = (k0 + 0.5) * dw
-  faces.push({ pts: circlePts(xm, -rl, rl), parent: 0, hinge: [[k0 * dw, 0], [(k0 + 1) * dw, 0]], angle: 90, color: lid, label: `r = ${r}` })
+  faces.push({ pts: circlePts(xm, -rl, rl), parent: 0, hinge: [[k0 * dw, 0], [(k0 + 1) * dw, 0]], angle: 90, color: lid })
   faces.push({ pts: circlePts(xm, h + rl, rl), parent: 0, hinge: [[k0 * dw, h], [(k0 + 1) * dw, h]], angle: 90, color: lid })
   return faces
 }
@@ -392,6 +392,6 @@ export function coneFaces(r = 2, L = 4, N = 15): Face[] {
   const cx = mx + (mx / ml) * ap, cy = my + (my / ml) * ap
   const start = Math.atan2(p[1] - cy, p[0] - cx)
   const poly: P2[] = Array.from({ length: N }, (_, i) => [cx + Rb * Math.cos(start + (2 * Math.PI * i) / N), cy + Rb * Math.sin(start + (2 * Math.PI * i) / N)] as P2)
-  faces.push({ pts: poly, parent: 0, hinge: [p, q], angle: baseAng, color: base, label: `r = ${r}` })
+  faces.push({ pts: poly, parent: 0, hinge: [p, q], angle: baseAng, color: base })
   return faces
 }

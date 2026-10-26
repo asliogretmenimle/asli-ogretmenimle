@@ -40,13 +40,13 @@ export function TearTask({ dark, footer, onSolved }: { t: Extract<Task, { kind: 
     if (!revealed || done || !obtuse) return
     setDone(true)
     const first = chk.pass()
-    onSolved(first && pred === '180')
+    onSolved(first)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revealed, obtuse, done])
   const choose = (id: string) => {
     if (pred) return
     setPred(id)
-    track.attempt(id === '180')
+    if (id !== '180') chk.fail()
     if (id === '360') track.misconception('Üçgenin iç açıları toplamını 360° sandı')
     if (id === 'var') track.misconception('İç açılar toplamının üçgenin biçimine göre değiştiğini düşündü')
   }

@@ -176,7 +176,7 @@ export function DistanceTask({ P, Q, footer, onSolved }: { P: Pt; Q: Pt } & Comm
               </g>
             )}
             {!formed && <Poly pts={[P, R, Q]} fill="none" stroke="#a78bfa" strokeWidth={2} strokeDasharray="4 5" />}
-            <Tag at={[P[0], P[1] - 0.8]} color={COL.c} size={14}>{lbl(P, 'A')}</Tag>
+            <Tag at={[P[0] - 0.45, P[1] + 0.1]} color={COL.c} size={14} anchor="end">{lbl(P, 'A')}</Tag>
             <Tag at={[Q[0], Q[1] + 0.8]} color={COL.c} size={14}>{lbl(Q, 'B')}</Tag>
             <DragPoint x={P[0]} y={P[1]} color={COL.c} r={8} disabled />
             <DragPoint x={Q[0]} y={Q[1]} color={COL.c} r={8} disabled />

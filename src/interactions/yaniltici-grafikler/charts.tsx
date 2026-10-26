@@ -22,7 +22,7 @@ export const CHART_W = 600
 export function yMap(v: number, y0: number, yMax: number, plotH: number, uneven?: number[]) {
   if (uneven) {
     const n = uneven.length - 1
-    const k = clamp(uneven.findIndex((t, i) => i < n && v <= uneven[i + 1]), 0, n - 1)
+    const k = clamp(uneven.findIndex((_, i) => i < n && v <= uneven[i + 1]), 0, n - 1)
     const a = uneven[k], b = uneven[k + 1]
     const f = (k + clamp((v - a) / (b - a), 0, 1)) / n
     return plotH * (1 - f)
@@ -140,7 +140,7 @@ export function DataChart({ look, data, type, y0, yMax, height = 300, uneven, on
         {/* eksenler */}
         <line x1={M.L} x2={M.L} y1={M.T - 6} y2={M.T + plotH} stroke={ink} strokeWidth={2.5} />
         <line x1={M.L} x2={W - M.R} y1={M.T + plotH} y2={M.T + plotH} stroke={ink} strokeWidth={2.5} />
-        {breakMark && y0 > 0 && <path d={`M${M.L - 9} ${M.T + plotH - 18} l9 -5 l9 5 M${M.L - 9} ${M.T + plotH - 10} l9 -5 l9 5`} stroke="#f59e0b" strokeWidth={3} fill="none" />}
+        {breakMark && y0 > 0 && <path d={`M${M.L - 9} ${M.T + plotH - 44} l9 -5 l9 5 M${M.L - 9} ${M.T + plotH - 36} l9 -5 l9 5`} stroke="#f59e0b" strokeWidth={3} fill="none" />}
         {unit && <text x={M.L + 6} y={M.T + 2} fontSize={12} fontWeight={800} fill={look.dark ? '#94a3b8' : '#5b6080'}>{unit}</text>}
         {onY0 && (
           <g ref={knob} data-handle style={{ cursor: 'ns-resize', touchAction: 'none' }}>
@@ -152,9 +152,9 @@ export function DataChart({ look, data, type, y0, yMax, height = 300, uneven, on
         )}
         {onHeight && (
           <g ref={top} data-handle style={{ cursor: 'ns-resize', touchAction: 'none' }}>
-            <rect x={W / 2 - 60} y={0} width={120} height={34} fill="transparent" />
-            <rect x={W / 2 - 34} y={3} width={68} height={14} rx={7} fill="#0891b2" />
-            <path d={`M${W / 2 - 10} 10 h20 M${W / 2} 4 v12`} stroke="#fff" strokeWidth={2.5} />
+            <rect x={W - M.R - 70} y={0} width={70} height={40} fill="transparent" />
+            <rect x={W - M.R - 52} y={3} width={50} height={22} rx={11} fill="#0891b2" />
+            <path d={`M${W - M.R - 27} 7 v14 M${W - M.R - 31} 11 l4 -4 l4 4 M${W - M.R - 31} 17 l4 4 l4 -4`} stroke="#fff" strokeWidth={2.2} fill="none" />
           </g>
         )}
       </svg>

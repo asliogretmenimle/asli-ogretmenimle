@@ -87,7 +87,7 @@ const ZLABEL: Record<Zone, string> = { L: 'Sol kefe', both: 'Ä°ki kefe', R: 'SaÄ
 export function DropStage({ children, dnd, zones, armed, onZone, dark }: { children: ReactNode; dnd: Dnd; zones: Zone[]; armed: boolean; onZone: (z: Zone) => void; dark?: boolean }) {
   const on = armed || !!dnd.drag
   return (
-    <div className="relative select-none" style={{ touchAction: 'none' }}>
+    <div className="relative pb-10 select-none" style={{ touchAction: 'none' }}>
       {children}
       <div className="absolute inset-0 grid grid-cols-[2fr_1.25fr_2fr] gap-1">
         {(['L', 'both', 'R'] as Zone[]).map((z) => {
@@ -111,7 +111,7 @@ export function DropStage({ children, dnd, zones, armed, onZone, dark }: { child
                 outlineOffset: -2,
               }}
             >
-              <span className={`absolute bottom-1 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black whitespace-nowrap uppercase transition sm:text-xs ${on ? 'bg-violet-600 text-white shadow' : dark ? 'bg-slate-700/80 text-slate-300' : 'bg-white/80 text-ink-soft ring-1 ring-line'}`}>
+              <span className={`absolute bottom-1.5 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black whitespace-nowrap uppercase transition sm:text-xs ${on ? 'bg-violet-600 text-white shadow' : dark ? 'bg-slate-700/80 text-slate-300' : 'bg-white/80 text-ink-soft ring-1 ring-line'}`}>
                 {z === 'both' && <ArrowLeftRight size={13} />}
                 {ZLABEL[z]}
               </span>
