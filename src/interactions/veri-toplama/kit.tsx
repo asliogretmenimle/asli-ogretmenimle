@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { ArrowRight, Minus, Plus } from 'lucide-react'
 import type { Grade } from '../../data/types'
 import { MathText } from '../../components/MathText'
@@ -148,7 +148,12 @@ export function Stepper({ look, value, onChange, min = -9999, max = 9999, step =
   )
 }
 
-export function NextButton({ onClick, last, label, disabled }: { onClick: () => void; last?: boolean; label?: string; disabled?: boolean }) {
+/** Son görevde NextButton “Keşfi bitir” yazar */
+export const LastTask = createContext(false)
+
+export function NextButton({ onClick, last: lastProp, label, disabled }: { onClick: () => void; last?: boolean; label?: string; disabled?: boolean }) {
+  const ctx = useContext(LastTask)
+  const last = lastProp ?? ctx
   return (
     <button type="button" onClick={onClick} disabled={disabled} className="btn-primary mt-3 min-h-14 w-full text-lg animate-pop">
       {label ?? (last ? 'Keşfi bitir' : 'Sonraki görev')}<ArrowRight size={20} />

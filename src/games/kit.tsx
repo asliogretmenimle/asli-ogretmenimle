@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { Heart, Timer, Trophy } from 'lucide-react'
 import type { Grade } from '../data/types'
 
@@ -83,7 +83,7 @@ export function useFrame(cb: (dt: number) => void, running: boolean) {
 export function useWidth<T extends HTMLElement>() {
   const ref = useRef<T>(null)
   const [w, setW] = useState(340)
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
     const ro = new ResizeObserver(() => setW(el.clientWidth))

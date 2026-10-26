@@ -187,7 +187,7 @@ export function FoldContent({ f, colors, paint, creases = true, foldMarks = fals
     const a: Anim = anim ?? { mode: 'fold', line: bad!, L: f.level, c: -1 }
     const { line, L, c } = a
     if (a.mode === 'fold') {
-      const base = shapesOf(f.shapes[0], folds.slice(0, L))[L] ?? shapes[L]
+      const base = shapes[L]
       const st = clipHalf(base, line, -1)
       const fl = clipHalf(base, line, 1)
       return (
@@ -245,7 +245,7 @@ export function PaperSvg({ viewBox, children, svgRef, label, onTap, className = 
   const ref = svgRef ?? local
   return (
     <svg
-      ref={ref}
+      ref={ref as RefObject<SVGSVGElement>}
       viewBox={viewBox}
       role="img"
       aria-label={label}

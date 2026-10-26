@@ -141,20 +141,27 @@ export interface IsoProps {
   maxHeight?: number
   /** yeni eklenen küpü vurgula (orijinal j, i, z) */
   flash?: string | null
+  /** Taban için ayrılacak en büyük boyut (yan yana sahneler aynı ölçekte görünsün) */
+  span?: number
+  /** Katmanlar ayrılınca görünüm zıplamasın: boşluğu baştan ayır */
+  room?: boolean
 }
 
-export function Iso({ h: h0, rot = 0, explode = false, onTap, onRotate, dark, glass, maxH, mono, front = true, layerLabels = true, label = 'İzometrik küp yapısı', maxHeight = 420, flash }: IsoProps) {
+export function Iso({ h: h0, rot = 0, explode = false, onTap, onRotate, dark, glass, maxH, mono, front = true, layerLabels = true, label = 'İzometrik küp yapısı', maxHeight = 420, flash, span, room }: IsoProps) {
   const s = 34
   const cw = s * 0.866, ch = s * 0.5
   const { h, back } = rotateMap(h0, rot)
   const D = h.length, W = h[0].length
-  const M = Math.max(W, D)
-  const topH = Math.max(maxH ?? 0, glass?.h ?? 0, ...h.flat(), 1)
+  const M = Math.max(W, D, span ?? 0)
+  const cur = Math.max(0, ...h.flat())
+  /** çizilecek kat sayısı ve görünüm için ayrılan yükseklik (yapı büyüdükçe sahne yavaşça uzaklaşır) */
+  const topH = Math.max(cur, glass?.h ?? 0, 1)
+  const viewH = Math.max(topH, maxH ?? 0)
   const gap = explode ? s * 0.62 : 0
   const P = (x: number, y: number, z: number) => [(x - y) * cw, (x + y) * ch - z * s] as const
   const ps = (...pts: (readonly [number, number])[]) => pts.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ')
   const minX = -M * cw - 10, maxX = M * cw + (layerLabels ? 70 : 10)
-  const minY = -topH * s - topH * s * 0.62 - 14, maxY = 2 * M * ch + 30
+  const minY = -viewH * s - (explode || room ? (viewH - 1) * s * 0.62 : 0) - 14, maxY = 2 * M * ch + 30
 
   const floor: ReactNode[] = []
   for (let y = 0; y < D; y++)
@@ -283,7 +290,8 @@ export function Iso({ h: h0, rot = 0, explode = false, onTap, onRotate, dark, gl
       {cubes}
       {glass && (
         <g pointerEvents="none" fill="none" stroke={glassStroke} strokeWidth={2} strokeDasharray="6 4" opacity={0.85}>
-          <polygon points={ps(G(gw, 0, glass.h), G(gw, gd, glass.h), G(0, gd, glass.h))} fill={glassStroke} fillOpacity={0.05} />
+          <polygon points={ps(G(0, 0, glass.h), G(gw, 0, glass.h), G(gw, gd, glass.h), G(0, gd, glass.h))} fill={glassStroke} fillOpacity={0.05} stroke="none" />
+          <polyline points={ps(G(gw, 0, glass.h), G(gw, gd, glass.h), G(0, gd, glass.h))} />
           <line x1={G(gw, gd, 0)[0]} y1={G(gw, gd, 0)[1]} x2={G(gw, gd, glass.h)[0]} y2={G(gw, gd, glass.h)[1]} />
           <line x1={G(gw, 0, 0)[0]} y1={G(gw, 0, 0)[1]} x2={G(gw, 0, glass.h)[0]} y2={G(gw, 0, glass.h)[1]} />
           <line x1={G(0, gd, 0)[0]} y1={G(0, gd, 0)[1]} x2={G(0, gd, glass.h)[0]} y2={G(0, gd, glass.h)[1]} />
@@ -322,7 +330,7 @@ export function BuildBoard({ h, onChange, maxH = 5, dark, glass, extraTools, exp
   }
   return (
     <div>
-      <Iso h={h} rot={rot} explode={explode} onTap={tap} onRotate={(d) => setRot((r) => (r + d + 4) % 4)} dark={dark} glass={glass} maxH={maxH} flash={flash} maxHeight={maxHeight} />
+      <Iso h={h} rot={rot} explode={explode} onTap={tap} onRotate={(d) => setRot((r) => (r + d + 4) % 4)} dark={dark} glass={glass} maxH={Math.min(maxH, 3)} flash={flash} maxHeight={maxHeight} room={explode} />
       <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
         {!lockedCells && (
           <>
@@ -341,12 +349,12 @@ export function BuildBoard({ h, onChange, maxH = 5, dark, glass, extraTools, exp
 }
 
 /** Yalnızca bakılan yapı: döndür + katmanları ayır */
-export function ViewBoard({ h, dark, glass, maxH, maxHeight, mono, onExplode }: { h: HMap; dark?: boolean; glass?: IsoProps['glass']; maxH?: number; maxHeight?: number; mono?: string; onExplode?: (on: boolean) => void }) {
+export function ViewBoard({ h, dark, glass, maxH, maxHeight, mono, onExplode, span }: { h: HMap; dark?: boolean; glass?: IsoProps['glass']; maxH?: number; maxHeight?: number; mono?: string; onExplode?: (on: boolean) => void; span?: number }) {
   const [rot, setRot] = useState(0)
   const [explode, setExplode] = useState(false)
   return (
     <div>
-      <Iso h={h} rot={rot} explode={explode} onRotate={(d) => setRot((r) => (r + d + 4) % 4)} dark={dark} glass={glass} maxH={maxH} maxHeight={maxHeight} mono={mono} />
+      <Iso h={h} rot={rot} explode={explode} onRotate={(d) => setRot((r) => (r + d + 4) % 4)} dark={dark} glass={glass} maxH={maxH} maxHeight={maxHeight} mono={mono} span={span} room />
       <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
         <GhostButton dark={dark} onClick={() => setRot((r) => (r + 3) % 4)}><RotateCcw size={18} /><span className="sr-only">Sola döndür</span></GhostButton>
         <GhostButton dark={dark} onClick={() => setRot((r) => (r + 1) % 4)}><RotateCw size={18} /><span className="sr-only">Sağa döndür</span></GhostButton>

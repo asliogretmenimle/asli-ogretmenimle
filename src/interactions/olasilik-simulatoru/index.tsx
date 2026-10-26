@@ -7,7 +7,7 @@ import { Scene, SolutionList, StrategyPicker, useSolutions } from '../../games/k
 import { ZoomBox } from '../../interactive/ZoomBox'
 import { useTracker } from '../../lib/trackerContext'
 import { sfx } from '../../lib/feedback'
-import { Choice, NextButton, Panel, Pill, Stepper, TopBar, Work, fmtN, fracT, rint, shuffle, starsBy, useLook, useRaf, useSay, type Look } from '../veri-toplama/kit'
+import { Choice, LastTask, NextButton, Panel, Pill, Stepper, TopBar, Work, fmtN, fracT, rint, shuffle, starsBy, useLook, useRaf, useSay, type Look } from '../veri-toplama/kit'
 import { COL, DeviceView, FreqBars, FreqChart, ProbLine, RunButtons, outcomes, theory, useTrials, type Device, type Mark, type Out } from './devices'
 
 /**
@@ -682,6 +682,8 @@ function CloudTask({ t, grade, look, onDone }: { t: Extract<Task, { kind: 'cloud
                   bins.set(b, k + 1)
                   return { v, k }
                 })
+                const maxStack = Math.max(1, ...bins.values())
+                const stepY = Math.min(9, 44 / maxStack)
                 const mn = res.length ? Math.min(...res) : 0
                 const mx = res.length ? Math.max(...res) : 0
                 return (
@@ -689,7 +691,7 @@ function CloudTask({ t, grade, look, onDone }: { t: Extract<Task, { kind: 'cloud
                     <text x={8} y={y0 + 5} fontSize={15} fontWeight={900} fill={ink}>{`× ${fmtN(s)}`}</text>
                     <line x1={xs(0)} x2={xs(1)} y1={y0 + 18} y2={y0 + 18} stroke={look.dark ? '#64748b' : '#cbd5e1'} strokeWidth={2} />
                     {res.length >= 2 && <rect x={xs(mn) - 9} y={y0 - 26} width={xs(mx) - xs(mn) + 18} height={50} rx={12} fill="#7c3aed" opacity={0.08} />}
-                    {vals.map(({ v, k }, i) => <circle key={i} cx={xs(v)} cy={y0 + 9 - k * 9} r={6} fill="#7c3aed" stroke="#fff" strokeWidth={1.5} className="animate-pop" />)}
+                    {vals.map(({ v, k }, i) => <circle key={i} cx={xs(v)} cy={y0 + 9 - k * stepY} r={stepY < 6 ? 5 : 6} fill="#7c3aed" stroke="#fff" strokeWidth={1.5} className="animate-pop" />)}
                     {res.length >= 20 && <text x={W - R} y={y0 - 16} textAnchor="end" fontSize={13} fontWeight={800} fill={look.dark ? '#94a3b8' : '#5b6080'}>açıklık {fmtN(mx - mn, 2)}</text>}
                   </g>
                 )
@@ -762,13 +764,13 @@ function DesignTask({ t, grade, look, onDone }: { t: Extract<Task, { kind: 'desi
       return
     }
     const key = n.join('-')
-    const fresh = sols.add(key, `${n[0]}K ${n[1]}M ${n[2]}Y`)
+    const fresh = sols.add(key, [n[0] && `${n[0]} kırmızı`, n[1] && `${n[1]} mavi`, n[2] && `${n[2]} yeşil`].filter(Boolean).join(', '))
     if (!fresh) {
       fb.say('Bu torbayı zaten buldun. Bilye sayılarını değiştirerek başka bir torba tasarlayabilir misin?')
       return
     }
     const left = t.need - sols.list.length - 1
-    fb.say(left > 0 ? `Harika bir torba! ${t.rule === 'quarter' ? `${fracT(n[0], tot, false)} = [[1/4]]. ` : ''}Başka bir torba daha tasarla.` : 'Süper! Farklı torbalar aynı olasılığı verebilir: önemli olan sayılar değil, parçanın bütüne oranı.', { tone: 'ok' })
+    fb.say(left > 0 ? `Harika bir torba! ${t.rule === 'quarter' ? `${fracT(n[0], tot, false)} = [[1/4]]. ` : ''}Başka bir torba daha tasarla.` : t.rule === 'likely' ? 'Süper! Kırmızılar diğerlerinden çok olduğu sürece kırmızı çekmek olasıdır; torbada başka renk de varsa kesin değildir.' : 'Süper! Farklı torbalar aynı olasılığı verebilir: önemli olan sayılar değil, parçanın bütüne oranı.', { tone: 'ok' })
     if (left <= 0) track.item(misses.current === 0)
   }
   const done = sols.list.length >= t.need
@@ -935,10 +937,10 @@ export default function OlasilikSimulatoru({ grade, onFinish }: InteractionProps
   }
 
   return (
-    <div>
+    <LastTask.Provider value={i === tasks.length - 1}>
       <TopBar look={look} step={i} total={tasks.length} title={t.title} emoji={EMOJI[t.kind]} />
       {body}
-    </div>
+    </LastTask.Provider>
   )
 }
 

@@ -33,6 +33,7 @@ const CTX = {
   paint: { o: 'kırmızı', O: 'Kırmızı boya', w: 'beyaz', W: 'Beyaz boya', unit: 'kutu', vessel: 'kova', strong: 'daha koyu pembe', strongest: 'En koyu', weakest: 'En açık', oc: [220, 38, 38] as const, wc: [255, 255, 255] as const, oSw: '#dc2626', wSw: '#e2e8f0' },
 }
 
+const cap1 = (s: string) => s[0].toLocaleUpperCase('tr') + s.slice(1)
 const conc = (m: Mix) => (m.o + m.w > 0 ? m.o / (m.o + m.w) : 0)
 const same = (a: Mix, b: Mix) => a.o + a.w > 0 && near(a.o * b.w, a.w * b.o, 1e-9)
 const ratioTxt = (m: Mix) => `${fmt(m.o)} : ${fmt(m.w)}`
@@ -346,14 +347,14 @@ function PredictTask({ t, footer, onSolved, grade }: { t: Extract<Task, { kind: 
     if (ans === right) {
       onSolved(chk.pass())
       setPhase('done')
-      setFb({ ok: true, text: right === 'eq' ? `Evet, ikisi aynı tatta! ${ratioTxt(t.B)} karışımı, ${ratioTxt(t.A)} karışımının ${fmt(t.B.o / t.A.o)} katı.` : `Evet! ${right} karışımında şurubun payı daha büyük: ${partWhole(right === 'A' ? t.A : t.B)} > ${partWhole(right === 'A' ? t.B : t.A)}.` })
+      setFb({ ok: true, text: right === 'eq' ? `Evet, ikisi aynı tatta! ${ratioTxt(t.B)} karışımı, ${ratioTxt(t.A)} karışımının ${fmt(t.B.o / t.A.o)} katı.` : `Evet! ${right} karışımında ${c.o} payı daha büyük: ${partWhole(right === 'A' ? t.A : t.B)} > ${partWhole(right === 'A' ? t.B : t.A)}.` })
       return
     }
     chk.fail()
-    if (ans === 'eq' && sameDiff) setFb({ ok: false, text: `İki karışımda da su, ${c.o}tan ${fmt(t.A.w - t.A.o)} ${c.unit} fazla. Ama ${fmt(t.A.o)} bardağa ${fmt(t.A.w - t.A.o)} fazla su ile ${fmt(t.B.o)} bardağa ${fmt(t.B.w - t.B.o)} fazla su aynı derecede mi sulandırır? Ölçerlere bak.`, mis: 'Oranları farka bakarak karşılaştırdı (toplamsal düşünme)' })
-    else if (right === 'eq') setFb({ ok: false, text: `${t.B.o} bardak şurup, ${t.A.o} bardağın kaç katı? Su da aynı katına çıktı mı? Ölçerler ne söylüyor?`, mis: 'Eşdeğer oranları farklı sandı (büyük sayılar daha koyu)' })
-    else if ((ans === 'A' ? t.A.o : t.B.o) > (ans === 'A' ? t.B.o : t.A.o)) setFb({ ok: false, text: `${ans} karışımında daha çok şurup var, doğru. Ama daha çok su da var! Her karışımda şurup, tüm karışımın ne kadarı? Ölçerleri karşılaştır.`, mis: 'Karışımı yalnızca bir bileşenin miktarına bakarak değerlendirdi' })
-    else setFb({ ok: false, text: 'Ölçerlerde hangisinin çubuğu daha uzun? Her karışımda 1 bardak suya ne kadar şurup düşüyor?' })
+    if (ans === 'eq' && sameDiff) setFb({ ok: false, text: `İki karışımda da ${c.w}, ${c.o === 'şurup' ? 'şuruptan' : 'kırmızıdan'} ${fmt(t.A.w - t.A.o)} ${c.unit} fazla. Ama ${fmt(t.A.o)} ${c.unit} ${c.o} ile ${fmt(t.A.w - t.A.o)} fazla ${c.w} ile ${fmt(t.B.o)} ${c.unit} ${c.o} ile ${fmt(t.B.w - t.B.o)} fazla ${c.w} aynı etkiyi mi yapar? Ölçerlere bak.`, mis: 'Oranları farka bakarak karşılaştırdı (toplamsal düşünme)' })
+    else if (right === 'eq') setFb({ ok: false, text: `${t.B.o} ${c.unit} ${c.o}, ${t.A.o} ${c.unit === 'bardak' ? 'bardağın' : 'kutunun'} kaç katı? ${cap1(c.w)} da aynı katına çıktı mı? Ölçerler ne söylüyor?`, mis: 'Eşdeğer oranları farklı sandı (büyük sayılar daha koyu)' })
+    else if ((ans === 'A' ? t.A.o : t.B.o) > (ans === 'A' ? t.B.o : t.A.o)) setFb({ ok: false, text: `${ans} karışımında daha çok ${c.o} var, doğru. Ama daha çok ${c.w} da var! Her karışımda ${c.o}, tüm karışımın ne kadarı? Ölçerleri karşılaştır.`, mis: 'Karışımı yalnızca bir bileşenin miktarına bakarak değerlendirdi' })
+    else setFb({ ok: false, text: `Ölçerlerde hangisinin çubuğu daha uzun? Her karışımda 1 ${c.unit} ${c.w} başına ne kadar ${c.o} düşüyor?` })
   }
   const opts = [{ id: 'A' as const, label: `A daha koyu` }, { id: 'B' as const, label: `B daha koyu` }, { id: 'eq' as const, label: 'Aynı' }]
   return (
@@ -420,7 +421,7 @@ function PredictTask({ t, footer, onSolved, grade }: { t: Extract<Task, { kind: 
           {phase === 'done' && (
             <StrategyPicker
               question="Nasıl karşılaştırdın?"
-              options={grade >= 7 ? ['Şurubun tüm karışıma oranı (kesir)', '1 bardak suya düşen şurup (birim oran)', 'Şurup miktarlarını eşitledim', 'Farklarına baktım'] : ['Şurubun tüm karışıma oranı', 'Karışımları büyütüp eşitledim', 'Renge baktım', 'Farklarına baktım']}
+              options={grade >= 7 ? [`${cap1(c.o)} / tüm karışım (kesir)`, `1 ${c.unit} ${c.w} başına ${c.o} (birim oran)`, `${cap1(c.o)} miktarlarını eşitledim`, 'Farklarına baktım'] : ['Şurubun tüm karışıma oranı', 'Karışımları büyütüp eşitledim', 'Renge baktım', 'Farklarına baktım']}
               onPick={(s) => s.startsWith('Farklarına') && track.misconception('Karışımları farka bakarak karşılaştırdığını söyledi')}
             />
           )}

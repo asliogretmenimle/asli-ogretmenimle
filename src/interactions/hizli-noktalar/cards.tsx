@@ -102,7 +102,7 @@ export function layout(card: Card): { w: number; h: number; dots: Dot[]; deco: R
       for (let i = 0; i < 10; i++) {
         const color = i < 5 ? RED : '#f8fafc'
         if (i < cnt) dots.push({ x: 22 + i * b, y, c: color })
-        else deco.push(<circle key={`u${r}${i}`} cx={W - 22 - (9 - i) * b} cy={y} r={11} fill={i < 5 ? '#fecaca' : '#f1f5f9'} stroke="#cbd5e1" strokeWidth={1.5} />)
+        else deco.push(<circle key={`u${r}${i}`} cx={W - 22 - (9 - i) * b} cy={y} r={12} fill={i < 5 ? '#fecaca' : '#f1f5f9'} stroke="#cbd5e1" strokeWidth={1.5} />)
       }
     })
     deco.unshift(<rect key="frame" x={2} y={6} width={W - 4} height={124} rx={14} fill="#fff7ed" stroke="#c2410c" strokeWidth={3} />)
@@ -138,6 +138,7 @@ export const PAINT = ['#f59e0b', '#22c55e', '#a855f7']
  */
 export function DotCard({ card, paint, onPaint, maxH = 300 }: { card: Card; paint?: (number | null)[]; onPaint?: (i: number, mode: 'tap' | 'drag') => void; maxH?: number }) {
   const L = layout(card)
+  const R = card.kind === 'tens' || card.kind === 'fives' || card.kind === 'pairs' ? 10 : card.kind === 'rek' ? 12 : 15
   const svgRef = useRef<SVGSVGElement>(null)
   const touched = useRef(new Set<number>())
   const hit = (cx: number, cy: number) => {
@@ -190,8 +191,8 @@ export function DotCard({ card, paint, onPaint, maxH = 300 }: { card: Card; pain
         const fill = p === null || p === undefined ? d.c : PAINT[p]
         return (
           <g key={i}>
-            <circle cx={d.x} cy={d.y} r={card.kind === 'tens' ? 10 : card.kind === 'fives' ? 10 : 15} fill={fill} stroke={d.c === '#f8fafc' && p == null ? '#94a3b8' : '#fff'} strokeWidth={2} />
-            {p != null && <circle cx={d.x} cy={d.y} r={card.kind === 'tens' || card.kind === 'fives' ? 13 : 18} fill="none" stroke={PAINT[p]} strokeWidth={2} opacity={0.5} />}
+            <circle cx={d.x} cy={d.y} r={R} fill={fill} stroke={d.c === '#f8fafc' && p == null ? '#94a3b8' : '#fff'} strokeWidth={2} />
+            {p != null && <circle cx={d.x} cy={d.y} r={R + 3} fill="none" stroke={PAINT[p]} strokeWidth={2} opacity={0.5} />}
           </g>
         )
       })}

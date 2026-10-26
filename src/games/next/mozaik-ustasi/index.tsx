@@ -361,7 +361,7 @@ function BoardMission({ m, grade, step, total, onDone }: { m: BM; grade: Grade; 
     const f = m.follow
     if (i === f.answer) {
       track.attempt(true)
-      complete(`Evet! ${f.choices[i].label.replace(/^Hayır, /, '')}`.replace(/^Evet! Evet, /, 'Evet! '), { solutions: found, extra: Math.max(0, found - m.goal) })
+      complete(f.right, { solutions: found, extra: Math.max(0, found - m.goal) })
     } else fail(f.wrong[i] ?? 'Bir daha düşün.', f.misconception?.[i] ?? undefined)
   }
 
@@ -643,7 +643,7 @@ function LabMission({ m, grade, step, total, onDone }: { m: Extract<MMission, { 
     if (!f) return
     if (i === f.answer) {
       track.attempt(true)
-      complete('Evet! 60°, 90° ve 120° 360°’yi tam böler; 108° ve 135° bölmez. Bu yüzden yalnız üçgen, kare ve altıgen tek başına kaplar.', { solutions: 5 })
+      complete(f.right, { solutions: 5 })
     } else fail(f.wrong[i] ?? 'Bir daha düşün.', f.misconception?.[i] ?? undefined)
   }
 

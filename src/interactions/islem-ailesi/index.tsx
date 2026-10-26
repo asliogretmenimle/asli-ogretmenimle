@@ -322,7 +322,7 @@ export default function IslemAilesi({ grade, onFinish }: InteractionProps) {
   const slotBox = (s: Slot) => {
     const v = frame[s]
     const isOp = s === 'op'
-    const color = !v || isOp ? undefined : T.type === 'open' ? '#1f2340' : v === '?' ? '#7c3aed' : val(v) === Math.max(T.a, T.b, T.c) ? COL_W : val(v) === T.a ? COL_A : COL_B
+    const color = !v ? undefined : isOp ? '#92400e' : T.type === 'open' ? '#1f2340' : v === '?' ? '#7c3aed' : val(v) === Math.max(T.a, T.b, T.c) ? COL_W : val(v) === T.a ? COL_A : COL_B
     return (
       <button
         key={s}
@@ -333,7 +333,7 @@ export default function IslemAilesi({ grade, onFinish }: InteractionProps) {
         onClick={() => v && clearSlot(s)}
         aria-label={v ? `${v}, kaldırmak için dokun` : isOp ? 'İşlem kutusu' : 'Sayı kutusu'}
         className={`grid shrink-0 place-items-center rounded-2xl border-[3px] font-black transition ${big ? 'h-16 text-3xl' : 'h-14 text-2xl'} ${isOp ? (big ? 'w-14' : 'w-12') : big ? 'min-w-[4.5rem] px-2' : 'min-w-16 px-2'} ${v ? 'border-solid bg-white shadow-[0_3px_0_var(--color-line)] animate-pop' : 'border-dashed border-slate-300 bg-white/60'} ${dnd.dragging && (dnd.dragging.kind === 'op') === isOp ? 'border-brand bg-brand-soft' : ''}`}
-        style={{ color, borderColor: v && !isOp ? color : undefined }}
+        style={{ color, borderColor: v ? (isOp ? '#f59e0b' : color) : undefined }}
       >
         {v === '?' && phase === 'solved' && T.type === 'missing' ? T.unknown : v ?? ''}
       </button>

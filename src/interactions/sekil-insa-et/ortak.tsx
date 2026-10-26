@@ -38,11 +38,18 @@ export function useSession(total: number) {
   return { idx, done, complete, next, isLast, firsts, firstCount, stars }
 }
 
-export function Layout({ work, panel }: { work: ReactNode; panel: ReactNode }) {
+/** top: görev kartı — dikeyde çalışma alanının üstünde, yatayda panelin başında */
+export function Layout({ work, panel, top }: { work: ReactNode; panel: ReactNode; top?: ReactNode }) {
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-      <div className="min-w-0">{work}</div>
-      <div className="flex min-w-0 flex-col gap-3">{panel}</div>
+      <div className="min-w-0">
+        {top && <div className="mb-3 lg:hidden">{top}</div>}
+        {work}
+      </div>
+      <div className="flex min-w-0 flex-col gap-3">
+        {top && <div className="hidden lg:block">{top}</div>}
+        {panel}
+      </div>
     </div>
   )
 }
@@ -195,13 +202,19 @@ export function useGridGesture<M>(svgRef: RefObject<SVGSVGElement | null>, h: { 
         if (hr.current.disabled) return
         if (e && 'isPrimary' in e && e.isPrimary === false) return
         const p = toWorld(svgRef.current, cx, cy)
+        if (tap) {
+          // dokunuş: tek olayda başla + bitir
+          if (memo.current?.active) memo.current.active = false
+          hr.current.onEnd?.(p, hr.current.onStart(p), true)
+          return
+        }
         if (first) memo.current = { m: hr.current.onStart(p), active: true, id: e?.pointerId ?? 0 }
         const s = memo.current
         if (!s?.active) return
         if (!first && !last) hr.current.onMove?.(p, s.m)
         if (last || canceled) {
           s.active = false
-          hr.current.onEnd?.(p, s.m, !!tap)
+          hr.current.onEnd?.(p, s.m, false)
         }
       },
     },

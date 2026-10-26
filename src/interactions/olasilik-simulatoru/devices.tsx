@@ -284,10 +284,10 @@ export function RunButtons({ look, t, sizes = [1, 10, 100, 1000], max = 20000 }:
 
 export interface Mark { id: string; v: number | null; color: string; label: string; drag?: boolean; ghost?: boolean }
 
-const PL = { L: 34, R: 34, W: 1000, Y: 70 }
+const PL = { L: 34, R: 34, W: 1000, Y: 84 }
 const vx = (v: number) => PL.L + v * (PL.W - PL.L - PL.R)
 
-function MarkG({ m, onMove, svg, active, onPick }: { m: Mark; onMove?: (v: number) => void; svg: React.RefObject<SVGSVGElement | null>; active?: boolean; onPick?: () => void }) {
+function MarkG({ m, onMove, svg, active, onPick, row = 0 }: { m: Mark; onMove?: (v: number) => void; svg: React.RefObject<SVGSVGElement | null>; active?: boolean; onPick?: () => void; row?: number }) {
   const ref = useRef<SVGGElement>(null)
   useDrag(
     ({ xy: [cx], tap, event }) => {
@@ -306,9 +306,9 @@ function MarkG({ m, onMove, svg, active, onPick }: { m: Mark; onMove?: (v: numbe
   return (
     <g ref={ref} data-handle style={{ cursor: m.drag ? 'grab' : 'default', touchAction: 'none' }} opacity={m.ghost ? 0.55 : 1}>
       <rect x={x - 34} y={4} width={68} height={100} fill="transparent" />
-      <line x1={x} x2={x} y1={PL.Y - 30} y2={PL.Y + 2} stroke={m.color} strokeWidth={4} strokeDasharray={m.ghost ? '6 5' : undefined} />
+      <line x1={x} x2={x} y1={PL.Y - 30 - row * 26} y2={PL.Y + 2} stroke={m.color} strokeWidth={4} strokeDasharray={m.ghost ? '6 5' : undefined} />
       <circle cx={x} cy={PL.Y} r={active ? 17 : 14} fill={m.color} stroke="#fff" strokeWidth={4} />
-      <text x={clamp(x, 70, PL.W - 70)} y={PL.Y - 38} textAnchor="middle" fontSize={22} fontWeight={900} fill={m.color} style={{ paintOrder: 'stroke', stroke: '#fff', strokeWidth: 5 }}>{m.label}</text>
+      <text x={clamp(x, 70, PL.W - 70)} y={PL.Y - 36 - row * 26} textAnchor="middle" fontSize={22} fontWeight={900} fill={m.color} style={{ paintOrder: 'stroke', stroke: '#fff', strokeWidth: 5 }}>{m.label}</text>
     </g>
   )
 }
@@ -329,9 +329,17 @@ export function ProbLine({ look, marks, onMove, selected, onSelect, words = 'fiv
   }
   const lab = words === 'five' ? [[0, 'İmkânsız'], [0.25, 'Olası değil'], [0.5, 'Yarı yarıya'], [0.75, 'Olası'], [1, 'Kesin']] : [[0, 'İmkânsız'], [0.5, 'Yarı yarıya'], [1, 'Kesin']]
   const ink = look.dark ? '#e2e8f0' : '#1f2340'
+  // yakın işaretlerin etiketleri üst üste binmesin: iki satıra dağıt
+  const rows: Record<string, number> = {}
+  const lastIn = [-9, -9]
+  marks.filter((m) => m.v !== null).sort((a, b) => a.v! - b.v!).forEach((m) => {
+    const r = m.v! - lastIn[0] > 0.12 ? 0 : m.v! - lastIn[1] > 0.12 ? 1 : 0
+    rows[m.id] = r
+    lastIn[r] = m.v!
+  })
   return (
     <div style={{ touchAction: 'none' }} className="select-none">
-      <svg ref={svg} viewBox={`0 0 ${PL.W} 150`} className="block w-full" onPointerUp={tapLine} role="img" aria-label="Olasılık doğrusu">
+      <svg ref={svg} viewBox={`0 0 ${PL.W} ${numbers ? 168 : 146}`} className="block w-full" onPointerUp={tapLine} role="img" aria-label="Olasılık doğrusu">
         <defs>
           <linearGradient id="pl-g" x1="0" x2="1">
             <stop offset="0" stopColor="#94a3b8" />
@@ -348,7 +356,7 @@ export function ProbLine({ look, marks, onMove, selected, onSelect, words = 'fiv
             {numbers && <text x={clamp(vx(v as number), 20, PL.W - 20)} y={PL.Y + 66} textAnchor="middle" fontSize={20} fontWeight={800} fill={look.dark ? '#94a3b8' : '#5b6080'}>{fmtN(v as number)}</text>}
           </g>
         ))}
-        {marks.map((m) => <MarkG key={m.id} m={m} svg={svg} active={selected === m.id} onPick={() => onSelect?.(m.id)} onMove={onMove ? (v) => onMove(m.id, v) : undefined} />)}
+        {marks.map((m) => <MarkG key={m.id} m={m} row={rows[m.id] ?? 0} svg={svg} active={selected === m.id} onPick={() => onSelect?.(m.id)} onMove={onMove ? (v) => onMove(m.id, v) : undefined} />)}
       </svg>
     </div>
   )
@@ -384,7 +392,7 @@ function Lines({ hist, focus, color, theoryV, guess }: { hist: number[][]; focus
 export function FreqChart({ t, focus, colors, theoryV, guess, label = 'Göreli sıklık grafiği' }: { t: Trials; focus: number[]; colors: string[]; theoryV?: (number | null)[]; guess?: number | null; label?: string }) {
   const bucket = t.n <= 20 ? 20 : t.n <= 100 ? 100 : t.n <= 500 ? 500 : t.n <= 2000 ? 2000 : t.n <= 5000 ? 5000 : 20000
   return (
-    <Plane key={bucket} initial={{ xMin: -bucket * 0.07, xMax: bucket * 1.03, yMin: -0.1, yMax: 1.08 }} equalUnits={false} aspect={0.5} xLabel="deneme" yLabel="göreli sıklık" label={label} minSpan={5} maxSpan={40000}>
+    <Plane key={bucket} initial={{ xMin: -bucket * 0.07, xMax: bucket * 1.03, yMin: -0.1, yMax: 1.08 }} equalUnits={false} aspect={0.42} xLabel="deneme" yLabel="göreli sıklık" label={label} minSpan={5} maxSpan={40000}>
       <Lines hist={t.hist} focus={focus} color={colors} theoryV={theoryV} guess={guess} />
     </Plane>
   )

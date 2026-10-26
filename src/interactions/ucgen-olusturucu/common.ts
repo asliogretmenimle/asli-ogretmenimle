@@ -19,7 +19,7 @@ export type Task =
   | { kind: 'select'; title: string; prompt: string; okLabel: string; items: SelectItem[] }
   | { kind: 'tear' }
   | { kind: 'twoAngles'; base: number; goal: number }
-  | { kind: 'third'; angles: [number, number, number]; labels: [string, string, string]; ask: number; story: string; answer: number; mis360?: boolean }
+  | { kind: 'third'; angles: [number, number, number]; labels: [string, string, string]; story: string; question: string; answer: number; unit?: string; traps?: { v: number; q: string; mis?: string }[] }
   | { kind: 'lines' }
   | { kind: 'coincide' }
   | { kind: 'outside' }

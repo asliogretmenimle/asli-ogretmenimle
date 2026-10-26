@@ -268,6 +268,7 @@ function Round({ grade, card, onAdd, onComplete, footer }: { grade: Grade; card:
 
   return (
     <Layout
+      top={<Prompt emoji={card.emoji} color={C}>{card.text}</Prompt>}
       work={
         <div>
           <div style={fitWidth((cols + 1.4) / (rows + 1.4), 300)}>
@@ -280,14 +281,13 @@ function Round({ grade, card, onAdd, onComplete, footer }: { grade: Grade; card:
               <ToolBtn onClick={clear} disabled={!pts.length} big={age.big}><Eraser size={18} />Temizle</ToolBtn>
             </div>
           )}
-          <p className="mt-2 text-center text-sm font-bold text-ink-soft">
+          {building && !enough && <p className="mt-2 text-center text-sm font-bold text-ink-soft">
             {closed ? 'Köşeleri sürükleyerek şekli değiştirebilirsin.' : pts.length >= 3 ? 'Şekli kapatmak için halkalı ilk köşeye dokun.' : 'Köşe koymak için çivilere dokun.'}
-          </p>
+          </p>}
         </div>
       }
       panel={
         <>
-          <Prompt emoji={card.emoji} color={C}>{card.text}</Prompt>
           <Card title={`Farklı şekiller: ${found.length} / ${card.need}`}>
             <div className="flex flex-wrap items-center gap-2">
               {Array.from({ length: card.need }, (_, i) => (
@@ -396,7 +396,8 @@ function Marks({ s, grade }: { s: Shape; grade: Grade }) {
       const a = p[i], b = p[(i + 1) % n]
       const col = PAR_COLORS[k % PAR_COLORS.length]
       const m: Pt = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]
-      const u = unit(sub(b, a))
+      let u = unit(sub(b, a))
+      if (u[0] < -1e-9 || (Math.abs(u[0]) < 1e-9 && u[1] < 0)) u = [-u[0], -u[1]]
       const nrm: Pt = [-u[1], u[0]]
       const tip: Pt = [m[0] + u[0] * 0.16, m[1] + u[1] * 0.16]
       out.push(

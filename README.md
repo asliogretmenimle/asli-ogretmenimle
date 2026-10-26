@@ -31,6 +31,14 @@ pnpm preview      # üretim çıktısını yerelde dene
 
 `vercel.json` dosyası, paylaşılan linklerin (ör. `/etkinlik/g3-tek-cift`) doğrudan açılabilmesini sağlar.
 
+## Arama motorları (SEO)
+
+- `pnpm build`, Vite derlemesinden sonra `scripts/prerender.ts` çalıştırır: her etkinlik, oyun, tema, keşif ve manipülatif sayfası için `dist/` içine kendi başlığı, açıklaması, canonical adresi, Open Graph etiketleri, JSON-LD'si ve okunabilir içeriği olan ayrı bir `.html` yazar. Ayrıca `sitemap.xml` ve gerçek 404 durum kodu döndüren `404.html` üretir.
+- Başlık ve açıklama metinleri tek yerde, `src/lib/seo.ts` içinde üretilir. Aynı fonksiyonlar tarayıcıda sayfalar arası geçişte de kullanılır (`usePageTitle`).
+- Online özel ders sayfasının (`/online-ozel-ders`) metinleri `src/data/onlineLesson.ts` içindedir.
+- Alan adı `src/lib/seo.ts` içindeki `SITE_URL`, `index.html` ve `public/robots.txt` dosyalarında yazılıdır (`https://asliogretmenimle.com`).
+- Yayından sonra: [Google Search Console](https://search.google.com/search-console)'a alan adını ekleyin ve `https://asliogretmenimle.com/sitemap.xml` adresini gönderin.
+
 ## Aslı Hoca için: dış link ekleme
 
 Wordwall, GeoGebra, YouTube gibi sitelerden link eklemek için `src/data/links.ts` dosyasını açın ve listeye yeni bir öğe ekleyin:

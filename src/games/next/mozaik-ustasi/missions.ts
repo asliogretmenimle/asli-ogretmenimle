@@ -9,6 +9,8 @@ export interface Choice {
 }
 export interface Follow {
   q: string
+  /** Doğru cevaptan sonra gösterilen açıklama */
+  right: string
   choices: Choice[]
   answer: number
   /** Her yanlış seçenek için yanılgıyı düşündüren soru */
@@ -86,7 +88,7 @@ function g2(): MMission[] {
       kind: 'fill', title: 'İki üçgen', lattice: 'tri', frame: RHOMBUS, tray: ['tri'], goal: 1, tally: 'none',
       prompt: 'Çerçeveyi yeşil üçgenlerle boşluk kalmadan doldur. Üçgeni sürükle; döndürmek için iki parmak kullan ya da seçip ⟳ düğmesine dokun.',
       hints: ['Üçgenin bir köşesi çerçevenin sivri köşesine uyuyor mu?', 'İkinci üçgeni ters çevirmen gerekebilir: ⟳ düğmesine dokun.'],
-      follow: { q: 'İki üçgen birleşince hangi parçanın aynısı oldu?', choices: [{ label: 'Mavi parça', icon: 'rhom' }, { label: 'Kırmızı parça', icon: 'trap' }, { label: 'Sarı parça', icon: 'hex' }], answer: 0, wrong: [null, 'Kırmızı parçayı kaç üçgen yapar? Çerçevendeki üçgenleri say.', 'Sarı parça çok daha büyük. Çerçevenin biçimine bak: dört kenarı var mı?'] },
+      follow: { q: 'İki üçgen birleşince hangi parçanın aynısı oldu?', right: 'Evet! İki üçgen yan yana gelince mavi eşkenar dörtgeni oluşturur.', choices: [{ label: 'Mavi parça', icon: 'rhom' }, { label: 'Kırmızı parça', icon: 'trap' }, { label: 'Sarı parça', icon: 'hex' }], answer: 0, wrong: [null, 'Kırmızı parçayı kaç üçgen yapar? Çerçevendeki üçgenleri say.', 'Sarı parça çok daha büyük. Çerçevenin biçimine bak: dört kenarı var mı?'] },
     },
     {
       kind: 'fill', title: 'Kırmızı yamuk', lattice: 'tri', frame: TRAP, tray: ['rhom', 'tri'], goal: 2, tally: 'none',
@@ -155,7 +157,7 @@ function g4(): MMission[] {
       kind: 'fill', title: 'Dev üçgen', lattice: 'tri', frame: BIGTRI, tray: ['hex', 'trap', 'rhom', 'tri'], goal: 2, tally: 'units',
       prompt: 'Dev üçgeni iki farklı yolla doldur. Panelde her parçanın kaç üçgen ettiğini izle.',
       hints: ['Sarı altıgen dev üçgenin ortasına sığar mı?', 'Köşelere hangi parça sığar?'],
-      follow: { q: 'Bu dev üçgeni yalnızca mavi parçalarla doldurabilir miydin?', choices: [{ label: 'Evet, dokuz mavi parçayla' }, { label: 'Hayır, çünkü 9 üçgenlik yer var; mavi parça 2 üçgen eder ve 9 ikiye tam bölünmez' }, { label: 'Evet, çünkü mavi parça her yere sığar' }], answer: 1, wrong: ['Bir mavi parça kaç üçgen eder? Dokuz mavi parça kaç üçgen eder?', null, 'Mavi parça 2 üçgen kadar. 9 üçgeni ikişer ikişer ayırabilir misin?'] },
+      follow: { q: 'Bu dev üçgeni yalnızca mavi parçalarla doldurabilir miydin?', right: 'Evet! 9 üçgenlik yer ikişer ikişer paylaşılamaz; bir üçgenlik yer hep artar.', choices: [{ label: 'Evet, dokuz mavi parçayla' }, { label: 'Hayır, çünkü 9 üçgenlik yer var; mavi parça 2 üçgen eder ve 9 ikiye tam bölünmez' }, { label: 'Evet, çünkü mavi parça her yere sığar' }], answer: 1, wrong: ['Bir mavi parça kaç üçgen eder? Dokuz mavi parça kaç üçgen eder?', null, 'Mavi parça 2 üçgen kadar. 9 üçgeni ikişer ikişer ayırabilir misin?'] },
       picker: ['Büyük parçalarla başladım', 'Üçgen sayısını hesapladım', 'Deneyerek doldurdum'],
     },
     {
@@ -174,7 +176,7 @@ function g4(): MMission[] {
       kind: 'fill', title: 'Karo ustası', lattice: 'sq', frame: [[0, 0], [4, 0], [4, 3], [0, 3]], tray: ['sq', 'rt', 'rect'], goal: 2, tally: 'squares',
       prompt: 'Duvarı karolarla kapla; iki farklı yol bul. Panelde alanı kare cinsinden izle.',
       hints: ['Bir dikdörtgen kaç kare eder?', 'İki mavi üçgen bir kare eder.'],
-      follow: { q: 'Bu duvarın alanı kaç kare?', choices: [{ label: '7 kare' }, { label: '12 kare' }, { label: '14 kare' }, { label: '24 kare' }], answer: 1, wrong: ['7, kenarların toplamı (4 + 3). Alan içindeki kare sayısıdır.', null, '14, duvarın çevresi. Alan içindeki kare sayısıdır.', '24 küçük üçgen olabilir mi? İki üçgen bir kare eder.'], misconception: ['Alan ile kenar uzunluklarını karıştırıyor', null, 'Alan ile çevreyi karıştırıyor', null] },
+      follow: { q: 'Bu duvarın alanı kaç kare?', right: 'Evet! 3 sıra, her sırada 4 kare: 3 × 4 = 12 kare. Hangi karoları kullanırsan kullan alan değişmez.', choices: [{ label: '7 kare' }, { label: '12 kare' }, { label: '14 kare' }, { label: '24 kare' }], answer: 1, wrong: ['7, kenarların toplamı (4 + 3). Alan içindeki kare sayısıdır.', null, '14, duvarın çevresi. Alan içindeki kare sayısıdır.', '24 küçük üçgen olabilir mi? İki üçgen bir kare eder.'], misconception: ['Alan ile kenar uzunluklarını karıştırıyor', null, 'Alan ile çevreyi karıştırıyor', null] },
     },
     {
       kind: 'free', title: 'Kendi desenin', lattice: 'tri', tray: BLOCKS, minPieces: 6, minLines: 1,
@@ -192,7 +194,7 @@ function g56(g: 5 | 6): MMission[] {
           kind: 'fill', title: 'İki altıgenlik kayık', lattice: 'tri', frame: BOAT, tray: ['hex', 'trap', 'rhom', 'tri'], goal: 2, tally: 'hexfrac',
           prompt: 'Sarı altıgen 1 bütün olsun. Kayığı iki farklı yolla doldur; panelde her parçanın kesir değerini topla.',
           hints: ['Kırmızı yamuk altıgenin yarısı.', 'Mavi parça altıgenin kaçta kaçı? Kaç tanesi altıgeni doldurur?'],
-          follow: { q: 'Kayığın alanı kaç altıgen?', choices: [{ label: '[[1 1/2]] altıgen' }, { label: '2 altıgen' }, { label: '[[2 1/2]] altıgen' }, { label: '12 altıgen' }], answer: 1, wrong: ['Panelde topladığın kesirlere bak: [[1/2]]’ler ve [[1/3]]’ler kaç bütün ediyor?', null, 'Yamukları ikişer ikişer eşleştir: kaç altıgen eder?', '12, kayığın kaç üçgen ettiği. Altıgen cinsinden kaç?'] },
+          follow: { q: 'Kayığın alanı kaç altıgen?', right: 'Evet! Kesirlerin toplamı 2 bütün ediyor: kayık 2 altıgen büyüklüğünde.', choices: [{ label: '[[1 1/2]] altıgen' }, { label: '2 altıgen' }, { label: '[[2 1/2]] altıgen' }, { label: '12 altıgen' }], answer: 1, wrong: ['Panelde topladığın kesirlere bak: [[1/2]]’ler ve [[1/3]]’ler kaç bütün ediyor?', null, 'Yamukları ikişer ikişer eşleştir: kaç altıgen eder?', '12, kayığın kaç üçgen ettiği. Altıgen cinsinden kaç?'] },
           picker: ['Kesirleri topladım', 'Parçaları altıgene tamamladım', 'Üçgenleri sayıp 6’ya böldüm'],
         }
       : {
@@ -206,13 +208,13 @@ function g56(g: 5 | 6): MMission[] {
           kind: 'fill', title: 'Birim değişirse', lattice: 'tri', frame: HEX, tray: ['trap', 'rhom', 'tri'], goal: 1, tally: 'trapunit',
           prompt: 'Bu kez kırmızı yamuk 1 birim! Altıgeni istediğin parçalarla doldur ve panelde değerleri izle.',
           hints: ['Altıgeni kaç yamuk doldurur?', 'Üç üçgen bir yamuk eder.'],
-          follow: { q: 'Yamuk 1 birimse yeşil üçgen kaç birimdir?', choices: [{ label: '[[1/3]]' }, { label: '3' }, { label: '[[1/2]]' }, { label: '[[1/6]]' }], answer: 0, wrong: [null, 'Üç üçgen bir yamuğu doldurur. Üçgen yamuktan büyük mü küçük mü?', '[[1/2]] yamuk kaç üçgen eder? Üçgenle karşılaştır.', '[[1/6]], altıgen 1 bütün olduğunda doğruydu. Şimdi bütün yamuk!'], misconception: [null, 'Birim kesri ters çeviriyor', null, 'Bütünü değiştiğinde kesrin değiştiğini fark etmiyor'] },
+          follow: { q: 'Yamuk 1 birimse yeşil üçgen kaç birimdir?', right: 'Evet! Üç üçgen bir yamuğu doldurur; bütün yamuk olunca üçgen [[1/3]] olur. Altıgen ise 2 birim!', choices: [{ label: '[[1/3]]' }, { label: '3' }, { label: '[[1/2]]' }, { label: '[[1/6]]' }], answer: 0, wrong: [null, 'Üç üçgen bir yamuğu doldurur. Üçgen yamuktan büyük mü küçük mü?', '[[1/2]] yamuk kaç üçgen eder? Üçgenle karşılaştır.', '[[1/6]], altıgen 1 bütün olduğunda doğruydu. Şimdi bütün yamuk!'], misconception: [null, 'Birim kesri ters çeviriyor', null, 'Bütünü değiştiğinde kesrin değiştiğini fark etmiyor'] },
         }
       : {
           kind: 'fill', title: 'Kayık kaç altıgen?', lattice: 'tri', frame: BOAT, tray: ['hex', 'trap', 'rhom', 'tri'], goal: 1, tally: 'hexfrac',
           prompt: 'Altıgen 1 bütün. Kayığı doldur ve alanını altıgen cinsinden bul.',
           hints: ['Panelde kesirleri topla.', 'İki yamuk bir altıgen eder.'],
-          follow: { q: 'Kayığın alanı kaç altıgen?', choices: [{ label: '[[1 1/2]] altıgen' }, { label: '2 altıgen' }, { label: '[[2 1/2]] altıgen' }, { label: '12 altıgen' }], answer: 1, wrong: ['Panelde topladığın kesirlere bak: kaç bütün ediyor?', null, 'Yamukları ikişer ikişer eşleştir: kaç altıgen eder?', '12, kayığın kaç üçgen ettiği. Altıgen cinsinden kaç?'] },
+          follow: { q: 'Kayığın alanı kaç altıgen?', right: 'Evet! Kesirlerin toplamı 2 bütün ediyor: kayık 2 altıgen büyüklüğünde.', choices: [{ label: '[[1 1/2]] altıgen' }, { label: '2 altıgen' }, { label: '[[2 1/2]] altıgen' }, { label: '12 altıgen' }], answer: 1, wrong: ['Panelde topladığın kesirlere bak: kaç bütün ediyor?', null, 'Yamukları ikişer ikişer eşleştir: kaç altıgen eder?', '12, kayığın kaç üçgen ettiği. Altıgen cinsinden kaç?'] },
           picker: ['Kesirleri topladım', 'Parçaları altıgene tamamladım', 'Üçgenleri sayıp 6’ya böldüm'],
         },
     {
@@ -232,7 +234,7 @@ function g56(g: 5 | 6): MMission[] {
           kind: 'lab', title: 'Hangisi kaplar?', mode: 'single', polys: [3, 4, 5, 6, 8], goal: 5,
           prompt: 'Her düzgün çokgeni tek başına dene: bir köşenin çevresine kopyalarını ekle. Hangileri boşluksuz kaplıyor?',
           hints: ['Beşgenin açısı 108°. Üç beşgen kaç derece eder?', 'Boşluk kalmaması için açılar tam 360° etmeli.'],
-          follow: { q: 'Hangi düzgün çokgenler zemini tek başına kaplar? Neden?', choices: [{ label: 'Bir iç açısı 360°’nin tam böleni olanlar' }, { label: 'Kenar sayısı çift olanlar' }, { label: 'Köşe sayısı az olanlar' }], answer: 0, wrong: [null, 'Sekizgenin de kenar sayısı çift. Sekizgenler bir köşede boşluksuz buluşabildi mi?', 'Beşgenin köşesi altıgenden az. Beşgen kapladı mı?'], misconception: [null, 'Kenar sayısı çift olan çokgenlerin kaplayacağını düşünüyor', null] },
+          follow: { q: 'Hangi düzgün çokgenler zemini tek başına kaplar? Neden?', right: 'Evet! 60°, 90° ve 120° 360°’yi tam böler; 108° ve 135° bölmez. Bu yüzden yalnız üçgen, kare ve altıgen tek başına kaplar.', choices: [{ label: 'Bir iç açısı 360°’nin tam böleni olanlar' }, { label: 'Kenar sayısı çift olanlar' }, { label: 'Köşe sayısı az olanlar' }], answer: 0, wrong: [null, 'Sekizgenin de kenar sayısı çift. Sekizgenler bir köşede boşluksuz buluşabildi mi?', 'Beşgenin köşesi altıgenden az. Beşgen kapladı mı?'], misconception: [null, 'Kenar sayısı çift olan çokgenlerin kaplayacağını düşünüyor', null] },
           picker: ['Açıları toplayarak denedim', '360’ı açıya böldüm', 'Deneyerek gördüm'],
         },
     {
