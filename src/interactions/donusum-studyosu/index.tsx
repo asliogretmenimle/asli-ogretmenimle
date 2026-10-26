@@ -504,7 +504,7 @@ function FindTask({ t, c }: { t: Extract<Task, { kind: 'find' }>; c: Ctx }) {
             {(api) => (
               <>
                 <Poly api={api} pts={target} color={pal.goal} dashed fill={0.1} />
-                <text x={api.sx(Math.max(...target.map((p) => p[0])))} y={api.sy(Math.max(...target.map((p) => p[1]))) - 8} fontSize={13} fontWeight={900} fill={pal.goal} textAnchor="end" pointerEvents="none">hedef</text>
+                <text x={api.sx(target.reduce((s, p) => s + p[0], 0) / target.length)} y={api.sy(Math.min(...target.map((p) => p[1]))) + 30} fontSize={13} fontWeight={900} fill={pal.goal} textAnchor="middle" stroke={dark ? '#0f172a' : '#fff'} strokeWidth={3} paintOrder="stroke" pointerEvents="none">hedef</text>
                 <Poly api={api} pts={t.shape} color={pal.pre} labels />
                 {mode === 'R' && <MirrorLine api={api} line={line} color={pal.mirror} />}
                 {mode === 'T' && (d[0] !== 0 || d[1] !== 0) && (

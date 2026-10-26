@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { Route, Routes, useParams } from 'react-router-dom'
 import { isGrade } from './data/curriculum'
 import Layout from './components/Layout'
@@ -6,19 +6,42 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import Home from './pages/Home'
 import NotFound from './pages/NotFound'
 
-const ThemePage = lazy(() => import('./pages/ThemePage'))
-const ActivityPage = lazy(() => import('./pages/ActivityPage'))
-const ManipulativesIndex = lazy(() => import('./pages/Manipulatives').then((m) => ({ default: m.ManipulativesIndex })))
-const Approach = lazy(() => import('./pages/Approach'))
-const ManipulativePage = lazy(() => import('./pages/Manipulatives').then((m) => ({ default: m.ManipulativePage })))
-const InteractionsIndex = lazy(() => import('./pages/Interactions').then((m) => ({ default: m.InteractionsIndex })))
-const InteractionPage = lazy(() => import('./pages/Interactions').then((m) => ({ default: m.InteractionPage })))
-const ReportView = lazy(() => import('./pages/Teacher').then((m) => ({ default: m.ReportView })))
-const TeacherPanel = lazy(() => import('./pages/Teacher').then((m) => ({ default: m.TeacherPanel })))
-const GamesIndex = lazy(() => import('./pages/Games').then((m) => ({ default: m.GamesIndex })))
-const GamePage = lazy(() => import('./pages/Games').then((m) => ({ default: m.GamePage })))
+const load = {
+  theme: () => import('./pages/ThemePage'),
+  activity: () => import('./pages/ActivityPage'),
+  manipulatives: () => import('./pages/Manipulatives'),
+  approach: () => import('./pages/Approach'),
+  interactions: () => import('./pages/Interactions'),
+  teacher: () => import('./pages/Teacher'),
+  games: () => import('./pages/Games'),
+  onlineLesson: () => import('./pages/OnlineLesson'),
+}
 
-const OnlineLesson = lazy(() => import('./pages/OnlineLesson'))
+const ThemePage = lazy(load.theme)
+const ActivityPage = lazy(load.activity)
+const ManipulativesIndex = lazy(() => load.manipulatives().then((m) => ({ default: m.ManipulativesIndex })))
+const Approach = lazy(load.approach)
+const ManipulativePage = lazy(() => load.manipulatives().then((m) => ({ default: m.ManipulativePage })))
+const InteractionsIndex = lazy(() => load.interactions().then((m) => ({ default: m.InteractionsIndex })))
+const InteractionPage = lazy(() => load.interactions().then((m) => ({ default: m.InteractionPage })))
+const ReportView = lazy(() => load.teacher().then((m) => ({ default: m.ReportView })))
+const TeacherPanel = lazy(() => load.teacher().then((m) => ({ default: m.TeacherPanel })))
+const GamesIndex = lazy(() => load.games().then((m) => ({ default: m.GamesIndex })))
+const GamePage = lazy(() => load.games().then((m) => ({ default: m.GamePage })))
+const OnlineLesson = lazy(load.onlineLesson)
+
+/** Sayfa açıldıktan sonra, tarayıcı boştayken diğer sayfaların kodunu indir: menü geçişleri beklemeden açılır */
+function usePrefetchPages() {
+  useEffect(() => {
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection
+    if (conn?.saveData || /2g/.test(conn?.effectiveType ?? '')) return
+    const run = () => Object.values(load).forEach((l) => l().catch(() => {}))
+    // Safari'de requestIdleCallback yok
+    const idle = typeof window.requestIdleCallback === 'function'
+    const id = idle ? window.requestIdleCallback(run, { timeout: 4000 }) : window.setTimeout(run, 2500)
+    return () => (idle ? window.cancelIdleCallback(id) : window.clearTimeout(id))
+  }, [])
+}
 
 /** /sinif/3 → o sınıfın etkinlikleriyle ana sayfa */
 function GradePage() {
@@ -33,6 +56,7 @@ const Loading = () => (
 )
 
 export default function App() {
+  usePrefetchPages()
   return (
     <ErrorBoundary>
     <Suspense fallback={<Loading />}>

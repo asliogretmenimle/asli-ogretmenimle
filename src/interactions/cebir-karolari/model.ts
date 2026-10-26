@@ -64,8 +64,8 @@ export function fmtNet(a: number, b: number) {
 }
 
 /** Karoların ham yazımı (sıfır çiftleri görünür): "x − x + 3 − 3" */
-export function fmtRaw(ts: Tile[]) {
-  const [px, nx, p1, n1] = countsOf(ts)
+export const fmtRaw = (ts: Tile[]) => fmtCounts(countsOf(ts))
+export function fmtCounts([px, nx, p1, n1]: Counts) {
   const parts: string[] = []
   const add = (s: string, neg: boolean) => parts.push(parts.length === 0 ? (neg ? `−${s}` : s) : neg ? `− ${s}` : `+ ${s}`)
   if (px) add(px === 1 ? 'x' : `${px}x`, false)

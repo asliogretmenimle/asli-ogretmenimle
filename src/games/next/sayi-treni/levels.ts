@@ -78,15 +78,6 @@ function g1Reps(n: number): Rep[] {
   return out
 }
 
-/** Bir sayı için temsil — 2. sınıf */
-function g2Reps(n: number): Rep[] {
-  const t = Math.floor(n / 10)
-  const o = n % 10
-  const out: Rep[] = [{ k: 'num', n }, { k: 'b10', t, o }, { k: 'word', n }, { k: 'place', t, o }]
-  if (o) out.push({ k: 'exp', parts: [t * 10, o] })
-  return out
-}
-
 function g1Couple(n: number): Level {
   const correct = shuffle(g1Reps(n)).slice(0, 5)
   const near = n + pick([-1, 1])

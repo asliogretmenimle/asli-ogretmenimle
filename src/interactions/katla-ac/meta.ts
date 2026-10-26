@@ -15,9 +15,9 @@ export const meta: InteractionMeta = {
   bigIdea: 'Katlamak bir yansımadır: kat çizgisi iki yarıyı tam üst üste getiriyorsa bir simetri doğrusudur ve eş parçalar oluşturur. Her katlama kat sayısını (ve kesik sayısını) iki katına çıkarır; bu yolla yarım–çeyrek–sekizde bir ve denk kesirler doğar. İleri düzeyde kat izi, nokta ile görüntüsünü birleştiren doğru parçasının orta dikmesi, iki kolu çakıştırınca da açıortaydır.',
   skills: {
     2: 'Katlayarak iki ve dört eş parça (yarım, çeyrek), simetrik şekli katlayarak tanıma, kesiğin açılınca nasıl görüneceğini tahmin etme',
-    3: 'Katlayarak [[1/2]] ve [[1/4]], birden çok simetri doğrusu bulma, iki katlamadan sonra kesik desenini tahmin etme',
-    4: 'Farklı yollarla dörde katlama, [[1/2]] = [[2/4]] = [[4/8]] denkliğini katlayarak görme, simetri doğruları ve kesik desenleri',
-    5: '[[3/4]] = [[6/8]] gibi denk kesirleri katlamayla açıklama, sekiz eş parçaya katlamanın farklı yolları, düzgün çokgenlerde simetri',
+    3: 'Katlayarak yarım ve çeyrek (1/2, 1/4), birden çok simetri doğrusu bulma, iki katlamadan sonra kesik desenini tahmin etme',
+    4: 'Farklı yollarla dörde katlama, 1/2 = 2/4 = 4/8 denkliğini katlayarak görme, simetri doğruları ve kesik desenleri',
+    5: '3/4 = 6/8 gibi denk kesirleri katlamayla açıklama, sekiz eş parçaya katlamanın farklı yolları, düzgün çokgenlerde simetri',
     6: 'Üç katlamayla sekizde birler, eşkenar dörtgen ve paralelkenarda köşegen–simetri ilişkisi, çapraz katlamalı kesik desenleri',
     7: 'Eğik doğruya göre yansıma, katlayarak orta dikme ve açıortay inşası, üzerindeki noktaların eşit uzaklık özelliği',
     8: 'Yansımanın özellikleri (dik ve ortalayan bağlantılar), orta dikme ve açıortay, çok katlı kesiklerle yansıma bileşimi',

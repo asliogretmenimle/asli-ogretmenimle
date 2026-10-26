@@ -1,3 +1,5 @@
+import { ekD, fmt } from './util'
+
 /**
  * Uzay Kolonisi — basit, açıklanabilir koloni simülasyonu.
  * Bir kaynak (su ya da enerji) birimlere bölünür; her birim bir modüle gider.
@@ -44,12 +46,9 @@ const r1 = (v: number) => Math.round(v * 10) / 10
 export function simulate(plan: Partial<Record<SegId, number>>, cfg: SimCfg): SimResult {
   const U = cfg.units
   const heat = plan.isitma ?? 0
-  const rest = U - heat
-  // ısıtmalı modelde ısı dışındaki pay, kalan enerjiye göre değil toplam üzerinden ölçülür
   const s = (plan.sera ?? 0) / U
   const o = (plan.oksijen ?? 0) / U
   const y = (plan.yasam ?? 0) / U
-  void rest
   let pop = cfg.p0
   let o2 = 21
   let food = 6
@@ -69,15 +68,16 @@ export function simulate(plan: Partial<Record<SegId, number>>, cfg: SimCfg): Sim
     }
     const row: SimRow = { sol: t, pop, o2: r1(o2), food: r1(food), care: r1(care), inside, heatNeed: heatNeed === undefined ? undefined : r1(heatNeed) }
     rows.push(row)
-    if (inside !== undefined && inside < 15) return { rows, fail: { sol: t, why: 'cold', text: `${t}. solde dışarısı ${cfg.temps![(t - 1) % cfg.temps!.length]} °C oldu; ısıtmaya giden enerji yetmedi, üs içi ${fmtNum(inside)} °C’ye düştü.` } }
-    if (o2 < 19) return { rows, fail: { sol: t, why: 'o2low', text: `${t}. solde oksijen %${fmtNum(r1(o2))}’e düştü. Nefes almak zorlaştı!` } }
-    if (o2 > 23) return { rows, fail: { sol: t, why: 'o2high', text: `${t}. solde oksijen %${fmtNum(r1(o2))} oldu. Fazla oksijen yangın riski demek!` } }
+    if (inside !== undefined && inside < 15) return { rows, fail: { sol: t, why: 'cold', text: `${t}. solde dışarısı ${fmt(cfg.temps![(t - 1) % cfg.temps!.length])} °C oldu; ısıtmaya giden enerji yetmedi, üs içi ${fmt(inside)} °C’ye düştü.` } }
+    if (o2 < 19) return { rows, fail: { sol: t, why: 'o2low', text: `${t}. solde oksijen %${ekD(r1(o2), 'dat')} düştü. Nefes almak zorlaştı!` } }
+    if (o2 > 23) return { rows, fail: { sol: t, why: 'o2high', text: `${t}. solde oksijen %${fmt(r1(o2))} oldu. Fazla oksijen yangın riski demek!` } }
     if (food < 0) return { rows, fail: { sol: t, why: 'food', text: `${t}. solde yiyecek bitti. Seralar ${pop} kişiye yetmedi.` } }
     if (care < 3) return { rows, fail: { sol: t, why: 'care', text: `${t}. solde yaşam modülünün payı ${pop} kişiye yetmedi.` } }
     // büyüme: yiyecek, yaşam payı ve oksijen iyiyse yeni bir kâşif gelir
     if (food >= pop * 0.5 && care >= 4 && o2 >= 20 && pop < cfg.cap) pop++
+    row.pop = pop
   }
   return { rows, fail: null }
 }
 
-export const fmtNum = (v: number) => (Math.abs(v) < 1e-9 ? 0 : v).toLocaleString('tr-TR', { maximumFractionDigits: 2 }).replace('-', '−')
+

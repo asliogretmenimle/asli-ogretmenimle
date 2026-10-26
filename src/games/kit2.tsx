@@ -41,7 +41,7 @@ export function Scene({ grade, children, className = '' }: { grade: Grade; child
 /** Görev / problem kartı */
 export function TaskCard({ children, step, total, tone = 'brand' }: { children: ReactNode; step?: number; total?: number; tone?: 'brand' | 'dark' }) {
   return (
-    <div className={`mb-4 flex items-start gap-3 rounded-2xl px-4 py-3 ${tone === 'dark' ? 'bg-slate-800 text-white ring-1 ring-slate-600' : 'bg-white/95 ring-1 ring-line'}`}>
+    <div className={`mb-4 flex items-start gap-3 rounded-2xl px-4 py-3 ${tone === 'dark' ? 'bg-slate-800 text-white ring-1 ring-slate-600' : 'bg-white/95 text-ink ring-1 ring-line'}`}>
       {step !== undefined && (
         <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand text-sm font-black text-white">{step}{total ? <span className="text-[10px] opacity-80">/{total}</span> : null}</span>
       )}

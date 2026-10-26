@@ -11,7 +11,7 @@ import type { InteractionMeta } from '../interactions/types'
 import type { ManipulativeTool } from '../data/types'
 import { lessonFaq, lessonIntro } from '../data/onlineLesson'
 
-export const SITE_URL = 'https://asliogretmenimle.com'
+export const SITE_URL = 'https://www.asliogretmenimle.com'
 export const SITE_NAME = 'Aslı Öğretmenimle'
 export const SITE_ALT_NAMES = ['Aslı Öğretmen', 'Aslı Öğretmenle', 'Aslı Öğretmenim', 'Aslı Hoca']
 export const OG_IMAGE = `${SITE_URL}/og-image.png`

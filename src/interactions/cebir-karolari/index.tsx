@@ -8,7 +8,7 @@ import { useTracker } from '../../lib/trackerContext'
 import { sfx } from '../../lib/feedback'
 import { ek } from '../../lib/generators'
 import { Card, Derived, Header, Layout, NextButton, Nudge, NumPad, PickBtn, isDark, parseNum, useSession } from '../oruntuden-kurala/ortak'
-import { countsOf, fmtNet, fmtRaw, fmtSubst, hasZeroPair, makeTasks, makeTiles, netOf, newId, valueOf, type BuildT, type Counts, type EqT, type EvalT, type JudgeT, type Kind, type MulT, type SideId, type SimplifyT, type Tile } from './model'
+import { countsOf, fmtCounts, fmtNet, fmtRaw, fmtSubst, hasZeroPair, makeTasks, makeTiles, netOf, newId, valueOf, type BuildT, type Counts, type EqT, type EvalT, type JudgeT, type Kind, type MulT, type SideId, type SimplifyT, type Tile } from './model'
 import { Bin, ExprEntry, Ghost, SideMat, TileFace, useTileDnd, type Src, type Target } from './tiles'
 
 /**
@@ -482,10 +482,14 @@ function EqView({ t, grade, dark, idx, sol, onDone, footer }: { t: EqT } & Commo
     const ok = valid(next)
     const wasOk = valid(prev)
     const snap = (note: string): Snap => ({ L: countsOf(next.L ?? []), R: countsOf(next.R ?? []), note })
+    let nh = histRef.current
     if (act.type === 'zero') {
       const h = histRef.current
       const last = h[h.length - 1]
-      if (ok) setHist(last.note === 'sıfır çifti' ? [...h.slice(0, -1), snap('sıfır çifti')] : [...h, snap('sıfır çifti')])
+      if (ok) {
+        nh = last.note === 'sıfır çifti' ? [...h.slice(0, -1), snap('sıfır çifti')] : [...h, snap('sıfır çifti')]
+        setHist(nh)
+      }
       clear()
     } else if (!ok) {
       const p = pendRef.current
@@ -499,11 +503,12 @@ function EqView({ t, grade, dark, idx, sol, onDone, footer }: { t: EqT } & Commo
       // denge yeniden kuruldu
       setPend([])
       const h = histRef.current
-      setHist([...h, snap(deltaNote(h[h.length - 1], next))])
+      nh = [...h, snap(deltaNote(h[h.length - 1], next))]
+      setHist(nh)
       sfx.ok()
       say('Eşitlik yeniden kuruldu: iki tarafa da aynı şeyi yaptın.', { tone: 'ok' })
     }
-    if (ok && isolated(next)) win(next)
+    if (ok && isolated(next)) win(next, nh)
     else if (!ok && isolated(next) && !misDone.current) {
       misDone.current = true
       first.current = false
@@ -519,10 +524,9 @@ function EqView({ t, grade, dark, idx, sol, onDone, footer }: { t: EqT } & Commo
   const L = mat.m.L ?? [], R = mat.m.R ?? []
   const ok = valid(mat.m)
 
-  function win(m: Mat) {
+  function win(m: Mat, h: Snap[]) {
     setSolved(true)
     track.attempt(true)
-    const h = [...histRef.current]
     const key = `${idx}:` + h.map((s) => `${s.L}|${s.R}`).join('>') + `>${countsOf(m.L ?? [])}|${countsOf(m.R ?? [])}`
     const label = h.slice(1).map((s) => s.note).filter((x) => x && x !== 'sıfır çifti').map((x) => x!.replace(' · iki taraf', '')).join(' → ') || 'çözüm'
     if (!stratDone.current) {
@@ -588,12 +592,12 @@ function EqView({ t, grade, dark, idx, sol, onDone, footer }: { t: EqT } & Commo
     const next = { L: take(L), R: take(R) }
     stack.current.push({ m: prev, hist: histRef.current, pend: pendRef.current })
     mat.set(next)
-    const h = histRef.current
-    setHist([...h, { L: countsOf(next.L), R: countsOf(next.R), note: `÷${rows}` }])
+    const nh = [...histRef.current, { L: countsOf(next.L), R: countsOf(next.R), note: `÷${rows}` }]
+    setHist(nh)
     setRows(0)
     sfx.ok()
     clear()
-    if (isolated(next)) win(next)
+    if (isolated(next)) win(next, nh)
   }
 
   const undo = () => {
@@ -660,7 +664,7 @@ function EqView({ t, grade, dark, idx, sol, onDone, footer }: { t: EqT } & Commo
           {hist.map((s, i) => (
             <li key={i} className="flex flex-wrap items-center gap-x-2">
               {s.note && <span className={`rounded-lg px-1.5 py-0.5 text-xs font-extrabold ${dark ? 'bg-violet-500/25 text-violet-200' : 'bg-violet-50 text-violet-800'}`}><MathText text={s.note} /></span>}
-              <MathText text={`${fmtNet(s.L[0] - s.L[1], s.L[2] - s.L[3])} = ${fmtNet(s.R[0] - s.R[1], s.R[2] - s.R[3])}`} />
+              <MathText text={`${fmtCounts(s.L)} = ${fmtCounts(s.R)}`} />
             </li>
           ))}
         </ol>

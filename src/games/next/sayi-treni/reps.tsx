@@ -285,7 +285,6 @@ export function B10G({ t, o, w, h }: { t: number; o: number; w: number; h: numbe
   const rodGap = 3
   const cs = seg
   const cg = 1.3
-  const cubeRows = Math.min(5, o)
   const cubeCols = Math.ceil(o / 5)
   const rodsW = t ? t * rodW + (t - 1) * rodGap : 0
   const cubesW = o ? cubeCols * (cs + cg) + Math.floor((cubeCols - 1) / 2) * 3 : 0

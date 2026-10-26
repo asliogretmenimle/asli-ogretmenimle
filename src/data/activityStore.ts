@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Activity, Grade, ThemeNotes } from './types'
 import { grades, isGrade, outcomeByCode } from './curriculum'
+import { isChunkError, reloadOnce } from '../lib/chunkReload'
 
 /**
  * Etkinlik verisi sınıf başına ayrı parçalar hâlinde, ihtiyaç anında yüklenir.
@@ -37,11 +38,19 @@ export function loadGrade(g: Grade): Promise<Activity[]> {
   if (hit) return Promise.resolve(hit)
   let p = pending.get(g)
   if (!p) {
-    p = loaders[g]().then((list) => {
-      cache.set(g, list)
-      pending.delete(g)
-      return list
-    })
+    p = loaders[g]().then(
+      (list) => {
+        cache.set(g, list)
+        pending.delete(g)
+        return list
+      },
+      (e) => {
+        // Bir sonraki denemede yeniden indirilsin; yeni sürüm yayınlandıysa sayfa yenilenir
+        pending.delete(g)
+        if (isChunkError(e)) reloadOnce()
+        throw e
+      },
+    )
     pending.set(g, p)
   }
   return p
@@ -52,11 +61,14 @@ export const loadAll = () => Promise.all(grades.map(loadGrade)).then((l) => l.fl
 /** Seçili sınıfın etkinlikleri (yüklenene kadar null) */
 export function useGradeActivities(g: Grade | null): Activity[] | null {
   const [list, setList] = useState<Activity[] | null>(() => (g ? cache.get(g) ?? null : null))
+  const [error, setError] = useState<unknown>(null)
+  // Yüklenemezse sonsuz "yükleniyor" yerine sayfanın hata ekranı (ErrorBoundary) görünsün
+  if (error) throw error
   useEffect(() => {
     if (!g) return setList(null)
     let alive = true
     setList(cache.get(g) ?? null)
-    loadGrade(g).then((l) => alive && setList(l))
+    loadGrade(g).then((l) => alive && setList(l), (e) => alive && setError(e))
     return () => {
       alive = false
     }
@@ -68,10 +80,12 @@ export function useGradeActivities(g: Grade | null): Activity[] | null {
 export function useAllActivities(enabled = true): Activity[] | null {
   const ready = () => (grades.every((g) => cache.has(g)) ? grades.flatMap((g) => cache.get(g)!) : null)
   const [list, setList] = useState<Activity[] | null>(ready)
+  const [error, setError] = useState<unknown>(null)
+  if (error) throw error
   useEffect(() => {
     if (!enabled) return
     let alive = true
-    loadAll().then((l) => alive && setList(l))
+    loadAll().then((l) => alive && setList(l), (e) => alive && setError(e))
     return () => {
       alive = false
     }

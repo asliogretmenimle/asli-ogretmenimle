@@ -19,44 +19,40 @@ export const WHEEL = { cx: 255, cy: 196, r: 148 }
  */
 export function useWheelAngle(idle = 7, speed = 220) {
   const [rot, setRot] = useState(0)
+  const cur = useRef(0)
   const target = useRef<number | null>(null)
   const spd = useRef(speed)
   const onArrive = useRef<(() => void) | null>(null)
   const idleRef = useRef(idle)
   idleRef.current = idle
   useFrame((dt) => {
-    setRot((r) => {
-      const t = target.current
-      if (t === null) return idleRef.current ? r + idleRef.current * dt : r
+    const t = target.current
+    if (t === null) {
+      if (!idleRef.current) return
+      cur.current += idleRef.current * dt
+    } else {
       const step = spd.current * dt
-      if (Math.abs(t - r) <= step) {
+      if (Math.abs(t - cur.current) <= step) {
+        cur.current = t
         target.current = null
         const cb = onArrive.current
         onArrive.current = null
         if (cb) setTimeout(cb, 0)
-        return t
-      }
-      return r + Math.sign(t - r) * step
-    })
+      } else cur.current += Math.sign(t - cur.current) * step
+    }
+    setRot(cur.current)
   }, true)
   return {
     rot,
-    /** Açıyı ileri doğru delta kadar döndür */
+    /** Açıyı ileri doğru delta kadar döndür; bitince done */
     spin: (delta: number, opts?: { speed?: number; done?: () => void }) => {
-      setRot((r) => {
-        target.current = (target.current ?? r) + delta
-        return r
-      })
-      spd.current = opts?.speed ?? speed
-      onArrive.current = opts?.done ?? null
-    },
-    to: (angle: number, opts?: { speed?: number; done?: () => void }) => {
-      target.current = angle
+      target.current = (target.current ?? cur.current) + delta
       spd.current = opts?.speed ?? speed
       onArrive.current = opts?.done ?? null
     },
     set: (a: number) => {
       target.current = null
+      cur.current = a
       setRot(a)
     },
   }
@@ -65,9 +61,9 @@ export function useWheelAngle(idle = 7, speed = 220) {
 /* ───────────── Sahne ───────────── */
 
 /** Lunapark sahnesi: gökyüzü, tepeler, hız treni silueti, bayraklar, zemin */
-export function ParkSvg({ children, label, night = false }: { children?: ReactNode; label: string; night?: boolean }) {
+export function ParkSvg({ children, label, night = false, tent = true, className = '' }: { children?: ReactNode; label: string; night?: boolean; tent?: boolean; className?: string }) {
   return (
-    <svg viewBox={`0 0 ${VB_W} ${VB_H}`} className="block h-auto w-full select-none" style={{ touchAction: 'none' }} role="img" aria-label={label}>
+    <svg viewBox={`0 0 ${VB_W} ${VB_H}`} className={`block h-auto w-full select-none ${className}`} style={{ touchAction: 'none' }} role="img" aria-label={label}>
       <defs>
         <linearGradient id="lp-sky" x1="0" y1="0" x2="0" y2="1">
           {night ? (
@@ -121,14 +117,14 @@ export function ParkSvg({ children, label, night = false }: { children?: ReactNo
         </g>
       </g>
       {/* çadır */}
-      <g transform="translate(655 300)">
+      {tent && <g transform="translate(655 300)">
         <path d="M-58 50 L0 -10 L58 50Z" fill="#f43f5e" />
         <path d="M-58 50 L-29 50 L0 -10Z M0 -10 L29 50 L58 50Z" fill="#fff" opacity=".9" />
         <rect x="-50" y="50" width="100" height="44" fill="#fde68a" />
         <path d="M-50 50 h100 v8 q-12 10 -25 0 q-12 10 -25 0 q-12 10 -25 0 q-12 10 -25 0z" fill="#f43f5e" />
         <line x1="0" y1="-10" x2="0" y2="-30" stroke="#334155" strokeWidth="2" />
         <path d="M0 -30 L18 -24 L0 -18Z" fill="#facc15" />
-      </g>
+      </g>}
       {/* bayraklar */}
       <Bunting y={14} />
       {/* zemin */}
@@ -160,7 +156,7 @@ function Bunting({ y }: { y: number }) {
       {flags.map((i) => {
         const t = (i + 0.5) / flags.length
         const x = t * 800
-        const yy = y + 34 * 2 * t * (1 - t) * 2 * 0.5 * 2
+        const yy = y + 2 * t * (1 - t) * 34
         return <path key={i} d={`M${x - 11} ${yy} L${x + 11} ${yy} L${x} ${yy + 18}Z`} fill={CABIN_COLORS[i % CABIN_COLORS.length]} />
       })}
     </g>

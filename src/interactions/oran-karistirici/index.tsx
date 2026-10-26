@@ -516,6 +516,10 @@ function EquivTask({ t, footer, onSolved, sol }: { t: Extract<Task, { kind: 'equ
   const check = () => {
     const m = M.mix
     if (same(m, t.base)) {
+      if (near(m.o, t.base.o) && near(m.w, t.base.w)) {
+        setFb({ ok: false, text: 'Bu, hedef sürahinin aynısı! Aynı tadı daha büyük ya da daha küçük bir sürahide yapabilir misin?' })
+        return
+      }
       if (found.some((f) => near(f.o, m.o) && near(f.w, m.w))) {
         setFb({ ok: false, text: `${ratioTxt(m)} karışımını zaten yaptın. Daha büyük ya da daha küçük bir sürahi dene!` })
         return

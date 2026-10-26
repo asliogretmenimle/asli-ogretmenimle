@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Blocks, ClipboardList, FlaskConical, Gamepad2, GraduationCap, Laptop, Menu, Volume2, VolumeX, X } from 'lucide-react'
 import { setSound, soundOn } from '../lib/feedback'
@@ -6,6 +6,13 @@ import { ONLINE_LESSON_PATH, notFoundSeo, privateSeo, seoForPath } from '../lib/
 import { applySeo } from '../lib/seoHead'
 import { cachedActivity } from '../data/activityStore'
 import { gradeInfo, grades } from '../data/curriculum'
+import { ErrorBoundary } from './ErrorBoundary'
+
+export const PageLoading = () => (
+  <div className="grid h-[50vh] place-items-center">
+    <span className="size-10 animate-spin rounded-full border-4 border-line border-t-brand" aria-label="Yükleniyor" />
+  </div>
+)
 
 export function Logo({ small }: { small?: boolean }) {
   return (
@@ -108,7 +115,12 @@ export default function Layout() {
         </header>
       )}
       <main className="flex-1">
-        <Outlet />
+        {/* Menü her zaman kalsın: sayfa yüklenirken ya da hata verirse yalnızca içerik alanı değişir */}
+        <ErrorBoundary resetKey={pathname}>
+          <Suspense fallback={<PageLoading />}>
+            <Outlet />
+          </Suspense>
+        </ErrorBoundary>
       </main>
       {!focusMode && (
         <footer className="mt-12 border-t border-line bg-white/60">
