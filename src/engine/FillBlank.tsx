@@ -6,7 +6,7 @@ import { VisualView } from '../components/Visual'
 import { answerMatches } from '../lib/format'
 import { shuffle } from '../lib/random'
 import { sfx } from '../lib/feedback'
-import { CheckBar, useItems, type EngineProps, type Status } from './common'
+import { CheckBar, Explain, FlashCover, useFlash, useItems, type EngineProps, type Status } from './common'
 
 const isNumericAnswer = (a: string) => a.split('|').every((alt) => /^[-−]?[\d.,/]+$/.test(alt.trim()))
 
@@ -24,9 +24,9 @@ export default function FillBlank({ activity, onProgress, onFinish }: EngineProp
   const [tries, setTries] = useState(0)
   const [wrongMask, setWrongMask] = useState<boolean[]>([])
   const [score, setScore] = useState(0)
-  const [showHint, setShowHint] = useState(false)
 
   const item = items[idx]
+  const flash = useFlash(item?.flash, idx)
   const parts = useMemo(() => (item ? item.text.split('__') : []), [item])
   const blanks = parts.length - 1
   const numeric = item ? item.answers.every(isNumericAnswer) : true
@@ -81,6 +81,7 @@ export default function FillBlank({ activity, onProgress, onFinish }: EngineProp
   const check = () => {
     const mask = item.answers.map((a, i) => !answerMatches(values[i] ?? '', a))
     if (mask.every((m) => !m)) {
+      flash.reveal()
       setStatus('correct')
       if (tries === 0) setScore((s) => s + 1)
       sfx.ok()
@@ -111,7 +112,6 @@ export default function FillBlank({ activity, onProgress, onFinish }: EngineProp
     setStatus('idle')
     setTries(0)
     setWrongMask([])
-    setShowHint(false)
   }
 
   if (!item) return null
@@ -121,7 +121,7 @@ export default function FillBlank({ activity, onProgress, onFinish }: EngineProp
     <div className="animate-fade-up" key={idx}>
       {item.visual && (
         <div className="mb-5">
-          <VisualView v={item.visual} size="lg" />
+          {flash.visible ? <VisualView v={item.visual} size="lg" /> : <FlashCover canPeek={flash.canPeek} onPeek={flash.peek} />}
         </div>
       )}
       <div className="mb-6 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-3 text-center text-2xl font-extrabold leading-relaxed sm:text-3xl">
@@ -180,15 +180,15 @@ export default function FillBlank({ activity, onProgress, onFinish }: EngineProp
 
       {editable && numeric && !chips && <Keypad onKey={type} comma={keys.comma} minus={keys.minus} slash={keys.slash} />}
 
+      {(status === 'revealed' || (status === 'correct' && tries > 0)) && item.explain && <Explain tone={status === 'correct' ? 'green' : 'amber'}>{item.explain}</Explain>}
+
       <CheckBar
         status={status}
         canCheck={filled}
         onCheck={check}
         onRetry={retry}
         onNext={next}
-        hint={item.hint}
-        showHint={showHint}
-        onHint={() => setShowHint(true)}
+        hints={[...(item.hint ? [item.hint] : []), ...(item.hints ?? [])]}
         revealedText="Doğru cevap kutuda gösterildi."
       />
     </div>

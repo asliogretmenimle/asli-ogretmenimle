@@ -5,7 +5,7 @@ import { ContentView, hasVisual } from '../components/ContentView'
 import { MathText } from '../components/MathText'
 import { shuffle } from '../lib/random'
 import { celebrate, sfx } from '../lib/feedback'
-import { CheckBar, Prompt, type EngineProps } from './common'
+import { CheckBar, Explain, Prompt, type EngineProps } from './common'
 
 const BUCKET_COLORS = ['#6366f1', '#f97316', '#22c55e', '#ec4899']
 
@@ -15,6 +15,7 @@ export default function Categorize({ activity, onProgress, onFinish }: EnginePro
   const [missed, setMissed] = useState<Set<number>>(new Set())
   const [shake, setShake] = useState<{ item: number; bucket: string } | null>(null)
   const [picked, setPicked] = useState<number | null>(null)
+  const [note, setNote] = useState<string | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -25,6 +26,7 @@ export default function Categorize({ activity, onProgress, onFinish }: EnginePro
     const it = activity.items[itemIdx]
     setPicked(null)
     if (it.category === bucket) {
+      setNote(null)
       const np = { ...placed, [itemIdx]: bucket }
       setPlaced(np)
       sfx.ok()
@@ -32,6 +34,7 @@ export default function Categorize({ activity, onProgress, onFinish }: EnginePro
       if (Object.keys(np).length === items.length) celebrate()
     } else {
       setMissed((m) => new Set(m).add(itemIdx))
+      setNote(it.explain ?? null)
       setShake({ item: itemIdx, bucket })
       sfx.bad()
       setTimeout(() => setShake(null), 500)
@@ -81,6 +84,7 @@ export default function Categorize({ activity, onProgress, onFinish }: EnginePro
           ))}
         </div>
       </DndContext>
+      {note && !finished && <Explain>{note}</Explain>}
       {finished && <CheckBar status="correct" canCheck={false} onNext={() => onFinish(score, items.length)} correctText="Hepsini yerleştirdin!" nextLabel="Bitir" />}
     </div>
   )
@@ -97,7 +101,7 @@ function DraggableItem({ id, children, picked, shaking, visual, onTap }: { id: n
       onClick={onTap}
       style={{ transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined, touchAction: 'none' }}
       className={`flex items-center justify-center rounded-2xl border-2 px-4 py-2 text-lg font-extrabold select-none sm:text-xl ${visual ? 'min-h-20 min-w-24' : 'min-h-14 min-w-14'} ${
-        isDragging ? 'z-30 scale-110 border-brand bg-brand-soft shadow-[var(--shadow-lift)]' : shaking ? 'border-bad bg-bad-soft animate-shake' : picked ? 'border-brand bg-brand-soft shadow-[0_0_0_4px_rgb(63_138_79/0.18)]' : 'border-line bg-white shadow-[0_3px_0_var(--color-line)]'
+        isDragging ? 'z-30 scale-110 border-brand bg-brand-soft shadow-[var(--shadow-lift)]' : shaking ? 'border-orange-400 bg-orange-50 animate-shake' : picked ? 'border-brand bg-brand-soft shadow-[0_0_0_4px_rgb(63_138_79/0.18)]' : 'border-line bg-white shadow-[0_3px_0_var(--color-line)]'
       } cursor-grab`}
     >
       {children}

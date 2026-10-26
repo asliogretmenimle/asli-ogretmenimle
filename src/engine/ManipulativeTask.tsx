@@ -3,7 +3,7 @@ import type { ManipulativeActivity } from '../data/types'
 import { tools } from '../manipulatives/registry'
 import { MathText } from '../components/MathText'
 import { sfx } from '../lib/feedback'
-import { CheckBar, type EngineProps, type Status } from './common'
+import { CheckBar, Explain, type EngineProps, type Status } from './common'
 
 export default function ManipulativeTask({ activity, onProgress, onFinish }: EngineProps<ManipulativeActivity>) {
   const tool = tools[activity.tool]
@@ -46,13 +46,15 @@ export default function ManipulativeTask({ activity, onProgress, onFinish }: Eng
         <MathText text={task.prompt} />
       </div>
       <Comp value={value} onChange={setValue} config={config} target={task.target} locked={status === 'correct' || status === 'revealed'} />
+      {(status === 'correct' || status === 'revealed') && task.explain && <Explain tone="green">{task.explain}</Explain>}
       <CheckBar
+        hints={task.hints}
         status={status}
         canCheck
         onCheck={check}
         onRetry={() => setStatus('idle')}
         onNext={next}
-        wrongText={tries >= 2 ? 'Biraz daha dene, yapabilirsin!' : 'Henüz olmadı, tekrar dene!'}
+        wrongText={tries >= 2 ? 'Henüz değil — ipucuna bakmak ister misin?' : 'Henüz değil! Bir daha dene.'}
         nextLabel={idx + 1 >= activity.tasks.length ? 'Bitir' : 'Sonraki görev'}
         onSkip={tries >= 2 ? () => setStatus('revealed') : undefined}
         revealedText="Bu görevi geçtin."

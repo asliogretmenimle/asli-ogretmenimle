@@ -1,21 +1,33 @@
 import { useEffect, useState } from 'react'
-import type { Activity, Grade } from './types'
+import type { Activity, Grade, ThemeNotes } from './types'
 import { grades, isGrade, outcomeByCode } from './curriculum'
 
 /**
  * Etkinlik verisi sınıf başına ayrı parçalar hâlinde, ihtiyaç anında yüklenir.
  * (Doğrulama scripti senkron sürüm olan ./activities/index.ts dosyasını kullanır.)
  */
-const loaders: Record<Grade, () => Promise<Activity[]>> = {
-  1: () => import('./activities/grade1').then((m) => m.grade1),
-  2: () => import('./activities/grade2').then((m) => m.grade2),
-  3: () => import('./activities/grade3').then((m) => m.grade3),
-  4: () => import('./activities/grade4').then((m) => m.grade4),
-  5: () => import('./activities/grade5').then((m) => m.grade5),
-  6: () => import('./activities/grade6').then((m) => m.grade6),
-  7: () => import('./activities/grade7').then((m) => m.grade7),
-  8: () => import('./activities/grade8').then((m) => m.grade8),
+type Mod = Record<string, unknown>
+const modules: Record<Grade, () => Promise<Mod>> = {
+  1: () => import('./activities/grade1'),
+  2: () => import('./activities/grade2'),
+  3: () => import('./activities/grade3'),
+  4: () => import('./activities/grade4'),
+  5: () => import('./activities/grade5'),
+  6: () => import('./activities/grade6'),
+  7: () => import('./activities/grade7'),
+  8: () => import('./activities/grade8'),
 }
+const notesCache = new Map<Grade, ThemeNotes>()
+const loaders = Object.fromEntries(
+  Object.entries(modules).map(([g, load]) => [
+    g,
+    () =>
+      load().then((m) => {
+        notesCache.set(Number(g) as Grade, (m[`grade${g}Notes`] as ThemeNotes) ?? {})
+        return (m[`grade${g}`] as Activity[]) ?? []
+      }),
+  ]),
+) as Record<Grade, () => Promise<Activity[]>>
 
 const cache = new Map<Grade, Activity[]>()
 const pending = new Map<Grade, Promise<Activity[]>>()
@@ -78,3 +90,9 @@ export const activityTheme = (a: Activity) => outcomeByCode.get(a.outcomes[0])?.
 
 /** Aynı temanın etkinliklerini, bir çıktıya bağlı olanları döndürür */
 export const forOutcome = (list: Activity[], code: string) => list.filter((a) => a.outcomes.includes(code))
+
+/** Temanın büyük fikirleri (sınıf verisi yüklendiyse) */
+export const themeNotes = (g: Grade, slug: string) => notesCache.get(g)?.[slug]
+
+/** Aşamaların sırası ve etiketleri */
+export const STAGE_ORDER = ['somut', 'model', 'sembol', 'problem'] as const
