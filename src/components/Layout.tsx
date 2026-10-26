@@ -1,6 +1,6 @@
 import { Suspense, useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Blocks, ClipboardList, FlaskConical, Gamepad2, GraduationCap, Laptop, Menu, Volume2, VolumeX, X } from 'lucide-react'
+import { Blocks, FlaskConical, Gamepad2, GraduationCap, Laptop, Menu, Volume2, VolumeX, X } from 'lucide-react'
 import { setSound, soundOn } from '../lib/feedback'
 import { ONLINE_LESSON_PATH, notFoundSeo, privateSeo, seoForPath } from '../lib/seo'
 import { applySeo } from '../lib/seoHead'
@@ -77,7 +77,6 @@ const NAV = [
   { to: '/manipulatifler', label: 'Manipülatifler', icon: Blocks },
   { to: '/yaklasim', label: 'Yaklaşımımız', icon: GraduationCap },
   { to: ONLINE_LESSON_PATH, label: 'Online Ders', icon: Laptop },
-  { to: '/ogretmen', label: 'Öğretmen', icon: ClipboardList },
 ]
 
 export default function Layout() {

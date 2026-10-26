@@ -267,8 +267,7 @@ add(
   ${h2('Sık sorulan sorular')}${lessonFaq.map((f) => `<h3 class="mt-4 font-black">${esc(f.q)}</h3>${p(esc(f.a), 'mt-1 font-semibold text-ink-soft')}`).join('')}`,
 )
 
-// İndekslenmeyen uygulama sayfaları
-add(privateSeo('Öğretmen paneli', '/ogretmen'), '')
+// İndekslenmeyen uygulama sayfası
 add(privateSeo('Öğrenci raporu', '/rapor'), '')
 
 // ---------------------------------------------------------------------------

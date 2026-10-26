@@ -462,7 +462,6 @@ export function seoForPath(pathname: string, findActivity: (id: string) => Activ
     if (a === 'etkilesimler') return interactionsIndexSeo()
     if (a === 'yaklasim') return approachSeo()
     if (a === ONLINE_LESSON_PATH.slice(1)) return onlineLessonSeo()
-    if (a === 'ogretmen') return privateSeo('Öğretmen paneli', p)
     if (a === 'rapor') return privateSeo('Öğrenci raporu', p)
     return null
   }

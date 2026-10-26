@@ -2,7 +2,8 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "redirects": [
-    { "source": "/index", "destination": "/", "permanent": true }
+    { "source": "/index", "destination": "/", "permanent": true },
+    { "source": "/ogretmen", "destination": "/", "permanent": true }
   ],
   "headers": [
     {

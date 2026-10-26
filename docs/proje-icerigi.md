@@ -50,7 +50,6 @@ pnpm preview      # üretim çıktısını yerelde dene
 | `/yaklasim` | Yaklaşımımız (Van de Walle) |
 | `/online-ozel-ders` | Online özel ders tanıtımı |
 | `/rapor` | Öğrencinin gönderdiği rapor linkini görüntüleme |
-| `/ogretmen` | Öğretmen paneli (raporlar cihazda saklanır) |
 
 ## Pedagojik yaklaşım
 
@@ -64,7 +63,7 @@ Ayrıntılar: [van-de-walle-tasarim.md](van-de-walle-tasarim.md) ve [oyun-gelist
 
 ## Öğretmen raporu
 
-Veritabanı kullanılmaz. Öğrenci bir etkinliği ya da oyunu bitirince oturum özeti (ilk denemede doğru, yanlış deneme, ipucu, süre, kullanılan stratejiler, kavram yanılgıları) sıkıştırılarak bir linke gömülür: `/rapor#...`. Öğretmen linki açar ve raporu kendi cihazındaki panele (`/ogretmen`) ekleyebilir.
+Veritabanı kullanılmaz. Öğrenci bir etkinliği ya da oyunu bitirince oturum özeti (ilk denemede doğru, yanlış deneme, ipucu, süre, kullanılan stratejiler, kavram yanılgıları) sıkıştırılarak bir linke gömülür: `/rapor#...`. Öğretmen linki açarak raporu görüntüler.
 
 ## Etkinlik türleri
 

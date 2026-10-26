@@ -148,7 +148,7 @@ export function WheelTask({ level }: { level: WheelLevel }) {
           <Chips label="Bir kabindeki koltuk" options={level.seatOpts} value={s} onChange={(v) => change(c, v)} big={api.big} />
           <div className="grid grid-cols-2 gap-2">
             <Stat label="Bir turda" value={`${per} kişi`} tone="pink" />
-            <Stat label={multiTurn ? (level.turnWord === 'saat' ? 'Saatte tur' : 'Tur sayısı') : 'Sırada'} value={multiTurn ? `${level.turns} tur` : `${level.need} kişi`} tone="blue" />
+            <Stat label={multiTurn ? (level.turnWord === 'saat' ? 'Saatte tur' : 'Tur sayısı') : 'Binecek'} value={multiTurn ? `${level.turns} tur` : `${level.need} kişi`} tone="blue" />
           </div>
           <BigButton onClick={run} disabled={running} className="w-full"><Play size={20} />{running ? 'Dolap dönüyor…' : runLabel}</BigButton>
         </>

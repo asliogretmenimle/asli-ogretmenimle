@@ -12,7 +12,7 @@ const load = {
   manipulatives: () => import('./pages/Manipulatives'),
   approach: () => import('./pages/Approach'),
   interactions: () => import('./pages/Interactions'),
-  teacher: () => import('./pages/Teacher'),
+  report: () => import('./pages/Report'),
   games: () => import('./pages/Games'),
   onlineLesson: () => import('./pages/OnlineLesson'),
 }
@@ -24,8 +24,7 @@ const Approach = lazy(load.approach)
 const ManipulativePage = lazy(() => load.manipulatives().then((m) => ({ default: m.ManipulativePage })))
 const InteractionsIndex = lazy(() => load.interactions().then((m) => ({ default: m.InteractionsIndex })))
 const InteractionPage = lazy(() => load.interactions().then((m) => ({ default: m.InteractionPage })))
-const ReportView = lazy(() => load.teacher().then((m) => ({ default: m.ReportView })))
-const TeacherPanel = lazy(() => load.teacher().then((m) => ({ default: m.TeacherPanel })))
+const ReportView = lazy(() => load.report().then((m) => ({ default: m.ReportView })))
 const GamesIndex = lazy(() => load.games().then((m) => ({ default: m.GamesIndex })))
 const GamePage = lazy(() => load.games().then((m) => ({ default: m.GamePage })))
 const OnlineLesson = lazy(load.onlineLesson)
@@ -75,7 +74,6 @@ export default function App() {
           <Route path="etkilesimler" element={<InteractionsIndex />} />
           <Route path="etkilesim/:id" element={<InteractionPage />} />
           <Route path="rapor" element={<ReportView />} />
-          <Route path="ogretmen" element={<TeacherPanel />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Check, ClipboardCheck, RotateCcw, Save, Undo2 } from 'lucide-react'
 import { ek } from '../../../lib/generators'
 import { CITIES, TurkeyMap, tempColor } from './art'
@@ -23,42 +23,24 @@ function ThermoPath({ api, s, e }: { api: Api; s: number; e: number }) {
   const [paths, setPaths] = useState<string[]>([])
   const last = stops[stops.length - 1]
   const atEnd = last === e && stops.length > 1
-  const key = stops.join('→')
-  const label = `${stops.map(f).join(' → ')}: ${stops.slice(1).map((b, k) => `(${chg(b - stops[k])})`).join(' + ')} = ${chg(e - s)}`
-  const record = () => {
+  const register = (st: number[]) => {
+    const key = st.join('→')
     if (paths.includes(key)) return api.nudge('Bu yolu zaten buldun. Başka duraklarla dene: örneğin 0’da durmayı ya da tek seferde çıkmayı düşün.', { tone: 'ok' })
-    api.found(key, label)
-    api.strategy(stops.includes(0) && stops.length > 2 ? '0’ı ara durak yapma' : stops.length === 2 ? 'Tek seferde sayma' : 'Parça parça zıplama')
+    api.found(key, `${st.map((x) => f(x)).join(' → ')}: ${st.slice(1).map((b, k) => `(${chg(b - st[k])})`).join(' + ')} = ${chg(e - s)}`)
+    api.strategy(st.includes(0) && st.length > 2 ? '0’ı ara durak yapma' : st.length === 2 ? 'Tek seferde sayma' : 'Parça parça zıplama')
     const next = [...paths, key]
     setPaths(next)
     if (next.length >= 2) {
       api.say(`Farklı yollar, aynı değişim: ${chg(e - s)} °C. Yani ${f(e)} − (${f(s)}) = ${f(e - s)}.`)
       api.complete()
-    } else api.say('Bir yol buldun! Şimdi aynı yolculuğu başka duraklarla göster.')
+    } else api.say('Bir yol buldun! Şimdi aynı yolculuğu başka duraklarla göster: “Yeni yol”a dokun.')
   }
   const commit = (v: number) => {
     setLevel(v)
-    if (atEnd && typed) return
     if (v === last) return
     const nx = [...stops, v]
     setStops(nx)
-    if (v === e && typed) {
-      // ikinci ve sonraki yollar: değişim zaten hesaplandı
-      setTimeout(() => {
-        const k = nx.join('→')
-        if (paths.includes(k)) api.nudge('Bu yolu zaten buldun. Başka duraklarla dene!', { tone: 'ok' })
-        else {
-          api.found(k, `${nx.map(f).join(' → ')}: ${nx.slice(1).map((b, i) => `(${chg(b - nx[i])})`).join(' + ')} = ${chg(e - s)}`)
-          api.strategy(nx.includes(0) && nx.length > 2 ? '0’ı ara durak yapma' : nx.length === 2 ? 'Tek seferde sayma' : 'Parça parça zıplama')
-          const next = [...paths, k]
-          setPaths(next)
-          if (next.length >= 2) {
-            api.say(`Farklı yollar, aynı değişim: ${chg(e - s)} °C. Yani ${f(e)} − (${f(s)}) = ${f(e - s)}.`)
-            api.complete()
-          }
-        }
-      }, 0)
-    }
+    if (v === e && typed) register(nx)
   }
   const undo = () => {
     if (stops.length <= 1) return
@@ -75,13 +57,13 @@ function ThermoPath({ api, s, e }: { api: Api; s: number; e: number }) {
   return (
     <div className="grid gap-3 md:grid-cols-[minmax(0,300px)_minmax(0,1fr)] md:items-start">
       <Panel ink={ink} title="🌡️ Erzurum istasyonu">
-        <Thermo ink={ink} lo={-10} hi={10} level={level} stops={stops} marks={[{ v: s, color: '#2563eb', label: `07.00: ${deg(s)}` }, { v: e, color: '#ea580c', label: `12.00: ${deg(e)}` }]} onLevel={atEnd && typed ? undefined : setLevel} onCommit={atEnd && typed ? undefined : commit} />
+        <Thermo ink={ink} lo={-10} hi={10} level={level} stops={stops} marks={[{ v: s, color: '#2563eb', label: `07.00: ${deg(s)}` }, { v: e, color: '#ea580c', label: `12.00: ${deg(e)}` }]} onLevel={atEnd ? undefined : setLevel} onCommit={atEnd ? undefined : commit} />
         <div className="mt-2 flex flex-wrap justify-center gap-2">
-          <ToolBtn ink={ink} onClick={undo} disabled={stops.length <= 1} label="Son zıplamayı geri al"><Undo2 size={16} />Geri al</ToolBtn>
-          {paths.length > 0 && <ToolBtn ink={ink} onClick={restart} label="Yeni yol"><RotateCcw size={16} />Yeni yol</ToolBtn>}
+          <ToolBtn ink={ink} onClick={undo} disabled={stops.length <= 1 || (atEnd && typed)} label="Son zıplamayı geri al"><Undo2 size={16} />Geri al</ToolBtn>
+          {typed && <ToolBtn ink={ink} onClick={restart} active={atEnd} label="Yeni yol"><RotateCcw size={16} />Yeni yol</ToolBtn>}
         </div>
       </Panel>
-      <div className="grid gap-3">
+      <div className="grid content-start gap-3">
         <Panel ink={ink} title="🧾 Yolculuk kaydı">
           {jumps.length === 0 ? (
             <p className="text-sm font-bold" style={{ color: ink.soft }}>Pembe tutamacı yukarı sürükle ya da termometrede bir sıcaklığa dokun. Her bırakışta bir zıplama kaydedilir.</p>
@@ -96,13 +78,13 @@ function ThermoPath({ api, s, e }: { api: Api; s: number; e: number }) {
               ))}
             </div>
           )}
-          {paths.length > 0 && <p className="mt-2 text-xs font-bold" style={{ color: ink.soft }}>Bulunan yollar: {paths.length}. Farklı duraklarla yeni bir yol dene.</p>}
+          {paths.length > 0 && <p className="mt-2 text-xs font-bold" style={{ color: ink.soft }}>Bulunan yollar: {paths.length}</p>}
         </Panel>
         {atEnd && !typed && (
           <Panel ink={ink} className="animate-fade-up">
             <Ask
               api={api}
-              q={`${ekS(s, 'abl')} ${ekS(e, 'dat')}: sıcaklık toplam kaç derece değişti? (Artışı + ile, düşüşü − ile düşün.)`}
+              q={`${ekS(s, 'abl')} ${ekS(e, 'dat')}: sıcaklık toplam kaç derece değişti? (Artışı +, düşüşü − ile düşün.)`}
               unit="°C"
               neg
               judge={(v) => {
@@ -111,13 +93,11 @@ function ThermoPath({ api, s, e }: { api: Api; s: number; e: number }) {
                 if (v === e + s || v === Math.abs(e) - Math.abs(s) || v === Math.abs(s) - Math.abs(e)) return { q: `${ekS(s, 'abl')} 0’a kaç derece çıktın? 0’dan ${ekS(e, 'dat')} kaç derece? Zıplamaları topla.`, misc: 'Negatif sayının işaretini yok saydı (5 − 3 gibi)' }
                 return { q: `Zıplama etiketlerini topla: ${jumps.map(chg).join(' + ')} = ?` }
               }}
-              onOk={() => { setTyped(true); setTimeout(record, 0) }}
+              onOk={() => { setTyped(true); register(stops) }}
             />
           </Panel>
         )}
-        {atEnd && typed && (
-          <Chip ink={ink} tone="ok"><Check size={16} />Değişim: {chg(e - s)} °C</Chip>
-        )}
+        {typed && <div><Chip ink={ink} tone="ok"><Check size={16} />Değişim: {chg(e - s)} °C</Chip></div>}
       </div>
     </div>
   )
@@ -626,7 +606,7 @@ export function makeG7(): Mission[] {
     {
       key: 'g7-harita',
       title: 'Haritada sıcaklık farkı',
-      prompt: `Ocak sabahı istasyonlardan gelen sıcaklıklar haritada. Önce Erzurum ile Antalya arasındaki farkı bul. Sonra sıcaklık farkı tam ${d(map.D)} olan 2 şehir çifti keşfet.`,
+      prompt: `Ocak sabahı istasyonlardan gelen sıcaklıklar haritada. Önce Erzurum ile Antalya arasındaki farkı bul. Sonra sıcaklık farkı tam ${deg(map.D)} olan 2 şehir çifti keşfet.`,
       hints: ['Termometrede iki işaret arasında kaç derece var? 0’ı ara durak yap.', `0’ın altındaki bir şehir ile üstündeki bir şehir arasındaki fark: (0’a uzaklık) + (0’dan uzaklık).`, `Bir şehrin sıcaklığına ${map.D} ekle: o sıcaklıkta başka bir şehir var mı?`],
       goal: 2,
       picker: { q: 'Farkları nasıl buldun?', options: ['0’ı ara durak yaptım', 'Termometrede saydım', 'Çıkarma işlemi yaptım', 'Bir şehre farkı ekleyip aradım'] },
@@ -673,5 +653,3 @@ export function makeG7(): Mission[] {
   ]
 }
 
-const d = (n: number) => `${n} °C`
-export const _unused = { useMemo, Check, tempColor }

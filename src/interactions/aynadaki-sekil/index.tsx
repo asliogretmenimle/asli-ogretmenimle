@@ -525,7 +525,7 @@ function ReflectRound({ grade, task, onComplete, footer, addSol }: RoundProps & 
       setPhase('done')
       track.item(tries === 0)
       onComplete(tries === 0)
-    } else setNudge({ q: i === 1 ? 'Ayna ile AA′ çizgisi arasındaki açıya bak. Paralel çizgiler hiç kesişmez; bunlar kesişiyor mu?' : 'Köşedeki küçük kare işaretine bak: ayna ile AA′ arasındaki açı kaç derece?', mis: 'Ayna doğrusu ile orta dikme ilişkisini kuramadı', id: Date.now() })
+    } else setNudge({ q: i === 1 ? 'Ayna ile kesikli çizgi arasındaki açıya bak. Paralel çizgiler hiç kesişmez; bunlar kesişiyor mu?' : 'Kesişme noktasındaki küçük kare işaretine bak: ayna ile kesikli çizgi arasındaki açı kaç derece?', mis: 'Ayna doğrusu ile orta dikme ilişkisini kuramadı', id: Date.now() })
   }
 
   const handles: Handle[] = phase === 'place' ? pred.map((p, i) => ({ id: `p${i}`, x: p[0], y: p[1], color: status ? (status[i] ? '#16a34a' : '#f59e0b') : BLUE, label: `${LET[i]}′`, ring: !!status && !status[i] })) : []
@@ -573,9 +573,9 @@ function ReflectRound({ grade, task, onComplete, footer, addSol }: RoundProps & 
           {phase === 'place' && !(reveal && tries >= 2) && <BigButton onClick={check} disabled={!full} className="w-full"><FlipHorizontal2 size={20} />Aynayı aç</BigButton>}
           {phase === 'q' && (
             <Card title="Düşün">
-              <p className="mb-2 text-[17px] leading-snug font-extrabold">Kesikli çizgiler her köşeyi görüntüsüne bağlıyor. Ayna doğrusu, AA′ doğru parçası için nedir?</p>
+              <p className="mb-2 text-[17px] leading-snug font-extrabold">Kesikli çizgiler her köşeyi görüntüsüne bağlıyor. Ayna doğrusu, [AA′] doğru parçası için nedir?</p>
               <div className="grid gap-2">
-                {['AA′’ye dik ve onu tam ortadan bölüyor: orta dikmesi', 'AA′’ye paralel', 'AA′’yi ortadan bölüyor ama dik değil'].map((t, i) => (
+                {['Doğru parçasına dik ve onu tam ortadan bölüyor: orta dikmesi', 'Doğru parçasına paralel', 'Doğru parçasını ortadan bölüyor ama ona dik değil'].map((t, i) => (
                   <PickBtn key={i} on={qPick === i} color={i === 0 && qPick === 0 ? '#16a34a' : C} onClick={() => pickQ(i)} className="text-left text-[15px] leading-snug">{t}</PickBtn>
                 ))}
               </div>

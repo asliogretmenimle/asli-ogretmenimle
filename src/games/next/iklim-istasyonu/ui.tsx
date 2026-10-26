@@ -516,5 +516,7 @@ export interface Mission {
   picker?: { q: string; options: string[] }
   /** Görev bitince istasyon notu */
   note: string
+  /** “Modelle dene” düğmesinin açacağı manipülatif (düşündüren sorularda) */
+  tool?: { id: ManipulativeTool; config?: ManipulativeConfig; title?: string }
   render: (api: Api) => ReactNode
 }

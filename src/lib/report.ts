@@ -2,7 +2,7 @@
  * Öğretmen raporu — veritabanı yok.
  * Bir oturum (etkinlik ya da oyun) boyunca olaylar toplanır, bitince özet bir linke gömülür:
  *   /rapor#<sıkıştırılmış base64url>
- * Aslı Hoca linki açınca raporu görür ve kendi cihazındaki panele ekleyebilir.
+ * Aslı Hoca linki açınca raporu görür.
  */
 
 export interface ReportData {
@@ -122,10 +122,9 @@ export async function decodeReport(code: string): Promise<ReportData | null> {
 
 export const reportUrl = (code: string) => `${window.location.origin}/rapor#${code}`
 
-// ─── Öğrenci adı ve öğretmen paneli (cihazda) ──────────────────────────────
+// ─── Öğrenci adı (cihazda) ──────────────────────────────────────────────
 
 const NAME_KEY = 'ao-student-name'
-const PANEL_KEY = 'ao-teacher-reports'
 
 export const getStudentName = () => {
   try {
@@ -140,44 +139,6 @@ export const setStudentName = (n: string) => {
   } catch {
     /* depolama yok */
   }
-}
-
-export interface StoredReport {
-  code: string
-  data: ReportData
-  addedAt: number
-}
-
-export function loadPanel(): StoredReport[] {
-  try {
-    const raw = JSON.parse(localStorage.getItem(PANEL_KEY) ?? '[]') as StoredReport[]
-    return Array.isArray(raw) ? raw : []
-  } catch {
-    return []
-  }
-}
-
-export function savePanel(list: StoredReport[]) {
-  try {
-    localStorage.setItem(PANEL_KEY, JSON.stringify(list.slice(-1000)))
-    return true
-  } catch {
-    return false
-  }
-}
-
-export function addToPanel(code: string, data: ReportData): 'added' | 'exists' | 'error' {
-  const list = loadPanel()
-  if (list.some((r) => r.code === code)) return 'exists'
-  list.push({ code, data, addedAt: Date.now() })
-  return savePanel(list) ? 'added' : 'error'
-}
-
-/** Metin içindeki rapor linklerini/kodlarını bulur (WhatsApp sohbetinden toplu yapıştırma) */
-export function extractCodes(text: string): string[] {
-  const out = new Set<string>()
-  for (const m of text.matchAll(/rapor#([zj][A-Za-z0-9_-]{10,})/g)) out.add(m[1])
-  return [...out]
 }
 
 export const fmtDuration = (s: number) => (s < 60 ? `${s} sn` : `${Math.floor(s / 60)} dk ${s % 60 ? `${s % 60} sn` : ''}`.trim())
