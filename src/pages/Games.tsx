@@ -7,6 +7,7 @@ import { gameMeta, gameMetaById, gamesForGrade, type GameId, type GameMeta } fro
 import { games } from '../games/registry'
 import type { GameResult } from '../games/kit'
 import { ShareButton } from '../components/ShareButton'
+import { MathText } from '../components/MathText'
 import { SoundToggle, usePageTitle } from '../components/Layout'
 import { celebrate, sfx } from '../lib/feedback'
 import NotFound from './NotFound'
@@ -222,7 +223,7 @@ function GameView({ m }: { m: GameMeta }) {
             {result.insight && (
               <div className="mt-6 flex w-full max-w-2xl items-start gap-2 rounded-3xl bg-brand-soft p-5 text-left ring-1 ring-brand/20">
                 <Lightbulb size={20} className="mt-0.5 shrink-0 text-brand-ink" />
-                <p className="font-extrabold text-ink">{result.insight}</p>
+                <p className="font-extrabold text-ink"><MathText text={result.insight} /></p>
               </div>
             )}
             <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row">
