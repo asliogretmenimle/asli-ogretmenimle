@@ -1,9 +1,9 @@
 import {
   Shapes, Calculator, Ruler, BarChart3, Dices, FlipHorizontal2, Sigma, Hash,
   Link2, ListOrdered, PencilLine, Puzzle, LayoutGrid, CircleHelp, Hand,
-  Gamepad2, PlayCircle, FileText, Globe,
+  Gamepad2, PlayCircle, FileText, Globe, Blocks, Image, Binary, Lightbulb,
 } from 'lucide-react'
-import type { ActivityType, ExternalLink, ThemeIcon } from '../data/types'
+import type { ActivityType, ExternalLink, Stage, ThemeIcon } from '../data/types'
 
 export const themeIcon: Record<ThemeIcon, typeof Shapes> = {
   numbers: Hash,
@@ -40,6 +40,26 @@ export function TypeBadge({ type, compact }: { type: ActivityType; compact?: boo
     <span className="chip shrink-0" style={{ color: m.color, background: m.bg }}>
       <Icon size={13} strokeWidth={2.6} />
       {!compact && m.label}
+    </span>
+  )
+}
+
+/** Van de Walle aşamaları: somuttan soyuta */
+export const stageMeta: Record<Stage, { label: string; short: string; icon: typeof Shapes; color: string; bg: string; step: number; desc: string }> = {
+  somut: { label: 'Yap ve Keşfet', short: 'Keşfet', icon: Blocks, color: '#a16207', bg: '#fef3c7', step: 1, desc: 'Sanal materyalle yaparak keşfet.' },
+  model: { label: 'Resimle Düşün', short: 'Model', icon: Image, color: '#0f766e', bg: '#ccfbf1', step: 2, desc: 'Resim ve modellerle düşün.' },
+  sembol: { label: 'Sembolle Çöz', short: 'Sembol', icon: Binary, color: '#1d4ed8', bg: '#dbeafe', step: 3, desc: 'Sayı ve sembollerle stratejini kullan.' },
+  problem: { label: 'Problem ve Gerekçe', short: 'Problem', icon: Lightbulb, color: '#7e22ce', bg: '#f3e8ff', step: 4, desc: 'Gerçek hayat problemi çöz, nedenini açıkla.' },
+}
+
+export function StageBadge({ stage, compact }: { stage: Stage; compact?: boolean }) {
+  const m = stageMeta[stage]
+  if (!m) return null
+  const Icon = m.icon
+  return (
+    <span className="chip shrink-0" style={{ color: m.color, background: m.bg }} title={m.desc}>
+      <Icon size={13} strokeWidth={2.6} />
+      {compact ? m.short : m.label}
     </span>
   )
 }

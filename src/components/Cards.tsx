@@ -3,9 +3,9 @@ import { ArrowRight, ExternalLink as ExtIcon } from 'lucide-react'
 import type { Activity, ExternalLink, Grade, Theme } from '../data/types'
 import { gradeInfo } from '../data/curriculum'
 import { outcomeByCode } from '../data/curriculum'
-import { TypeBadge, linkMeta, themeIcon } from './meta'
+import { StageBadge, TypeBadge, linkMeta, stageMeta, themeIcon } from './meta'
 
-export function ActivityCard({ a, grade, showTheme }: { a: Activity; grade: Grade; showTheme?: boolean }) {
+export function ActivityCard({ a, grade, showTheme, step }: { a: Activity; grade: Grade; showTheme?: boolean; step?: number }) {
   const g = gradeInfo[grade]
   const oc = outcomeByCode.get(a.outcomes[0])
   return (
@@ -14,9 +14,15 @@ export function ActivityCard({ a, grade, showTheme }: { a: Activity; grade: Grad
       className="group card relative flex min-h-28 flex-col gap-2 overflow-hidden p-4 pl-5 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)] focus-visible:-translate-y-0.5"
     >
       <span className="absolute inset-y-0 left-0 w-1.5" style={{ background: g.color }} aria-hidden />
+      {step !== undefined && (
+        <span className="absolute top-3 right-3 grid size-6 place-items-center rounded-full text-[11px] font-black text-white" style={{ background: stageMeta[a.stage]?.color ?? g.color }} aria-label={`${step}. adım`}>{step}</span>
+      )}
       <div className="flex items-center justify-between gap-2">
-        <TypeBadge type={a.type} />
-        {a.level && (
+        <span className="flex flex-wrap items-center gap-1">
+          {a.stage && <StageBadge stage={a.stage} compact />}
+          <TypeBadge type={a.type} />
+        </span>
+        {a.level && step === undefined && (
           <span className="flex gap-0.5" aria-label={`Zorluk ${a.level}/3`} title={['', 'Kolay', 'Orta', 'Zor'][a.level]}>
             {[1, 2, 3].map((l) => <span key={l} className="size-1.5 rounded-full" style={{ background: l <= a.level! ? g.color : '#e5e7eb' }} />)}
           </span>

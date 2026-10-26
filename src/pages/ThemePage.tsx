@@ -1,10 +1,10 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import { findTheme, gradeInfo, isGrade, themesByGrade } from '../data/curriculum'
-import { forOutcome, useGradeActivities } from '../data/activityStore'
+import { STAGE_ORDER, forOutcome, themeNotes, useGradeActivities } from '../data/activityStore'
 import { linksFor } from '../data/links'
 import { ActivityCard, LinkCard } from '../components/Cards'
-import { themeIcon } from '../components/meta'
+import { stageMeta, themeIcon } from '../components/meta'
 import { usePageTitle } from '../components/Layout'
 import { ShareButton } from '../components/ShareButton'
 import NotFound from './NotFound'
@@ -49,9 +49,34 @@ export default function ThemePage() {
         </div>
       </header>
 
+      {all && themeNotes(g, theme.slug) && (
+        <section className="mb-8 rounded-3xl bg-white p-5 ring-1 ring-line sm:p-6">
+          <h2 className="mb-3 flex items-center gap-2 text-lg font-black"><Sparkles size={20} className="text-amber-500" />Büyük Fikirler</h2>
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {themeNotes(g, theme.slug)!.bigIdeas.map((b) => (
+              <li key={b} className="flex items-start gap-2 rounded-2xl bg-paper p-3 text-sm font-semibold text-ink">
+                <span className="mt-1.5 size-2 shrink-0 rounded-full" style={{ background: info.color }} />{b}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <div className="mb-6 flex flex-wrap items-center gap-1.5 text-xs font-extrabold text-ink-soft">
+        <span className="mr-1">Öğrenme yolu:</span>
+        {STAGE_ORDER.map((st, i) => (
+          <span key={st} className="flex items-center gap-1.5">
+            <span className="chip" style={{ color: stageMeta[st].color, background: stageMeta[st].bg }}>{i + 1}. {stageMeta[st].label}</span>
+            {i < STAGE_ORDER.length - 1 && <ChevronRight size={14} />}
+          </span>
+        ))}
+      </div>
+
       <div className="space-y-9">
         {theme.outcomes.map((o) => {
-          const list = forOutcome(all ?? [], o.code).filter((a) => !seen.has(a.id))
+          const list = forOutcome(all ?? [], o.code)
+            .filter((a) => !seen.has(a.id))
+            .sort((x, y) => STAGE_ORDER.indexOf(x.stage) - STAGE_ORDER.indexOf(y.stage))
           list.forEach((a) => seen.add(a.id))
           return (
             <section key={o.code}>
@@ -66,7 +91,7 @@ export default function ThemePage() {
                 <div className="h-28 animate-pulse rounded-2xl bg-white/70 ring-1 ring-line" />
               ) : list.length > 0 ? (
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {list.map((a) => <ActivityCard key={a.id} a={a} grade={g} />)}
+                  {list.map((a, i) => <ActivityCard key={a.id} a={a} grade={g} step={i + 1} />)}
                 </div>
               ) : (
                 <p className="text-sm font-bold text-ink-soft">Bu çıktının etkinlikleri yukarıdaki kartlarda yer alıyor.</p>
