@@ -84,6 +84,12 @@ export const gradeFromId = (id: string): Grade | null => {
   return isGrade(g) ? g : null
 }
 
+/** Sınıfı yüklenmişse etkinliği senkron döndürür */
+export const cachedActivity = (id: string): Activity | undefined => {
+  const g = gradeFromId(id)
+  return g ? cache.get(g)?.find((a) => a.id === id) : undefined
+}
+
 export const activityGrade = (a: Activity): Grade => gradeFromId(a.id) ?? ((outcomeByCode.get(a.outcomes[0])?.theme.grade ?? 1) as Grade)
 
 export const activityTheme = (a: Activity) => outcomeByCode.get(a.outcomes[0])?.theme

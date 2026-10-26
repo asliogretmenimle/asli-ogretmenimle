@@ -4,6 +4,7 @@ import { ContentView, hasVisual } from '../components/ContentView'
 import { shuffle, shuffleNotSame } from '../lib/random'
 import { sfx } from '../lib/feedback'
 import { CheckBar, Prompt, useItems, type EngineProps } from './common'
+import { useTracker } from '../lib/trackerContext'
 
 type Side = 'L' | 'R'
 
@@ -26,6 +27,7 @@ export default function MatchGame({ activity, onProgress, onFinish }: EngineProp
   const [missed, setMissed] = useState<Set<number>>(new Set())
   const [score, setScore] = useState(0)
   const [matchedTotal, setMatchedTotal] = useState(0)
+  const track = useTracker()
 
   const current = rounds[round] ?? []
   const rightOrder = useMemo(() => shuffleNotSame(current.map((_, i) => i)), [current])
@@ -42,7 +44,9 @@ export default function MatchGame({ activity, onProgress, onFinish }: EngineProp
     const L = side === 'L' ? i : sel.i
     const R = side === 'R' ? i : sel.i
     setSel(null)
+    track.attempt(L === R)
     if (L === R) {
+      track.item(!missed.has(L))
       const nd = new Set(done).add(L)
       setDone(nd)
       sfx.ok()

@@ -1,249 +1,363 @@
-import { useReducer, useRef, useState } from 'react'
-import { Crosshair, SkipForward } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { ArrowRight, Crosshair, RotateCcw, RotateCw, Ruler } from 'lucide-react'
 import type { Grade } from '../data/types'
 import { pick, randInt, shuffle } from '../lib/random'
 import { sfx } from '../lib/feedback'
-import { fmt } from '../lib/format'
-import { Hud, starsFor, useFrame, type GameProps } from './kit'
+import { Plane, Pinchable, usePlane } from '../interactive/Plane'
+import { useTracker } from '../lib/trackerContext'
+import { starsFor, type GameProps } from './kit'
+import { LevelDots, Nudge, Scene, StrategyPicker, useAge } from './kit2'
+
+/**
+ * Açı Topçusu (Van de Walle: ölçmeden önce tahmin, referans açılar, ölçme aracını anlamlı kullanma)
+ *  1. Tahmin: balon çizgisinin yerle yaptığı açıyı referanslarla (90°, 45°, 180°) karşılaştırıp tahmin et.
+ *  2. Ölç: iletkiyi sürükle/döndür (iki parmak), merkezini topun dibine, 0° çizgisini yere hizala; açıyı oku.
+ *  3. Ateş et: ölçtüğün açıyla. Iskada soru soran ipucu (yanlış sıra okuma, hizalama…). Can yok, süre yok.
+ */
 
 type Kind = 'dar' | 'dik' | 'geniş'
 interface Target { a: number; d: number; color: string }
-interface Result { hit: boolean; err: number; pts: number; text: string; kindText?: string; kindOk?: boolean }
+type Phase = 'estimate' | 'measure' | 'fly' | 'result'
 
-const SHOTS = 8
-const W = 340, H = 212, CX = 170, CY = 190, R = 150
+const ROUNDS = 6
 const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#ec4899']
 const KINDS: { k: Kind; label: string; why: string }[] = [
   { k: 'dar', label: 'Dar', why: '90°’den küçük' },
   { k: 'dik', label: 'Dik', why: 'tam 90°' },
-  { k: 'geniş', label: 'Geniş', why: '90°’den büyük, 180°’den küçük' },
+  { k: 'geniş', label: 'Geniş', why: '90°’den büyük' },
 ]
 const kindOf = (a: number): Kind => (a < 90 ? 'dar' : a === 90 ? 'dik' : 'geniş')
 const rad = (a: number) => (a * Math.PI) / 180
-const px = (a: number, r: number) => CX + r * Math.cos(rad(a))
-const py = (a: number, r: number) => CY - r * Math.sin(rad(a))
+const PR = 5 // iletki yarıçapı (birim)
+const STRATS = ['90° (dik açı) ile karşılaştırdım', '45° (dik açının yarısı) ile karşılaştırdım', '180° (doğru açı) ile karşılaştırdım', '30° / 60° gibi bildiğim açılar', 'Göz kararı']
 
 function makeTargets(grade: Grade): Target[] {
   let angles: number[]
-  if (grade === 4) {
-    angles = shuffle([90, ...shuffle([15, 30, 45, 60, 75, 105, 120, 135, 150, 165]).slice(0, SHOTS - 1)])
-  } else {
+  if (grade === 4) angles = shuffle([90, ...shuffle([20, 30, 45, 60, 70, 110, 120, 135, 150, 160]).slice(0, ROUNDS - 1)])
+  else {
     angles = []
-    while (angles.length < SHOTS) {
-      const a = grade <= 6 ? randInt(2, 34) * 5 : randInt(5, 175)
-      const prev = angles[angles.length - 1]
-      if (prev !== undefined && Math.abs(a - prev) < 20) continue
+    while (angles.length < ROUNDS) {
+      const a = grade <= 6 ? randInt(2, 34) * 5 : randInt(8, 172)
+      if (angles.some((p) => Math.abs(p - a) < 18) || a === 90) continue
       angles.push(a)
     }
   }
-  return angles.map((a) => ({ a, d: 0.55 + Math.random() * 0.35, color: pick(COLORS) }))
+  return angles.map((a) => ({ a, d: 5.6 + Math.random() * 2.6, color: pick(COLORS) }))
 }
 
-/** İletki: 0° sağda, 180° solda */
-function Protractor({ fine }: { fine: boolean }) {
+/** Gökyüzü, zemin, top, balon, nişan çizgisi */
+function Field({ tg, phase, shotAng, t, popped, bench }: { tg: Target; phase: Phase; shotAng: number | null; t: number; popped: boolean; bench: boolean }) {
+  const P = usePlane()
+  const X = (a: number, r: number) => P.sx(r * Math.cos(rad(a)))
+  const Y = (a: number, r: number) => P.sy(r * Math.sin(rad(a)))
+  const u = P.unitPx
+  const bx = X(tg.a, tg.d), by = Y(tg.a, tg.d)
+  const showBarrel = phase !== 'estimate' && shotAng !== null
   return (
-    <g pointerEvents="none" className="animate-fade-up">
-      <path d={`M${CX - R} ${CY} A${R} ${R} 0 0 1 ${CX + R} ${CY} Z`} fill="#fef9c3" fillOpacity={0.55} stroke="#ca8a04" strokeWidth={1.5} />
-      {Array.from({ length: fine ? 181 : 37 }, (_, i) => {
-        const d = fine ? i : i * 5
-        const len = d % 10 === 0 ? 11 : d % 5 === 0 ? 7 : 4
-        return <line key={d} x1={px(d, R)} y1={py(d, R)} x2={px(d, R - len)} y2={py(d, R - len)} stroke="#a16207" strokeWidth={d % 10 === 0 ? 1.3 : 0.7} />
-      })}
-      {Array.from({ length: 7 }, (_, i) => i * 30).map((d) => (
-        <text key={d} x={px(d, R - 20)} y={py(d, R - 20) + 3} textAnchor="middle" fontSize={9} fontWeight={800} fill="#713f12">{d}</text>
+    <g>
+      <defs>
+        <linearGradient id="ac-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#bae6fd" />
+          <stop offset="1" stopColor="#f0f9ff" />
+        </linearGradient>
+      </defs>
+      <rect x={0} y={0} width={P.width} height={P.sy(0)} fill="url(#ac-sky)" />
+      <rect x={0} y={P.sy(0)} width={P.width} height={Math.max(0, P.height - P.sy(0))} fill="#86efac" />
+      <line x1={P.sx(-30)} x2={P.sx(30)} y1={P.sy(0)} y2={P.sy(0)} stroke="#15803d" strokeWidth={2} />
+      {/* 0° kolu: yer */}
+      <line x1={P.sx(0)} y1={P.sy(0)} x2={P.sx(9.6)} y2={P.sy(0)} stroke="#1f2340" strokeWidth={3} strokeLinecap="round" />
+      {/* Balon kolu */}
+      <line x1={P.sx(0)} y1={P.sy(0)} x2={X(tg.a, 11.5)} y2={Y(tg.a, 11.5)} stroke="#dc2626" strokeWidth={2.5} strokeDasharray="7 5" />
+      <path d={`M${X(0, 1.4)} ${Y(0, 1.4)} A${1.4 * u} ${1.4 * u} 0 0 0 ${X(tg.a, 1.4)} ${Y(tg.a, 1.4)}`} fill="none" stroke="#dc2626" strokeWidth={3} />
+      {bench && [45, 90, 135].map((b) => (
+        <g key={b} pointerEvents="none">
+          <line x1={P.sx(0)} y1={P.sy(0)} x2={X(b, 8.4)} y2={Y(b, 8.4)} stroke="#7c3aed" strokeWidth={1.8} strokeDasharray="2 5" />
+          <text x={X(b, 8.9)} y={Y(b, 8.9)} textAnchor="middle" fontSize={13} fontWeight={900} fill="#6d28d9" stroke="#fff" strokeWidth={3} paintOrder="stroke">{b}°</text>
+        </g>
       ))}
+      {popped ? (
+        <text x={bx} y={by} fontSize={u * 1.6} textAnchor="middle" dominantBaseline="central" className="animate-pop" style={{ transformBox: 'fill-box', transformOrigin: 'center' }}>💥</text>
+      ) : (
+        <g transform={`translate(${bx - u * 0.8} ${by - u * 0.85}) scale(${(u * 1.6) / 80})`} pointerEvents="none">
+          <path d="M40 88c-4 6 4 10 0 16" stroke="#64748b" strokeWidth={3} fill="none" />
+          <path d="M40 4C19 4 6 20 6 39c0 22 18 38 30 43l-3 6h14l-3-6c12-5 30-21 30-43C74 20 61 4 40 4z" fill={tg.color} />
+          <ellipse cx={26} cy={24} rx={7} ry={11} fill="#fff" opacity={0.35} transform="rotate(-20 26 24)" />
+        </g>
+      )}
+      {phase === 'fly' && shotAng !== null && <circle cx={X(shotAng, t * 12)} cy={Y(shotAng, t * 12)} r={u * 0.28} fill="#1f2340" />}
+      {showBarrel && (
+        <g transform={`rotate(${-(shotAng ?? 90)} ${P.sx(0)} ${P.sy(0)})`}>
+          <rect x={P.sx(0)} y={P.sy(0) - u * 0.3} width={u * 1.9} height={u * 0.6} rx={u * 0.2} fill="#334155" />
+        </g>
+      )}
+      <path d={`M${P.sx(-1)} ${P.sy(0)} A${u} ${u} 0 0 1 ${P.sx(1)} ${P.sy(0)} Z`} fill="#475569" />
+      <circle cx={P.sx(0)} cy={P.sy(0)} r={4} fill="#f8fafc" />
+      {phase === 'estimate' && <text x={P.sx(0)} y={P.sy(0) - u * 0.32} textAnchor="middle" fontSize={u * 0.55} fontWeight={900} fill="#fff">?</text>}
+      <text x={P.sx(9.7)} y={P.sy(0) - 8} textAnchor="end" fontSize={13} fontWeight={900} fill="#1f2340">0°</text>
     </g>
   )
 }
 
+/** İki sıralı iletki: dış sıra sağdan sola 0→180, iç sıra 180→0 */
+function Protractor({ cx, cy, rot, fine, onMove, onRotate }: { cx: number; cy: number; rot: number; fine: boolean; onMove: (dx: number, dy: number) => void; onRotate: (d: number) => void }) {
+  const P = usePlane()
+  const R = PR * P.unitPx
+  const px = (d: number, r: number) => r * Math.cos(rad(d))
+  const py = (d: number, r: number) => -r * Math.sin(rad(d))
+  const ticks = Array.from({ length: fine ? 181 : 37 }, (_, i) => (fine ? i : i * 5))
+  const fs = Math.max(8, Math.min(13, R * 0.065))
+  return (
+    <Pinchable onMove={onMove} onRotate={onRotate}>
+      <g transform={`translate(${P.sx(cx)} ${P.sy(cy)}) rotate(${-rot})`}>
+        <path d={`M${-R} 0 A${R} ${R} 0 0 1 ${R} 0 Z`} fill="#fef9c3" fillOpacity={0.72} stroke="#ca8a04" strokeWidth={1.6} />
+        <path d={`M${-R * 0.55} 0 A${R * 0.55} ${R * 0.55} 0 0 1 ${R * 0.55} 0`} fill="none" stroke="#eab308" strokeWidth={1} />
+        {ticks.map((d) => {
+          const len = d % 10 === 0 ? R * 0.09 : d % 5 === 0 ? R * 0.06 : R * 0.035
+          return <line key={d} x1={px(d, R)} y1={py(d, R)} x2={px(d, R - len)} y2={py(d, R - len)} stroke="#a16207" strokeWidth={d % 10 === 0 ? 1.4 : 0.7} />
+        })}
+        {Array.from({ length: 19 }, (_, i) => i * 10).map((d) => (
+          <g key={d} fontWeight={800} textAnchor="middle">
+            <text x={px(d, R * 0.83)} y={py(d, R * 0.83) + fs * 0.35} fontSize={fs} fill="#713f12">{d}</text>
+            <text x={px(d, R * 0.68)} y={py(d, R * 0.68) + fs * 0.35} fontSize={fs * 0.82} fill="#b45309">{180 - d}</text>
+          </g>
+        ))}
+        <line x1={-R} x2={R} y1={0} y2={0} stroke="#a16207" strokeWidth={1.6} />
+        <line x1={0} x2={0} y1={0} y2={-R * 0.12} stroke="#a16207" strokeWidth={1.4} />
+        <circle r={5} fill="#fff" stroke="#a16207" strokeWidth={2} />
+      </g>
+    </Pinchable>
+  )
+}
+
 export default function AngleCannon({ grade, onFinish }: GameProps) {
-  const tol = grade === 4 ? 10 : grade <= 6 ? 7 : 5
-  const deltas = grade === 4 ? [-15, 15] : grade <= 6 ? [-10, -5, 5, 10] : [-10, -1, 1, 10]
+  const age = useAge(grade)
+  const dark = age.tier === 'atolye'
+  const track = useTracker()
+  const tol = grade >= 7 ? 2 : 3
+  const fine = grade >= 6
   const [targets] = useState(() => makeTargets(grade))
   const [round, setRound] = useState(0)
-  const [ang, setAng] = useState(90)
+  const [phase, setPhase] = useState<Phase>('estimate')
   const [kind, setKind] = useState<Kind | null>(null)
-  const [phase, setPhase] = useState<'aim' | 'fly' | 'show'>('aim')
-  const [score, setScore] = useState(0)
-  const [res, setRes] = useState<Result | null>(null)
-  const fly = useRef({ t: 0 })
-  const stats = useRef({ hits: 0, errSum: 0, kinds: 0, over: false })
-  const [, render] = useReducer((x: number) => x + 1, 0)
+  const [est, setEst] = useState(90)
+  const [meas, setMeas] = useState(90)
+  const [bench, setBench] = useState(false)
+  const [pro, setPro] = useState({ x: -4.6, y: 1.4, rot: 18 })
+  const [t, setT] = useState(0)
+  const [tries, setTries] = useState(0)
+  const [nudge, setNudge] = useState<{ q: string; mis?: string; k: number } | null>(null)
+  const [picked, setPicked] = useState(false)
+  const [kindMsg, setKindMsg] = useState<string | null>(null)
+  const stats = useRef({ estErr: [] as number[], firstHit: 0, kinds: 0, benchUsed: false, over: false })
   const tg = targets[round]
-  const maxScore = SHOTS * (grade === 4 ? 13 : 10)
+  const aligned = Math.hypot(pro.x, pro.y) < 1e-6 && Math.abs(pro.rot) < 1e-6
+  const hit = phase === 'result' || (phase === 'fly' && t >= tg.d / 12)
+  const popped = hit && Math.abs(meas - tg.a) <= tol
 
-  const land = () => {
-    const err = Math.abs(ang - tg.a)
-    const hit = err <= tol
-    let pts = hit ? 10 - Math.round((err * 5) / tol) : 0
-    const r: Result = {
-      hit,
-      err,
-      pts,
-      text: hit
-        ? err === 0 ? `Tam isabet! Balon ${tg.a}°’deydi. 🎯` : `Vurdun! Balon ${tg.a}°’deydi, sen ${ang}° seçtin (fark ${err}°).`
-        : `Iska! Balon ${tg.a}°’deydi, sen ${ang}° seçtin: ${err}° ${ang > tg.a ? 'fazla' : 'az'}.`,
+  // Uçuş animasyonu
+  useEffect(() => {
+    if (phase !== 'fly') return
+    let raf = 0
+    const t0 = performance.now()
+    const loop = (now: number) => {
+      const k = Math.min(1, (now - t0) / 800)
+      setT(k)
+      if (k < 1) raf = requestAnimationFrame(loop)
+      else land()
     }
+    raf = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(raf)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase])
+
+  const snap = (p: { x: number; y: number; rot: number }) => {
+    const n = { ...p }
+    if (Math.hypot(n.x, n.y) < 0.55) {
+      n.x = 0
+      n.y = 0
+    }
+    if (Math.abs(n.rot) < 4) n.rot = 0
+    return n
+  }
+  const moveP = (dx: number, dy: number) => setPro((c) => snap({ ...c, x: c.x + dx, y: c.y + dy }))
+  const rotP = (d: number) => setPro((c) => snap({ ...c, rot: ((c.rot - d + 540) % 360) - 180 }))
+  const nudgeRot = (d: number) => setPro((c) => snap({ ...c, rot: Math.round(c.rot + d) }))
+
+  const commitEstimate = () => {
     if (grade === 4) {
-      const real = KINDS.find((k) => k.k === kindOf(tg.a))!
-      r.kindOk = kind === real.k
-      r.kindText = r.kindOk ? `${tg.a}° ${real.label.toLocaleLowerCase('tr-TR')} açı, doğru bildin! +3` : `${tg.a}° ${real.label.toLocaleLowerCase('tr-TR')} açıdır: ${real.why}.`
-      if (r.kindOk) {
-        pts += 3
-        stats.current.kinds++
+      const real = kindOf(tg.a)
+      if (kind !== real) {
+        track.attempt(false)
+        setKindMsg(null)
+        setNudge({ q: kind === null ? 'Önce açının türünü seç.' : 'Balon çizgisini dik açıyla (90°) karşılaştır: dik açıdan daha mı az açılmış, daha mı çok? Köşesine bir kitabın köşesini koyduğunu düşün.', mis: kind ? 'Açıyı dik açıyla karşılaştırarak sınıflamada zorlandı.' : undefined, k: Date.now() })
+        return
       }
-      r.pts = pts
+      stats.current.kinds++
+      setKindMsg(`Evet, ${KINDS.find((k) => k.k === real)!.label.toLocaleLowerCase('tr-TR')} açı: ${KINDS.find((k) => k.k === real)!.why}.`)
     }
-    if (hit) stats.current.hits++
-    stats.current.errSum += err
-    if (hit) sfx.ok()
-    else sfx.bad()
-    setRes(r)
-    setScore((s) => s + pts)
-    setPhase('show')
+    stats.current.estErr.push(Math.abs(est - tg.a))
+    setNudge(null)
+    setMeas(est)
+    setPhase('measure')
   }
 
-  useFrame((dt) => {
-    const f = fly.current
-    if (f.t >= 1) return
-    f.t = Math.min(1, f.t + dt / 0.75)
-    if (f.t >= 1) land()
-    render()
-  }, phase === 'fly')
-
   const fire = () => {
-    if (phase !== 'aim' || (grade === 4 && !kind)) return
-    fly.current.t = 0
+    if (phase !== 'measure') return
+    setT(0)
+    setNudge(null)
     setPhase('fly')
   }
 
+  const land = () => {
+    const ok = Math.abs(meas - tg.a) <= tol
+    track.attempt(ok)
+    if (ok) {
+      sfx.ok()
+      if (tries === 0) stats.current.firstHit++
+      track.item(tries === 0)
+      setPhase('result')
+      return
+    }
+    setTries((n) => n + 1)
+    let q: string
+    let mis: string | undefined
+    if (Math.abs(meas - (180 - tg.a)) <= tol && Math.abs(tg.a - 90) > 8) {
+      q = 'İletkinin iki sıra sayısı var. Ölçmeye başladığın kol (yer) hangi sıradaki 0°’dan geçiyor? O sıradan oku.'
+      mis = 'İletkide yanlış sırayı okudu (180° − açı).'
+    } else if (!aligned) {
+      q = 'İletkinin merkezi topun tam dibinde mi? Düz kenarı (0° çizgisi) yerle çakışıyor mu? Hizalamadan okunan açı yanıltır.'
+      mis = 'Ölçerken iletkiyi köşeye ve kola hizalamadı.'
+    } else {
+      q = `Top ${meas > tg.a ? 'balonun üstünden' : 'balonun altından'} geçti. Kırmızı kesikli çizgi iletkide hangi iki büyük çentik arasında? Küçük çentikleri say.`
+    }
+    setNudge({ q, mis, k: Date.now() })
+    setPhase('measure')
+  }
+
   const next = () => {
-    if (round + 1 >= SHOTS) {
+    if (round + 1 >= ROUNDS) {
       const s = stats.current
       if (s.over) return
       s.over = true
+      const avg = s.estErr.reduce((a, b) => a + b, 0) / Math.max(1, s.estErr.length)
       onFinish({
-        stars: starsFor(score / maxScore),
-        score,
-        summary: `${s.hits}/${SHOTS} balonu vurdun, ortalama fark ${fmt(s.errSum / SHOTS, 1)}°${grade === 4 ? `, ${s.kinds} açı türünü doğru bildin` : ''}.`,
+        stars: starsFor((s.firstHit / ROUNDS) * 0.6 + Math.max(0, 1 - avg / 30) * 0.4),
+        score: s.firstHit * 15 + Math.max(0, Math.round(100 - avg * 3)),
+        summary: `Tahminlerin gerçek açıdan ortalama ${Math.round(avg)}° uzaktaydı; ${ROUNDS} balonun ${s.firstHit} tanesini ilk ölçümünle vurdun${grade === 4 ? `, ${s.kinds} açı türünü doğru bildin` : ''}.`,
         insight: grade === 4
-          ? 'Dik açı (90°) iyi bir ölçü çubuğu: balon ondan alçaktaysa dar, ötesindeyse geniş açı. Tahmin ederken 90°’yi kullandın mı?'
-          : 'İyi tahmin için önce 90°, 45° ve 135° gibi bilinen açılarla karşılaştır. Hangi açıları tahmin etmek daha zordu, neden?',
+          ? 'Dik açı (90°) iyi bir ölçü çubuğu: balon çizgisi ondan alçaktaysa dar, ötesindeyse geniş açı. Tahmin ederken 90°’yi kullandın mı?'
+          : 'İyi tahmin için önce 90°, 45° ve 180° gibi bilinen açılarla karşılaştır; sonra iletkinin hangi sırasını okuyacağına 0°’ın hangi kolda olduğuna bakarak karar ver.',
       })
       return
     }
     setRound(round + 1)
-    setAng(90)
+    setPhase('estimate')
     setKind(null)
-    setRes(null)
-    setPhase('aim')
+    setKindMsg(null)
+    setEst(90)
+    setMeas(90)
+    setBench(false)
+    setPro({ x: -4.6, y: 1.4, rot: pick([-25, 15, 30]) })
+    setTries(0)
+    setNudge(null)
+    setPicked(false)
   }
 
-  // Top ve balon konumu
-  const tx = px(tg.a, tg.d * R), ty = py(tg.a, tg.d * R)
-  const reach = fly.current.t * R * 1.15
-  const popped = phase !== 'aim' && Math.abs(ang - tg.a) <= tol && (phase === 'show' || reach >= tg.d * R)
-  const lo = Math.min(ang, tg.a), hiA = Math.max(ang, tg.a)
+  const panel = dark ? 'bg-slate-800/90 ring-1 ring-slate-600 text-slate-100' : 'bg-white/95 ring-1 ring-line text-ink'
+  const soft = dark ? 'text-slate-300' : 'text-ink-soft'
+  const deltas = grade === 4 ? [-10, -5, 5, 10] : [-10, -5, -1, 1, 5, 10]
+  const err = stats.current.estErr[round] ?? 0
+  const steps = ['Tahmin et', 'İletkiyle ölç', 'Karşılaştır']
+  const si = phase === 'estimate' ? 0 : phase === 'result' ? 2 : 1
+
+  const dial = (value: number, set: (v: number) => void, color: string, label: string) => (
+    <div>
+      <p className={`text-center text-xs font-extrabold tracking-wide uppercase ${soft}`}>{label}</p>
+      <p className="text-center text-4xl font-black tabular-nums" style={{ color }} aria-live="polite">{value}°</p>
+      <div className="mt-1 flex flex-wrap items-center justify-center gap-1.5">
+        {deltas.map((d) => (
+          <button key={d} type="button" onClick={() => set(Math.min(180, Math.max(0, value + d)))} disabled={d < 0 ? value === 0 : value === 180} className="min-h-12 min-w-14 rounded-xl bg-white px-2 text-base font-black text-ink ring-1 ring-line transition active:scale-95 disabled:opacity-40" aria-label={`${Math.abs(d)} derece ${d < 0 ? 'azalt' : 'artır'}`}>
+            {d < 0 ? '−' : '+'}{Math.abs(d)}°
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 
   return (
-    <div className="animate-fade-up">
-      <Hud round={round + 1} rounds={SHOTS} score={score} />
-      <div className="mb-3 rounded-2xl bg-ink px-4 py-2.5 text-center text-white">
-        <p className="text-lg font-black">Balon kaç derecede?</p>
-        <p className="text-sm font-bold text-white/75">Açı, sağdaki 0° çizgisinden ölçülür. ±{tol}° içinde vurursun.</p>
+    <Scene grade={grade} className="animate-fade-up">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <LevelDots current={round} total={ROUNDS} />
+        <div className="flex gap-1">
+          {steps.map((s, i) => (
+            <span key={s} className={`chip px-2.5 py-1 text-xs ${i === si ? 'bg-amber-600 text-white' : i < si ? 'bg-amber-100 text-amber-800' : dark ? 'bg-slate-700 text-slate-300' : 'bg-white text-ink-soft ring-1 ring-line'}`}>{i + 1}. {s}</span>
+          ))}
+        </div>
       </div>
 
-      <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto block w-full max-w-[520px] overflow-hidden rounded-3xl ring-1 ring-sky-200 select-none" role="img" aria-label="Top ve hedef balon">
-        <defs>
-          <linearGradient id="ac-sky" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#bae6fd" />
-            <stop offset="1" stopColor="#f0f9ff" />
-          </linearGradient>
-        </defs>
-        <rect width={W} height={H} fill="url(#ac-sky)" />
-        <rect y={CY} width={W} height={H - CY} fill="#86efac" />
-        <line x1={CX} y1={CY} x2={W - 6} y2={CY} stroke="#1f2340" strokeWidth={2} strokeDasharray="6 4" />
-        <text x={W - 8} y={CY - 6} textAnchor="end" fontSize={11} fontWeight={900} fill="#1f2340">0°</text>
-        <text x={8} y={CY - 6} fontSize={11} fontWeight={900} fill="#1f2340">180°</text>
-
-        {phase === 'show' && <Protractor fine={grade >= 7} />}
-
-        {phase === 'show' && (
-          <g pointerEvents="none">
-            <path d={`M${px(0, 30)} ${py(0, 30)} A30 30 0 0 0 ${px(tg.a, 30)} ${py(tg.a, 30)}`} fill="none" stroke="#dc2626" strokeWidth={3} opacity={0.6} />
-            {lo !== hiA && <path d={`M${px(lo, 62)} ${py(lo, 62)} A62 62 0 0 0 ${px(hiA, 62)} ${py(hiA, 62)}`} fill="none" stroke="#f97316" strokeWidth={6} strokeLinecap="round" />}
-            <line x1={CX} y1={CY} x2={px(tg.a, R + 4)} y2={py(tg.a, R + 4)} stroke="#dc2626" strokeWidth={2.5} strokeDasharray="6 4" />
-            <line x1={CX} y1={CY} x2={px(ang, R + 4)} y2={py(ang, R + 4)} stroke="#2563eb" strokeWidth={2.5} />
-            <text x={px(tg.a, R + 13)} y={py(tg.a, R + 13) + 4} textAnchor="middle" fontSize={12} fontWeight={900} fill="#dc2626" stroke="#fff" strokeWidth={3} paintOrder="stroke">{tg.a}°</text>
-            <text x={px(ang, R * 0.42)} y={py(ang, R * 0.42) + 4} textAnchor="middle" fontSize={12} fontWeight={900} fill="#2563eb" stroke="#fff" strokeWidth={3} paintOrder="stroke">{ang}°</text>
-          </g>
-        )}
-
-        {popped ? (
-          <text x={tx} y={ty} fontSize={30} textAnchor="middle" dominantBaseline="central" className="animate-pop" style={{ transformBox: 'fill-box', transformOrigin: 'center' }}>💥</text>
-        ) : (
-          <g transform={`translate(${tx - 16} ${ty - 16}) scale(0.4)`}>
-            <path d="M40 88c-4 6 4 10 0 16" stroke="#64748b" strokeWidth={3} fill="none" />
-            <path d="M40 4C19 4 6 20 6 39c0 22 18 38 30 43l-3 6h14l-3-6c12-5 30-21 30-43C74 20 61 4 40 4z" fill={tg.color} />
-            <ellipse cx={26} cy={24} rx={7} ry={11} fill="#fff" opacity={0.35} transform="rotate(-20 26 24)" />
-          </g>
-        )}
-
-        {phase === 'fly' && reach < R * 1.15 && <circle cx={px(ang, reach)} cy={py(ang, reach)} r={5.5} fill="#1f2340" />}
-
-        {/* Top: nişan alırken namlu gizli, yalnızca sayı seçilir */}
-        {phase !== 'aim' && (
-          <g transform={`rotate(${-ang} ${CX} ${CY})`}>
-            <rect x={CX} y={CY - 6} width={34} height={12} rx={4} fill="#334155" />
-          </g>
-        )}
-        <path d={`M${CX - 20} ${CY} A20 20 0 0 1 ${CX + 20} ${CY} Z`} fill="#475569" />
-        <circle cx={CX} cy={CY} r={4} fill="#f8fafc" />
-        {phase === 'aim' && <text x={CX} y={CY - 7} textAnchor="middle" fontSize={11} fontWeight={900} fill="#fff">?</text>}
-      </svg>
-
-      {phase === 'show' && res ? (
-        <div className={`card mt-3 p-4 text-center ${res.hit ? 'animate-pop' : 'animate-shake'}`}>
-          <p className={`text-lg font-black ${res.hit ? 'text-green-700' : 'text-orange-700'}`}>{res.text}</p>
-          {res.kindText && <p className={`mt-1 text-sm font-extrabold ${res.kindOk ? 'text-green-700' : 'text-orange-700'}`}>{res.kindText}</p>}
-          <p className="mt-1 text-sm font-bold text-ink-soft">{res.pts > 0 ? `+${res.pts} puan` : 'Bu atıştan puan yok.'} <span className="text-red-600">Kırmızı</span>: balon, <span className="text-blue-600">mavi</span>: senin atışın.</p>
-          <button type="button" onClick={next} className="btn-primary mt-3 w-full">{round + 1 >= SHOTS ? 'Sonuçları gör' : 'Sonraki atış'}<SkipForward size={18} /></button>
+      <div className="grid gap-3 lg:grid-cols-[1fr_320px]">
+        <div>
+          <Plane initial={{ xMin: -10, xMax: 10, yMin: -2.6, yMax: 9.6 }} grid={false} axes={false} minSpan={4} maxSpan={30} label="Top, balon ve iletki">
+            <Field tg={tg} phase={phase} shotAng={phase === 'estimate' ? null : meas} t={t} popped={popped} bench={bench && phase === 'estimate'} />
+            {phase !== 'estimate' && <Protractor cx={pro.x} cy={pro.y} rot={pro.rot} fine={fine} onMove={moveP} onRotate={rotP} />}
+          </Plane>
         </div>
-      ) : (
-        <div className="mt-3">
-          <p className="text-center text-xs font-extrabold tracking-wide text-ink-soft uppercase">Topun açısı</p>
-          <p className="text-center text-4xl font-black text-amber-700 tabular-nums" aria-live="polite">{ang}°</p>
-          <div className="mt-2 flex items-center justify-center gap-2">
-            {deltas.map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => setAng(Math.min(180, Math.max(0, ang + d)))}
-                disabled={phase !== 'aim' || (d < 0 ? ang === 0 : ang === 180)}
-                className="min-h-12 min-w-16 rounded-2xl bg-white px-2 text-base font-black ring-1 ring-line transition active:scale-95 disabled:opacity-40"
-                aria-label={`${Math.abs(d)} derece ${d < 0 ? 'azalt' : 'artır'}`}
-              >
-                {d < 0 ? '−' : '+'}{Math.abs(d)}°
+
+        <div className="space-y-3">
+          {phase === 'estimate' && (
+            <div className={`rounded-2xl p-3 ${panel}`}>
+              <p className="text-base font-black">Kırmızı kesikli çizgi yerle kaç derecelik açı yapıyor?</p>
+              <p className={`text-sm font-bold ${soft}`}>Önce ölçmeden tahmin et. Bildiğin açılarla karşılaştır.</p>
+              {grade === 4 && (
+                <div className="mt-2">
+                  <p className={`text-xs font-extrabold tracking-wide uppercase ${soft}`}>Dik açıyla karşılaştır: bu açı…</p>
+                  <div className="mt-1 grid grid-cols-3 gap-2">
+                    {KINDS.map((k) => (
+                      <button key={k.k} type="button" onClick={() => setKind(k.k)} aria-pressed={kind === k.k} className={`min-h-12 rounded-xl text-base font-black ring-1 transition active:scale-95 ${kind === k.k ? 'bg-amber-500 text-white ring-amber-500' : 'bg-white text-ink ring-line'}`}>{k.label}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="mt-3">{dial(est, setEst, '#b45309', 'Tahminim')}</div>
+              <button type="button" onClick={() => { setBench(!bench); if (!stats.current.benchUsed) { stats.current.benchUsed = true; track.strategy('Referans açıları (45°, 90°, 135°) kullandı') } }} aria-pressed={bench} className={`mt-3 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-extrabold ring-1 ${bench ? 'bg-violet-600 text-white ring-violet-600' : 'bg-white text-ink ring-line'}`}>
+                {bench ? 'Referans çizgilerini gizle' : '45°, 90°, 135° referans çizgilerini göster'}
               </button>
-            ))}
-          </div>
-          {grade === 4 && (
-            <div className="mt-3">
-              <p className="text-center text-xs font-extrabold tracking-wide text-ink-soft uppercase">Balonun açısı nasıl bir açı?</p>
-              <div className="mt-1.5 grid grid-cols-3 gap-2">
-                {KINDS.map((k) => (
-                  <button key={k.k} type="button" onClick={() => setKind(k.k)} disabled={phase !== 'aim'} aria-pressed={kind === k.k} className={`min-h-12 rounded-2xl text-base font-black ring-1 transition active:scale-95 ${kind === k.k ? 'bg-amber-500 text-white ring-amber-500' : 'bg-white text-ink ring-line'}`}>
-                    {k.label}
-                  </button>
-                ))}
-              </div>
+              <button type="button" onClick={commitEstimate} className="btn-primary mt-3 w-full text-lg">Tahminim bu</button>
             </div>
           )}
-          <button type="button" onClick={fire} disabled={phase !== 'aim' || (grade === 4 && !kind)} className="btn-primary mt-3 w-full text-lg">
-            <Crosshair size={20} />{grade === 4 && !kind ? 'Önce açı türünü seç' : 'Ateş!'}
-          </button>
+
+          {(phase === 'measure' || phase === 'fly') && (
+            <div className={`rounded-2xl p-3 ${panel}`}>
+              {kindMsg && <p className="mb-2 rounded-xl bg-emerald-50 px-3 py-1.5 text-sm font-extrabold text-emerald-800">{kindMsg}</p>}
+              <p className="flex items-center gap-1.5 text-base font-black"><Ruler size={18} className="text-amber-500" />Şimdi iletkiyle ölç</p>
+              <p className={`text-sm font-bold ${soft}`}>İletkiyi sürükle; merkezini topun dibine, düz kenarını yere yerleştir. İki parmakla döndürebilirsin.</p>
+              <div className="mt-2 flex items-center justify-center gap-2">
+                <button type="button" onClick={() => nudgeRot(5)} className="grid size-12 place-items-center rounded-xl bg-white text-ink ring-1 ring-line active:scale-95" aria-label="İletkiyi sola döndür"><RotateCcw size={20} /></button>
+                <span className={`min-w-28 rounded-xl px-2 py-1 text-center text-sm font-black ${aligned ? 'bg-emerald-100 text-emerald-800' : dark ? 'bg-slate-700 text-slate-200' : 'bg-slate-100 text-ink-soft'}`}>{aligned ? 'Hizalandı ✓' : 'Hizalı değil'}</span>
+                <button type="button" onClick={() => nudgeRot(-5)} className="grid size-12 place-items-center rounded-xl bg-white text-ink ring-1 ring-line active:scale-95" aria-label="İletkiyi sağa döndür"><RotateCw size={20} /></button>
+              </div>
+              <div className="mt-3">{dial(meas, setMeas, '#2563eb', 'Ölçtüğüm açı')}</div>
+              <button type="button" onClick={fire} disabled={phase === 'fly'} className="btn-primary mt-3 w-full text-lg"><Crosshair size={20} />Ateş! {meas}°</button>
+            </div>
+          )}
+
+          {phase === 'result' && (
+            <div className={`rounded-2xl p-3 animate-pop ${panel}`}>
+              <p className="text-lg font-black text-emerald-500">Balon patladı! 🎯</p>
+              <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+                <div className={`rounded-xl p-2 ${dark ? 'bg-slate-700' : 'bg-amber-50'}`}><p className="text-xs font-extrabold opacity-70">Tahminin</p><p className="text-xl font-black text-amber-600">{stats.current.estErr.length > round ? est : '–'}°</p></div>
+                <div className={`rounded-xl p-2 ${dark ? 'bg-slate-700' : 'bg-sky-50'}`}><p className="text-xs font-extrabold opacity-70">Ölçümün</p><p className="text-xl font-black text-sky-600">{meas}°</p></div>
+                <div className={`rounded-xl p-2 ${dark ? 'bg-slate-700' : 'bg-rose-50'}`}><p className="text-xs font-extrabold opacity-70">Gerçek</p><p className="text-xl font-black text-rose-600">{tg.a}°</p></div>
+              </div>
+              <p className={`mt-2 text-sm font-bold ${soft}`}>{err <= 5 ? 'Tahminin neredeyse tam! Referans açıları iyi kullanıyorsun.' : err <= 15 ? `Tahminin ${err}° uzaktaydı; oldukça yakın.` : `Tahminin ${err}° uzaktaydı. Bir dahaki sefere önce 90° ile karşılaştır: daha mı açık, daha mı kapalı?`}</p>
+              {round % 2 === 0 && !picked && <StrategyPicker question="Tahmin ederken hangi açıyı referans aldın?" options={STRATS} onPick={() => setPicked(true)} />}
+              <button type="button" onClick={next} className="btn-primary mt-3 w-full">{round + 1 >= ROUNDS ? 'Sonuçları gör' : 'Sonraki balon'}<ArrowRight size={18} /></button>
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+
+      {nudge && <Nudge key={nudge.k} question={nudge.q} misconception={nudge.mis} tool="angle" toolTitle="Açı ölçer" onClose={() => setNudge(null)} />}
+    </Scene>
   )
 }

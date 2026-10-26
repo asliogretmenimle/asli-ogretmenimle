@@ -6,6 +6,7 @@ import { MathText } from '../components/MathText'
 import { shuffle } from '../lib/random'
 import { celebrate, sfx } from '../lib/feedback'
 import { CheckBar, Explain, Prompt, type EngineProps } from './common'
+import { useTracker } from '../lib/trackerContext'
 
 const BUCKET_COLORS = ['#6366f1', '#f97316', '#22c55e', '#ec4899']
 
@@ -16,6 +17,7 @@ export default function Categorize({ activity, onProgress, onFinish }: EnginePro
   const [shake, setShake] = useState<{ item: number; bucket: string } | null>(null)
   const [picked, setPicked] = useState<number | null>(null)
   const [note, setNote] = useState<string | null>(null)
+  const track = useTracker()
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -25,7 +27,9 @@ export default function Categorize({ activity, onProgress, onFinish }: EnginePro
   const drop = (itemIdx: number, bucket: string) => {
     const it = activity.items[itemIdx]
     setPicked(null)
+    track.attempt(it.category === bucket)
     if (it.category === bucket) {
+      track.item(!missed.has(itemIdx))
       setNote(null)
       const np = { ...placed, [itemIdx]: bucket }
       setPlaced(np)
@@ -35,6 +39,7 @@ export default function Categorize({ activity, onProgress, onFinish }: EnginePro
     } else {
       setMissed((m) => new Set(m).add(itemIdx))
       setNote(it.explain ?? null)
+      track.misconception(it.explain)
       setShake({ item: itemIdx, bucket })
       sfx.bad()
       setTimeout(() => setShake(null), 500)

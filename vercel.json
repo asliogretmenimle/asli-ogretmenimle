@@ -1,5 +1,9 @@
 {
-  "rewrites": [{ "source": "/((?!assets/).*)", "destination": "/index.html" }],
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/index", "destination": "/", "permanent": true }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",

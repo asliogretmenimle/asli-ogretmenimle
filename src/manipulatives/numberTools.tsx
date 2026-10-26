@@ -1,4 +1,5 @@
-import { TenFrameSvg, BlocksSvg, NumberLineSvg, Money } from '../components/Visual'
+import { TenFrameSvg, BlocksSvg, Money } from '../components/Visual'
+import { DragPoint, Plane, usePlane } from '../interactive/Plane'
 import { fmt, fmtPlain } from '../lib/format'
 import { Readout, Stepper, ToolButton } from './ui'
 import { n, type ToolDef } from './types'
@@ -83,6 +84,29 @@ export const base10: ToolDef<B> = {
 
 // ─── Sayı doğrusu ──────────────────────────────────────────────────────────
 type NL = { points: number[] }
+
+/** Noktalar arası sıçrama yayları */
+function Jumps({ points }: { points: number[] }) {
+  const P = usePlane()
+  const y0 = P.sy(0)
+  return (
+    <g pointerEvents="none">
+      {points.slice(1).map((p, i) => {
+        const a = points[i]
+        const mid = (P.sx(a) + P.sx(p)) / 2
+        const h = Math.min(70, Math.abs(P.sx(p) - P.sx(a)) / 2 + 12)
+        const d = p - a
+        return (
+          <g key={i}>
+            <path d={`M${P.sx(a)} ${y0 - 6} Q${mid} ${y0 - 6 - h} ${P.sx(p)} ${y0 - 6}`} fill="none" stroke="#f97316" strokeWidth={3} />
+            <text x={mid} y={y0 - h / 2 - 12} textAnchor="middle" fontSize={14} fontWeight={900} fill="#c2410c">{d >= 0 ? '+' : '−'}{fmtPlain(Math.abs(d))}</text>
+          </g>
+        )
+      })}
+    </g>
+  )
+}
+
 export const numberline: ToolDef<NL> = {
   id: 'numberline',
   defaultConfig: { min: 0, max: 20, step: 1 },
@@ -90,29 +114,37 @@ export const numberline: ToolDef<NL> = {
   check: (v, t) => v.points.length > 0 && Math.abs(v.points[v.points.length - 1] - n(t, 'value')) < 1e-6,
   Component: ({ value, onChange, config, target, locked }) => {
     const min = config.min ?? 0, max = config.max ?? 20, step = config.step ?? 1
-    const ticks = Math.round((max - min) / step)
-    const snap = (i: number) => Math.round((min + Math.max(0, Math.min(ticks, i)) * step) * 1e6) / 1e6
-    const tap = (v: number) => {
+    const snapV = (x: number) => Math.round(Math.max(min, Math.min(max, Math.round((x - min) / step) * step + min)) * 1e6) / 1e6
+    const tap = (x: number) => {
       if (locked) return
+      const v = snapV(x)
       onChange({ points: target ? [v] : [...value.points.slice(-5), v] })
     }
-    const onClick = (e: React.MouseEvent<HTMLDivElement>) => {
-      const r = e.currentTarget.getBoundingClientRect()
-      const x = ((e.clientX - r.left) / r.width) * 340
-      tap(snap(Math.round(((x - 20) / 300) * ticks)))
-    }
-    const onKey = (e: React.KeyboardEvent) => {
-      const cur = value.points.length ? Math.round((value.points[value.points.length - 1] - min) / step) : -1
-      if (e.key === 'ArrowRight') { e.preventDefault(); tap(snap(cur + 1)) }
-      if (e.key === 'ArrowLeft') { e.preventDefault(); tap(snap(Math.max(0, cur - 1))) }
-    }
     const last = value.points[value.points.length - 1]
+    const pad = (max - min) * 0.04
     return (
       <div className="flex flex-col items-center gap-3">
-        <div className="w-full max-w-2xl cursor-crosshair rounded-xl" onClick={onClick} onKeyDown={onKey} tabIndex={0} role="slider" aria-valuemin={min} aria-valuemax={max} aria-valuenow={last} aria-label="Sayı doğrusu">
-          <NumberLineSvg min={min} max={max} step={step} points={value.points} jumps={target ? [] : value.points} />
+        <div className="w-full max-w-3xl">
+          <Plane mode="x" initial={{ xMin: min - pad, xMax: max + pad, yMin: -1, yMax: 1 }} minSpan={step * 2} maxSpan={(max - min) * 4 + 10} onTap={(p) => tap(p.x)} tickPx={30} label="Sayı doğrusu">
+            {!target && <Jumps points={value.points} />}
+            {value.points.map((p, i) => (
+              <DragPoint
+                key={i}
+                x={p}
+                y={0}
+                r={i === value.points.length - 1 ? 12 : 8}
+                color={i === value.points.length - 1 ? '#d6457a' : '#f9a8c2'}
+                disabled={locked || i !== value.points.length - 1}
+                onChange={(q) => {
+                  const pts = value.points.slice()
+                  pts[i] = snapV(q.x)
+                  onChange({ points: pts })
+                }}
+              />
+            ))}
+          </Plane>
         </div>
-        <p className="text-sm font-bold text-ink-soft">Çizgi üzerindeki bir çentiğe dokun.</p>
+        <p className="text-sm font-bold text-ink-soft">Çizgiye dokunarak nokta koy, noktayı sürükle. {target ? '' : 'Art arda dokunursan sıçramaları görürsün.'}</p>
         <div className="flex items-center gap-2">
           {!target && last !== undefined && (
             <Readout>

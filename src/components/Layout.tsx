@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Blocks, Gamepad2, GraduationCap, Volume2, VolumeX } from 'lucide-react'
+import { Blocks, ClipboardList, FlaskConical, Gamepad2, GraduationCap, Laptop, Menu, Volume2, VolumeX, X } from 'lucide-react'
 import { setSound, soundOn } from '../lib/feedback'
+import { ONLINE_LESSON_PATH, applySeo, notFoundSeo, privateSeo, seoForPath } from '../lib/seo'
+import { cachedActivity } from '../data/activityStore'
+import { gradeInfo, grades } from '../data/curriculum'
 
 export function Logo({ small }: { small?: boolean }) {
   return (
@@ -37,46 +40,69 @@ export function SoundToggle() {
   )
 }
 
+function MobileMenu() {
+  const [open, setOpen] = useState(false)
+  const { pathname } = useLocation()
+  useEffect(() => setOpen(false), [pathname])
+  return (
+    <div className="flex items-center gap-1.5 md:hidden">
+      <SoundToggle />
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="Menü" className="grid size-11 place-items-center rounded-xl bg-white text-ink ring-1 ring-line">
+        {open ? <X size={22} /> : <Menu size={22} />}
+      </button>
+      {open && (
+        <div className="absolute inset-x-3 top-[calc(100%+6px)] z-40 rounded-2xl bg-white p-2 shadow-[var(--shadow-lift)] ring-1 ring-line animate-fade-up">
+          {NAV.map((n) => (
+            <NavLink key={n.to} to={n.to} className={({ isActive }) => `flex min-h-12 items-center gap-3 rounded-xl px-3 text-base font-extrabold ${isActive ? 'bg-brand-soft text-brand-ink' : 'text-ink hover:bg-paper'}`}>
+              <n.icon size={20} />{n.label}
+            </NavLink>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const NAV = [
+  { to: '/oyunlar', label: 'Oyunlar', icon: Gamepad2 },
+  { to: '/etkilesimler', label: 'Keşif Atölyesi', icon: FlaskConical },
+  { to: '/manipulatifler', label: 'Manipülatifler', icon: Blocks },
+  { to: '/yaklasim', label: 'Yaklaşımımız', icon: GraduationCap },
+  { to: ONLINE_LESSON_PATH, label: 'Online Ders', icon: Laptop },
+  { to: '/ogretmen', label: 'Öğretmen', icon: ClipboardList },
+]
+
 export default function Layout() {
   const { pathname } = useLocation()
   useEffect(() => {
     window.scrollTo({ top: 0 })
   }, [pathname])
-  const focusMode = pathname.startsWith('/etkinlik/') || pathname.startsWith('/oyun/')
+  const focusMode = pathname.startsWith('/etkinlik/') || pathname.startsWith('/oyun/') || pathname.startsWith('/etkilesim/')
 
   return (
     <div className="flex min-h-dvh flex-col">
       {!focusMode && (
         <header className="sticky top-0 z-30 border-b border-line/70 bg-paper/85 backdrop-blur-md">
+          <div className="relative">
           <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-4">
             <Logo />
-            <nav className="flex items-center gap-1 sm:gap-2">
-              <NavLink
-                to="/yaklasim"
-                className={({ isActive }) => `inline-flex min-h-10 items-center gap-1.5 rounded-xl px-2 text-sm font-extrabold transition sm:px-3 ${isActive ? 'bg-brand text-white' : 'text-ink hover:bg-white'}`}
-                aria-label="Yaklaşımımız"
-              >
-                <GraduationCap size={18} />
-                <span className="hidden md:inline">Yaklaşımımız</span>
-              </NavLink>
-              <NavLink
-                to="/oyunlar"
-                aria-label="Oyunlar"
-                className={({ isActive }) => `inline-flex min-h-10 items-center gap-1.5 rounded-xl px-2 text-sm font-extrabold transition sm:px-3 ${isActive ? 'bg-brand text-white' : 'text-ink hover:bg-white'}`}
-              >
-                <Gamepad2 size={18} />
-                <span className="hidden md:inline">Oyunlar</span>
-              </NavLink>
-              <NavLink
-                to="/manipulatifler"
-                aria-label="Manipülatifler"
-                className={({ isActive }) => `inline-flex min-h-10 items-center gap-1.5 rounded-xl px-2 text-sm font-extrabold transition sm:px-3 ${isActive ? 'bg-brand text-white' : 'text-ink hover:bg-white'}`}
-              >
-                <Blocks size={18} />
-                <span className="hidden md:inline">Manipülatifler</span>
-              </NavLink>
+            <nav className="hidden items-center gap-1 md:flex lg:gap-2" aria-label="Ana menü">
+              {NAV.map((n) => (
+                <NavLink
+                  key={n.to}
+                  to={n.to}
+                  aria-label={n.label}
+                  title={n.label}
+                  className={({ isActive }) => `inline-flex min-h-11 items-center gap-1.5 rounded-xl px-2.5 text-sm font-extrabold transition xl:px-3 ${isActive ? 'bg-brand text-white' : 'text-ink hover:bg-white'}`}
+                >
+                  <n.icon size={19} />
+                  <span className="hidden xl:inline">{n.label}</span>
+                </NavLink>
+              ))}
               <SoundToggle />
             </nav>
+            <MobileMenu />
+          </div>
           </div>
         </header>
       )}
@@ -85,9 +111,30 @@ export default function Layout() {
       </main>
       {!focusMode && (
         <footer className="mt-12 border-t border-line bg-white/60">
-          <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-6 text-center text-sm text-ink-soft sm:flex-row sm:text-left">
-            <p><span className="font-extrabold text-ink">Aslı Öğretmenimle</span> · 1–8. sınıf matematik etkinlikleri</p>
-            <p>Maarif Modeli öğretim programlarına uygun, Van de Walle’ün gelişimsel yaklaşımıyla hazırlanmıştır. <Link to="/yaklasim" className="font-extrabold text-brand hover:underline">Yaklaşımımız</Link></p>
+          <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8 text-sm text-ink-soft sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]">
+            <div>
+              <p className="font-extrabold text-ink">Aslı Öğretmenimle</p>
+              <p className="mt-1">Aslı Öğretmen’in 1–8. sınıf matematik oyunları, etkinlikleri ve sanal manipülatifleri. Maarif Modeli öğretim programlarına uygun, Van de Walle’ün gelişimsel yaklaşımıyla hazırlanmıştır.</p>
+              <p className="mt-2">
+                <Link to={ONLINE_LESSON_PATH} className="font-extrabold text-brand hover:underline">Online birebir matematik özel ders</Link> · Hatay, Antakya, Samandağ
+              </p>
+            </div>
+            <nav aria-label="Sınıflar">
+              <p className="font-extrabold text-ink">Sınıflar</p>
+              <ul className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1">
+                {grades.map((g) => (
+                  <li key={g}><Link to={`/sinif/${g}`} className="inline-block py-0.5 font-bold hover:text-brand">{gradeInfo[g].label} Matematik</Link></li>
+                ))}
+              </ul>
+            </nav>
+            <nav aria-label="Site">
+              <p className="font-extrabold text-ink">Keşfet</p>
+              <ul className="mt-1 space-y-1">
+                {NAV.map((n) => (
+                  <li key={n.to}><Link to={n.to} className="inline-block py-0.5 font-bold hover:text-brand">{n.label}</Link></li>
+                ))}
+              </ul>
+            </nav>
           </div>
         </footer>
       )}
@@ -95,8 +142,12 @@ export default function Layout() {
   )
 }
 
+/** Başlık, açıklama, canonical ve yapılandırılmış veriyi yola göre günceller (bkz. lib/seo.ts) */
 export function usePageTitle(title?: string) {
+  const { pathname } = useLocation()
   useEffect(() => {
-    document.title = title ? `${title} · Aslı Öğretmenimle` : 'Aslı Öğretmenimle — Matematik Oyunları ve Etkinlikleri'
-  }, [title])
+    const s = seoForPath(pathname, cachedActivity)
+    if (!s) applySeo(title ? privateSeo(title, pathname) : notFoundSeo(pathname))
+    else applySeo(s.noindex && title ? { ...s, title: privateSeo(title, pathname).title } : s)
+  }, [pathname, title])
 }

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { ArrowRight, Check, Lightbulb, RotateCcw, Sprout } from 'lucide-react'
 import { MathText } from '../components/MathText'
+import { useTracker } from '../lib/trackerContext'
 import type { Activity, GeneratorSpec } from '../data/types'
 import { runGenerator } from '../lib/generators'
 
@@ -52,6 +53,7 @@ export function CheckBar({
   onSkip?: () => void
 }) {
   const [hintLevel, setHintLevel] = useState(0)
+  const track = useTracker()
   const hintList = (hints ?? []).filter(Boolean)
   const canHint = (status === 'idle' || status === 'wrong') && hintList.length > 0
   // Enter ile ilerleme
@@ -86,7 +88,7 @@ export function CheckBar({
           {status === 'wrong' && (<><span className="grid size-9 shrink-0 place-items-center rounded-full bg-orange-500 text-white animate-pop"><Sprout size={20} strokeWidth={2.6} /></span><span className="text-base sm:text-lg">{wrongText}</span></>)}
           {status === 'revealed' && <span className="text-base">{revealedText}</span>}
           {canHint && hintLevel < hintList.length && (
-            <button type="button" onClick={() => setHintLevel((h) => h + 1)} className="flex shrink-0 items-center gap-1.5 rounded-xl px-2 py-1 text-sm font-bold text-amber-600 hover:bg-amber-100/60">
+            <button type="button" onClick={() => { track.hint(); setHintLevel((h) => h + 1) }} className="flex shrink-0 items-center gap-1.5 rounded-xl px-2 py-1 text-sm font-bold text-amber-600 hover:bg-amber-100/60">
               <Lightbulb size={18} />{hintLevel === 0 ? 'İpucu' : 'Bir ipucu daha'}{hintList.length > 1 && <span className="text-xs opacity-70">({hintLevel + 1}/{hintList.length})</span>}
             </button>
           )}

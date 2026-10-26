@@ -1,5 +1,6 @@
 import { Suspense, lazy } from 'react'
-import { Navigate, Route, Routes, useParams } from 'react-router-dom'
+import { Route, Routes, useParams } from 'react-router-dom'
+import { isGrade } from './data/curriculum'
 import Layout from './components/Layout'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import Home from './pages/Home'
@@ -10,12 +11,19 @@ const ActivityPage = lazy(() => import('./pages/ActivityPage'))
 const ManipulativesIndex = lazy(() => import('./pages/Manipulatives').then((m) => ({ default: m.ManipulativesIndex })))
 const Approach = lazy(() => import('./pages/Approach'))
 const ManipulativePage = lazy(() => import('./pages/Manipulatives').then((m) => ({ default: m.ManipulativePage })))
+const InteractionsIndex = lazy(() => import('./pages/Interactions').then((m) => ({ default: m.InteractionsIndex })))
+const InteractionPage = lazy(() => import('./pages/Interactions').then((m) => ({ default: m.InteractionPage })))
+const ReportView = lazy(() => import('./pages/Teacher').then((m) => ({ default: m.ReportView })))
+const TeacherPanel = lazy(() => import('./pages/Teacher').then((m) => ({ default: m.TeacherPanel })))
 const GamesIndex = lazy(() => import('./pages/Games').then((m) => ({ default: m.GamesIndex })))
 const GamePage = lazy(() => import('./pages/Games').then((m) => ({ default: m.GamePage })))
 
-function GradeRedirect() {
+const OnlineLesson = lazy(() => import('./pages/OnlineLesson'))
+
+/** /sinif/3 → o sınıfın etkinlikleriyle ana sayfa */
+function GradePage() {
   const { grade } = useParams()
-  return <Navigate to={`/?sinif=${grade}`} replace />
+  return isGrade(Number(grade)) ? <Home /> : <NotFound />
 }
 
 const Loading = () => (
@@ -31,7 +39,7 @@ export default function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<Home />} />
-          <Route path="sinif/:grade" element={<GradeRedirect />} />
+          <Route path="sinif/:grade" element={<GradePage />} />
           <Route path="sinif/:grade/:slug" element={<ThemePage />} />
           <Route path="etkinlik/:id" element={<ActivityPage />} />
           <Route path="manipulatifler" element={<ManipulativesIndex />} />
@@ -39,6 +47,11 @@ export default function App() {
           <Route path="oyunlar" element={<GamesIndex />} />
           <Route path="oyun/:id" element={<GamePage />} />
           <Route path="yaklasim" element={<Approach />} />
+          <Route path="online-ozel-ders" element={<OnlineLesson />} />
+          <Route path="etkilesimler" element={<InteractionsIndex />} />
+          <Route path="etkilesim/:id" element={<InteractionPage />} />
+          <Route path="rapor" element={<ReportView />} />
+          <Route path="ogretmen" element={<TeacherPanel />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

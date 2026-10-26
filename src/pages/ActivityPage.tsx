@@ -11,6 +11,9 @@ import { StageBadge, TypeBadge } from '../components/meta'
 import { VisualView } from '../components/Visual'
 import { MathText } from '../components/MathText'
 import { celebrate, sfx } from '../lib/feedback'
+import { SessionTracker } from '../lib/report'
+import { TrackerProvider } from '../lib/trackerContext'
+import { SendReport } from '../components/SendReport'
 import NotFound from './NotFound'
 
 const engines: Record<ActivityType, ComponentType<EngineProps<any>>> = {
@@ -42,6 +45,7 @@ function ActivityView({ a, list }: { a: Activity; list: Activity[] }) {
   const info = gradeInfo[grade]
   const navigate = useNavigate()
   const [run, setRun] = useState(0)
+  const tracker = useMemo(() => new SessionTracker(a.id, a.title, 'etkinlik', activityGrade(a)), [a, run])
   const [progress, setProgress] = useState(0)
   const [result, setResult] = useState<{ correct: number; total: number } | null>(null)
   const [started, setStarted] = useState(!a.launch?.text)
@@ -57,7 +61,7 @@ function ActivityView({ a, list }: { a: Activity; list: Activity[] }) {
   }, [i, list, a.outcomes])
   const nextStep = next && next.outcomes[0] === a.outcomes[0] ? next : undefined
 
-  const backTo = theme ? `/sinif/${grade}/${theme.slug}` : `/?sinif=${grade}`
+  const backTo = theme ? `/sinif/${grade}/${theme.slug}` : `/sinif/${grade}`
 
   useEffect(() => {
     if (!result) return
@@ -95,7 +99,7 @@ function ActivityView({ a, list }: { a: Activity; list: Activity[] }) {
         {!started ? (
           <LaunchScreen a={a} onStart={() => setStarted(true)} />
         ) : result ? (
-          <Finish a={a} result={result} onRestart={restart} next={next} nextStep={nextStep} prevStep={prevStep} backTo={backTo} gradeColor={info.color} />
+          <Finish a={a} tracker={tracker} result={result} onRestart={restart} next={next} nextStep={nextStep} prevStep={prevStep} backTo={backTo} gradeColor={info.color} />
         ) : (
           <>
             <div className="mb-5 flex flex-wrap items-center justify-center gap-2 text-center">
@@ -105,12 +109,17 @@ function ActivityView({ a, list }: { a: Activity; list: Activity[] }) {
             </div>
             <div className="flex-1">
               <Suspense fallback={<div className="grid h-60 place-items-center"><span className="size-10 animate-spin rounded-full border-4 border-line border-t-brand" /></div>}>
-                <Engine
-                  key={run}
-                  activity={a}
-                  onProgress={(d: number, t: number) => setProgress(d / Math.max(1, t))}
-                  onFinish={(correct: number, total: number) => setResult({ correct, total })}
-                />
+                <TrackerProvider tracker={tracker}>
+                  <Engine
+                    key={run}
+                    activity={a}
+                    onProgress={(d: number, t: number) => setProgress(d / Math.max(1, t))}
+                    onFinish={(correct: number, total: number) => {
+                      tracker.setTotals(total, correct)
+                      setResult({ correct, total })
+                    }}
+                  />
+                </TrackerProvider>
               </Suspense>
             </div>
           </>
@@ -169,7 +178,7 @@ const FEELINGS = [
   { e: '🤔', t: 'Zorlandım' },
 ] as const
 
-function Finish({ a, result, onRestart, next, nextStep, prevStep, backTo, gradeColor }: { a: Activity; result: { correct: number; total: number }; onRestart: () => void; next?: Activity; nextStep?: Activity; prevStep?: Activity; backTo: string; gradeColor: string }) {
+function Finish({ a, tracker, result, onRestart, next, nextStep, prevStep, backTo, gradeColor }: { a: Activity; tracker: SessionTracker; result: { correct: number; total: number }; onRestart: () => void; next?: Activity; nextStep?: Activity; prevStep?: Activity; backTo: string; gradeColor: string }) {
   const ratio = result.correct / Math.max(1, result.total)
   const stars = ratio >= 0.9 ? 3 : ratio >= 0.6 ? 2 : 1
   const msg = stars === 3 ? 'Muhteşem!' : stars === 2 ? 'Çok iyi!' : 'Güzel çaba!'
@@ -218,7 +227,11 @@ function Finish({ a, result, onRestart, next, nextStep, prevStep, backTo, gradeC
         )}
       </div>
 
-      <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row">
+      <div className="mt-6 flex w-full justify-center">
+        <SendReport tracker={tracker} reflectQ={a.reflect} feeling={feeling} compact />
+      </div>
+
+      <div className="mt-6 flex w-full max-w-md flex-col gap-3 sm:flex-row">
         <button type="button" onClick={onRestart} className="btn-ghost flex-1"><RotateCcw size={18} />Tekrar oyna</button>
         {next ? (
           <Link to={`/etkinlik/${next.id}`} className="btn-primary flex-1">Sonraki etkinlik<ArrowRight size={18} /></Link>
@@ -237,7 +250,7 @@ function MovedActivity({ grade }: { grade: number }) {
       <p className="text-6xl" aria-hidden>🌱</p>
       <h1 className="mt-4 text-2xl font-black">Bu etkinlik yenilendi</h1>
       <p className="mt-2 font-semibold text-ink-soft">Etkinlikleri daha iyi bir öğrenme yolu için yeniden düzenledik. Aynı konuyu {grade}. sınıf sayfasında bulabilirsin.</p>
-      <Link to={`/?sinif=${grade}`} className="btn-primary mt-6">{grade}. sınıf etkinlikleri</Link>
+      <Link to={`/sinif/${grade}`} className="btn-primary mt-6">{grade}. sınıf etkinlikleri</Link>
     </div>
   )
 }

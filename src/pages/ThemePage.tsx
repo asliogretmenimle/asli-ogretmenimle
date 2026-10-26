@@ -16,7 +16,7 @@ export default function ThemePage() {
   const theme = isGrade(g) ? findTheme(g, slug) : undefined
   const all = useGradeActivities(isGrade(g) ? g : null)
   usePageTitle(theme ? `${theme.title} (${g}. Sınıf)` : 'Sayfa bulunamadı')
-  if (isGrade(g) && !slug) return <Navigate to={`/?sinif=${g}`} replace />
+  if (isGrade(g) && !slug) return <Navigate to={`/sinif/${g}`} replace />
   if (!theme || !isGrade(g)) return <NotFound />
 
   const info = gradeInfo[g]
@@ -29,7 +29,7 @@ export default function ThemePage() {
   return (
     <div className="mx-auto max-w-6xl px-4 pt-6">
       <nav className="mb-5 flex items-center justify-between gap-2">
-        <Link to={`/?sinif=${g}`} className="inline-flex min-h-10 items-center gap-1 rounded-xl pr-3 text-sm font-extrabold text-ink-soft hover:text-ink">
+        <Link to={`/sinif/${g}`} className="inline-flex min-h-10 items-center gap-1 rounded-xl pr-3 text-sm font-extrabold text-ink-soft hover:text-ink">
           <ChevronLeft size={18} /> {info.label}
         </Link>
         <ShareButton title={theme.title} />

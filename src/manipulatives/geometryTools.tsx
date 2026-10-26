@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { RotateCcw, Undo2 } from 'lucide-react'
-import { CoordsSvg, GridSvg, ShapeSvg } from '../components/Visual'
+import { GridSvg, ShapeSvg } from '../components/Visual'
+import { DragPoint, Plane, usePlane } from '../interactive/Plane'
 import type { ShapeName } from '../data/types'
 import { Readout, ToolButton } from './ui'
 import { n, type ToolDef } from './types'
@@ -216,6 +217,30 @@ export const angle: ToolDef<number> = {
 
 // ─── Koordinat düzlemi ─────────────────────────────────────────────────────
 type CP = { x: number; y: number }[]
+
+function CoordShapes({ value, onChange, target, locked }: { value: CP; onChange: (v: CP) => void; target?: Record<string, unknown>; locked?: boolean }) {
+  const P = usePlane()
+  const letters = 'ABCDEFGH'
+  return (
+    <g>
+      {!target && value.length >= 3 && (
+        <polygon points={value.map((p) => `${P.sx(p.x)},${P.sy(p.y)}`).join(' ')} fill="#d6457a" fillOpacity={0.18} stroke="#d6457a" strokeWidth={2.5} strokeLinejoin="round" pointerEvents="none" />
+      )}
+      {value.map((p, i) => (
+        <DragPoint
+          key={i}
+          x={p.x}
+          y={p.y}
+          label={target ? 'P' : `${letters[i]}(${p.x}, ${p.y})`}
+          snapStep={1}
+          disabled={locked}
+          onChange={(q) => onChange(value.map((o, j) => (j === i ? { x: Math.round(q.x), y: Math.round(q.y) } : o)))}
+        />
+      ))}
+    </g>
+  )
+}
+
 export const coordinate: ToolDef<CP> = {
   id: 'coordinate',
   defaultConfig: { size: 6 },
@@ -226,28 +251,24 @@ export const coordinate: ToolDef<CP> = {
   },
   Component: ({ value, onChange, config, target, locked }) => {
     const range = config.size ?? 6
-    const letters = 'ABCDEFGH'
-    const tap = (x: number, y: number) => {
+    const tap = (p: { x: number; y: number }) => {
       if (locked) return
-      if (target) return onChange([{ x, y }])
-      const exists = value.findIndex((p) => p.x === x && p.y === y)
+      const q = { x: Math.round(p.x), y: Math.round(p.y) }
+      if (target) return onChange([q])
+      const exists = value.findIndex((o) => o.x === q.x && o.y === q.y)
       if (exists >= 0) return onChange(value.filter((_, i) => i !== exists))
-      onChange([...value, { x, y }].slice(-8))
+      onChange([...value, q].slice(-8))
     }
     return (
       <div className="flex flex-col items-center gap-3">
-        <div className="w-full max-w-md touch-none">
-          <CoordsSvg
-            range={range}
-            onPoint={tap}
-            points={value.map((p, i) => ({ ...p, label: target ? 'P' : letters[i] }))}
-            polygons={!target && value.length >= 3 ? [{ pts: value.map((p) => [p.x, p.y] as [number, number]), color: '#6366f1' }] : []}
-          />
+        <div className="w-full max-w-xl">
+          <Plane initial={{ xMin: -range - 0.5, xMax: range + 0.5, yMin: -range - 0.5, yMax: range + 0.5 }} onTap={tap} fixedStep={range > 12 ? undefined : 1} minSpan={4} maxSpan={80} xLabel="x" yLabel="y" label="Koordinat düzlemi">
+            <CoordShapes value={value} onChange={onChange} target={target} locked={locked} />
+          </Plane>
         </div>
-        <p className="text-sm font-bold text-ink-soft">Kesişim noktalarına dokunarak nokta koy.</p>
+        <p className="text-sm font-bold text-ink-soft">Kesişim noktalarına dokunarak nokta koy; noktaları sürükleyebilirsin.</p>
         {!target && value.length > 0 && (
           <div className="flex flex-wrap items-center justify-center gap-2">
-            {value.map((p, i) => <span key={i} className="chip bg-rose-50 text-sm text-rose-700">{letters[i]}({p.x}, {p.y})</span>)}
             <ToolButton onClick={() => onChange([])}><RotateCcw size={16} />Temizle</ToolButton>
           </div>
         )}

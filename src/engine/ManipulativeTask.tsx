@@ -4,6 +4,7 @@ import { tools } from '../manipulatives/registry'
 import { MathText } from '../components/MathText'
 import { sfx } from '../lib/feedback'
 import { CheckBar, Explain, type EngineProps, type Status } from './common'
+import { useTracker } from '../lib/trackerContext'
 
 export default function ManipulativeTask({ activity, onProgress, onFinish }: EngineProps<ManipulativeActivity>) {
   const tool = tools[activity.tool]
@@ -14,9 +15,13 @@ export default function ManipulativeTask({ activity, onProgress, onFinish }: Eng
   const [status, setStatus] = useState<Status>('idle')
   const [tries, setTries] = useState(0)
   const [score, setScore] = useState(0)
+  const track = useTracker()
 
   const check = () => {
-    if (tool.check(value, task.target, config)) {
+    const ok = tool.check(value, task.target, config)
+    track.attempt(ok)
+    if (ok) {
+      track.item(tries === 0)
       setStatus('correct')
       if (tries === 0) setScore((s) => s + 1)
       sfx.ok()
@@ -56,7 +61,7 @@ export default function ManipulativeTask({ activity, onProgress, onFinish }: Eng
         onNext={next}
         wrongText={tries >= 2 ? 'Henüz değil — ipucuna bakmak ister misin?' : 'Henüz değil! Bir daha dene.'}
         nextLabel={idx + 1 >= activity.tasks.length ? 'Bitir' : 'Sonraki görev'}
-        onSkip={tries >= 2 ? () => setStatus('revealed') : undefined}
+        onSkip={tries >= 2 ? () => { track.item(false); setStatus('revealed') } : undefined}
         revealedText="Bu görevi geçtin."
       />
     </div>

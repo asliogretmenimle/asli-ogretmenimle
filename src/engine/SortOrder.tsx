@@ -18,6 +18,7 @@ import { MathText } from '../components/MathText'
 import { shuffleNotSame } from '../lib/random'
 import { sfx } from '../lib/feedback'
 import { CheckBar, Explain, Prompt, useItems, type EngineProps, type Status } from './common'
+import { useTracker } from '../lib/trackerContext'
 
 export default function SortOrder({ activity, onProgress, onFinish }: EngineProps<SortActivity>) {
   const rounds = useItems<SortRound>(activity.rounds, activity.generator, 4)
@@ -29,6 +30,7 @@ export default function SortOrder({ activity, onProgress, onFinish }: EngineProp
   const [tries, setTries] = useState(0)
   const [score, setScore] = useState(0)
   const [picked, setPicked] = useState<number | null>(null)
+  const track = useTracker()
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -59,13 +61,16 @@ export default function SortOrder({ activity, onProgress, onFinish }: EngineProp
 
   const check = () => {
     const ok = order.every((v, i) => v === i)
+    track.attempt(ok)
     if (ok) {
+      track.item(tries === 0)
       setStatus('correct')
       if (tries === 0) setScore((s) => s + 1)
       sfx.ok()
     } else {
       sfx.bad()
       if (tries >= 1) {
+        track.item(false)
         setOrder(round.items.map((_, i) => i))
         setStatus('revealed')
       } else setStatus('wrong')

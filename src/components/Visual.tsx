@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { ShapeName, Visual } from '../data/types'
 import { fmt } from '../lib/format'
 import { MathText } from './MathText'
+import { ZoomBox } from '../interactive/ZoomBox'
 
 const C = {
   ink: '#1f2340',
@@ -18,9 +19,14 @@ const C = {
 
 const PALETTE = ['#f97316', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#ec4899', '#14b8a6', '#ef4444']
 
-export function VisualView({ v, size = 'md' }: { v: Visual; size?: 'sm' | 'md' | 'lg' }) {
-  const max = size === 'sm' ? 'max-w-[140px]' : size === 'lg' ? 'max-w-[420px]' : 'max-w-[300px]'
-  return <div className={`mx-auto w-full ${max} [&_svg]:h-auto [&_svg]:w-full`}>{render(v)}</div>
+/** Büyük boyutta (soru görselleri) iki parmakla yakınlaştırılabilir */
+const ZOOMABLE: Visual['kind'][] = ['numberline', 'coords', 'bars', 'pictograph', 'table', 'area', 'grid', 'fraction', 'shape', 'angle', 'svg', 'array', 'tape', 'cubes', 'blocks', 'clock', 'balance', 'tenframe', 'dots']
+
+export function VisualView({ v, size = 'md', zoom }: { v: Visual; size?: 'sm' | 'md' | 'lg'; zoom?: boolean }) {
+  const max = size === 'sm' ? 'max-w-[140px]' : size === 'lg' ? 'max-w-[460px]' : 'max-w-[300px]'
+  const inner = <div className={`mx-auto w-full ${max} [&_svg]:h-auto [&_svg]:w-full`}>{render(v)}</div>
+  if ((zoom ?? size === 'lg') && ZOOMABLE.includes(v.kind)) return <ZoomBox className="mx-auto w-full max-w-[520px]">{inner}</ZoomBox>
+  return inner
 }
 
 function render(v: Visual): ReactNode {

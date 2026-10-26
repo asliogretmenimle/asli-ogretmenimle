@@ -7,6 +7,7 @@ import { answerMatches } from '../lib/format'
 import { shuffle } from '../lib/random'
 import { sfx } from '../lib/feedback'
 import { CheckBar, Explain, FlashCover, useFlash, useItems, type EngineProps, type Status } from './common'
+import { useTracker } from '../lib/trackerContext'
 
 const isNumericAnswer = (a: string) => a.split('|').every((alt) => /^[-−]?[\d.,/]+$/.test(alt.trim()))
 
@@ -27,6 +28,7 @@ export default function FillBlank({ activity, onProgress, onFinish }: EngineProp
 
   const item = items[idx]
   const flash = useFlash(item?.flash, idx)
+  const track = useTracker()
   const parts = useMemo(() => (item ? item.text.split('__') : []), [item])
   const blanks = parts.length - 1
   const numeric = item ? item.answers.every(isNumericAnswer) : true
@@ -80,7 +82,9 @@ export default function FillBlank({ activity, onProgress, onFinish }: EngineProp
 
   const check = () => {
     const mask = item.answers.map((a, i) => !answerMatches(values[i] ?? '', a))
+    track.attempt(mask.every((m) => !m))
     if (mask.every((m) => !m)) {
+      track.item(tries === 0)
       flash.reveal()
       setStatus('correct')
       if (tries === 0) setScore((s) => s + 1)
@@ -89,6 +93,7 @@ export default function FillBlank({ activity, onProgress, onFinish }: EngineProp
       setWrongMask(mask)
       sfx.bad()
       if (tries >= 1) {
+        track.item(false)
         setValues(item.answers.map((a) => a.split('|')[0]))
         setStatus('revealed')
       } else setStatus('wrong')

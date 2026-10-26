@@ -1,0 +1,27 @@
+/** Yeni nesil (Van de Walle) oyunların tanımları — her oyun kendi klasöründe */
+import type { GameMeta } from './meta'
+import { meta as m0 } from './next/sayi-adalari/meta'
+import { meta as m1 } from './next/kurabiye-fabrikasi/meta'
+import { meta as m2 } from './next/denge-kulesi/meta'
+import { meta as m3 } from './next/matematik-sehri/meta'
+import { meta as m4 } from './next/mozaik-ustasi/meta'
+import { meta as m5 } from './next/kesir-takimadalari/meta'
+import { meta as m6 } from './next/denklem-kapilari/meta'
+import { meta as m7 } from './next/veri-dedektifleri/meta'
+import { meta as m8 } from './next/sayi-konusmalari/meta'
+import { meta as m9 } from './next/hata-avcisi/meta'
+
+import { meta as m10 } from './next/sayi-treni/meta'
+import { meta as m11 } from './next/matematik-bahcem/meta'
+import { meta as m12 } from './next/su-muhendisi/meta'
+import { meta as m13 } from './next/lunapark/meta'
+import { meta as m14 } from './next/kargo-rotasi/meta'
+import { meta as m15 } from './next/uzay-kolonisi/meta'
+import { meta as m16 } from './next/carpan-fabrikasi/meta'
+import { meta as m17 } from './next/iklim-istasyonu/meta'
+import { meta as m18 } from './next/kopru-muhendisi/meta'
+import { meta as m19 } from './next/lazer-lab/meta'
+import { meta as m20 } from './next/trafik-simulatoru/meta'
+import { meta as m21 } from './next/kristal-magarasi/meta'
+
+export const nextGenMeta: GameMeta[] = [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, m21]

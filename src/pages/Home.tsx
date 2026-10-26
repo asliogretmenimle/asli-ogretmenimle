@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowRight, Search, X } from 'lucide-react'
 import { gradeInfo, grades, isGrade, outcomeByCode, themesByGrade } from '../data/curriculum'
 import { activityGrade, activityTheme, useAllActivities, useGradeActivities } from '../data/activityStore'
@@ -7,7 +7,9 @@ import type { Grade } from '../data/types'
 import { ActivityCard, ThemeHeader } from '../components/Cards'
 import { usePageTitle } from '../components/Layout'
 import { toolMeta as toolList } from '../manipulatives/meta'
-import { gameMeta, gamesForGrade } from '../games/meta'
+import { gameMeta, gameMetaById, gamesForGrade, type GameId } from '../games/meta'
+import { interactionById } from '../interactions/meta'
+import { gradePlan } from '../data/gradePlan'
 import { searchKey } from '../lib/format'
 import { stageMeta, typeMeta } from '../components/meta'
 import { STAGE_ORDER } from '../data/activityStore'
@@ -17,7 +19,10 @@ const GRADE_KEY = 'ao-grade'
 export default function Home() {
   const [params, setParams] = useSearchParams()
   const q = params.get('ara') ?? ''
-  const fromUrl = Number(params.get('sinif'))
+  const { grade: gradeParam } = useParams()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const fromUrl = Number(gradeParam ?? params.get('sinif'))
   const [stored] = useState(() => {
     try {
       return Number(localStorage.getItem(GRADE_KEY))
@@ -38,16 +43,21 @@ export default function Home() {
     }
   }, [grade])
 
-  const choose = (g: Grade) => {
-    const p = new URLSearchParams(params)
-    p.set('sinif', String(g))
-    p.delete('ara')
-    setParams(p, { replace: true })
-    requestAnimationFrame(() => {
+  // Eski ?sinif=3 linkleri kalıcı adrese: /sinif/3
+  useEffect(() => {
+    if (!gradeParam && isGrade(fromUrl) && !q) navigate(`/sinif/${fromUrl}`, { replace: true })
+  }, [gradeParam, fromUrl, q, navigate])
+
+  // Sınıf seçilince içerik ekranın altında kaldıysa ona kaydır
+  const scrollToContent = (location.state as { scrollToGrade?: boolean } | null)?.scrollToGrade
+  useEffect(() => {
+    if (!scrollToContent) return
+    const id = requestAnimationFrame(() => {
       const top = contentRef.current?.getBoundingClientRect().top ?? 0
       if (top > window.innerHeight * 0.6) contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
-  }
+    return () => cancelAnimationFrame(id)
+  }, [scrollToContent, grade])
 
   const setQuery = (v: string) => {
     const p = new URLSearchParams(params)
@@ -65,11 +75,14 @@ export default function Home() {
           <div className="absolute -top-10 right-0 size-64 rounded-full bg-amber-200/50 blur-3xl" />
         </div>
         <div className="mx-auto max-w-6xl px-4 pt-8 pb-6 sm:pt-12">
-          <h1 className="max-w-2xl text-3xl leading-tight font-black tracking-tight text-ink sm:text-5xl">
+          <h1 className="mb-2 text-sm font-extrabold text-brand-ink sm:text-base">
+            Aslı Öğretmenle {gradeParam && grade ? `${gradeInfo[grade].label.toLocaleLowerCase('tr')} matematik etkinlikleri ve oyunları` : '1–8. sınıf matematik oyunları ve etkinlikleri'}
+          </h1>
+          <p className="max-w-2xl text-3xl leading-tight font-black tracking-tight text-ink sm:text-5xl">
             Merhaba! <span aria-hidden>👋</span>
             <br />
             <span className="text-brand">Hangi sınıftasın?</span>
-          </h1>
+          </p>
           <p className="mt-3 max-w-xl text-base font-semibold text-ink-soft sm:text-lg">
             Oyunlar, eşleştirmeler, sürükle-bırak etkinlikleri ve sanal manipülatiflerle matematiği keşfet.
           </p>
@@ -99,18 +112,20 @@ export default function Home() {
             const info = gradeInfo[g]
             const active = grade === g && !q
             return (
-              <button
+              <Link
                 key={g}
-                type="button"
-                onClick={() => choose(g)}
-                aria-pressed={active}
+                to={`/sinif/${g}`}
+                replace
+                state={{ scrollToGrade: true }}
+                aria-current={active ? 'page' : undefined}
+                aria-label={`${info.label} matematik`}
                 className={`group relative flex aspect-[1/1.05] flex-col items-center justify-center rounded-3xl border-2 transition md:aspect-[1/1.1] lg:aspect-square ${active ? 'scale-[1.03] text-white shadow-[var(--shadow-lift)]' : 'bg-white hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]'}`}
                 style={{ background: active ? info.color : undefined, borderColor: active ? info.color : `${info.color}55` }}
               >
                 <span className="text-xl sm:text-2xl" aria-hidden>{info.emoji}</span>
                 <span className="text-3xl leading-none font-black sm:text-4xl" style={{ color: active ? '#fff' : info.color }}>{g}</span>
                 <span className={`mt-0.5 text-[11px] font-extrabold sm:text-xs ${active ? 'text-white/90' : 'text-ink-soft'}`}>SINIF</span>
-              </button>
+              </Link>
             )
           })}
         </div>
@@ -192,6 +207,41 @@ function Welcome() {
   )
 }
 
+/** Sınıfa göre öne çıkan yeni nesil oyun ve keşif etkinlikleri */
+function Featured({ grade }: { grade: Grade }) {
+  const plan = gradePlan[grade]
+  const items = plan.featured
+    .map((f) => {
+      if (f.kind === 'oyun') {
+        const m = gameMetaById[f.id as GameId]
+        return m ? { key: f.id, to: `/oyun/${m.id}?sinif=${grade}`, name: m.name, emoji: m.emoji, color: m.color, desc: m.skills[grade] ?? m.description, tag: 'Oyun' } : null
+      }
+      const m = interactionById[f.id]
+      return m && m.ready ? { key: f.id, to: `/etkilesim/${m.id}?sinif=${grade}`, name: m.name, emoji: m.emoji, color: m.color, desc: m.skills?.[grade] ?? m.description, tag: 'Keşif' } : null
+    })
+    .filter(Boolean) as { key: string; to: string; name: string; emoji: string; color: string; desc: string; tag: string }[]
+  return (
+    <div className="mb-6 rounded-3xl bg-white p-4 ring-1 ring-line sm:p-5">
+      <p className="text-xs font-black tracking-wide text-ink-soft uppercase">Bu sınıfın odağı</p>
+      <p className="mt-0.5 font-extrabold text-ink">{plan.focus}</p>
+      {items.length > 0 && (
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {items.map((it) => (
+            <Link key={it.key} to={it.to} className="group flex items-start gap-3 rounded-2xl p-3 ring-1 ring-line transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]" style={{ background: `${it.color}0d` }}>
+              <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-white text-2xl shadow-sm transition group-hover:scale-110" aria-hidden>{it.emoji}</span>
+              <span className="min-w-0">
+                <span className="chip mb-1 bg-white text-ink-soft">{it.tag}</span>
+                <span className="block leading-tight font-black">{it.name}</span>
+                <span className="mt-0.5 line-clamp-2 block text-xs font-bold text-ink-soft">{it.desc}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function GradeContent({ grade }: { grade: Grade }) {
   const info = gradeInfo[grade]
   const themes = themesByGrade(grade)
@@ -214,6 +264,8 @@ function GradeContent({ grade }: { grade: Grade }) {
           <p className="text-sm font-semibold text-ink-soft">{themes.length} tema{all ? ` · ${total} etkinlik` : ''}</p>
         </div>
       </div>
+
+      <Featured grade={grade} />
 
       {/* Tema kısayolları + tür filtresi */}
       <div className="sticky top-16 z-20 -mx-4 mb-6 border-b border-line/60 bg-paper/90 px-4 py-2.5 backdrop-blur-md">

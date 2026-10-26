@@ -1,6 +1,6 @@
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, LayoutGrid, Lightbulb, Play, RotateCcw } from 'lucide-react'
+import { ChevronLeft, LayoutGrid, Lightbulb, MessageCircleQuestion, Play, RotateCcw, Sparkles } from 'lucide-react'
 import { gradeInfo, grades, isGrade } from '../data/curriculum'
 import type { Grade } from '../data/types'
 import { gameMeta, gameMetaById, gamesForGrade, type GameId, type GameMeta } from '../games/meta'
@@ -10,6 +10,9 @@ import { ShareButton } from '../components/ShareButton'
 import { MathText } from '../components/MathText'
 import { SoundToggle, usePageTitle } from '../components/Layout'
 import { celebrate, sfx } from '../lib/feedback'
+import { SessionTracker } from '../lib/report'
+import { TrackerProvider } from '../lib/trackerContext'
+import { SendReport } from '../components/SendReport'
 import NotFound from './NotFound'
 
 const GRADE_KEY = 'ao-grade'
@@ -78,7 +81,7 @@ export function GamesIndex() {
   return (
     <div className="mx-auto max-w-6xl px-4 pt-8">
       <h1 className="text-3xl font-black sm:text-4xl">Matematik Oyunları <span aria-hidden>🎮</span></h1>
-      <p className="mt-2 max-w-2xl font-semibold text-ink-soft">Balon patlat, robotu kodla, kesir pizzası yap, gizli gemileri bul… Her oyun, seçtiğin sınıfa göre zorlaşır.</p>
+      <p className="mt-2 max-w-2xl font-semibold text-ink-soft">Köprü kur, kurabiye diz, şehir tasarla, gizemleri çöz… Her oyun seçtiğin sınıfa göre değişir; amaç hız değil, düşünmek ve farklı yollar keşfetmek.</p>
       <div className="mt-6 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
         <button type="button" onClick={() => choose(null)} className={`chip shrink-0 px-3 py-1.5 text-sm ${!grade ? 'bg-ink text-white' : 'bg-white text-ink ring-1 ring-line'}`}>Tüm oyunlar</button>
         {grades.map((g) => (
@@ -87,9 +90,23 @@ export function GamesIndex() {
           </button>
         ))}
       </div>
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {list.map((m) => <GameCard key={m.id} m={m} grade={grade ?? undefined} />)}
-      </div>
+      {list.some((m) => m.nextGen) && (
+        <section className="mt-6">
+          <h2 className="mb-1 flex items-center gap-2 text-xl font-black"><Sparkles size={20} className="text-amber-500" />Keşfet ve inşa et</h2>
+          <p className="mb-3 text-sm font-semibold text-ink-soft">Tek doğru cevaba tıklamak yok: kur, dene, farklı yollar bul, nedenini açıkla.</p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {list.filter((m) => m.nextGen).map((m) => <GameCard key={m.id} m={m} grade={grade ?? undefined} />)}
+          </div>
+        </section>
+      )}
+      {list.some((m) => !m.nextGen) && (
+        <section className="mt-10">
+          <h2 className="mb-3 text-xl font-black">Strateji oyunları</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {list.filter((m) => !m.nextGen).map((m) => <GameCard key={m.id} m={m} grade={grade ?? undefined} />)}
+          </div>
+        </section>
+      )}
     </div>
   )
 }
@@ -115,6 +132,7 @@ function GameView({ m }: { m: GameMeta }) {
   const [result, setResult] = useState<GameResult | null>(null)
   const [best, setBest] = useState(() => readBest(m.id, grade))
   const Game = games[m.id]
+  const tracker = useMemo(() => new SessionTracker(m.id, m.name, 'oyun', grade), [m.id, m.name, grade, run])
 
   useEffect(() => setBest(readBest(m.id, grade)), [m.id, grade, result])
 
@@ -158,13 +176,19 @@ function GameView({ m }: { m: GameMeta }) {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 pt-5 pb-8">
+      <main className={`mx-auto flex w-full flex-1 flex-col px-3 pt-4 pb-8 sm:px-4 ${m.nextGen && phase === 'play' ? 'max-w-6xl' : 'max-w-4xl'}`}>
         {phase === 'intro' && (
           <div className="flex flex-1 flex-col items-center justify-center py-4 animate-fade-up">
             <div className="w-full max-w-2xl rounded-3xl bg-white p-6 text-center shadow-[var(--shadow-card)] ring-1 ring-line sm:p-8">
               <span className="mx-auto grid size-20 place-items-center rounded-3xl text-5xl" style={{ background: `${m.color}18` }} aria-hidden>{m.emoji}</span>
               <h2 className="mt-3 text-2xl font-black sm:text-3xl">{m.name}</h2>
               <p className="mt-1 font-semibold text-ink-soft">{m.description}</p>
+              {m.launch && (
+                <div className="mx-auto mt-4 max-w-xl rounded-2xl bg-cream p-4 text-left">
+                  <p className="mb-1 text-xs font-black tracking-wide text-amber-800 uppercase">🌱 Başlarken</p>
+                  <p className="text-lg leading-relaxed font-extrabold text-ink"><MathText text={m.launch} /></p>
+                </div>
+              )}
 
               {m.grades.length > 1 && (
                 <div className="mt-5">
@@ -203,7 +227,9 @@ function GameView({ m }: { m: GameMeta }) {
         {phase === 'play' && (
           <div className="flex-1">
             <Suspense fallback={<div className="grid h-60 place-items-center"><span className="size-10 animate-spin rounded-full border-4 border-line border-t-brand" aria-label="Yükleniyor" /></div>}>
-              <Game key={`${run}-${grade}`} grade={grade} onFinish={finish} />
+              <TrackerProvider tracker={tracker}>
+                <Game key={`${run}-${grade}`} grade={grade} onFinish={finish} />
+              </TrackerProvider>
             </Suspense>
           </div>
         )}
@@ -219,15 +245,24 @@ function GameView({ m }: { m: GameMeta }) {
             </div>
             <h2 className="mt-3 text-3xl font-black">{result.stars === 3 ? 'Muhteşem!' : result.stars === 2 ? 'Çok iyi!' : 'Güzel çaba!'}</h2>
             <p className="mt-1 text-lg font-bold text-ink-soft">{result.summary}</p>
-            <p className="mt-1 text-sm font-extrabold text-amber-700">Puan: {result.score}{best ? ` · En iyi: ${best.score}` : ''}</p>
+            {!m.nextGen && <p className="mt-1 text-sm font-extrabold text-amber-700">Puan: {result.score}{best ? ` · En iyi: ${best.score}` : ''}</p>}
             {result.insight && (
               <div className="mt-6 flex w-full max-w-2xl items-start gap-2 rounded-3xl bg-brand-soft p-5 text-left ring-1 ring-brand/20">
                 <Lightbulb size={20} className="mt-0.5 shrink-0 text-brand-ink" />
                 <p className="font-extrabold text-ink"><MathText text={result.insight} /></p>
               </div>
             )}
-            <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row">
-              <button type="button" onClick={start} className="btn-primary flex-1" autoFocus><RotateCcw size={18} />Tekrar oyna</button>
+            {m.reflect && (
+              <div className="mt-4 w-full max-w-2xl rounded-3xl bg-white p-5 text-left ring-1 ring-line">
+                <p className="mb-1 flex items-center gap-2 text-sm font-black tracking-wide text-brand-ink uppercase"><MessageCircleQuestion size={18} />Düşün ve Paylaş</p>
+                <p className="text-lg font-extrabold text-ink"><MathText text={m.reflect} /></p>
+              </div>
+            )}
+            <div className="mt-5 flex w-full justify-center">
+              <SendReport tracker={tracker} reflectQ={m.reflect} compact />
+            </div>
+            <div className="mt-6 flex w-full max-w-md flex-col gap-3 sm:flex-row">
+              <button type="button" onClick={start} className="btn-primary flex-1" autoFocus><RotateCcw size={18} />{m.nextGen ? 'Başka bir yolla dene' : 'Tekrar oyna'}</button>
               <Link to={`/oyunlar?sinif=${grade}`} className="btn-ghost flex-1"><LayoutGrid size={18} />Tüm oyunlar</Link>
             </div>
             {others.length > 0 && (

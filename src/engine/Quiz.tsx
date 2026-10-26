@@ -6,6 +6,7 @@ import { MathText } from '../components/MathText'
 import { shuffle } from '../lib/random'
 import { sfx } from '../lib/feedback'
 import { CheckBar, Explain, FlashCover, Prompt, useFlash, useItems, type EngineProps, type Status } from './common'
+import { useTracker } from '../lib/trackerContext'
 
 export default function Quiz({ activity, onProgress, onFinish }: EngineProps<QuizActivity>) {
   const raw = useItems<QuizQuestion>(activity.questions, activity.generator)
@@ -31,11 +32,14 @@ export default function Quiz({ activity, onProgress, onFinish }: EngineProps<Qui
   const [score, setScore] = useState(0)
   const q = questions[idx]
   const flash = useFlash(q?.flash, idx)
+  const track = useTracker()
 
   const choose = (i: number) => {
     if (status === 'correct' || status === 'revealed') return
     setPicked(i)
+    track.attempt(open || i === q.answer)
     if (open || i === q.answer) {
+      track.item(wrongPicks.length === 0)
       setStatus('correct')
       if (wrongPicks.length === 0) setScore((s) => s + 1)
       flash.reveal()
@@ -43,9 +47,11 @@ export default function Quiz({ activity, onProgress, onFinish }: EngineProps<Qui
     } else {
       const wp = [...wrongPicks, i]
       setWrongPicks(wp)
+      track.misconception(q.feedback?.[i])
       sfx.bad()
       // İki seçenekli sorularda ya da ikinci yanlışta doğru cevabı göster
       if (wp.length >= Math.min(2, q.choices.length - 1)) {
+        track.item(false)
         setStatus('revealed')
         flash.reveal()
       } else setStatus('wrong')
