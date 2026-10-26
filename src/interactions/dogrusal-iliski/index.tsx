@@ -41,8 +41,10 @@ const eq = (m: number, b: number, x = 'x') => {
 // ───────────────────────── Grafik parçaları ─────────────────────────
 
 function Graph({ xMax, yMax, children, onTap, xLabel = 'x', yLabel = 'y' }: { xMax: number; yMax: number; children: ReactNode; onTap?: (p: { x: number; y: number }) => void; xLabel?: string; yLabel?: string }) {
+  // dar ekranda ± düğmeleri x eksenini örtmesin: altta biraz boşluk bırak
+  const [pad] = useState(() => (typeof window !== 'undefined' && window.innerWidth < 640 ? 0.24 : 0.1))
   return (
-    <Plane initial={{ xMin: -xMax * 0.08, xMax: xMax * 1.04, yMin: -yMax * 0.07, yMax: yMax * 1.05 }} equalUnits={false} aspect={0.66} xLabel={xLabel} yLabel={yLabel} onTap={onTap} minSpan={2} maxSpan={xMax * 6} label="Doğrusal ilişki grafiği">
+    <Plane initial={{ xMin: -xMax * 0.08, xMax: xMax * 1.04, yMin: -yMax * pad, yMax: yMax * 1.05 }} equalUnits={false} aspect={0.66} xLabel={xLabel} yLabel={yLabel} onTap={onTap} minSpan={2} maxSpan={xMax * 6} label="Doğrusal ilişki grafiği">
       {children}
     </Plane>
   )
@@ -55,7 +57,7 @@ function LineG({ m, b, color = '#7c3aed', dash, w = 4, label }: { m: number; b: 
   return (
     <g>
       <line x1={P.sx(x0)} y1={P.sy(m * x0 + b)} x2={P.sx(x1)} y2={P.sy(m * x1 + b)} stroke={color} strokeWidth={w} strokeDasharray={dash} strokeLinecap="round" />
-      {label && <text x={P.sx(Math.min(lx, x1 - 0.6)) + 8} y={P.sy(m * Math.min(lx, x1 - 0.6) + b) + 4} fontSize={14} fontWeight={900} fill={color} style={{ paintOrder: 'stroke', stroke: '#fff', strokeWidth: 4 }}>{label}</text>}
+      {label && <text x={Math.min(P.sx(Math.min(lx, x1 - 0.6)) + 8, P.width - 8 - label.length * 7.6)} y={P.sy(m * Math.min(lx, x1 - 0.6) + b) + 4} fontSize={14} fontWeight={900} fill={color} style={{ paintOrder: 'stroke', stroke: '#fff', strokeWidth: 4 }}>{label}</text>}
     </g>
   )
 }
@@ -95,7 +97,7 @@ function RotLine({ m, b, onChange, mStep = 1, bStep = 1, pivotX = 0, color = '#7
     if (noMove) return
     const a = acc.current
     if (a.m !== m || a.b !== b) Object.assign(a, { m, b, ang: Math.atan((m * pxY) / pxX), dy: 0 })
-    a.dy += (dyU * P.unitPx) / pxY
+    a.dy += dyU
     const steps = Math.trunc(a.dy / bStep)
     if (steps) {
       a.dy -= steps * bStep
@@ -444,9 +446,9 @@ function CompareTask({ look, onDone }: { look: Look; onDone: (r: Res) => void })
             <DragPoint x={x} y={0} color="#f59e0b" label={`${x}. ay`} onChange={(p) => setX(clamp(Math.round(p.x), 0, 8))} constrain={(p) => ({ x: p.x, y: 0 })} />
           </Graph>
           <div className="mt-3 overflow-x-auto">
-            <table className={`w-full text-center font-black tabular-nums ${look.strong}`}>
+            <table className={`w-full text-center text-sm font-black tabular-nums sm:text-base ${look.strong}`}>
               <tbody>
-                <tr className={look.dark ? 'bg-slate-700' : 'bg-violet-50'}><th className="px-2 py-1 text-left text-xs">ay</th>{rows.map((r) => <td key={r}><button type="button" onClick={() => setX(r)} className={`h-10 w-full min-w-9 rounded-lg ${r === x ? 'bg-amber-400 text-slate-900' : ''}`}>{r}</button></td>)}</tr>
+                <tr className={look.dark ? 'bg-slate-700' : 'bg-violet-50'}><th className="px-2 py-1 text-left text-xs">ay</th>{rows.map((r) => <td key={r}><button type="button" onClick={() => setX(r)} className={`h-10 w-full min-w-7 rounded-lg ${r === x ? 'bg-amber-400 text-slate-900' : ''}`}>{r}</button></td>)}</tr>
                 <tr><th className="px-2 py-1 text-left text-xs text-cyan-500">A</th>{rows.map((r) => <td key={r} className={r === x ? 'text-amber-400' : ''}>{PA.m * r + PA.b}</td>)}</tr>
                 <tr><th className="px-2 py-1 text-left text-xs text-pink-500">B</th>{rows.map((r) => <td key={r} className={r === x ? 'text-amber-400' : ''}>{PB.m * r + PB.b}</td>)}</tr>
               </tbody>

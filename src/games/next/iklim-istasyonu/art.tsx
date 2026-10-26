@@ -139,7 +139,7 @@ export function TurkeyMap({ ink, pins, sel = [], hl = [], onPick, showAll = true
         const lit = hl.includes(p.id)
         const col = p.t !== undefined ? tempColor(p.t) : ink.accent
         const label = p.text ?? (p.t !== undefined ? `${f(p.t)}°` : '')
-        const lw = Math.max(46, label.length * 15 + 14)
+        const lw = Math.max(54, label.length * 18 + 16)
         const above = y > 70
         return (
           <g key={p.id} onClick={onPick ? () => onPick(p.id) : undefined} style={{ cursor: onPick ? 'pointer' : 'default' }} role={onPick ? 'button' : undefined} aria-label={`${c.name}${p.t !== undefined ? ` ${f(p.t)} derece` : ''}`} aria-pressed={onPick ? on : undefined}>
@@ -147,12 +147,12 @@ export function TurkeyMap({ ink, pins, sel = [], hl = [], onPick, showAll = true
             {(on || lit) && <circle cx={x} cy={y} r={24} fill="none" stroke={on ? (dark ? '#22d3ee' : '#0891b2') : '#f59e0b'} strokeWidth={4} className="ii-ping" />}
             <circle cx={x} cy={y} r={on ? 12 : 9} fill={col} stroke="#fff" strokeWidth={3} />
             {showAll && label && (
-              <g transform={`translate(${x} ${above ? y - 46 : y + 18})`}>
-                <rect x={-lw / 2} y={0} width={lw} height={30} rx={10} fill={on ? (dark ? '#22d3ee' : '#0891b2') : dark ? '#0f172a' : '#fff'} stroke={col} strokeWidth={2.5} />
-                <text x={0} y={22} textAnchor="middle" fontSize={21} fontWeight={900} fill={on ? (dark ? '#0b1324' : '#fff') : col}>{label}</text>
+              <g transform={`translate(${x} ${above ? y - 52 : y + 18})`}>
+                <rect x={-lw / 2} y={0} width={lw} height={36} rx={12} fill={on ? (dark ? '#22d3ee' : '#0891b2') : dark ? '#0f172a' : '#fff'} stroke={col} strokeWidth={2.5} />
+                <text x={0} y={27} textAnchor="middle" fontSize={26} fontWeight={900} fill={on ? (dark ? '#0b1324' : '#fff') : col}>{label}</text>
               </g>
             )}
-            <text x={x} y={above ? y + 32 : y - 16} textAnchor="middle" fontSize={18} fontWeight={800} fill={dark ? '#cbd5e1' : '#334155'} stroke={dark ? '#0b1324' : '#f4fbff'} strokeWidth={4} paintOrder="stroke">{c.name}</text>
+            <text x={x} y={above ? y + 36 : y - 16} textAnchor="middle" fontSize={22} fontWeight={800} fill={dark ? '#cbd5e1' : '#334155'} stroke={dark ? '#0b1324' : '#f4fbff'} strokeWidth={4} paintOrder="stroke">{c.name}</text>
           </g>
         )
       })}
@@ -263,6 +263,8 @@ export const ART_CSS = `
 .ii-pulse { animation: ii-pulse 1.4s ease-in-out infinite; }
 @keyframes ii-bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(4px) } }
 .ii-bob { animation: ii-bob 1.1s ease-in-out infinite; }
+/* Çizgi grafiklerinde ± düğmeleri sağ üste: alt kenardaki zaman etiketlerini örtmesin */
+.ii-line-plane > div:first-child > div.absolute { top: .5rem; bottom: auto; }
 /* Koyu gösterge paneli: <Plane> renklerini koyu temaya çevir (yalnız düzlemin kendi çizimleri) */
 .ii-dark-plane > div:first-child { background: #0b1324 !important; box-shadow: inset 0 0 0 1px #24324a !important; }
 .ii-dark-plane svg > g:not(.ii-own) line[stroke="#e3e5ef"] { stroke: #22304a; }

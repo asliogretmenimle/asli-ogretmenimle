@@ -73,7 +73,7 @@ export default function OruntudenKurala({ grade, onFinish }: InteractionProps) {
               : 'Doğrusal bir örüntünün noktaları bir doğru üzerindedir: her adımdaki artış doğrunun eğimini, şekil 0’daki değer y eksenini kestiği yeri verir (y = 5x + 2).'
     onFinish({
       stars: S.stars(n >= 3 ? 1 : 0),
-      summary: `${tasks.length} görevi tamamladın${n ? `; aynı örüntü için ${n} farklı ifade buldun` : ''}.`,
+      summary: `${tasks.length} görevi tamamladın${n ? `; örüntüler için ${n} farklı kural ifadesi yazdın` : ''}.`,
       insight,
     })
   }
@@ -179,7 +179,7 @@ function useOnce() {
 
 /* ───────────────────────── 1. Şekli kur ───────────────────────── */
 
-function BuildTask({ p, grade, dark, onDone, footer }: Common) {
+function BuildTask({ p, dark, onDone, footer }: Common) {
   const track = useTracker()
   const target = useMemo(() => p.fig(4), [p])
   const region = useMemo(() => {
@@ -263,7 +263,6 @@ function BuildTask({ p, grade, dark, onDone, footer }: Common) {
 
   const panel = (
     <>
-      <Prompt dark={dark} kicker={p.name}>Şekil 1, 2 ve 3’ün nasıl büyüdüğüne bak. Şekil 4’ü yapım alanına sen kur.</Prompt>
       <Card dark={dark}>
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm font-extrabold">Şeklinde</span>
@@ -296,7 +295,7 @@ function BuildTask({ p, grade, dark, onDone, footer }: Common) {
       )}
     </>
   )
-  return <Layout work={work} panel={panel} />
+  return <Layout lead={<Prompt dark={dark} kicker={p.name}>Şekil 1, 2 ve 3’ün nasıl büyüdüğüne bak. Şekil 4’ü yapım alanına sen kur.</Prompt>} work={work} panel={panel} />
 }
 
 /* ───────────────────────── 2. Uzak şekil ───────────────────────── */
@@ -347,7 +346,7 @@ function FarTask({ t, p, grade, dark, onDone, footer }: Common) {
   const ns = Array.from({ length: rows }, (_, i) => i + 1)
   const work = (
     <div className="flex flex-col gap-3">
-      <Strip p={p} upto={4} growth={growth} dark={dark} u={p.id === 'arti' ? 12 : p.kind === 'tile' ? 15 : 20} />
+      <Strip p={p} upto={4} growth={growth} dark={dark} u={p.id === 'arti' ? 13 : p.kind === 'tile' ? 17 : 24} />
       <div className="flex flex-wrap items-center justify-center gap-2">
         <GrowthToggle on={growth} set={setGrowth} dark={dark} />
         {!solved && rows < (grade <= 5 ? 8 : 6) && <PickBtn onClick={extend} dark={dark} className="text-sm"><span className="inline-flex items-center gap-1.5"><TableProperties size={16} />Tabloyu uzat</span></PickBtn>}
@@ -363,7 +362,6 @@ function FarTask({ t, p, grade, dark, onDone, footer }: Common) {
   )
   const panel = (
     <>
-      <Prompt dark={dark} kicker={p.name}>{`Şekil ${ek(N, 'acc')} kurmadan bul: şekil ${ek(N, 'loc')} kaç ${p.unit} olur?`}</Prompt>
       {!solved && (
         <Card dark={dark}>
           <NumPad value={val} onChange={(v) => { setVal(v); nd.clear() }} dark={dark} label={`Şekil ${N}:`} unit={p.unit} onEnter={check} enterLabel={<><Check size={20} />Kontrol et</>} />
@@ -379,7 +377,7 @@ function FarTask({ t, p, grade, dark, onDone, footer }: Common) {
       )}
     </>
   )
-  return <Layout work={work} panel={panel} />
+  return <Layout lead={<Prompt dark={dark} kicker={p.name}>{`Şekil ${ek(N, 'acc')} kurmadan bul: şekil ${ek(N, 'loc')} kaç ${p.unit} olur?`}</Prompt>} work={work} panel={panel} />
 }
 
 /* ───────────────────────── 3a. Kural makinesi (4. sınıf) ───────────────────────── */
@@ -416,7 +414,7 @@ function MachineRule({ p, dark, onDone, footer }: Common) {
 
   const work = (
     <div className="flex flex-col gap-3">
-      <Strip p={p} upto={4} growth dark={dark} u={p.kind === 'tile' ? 15 : 20} />
+      <Strip p={p} upto={4} growth dark={dark} u={p.kind === 'tile' ? 17 : 24} />
       <ValueTable p={p} ns={[1, 2, 3, 4, 5]} dark={dark} diffs mine={mine} mineLabel="Makinen" />
       <div className={`flex flex-wrap items-center justify-center gap-2 rounded-2xl p-3 text-lg font-black ${dark ? 'bg-slate-800 text-white' : 'bg-white ring-1 ring-line'}`} data-testid="machine">
         <span className="rounded-xl bg-violet-100 px-3 py-2 text-violet-900">Şekil no</span>
@@ -431,7 +429,6 @@ function MachineRule({ p, dark, onDone, footer }: Common) {
   )
   const panel = (
     <>
-      <Prompt dark={dark} kicker="Kural makinesi">Makineyi ayarla: şekil numarasını hangi sayıyla çarpıp kaç eklemeli ki her şekil için doğru sayıyı versin?</Prompt>
       {!solved && (
         <>
           <Card dark={dark} title="Şekil numarasını çarp">
@@ -453,7 +450,7 @@ function MachineRule({ p, dark, onDone, footer }: Common) {
       )}
     </>
   )
-  return <Layout work={work} panel={panel} />
+  return <Layout lead={<Prompt dark={dark} kicker="Kural makinesi">Makineyi ayarla: şekil numarasını hangi sayıyla çarpıp kaç eklemeli ki her şekil için doğru sayıyı versin?</Prompt>} work={work} panel={panel} />
 }
 
 /* ───────────────────────── ifade tuş takımı ───────────────────────── */
@@ -527,7 +524,7 @@ function RuleTask({ p, grade, dark, box, onDone, footer, sol }: Common) {
   const simple = linText(p.A, p.B, box)
   const work = (
     <div className="flex flex-col gap-3">
-      <Strip p={p} upto={4} growth dark={dark} u={p.id === 'arti' ? 12 : 20} />
+      <Strip p={p} upto={4} growth dark={dark} u={p.id === 'arti' ? 13 : 24} />
       <ValueTable p={p} ns={[1, 2, 3, 4, 5]} dark={dark} diffs mine={mine} />
       {solved && (
         <Derived className="text-center">
@@ -538,7 +535,6 @@ function RuleTask({ p, grade, dark, box, onDone, footer, sol }: Common) {
   )
   const panel = (
     <>
-      <Prompt dark={dark} kicker={p.name}>{box ? `Şekil numarası □ olsun. Herhangi bir şekildeki ${p.unit} sayısını □ ile yaz.` : `Şekil numarası n olsun. Şekil n’deki ${p.unit} sayısını veren kuralı yaz.`}</Prompt>
       {!solved && (
         <Card dark={dark}>
           <ExprPad toks={toks} setToks={(x) => { setToks(x); nd.clear() }} box={box} dark={dark} />
@@ -555,7 +551,7 @@ function RuleTask({ p, grade, dark, box, onDone, footer, sol }: Common) {
       )}
     </>
   )
-  return <Layout work={work} panel={panel} />
+  return <Layout lead={<Prompt dark={dark} kicker={p.name}>{box ? `Şekil numarası □ olsun. Herhangi bir şekildeki ${p.unit} sayısını □ ile yaz.` : `Şekil numarası n olsun. Şekil n’deki ${p.unit} sayısını veren kuralı yaz.`}</Prompt>} work={work} panel={panel} />
 }
 
 /* ───────────────────────── 4. Görme biçimleri ───────────────────────── */
@@ -617,7 +613,7 @@ function SeeingsTask({ t, p, grade, dark, box, onDone, footer, sol }: Common) {
   const work = (
     <div className="flex flex-col gap-3">
       <div className={`flex flex-col items-center gap-2 rounded-2xl p-3 ${dark ? 'bg-slate-900/70 ring-1 ring-slate-600' : 'bg-white ring-1 ring-line'}`}>
-        <FigureSvg keys={keys} kind={p.kind} u={Math.min(64, 480 / (bounds(p.fig(5)).x1 - bounds(p.fig(5)).x0 + 1))} dark={dark} colorOf={(k) => colorMap.get(k)} twice={twice} maxW title={`Şekil ${fn}`} />
+        <FigureSvg keys={keys} kind={p.kind} u={Math.min(64, 480 / (bounds(p.fig(5)).x1 - bounds(p.fig(5)).x0 + 1), 330 / (bounds(p.fig(5)).y1 - bounds(p.fig(5)).y0 + 1))} dark={dark} colorOf={(k) => colorMap.get(k)} twice={twice} maxW title={`Şekil ${fn}`} />
         <div className="flex flex-wrap items-center justify-center gap-1.5">
           <span className={`text-xs font-black uppercase ${dark ? 'text-slate-300' : 'text-ink-soft'}`}>Şekil</span>
           {[2, 3, 4, 5].map((n) => <PickBtn key={n} on={fn === n} onClick={() => setFn(n)} dark={dark} className="text-base" label={`Şekil ${ek(n, 'acc')} göster`}>{n}</PickBtn>)}
@@ -631,6 +627,19 @@ function SeeingsTask({ t, p, grade, dark, box, onDone, footer, sol }: Common) {
             </PickBtn>
           ))}
         </div>
+        {lens && (
+          <p className={`mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 rounded-xl px-3 py-2 text-lg font-black tabular-nums ${dark ? 'bg-slate-900/80' : 'bg-paper'}`} data-testid="lens-sum">
+            <span className={`mr-1 text-sm font-extrabold ${dark ? 'text-slate-300' : 'text-ink-soft'}`}>Şekil {fn}:</span>
+            {groups.map((g, i) => (
+              <span key={i} className="inline-flex items-center gap-1.5">
+                {(i > 0 || g.twice) && <span className={dark ? 'text-slate-400' : 'text-ink-soft'}>{g.twice ? '−' : '+'}</span>}
+                <span className="rounded-lg px-1.5" style={{ color: TONES[g.tone], boxShadow: `inset 0 0 0 2px ${TONES[g.tone]}55` }}>{g.keys.length}</span>
+              </span>
+            ))}
+            <span className={dark ? 'text-slate-400' : 'text-ink-soft'}>=</span>
+            <span>{keys.length}</span>
+          </p>
+        )}
         <p className={`mt-2 min-h-10 text-[15px] font-bold ${dark ? 'text-slate-200' : 'text-ink'}`}>
           {lens ? <>{lens.say}{foundLens.has(lens.id) && <span className="ml-1 font-black text-emerald-500">→ {show(tokenize(lens.expr), box)}</span>}</> : 'Bir bakış seç: şekil renkli gruplara ayrılsın. Ya da kendi gruplamanı düşün.'}
         </p>
@@ -639,7 +648,6 @@ function SeeingsTask({ t, p, grade, dark, box, onDone, footer, sol }: Common) {
   )
   const panel = (
     <>
-      <Prompt dark={dark} kicker={`${p.name} · en az ${goal} ifade`}>{`Aynı şekli farklı biçimlerde görebilirsin. Her görme biçimi için şekil ${box ? '□' : 'n'}’deki ${p.unit} sayısını yaz.`}</Prompt>
       <Card dark={dark}>
         <ExprPad toks={toks} setToks={(x) => { setToks(x); nd.clear() }} box={box} dark={dark} />
         <BigButton onClick={add} disabled={!toks.length} className="mt-2 w-full"><Plus size={20} />Bu bakışı ekle</BigButton>
@@ -654,7 +662,7 @@ function SeeingsTask({ t, p, grade, dark, box, onDone, footer, sol }: Common) {
       )}
     </>
   )
-  return <Layout work={work} panel={panel} />
+  return <Layout lead={<Prompt dark={dark} kicker={`${p.name} · en az ${goal} ifade`}>{`Aynı şekli farklı biçimlerde görebilirsin. Her görme biçimi için şekil ${box ? '□' : 'n'}’deki ${p.unit} sayısını yaz.`}</Prompt>} work={work} panel={panel} />
 }
 
 /* ───────────────────────── 5. Ters soru ───────────────────────── */
@@ -746,7 +754,6 @@ function InverseTask({ t, p, grade, dark, onDone, footer }: Common) {
   )
   const panel = (
     <>
-      <Prompt dark={dark} kicker={p.name}>{`Bir arkadaşın bu örüntüden bir şekil kurmuş ve tam ${T} ${p.unit} kullanmış. Bu kaçıncı şekil?`}</Prompt>
       {stage === 'ask' && (
         <Card dark={dark}>
           <NumPad value={val} onChange={(v) => { setVal(v); nd.clear() }} dark={dark} label="Şekil" maxLen={3} onEnter={check} enterLabel={<><Check size={20} />Kontrol et</>} />
@@ -770,7 +777,7 @@ function InverseTask({ t, p, grade, dark, onDone, footer }: Common) {
       )}
     </>
   )
-  return <Layout work={work} panel={panel} />
+  return <Layout lead={<Prompt dark={dark} kicker={p.name}>{`Bir arkadaşın bu örüntüden bir şekil kurmuş ve tam ${T} ${p.unit} kullanmış. Bu kaçıncı şekil?`}</Prompt>} work={work} panel={panel} />
 }
 
 /* ───────────────────────── 6. Grafik (8. sınıf) ───────────────────────── */
@@ -870,7 +877,7 @@ function GraphTask({ p, dark, onDone, footer }: Common) {
   const work = (
     <div className="flex flex-col gap-3">
       <div className="rounded-2xl bg-white p-2 text-ink">
-        <Plane initial={{ xMin: -0.8, xMax: 7, yMin: -3, yMax: yMax }} equalUnits={false} aspect={0.8} xLabel="şekil no (x)" yLabel={`${p.unit} (y)`} onTap={(q) => place(q.x, q.y)} label="Şekil numarası – parça sayısı grafiği">
+        <Plane initial={{ xMin: -0.8, xMax: 7, yMin: -3, yMax: yMax }} equalUnits={false} aspect={0.8} tickPx={50} xLabel="şekil no (x)" yLabel={`${p.unit} (y)`} onTap={(q) => place(q.x, q.y)} label="Şekil numarası – parça sayısı grafiği">
           <LineLayer p={p} show={stage !== 'plot'} />
           {Object.entries(pts).map(([n, y]) => (
             <DragPoint key={n} x={Number(n)} y={y} color={y === valueAt(p, Number(n)) && stage !== 'plot' ? '#16a34a' : '#7c3aed'} snapStep={1} label={`Ş${n}`} disabled={stage !== 'plot'} constrain={(q) => ({ x: Number(n), y: Math.max(0, Math.min(yMax, q.y)) })} onChange={(q) => setPts((c) => ({ ...c, [n]: q.y }))} />
@@ -882,7 +889,6 @@ function GraphTask({ p, dark, onDone, footer }: Common) {
   )
   const panel = (
     <>
-      <Prompt dark={dark} kicker={p.name}>{stage === 'plot' ? 'Tablodaki her şekli bir nokta olarak işaretle: x şekil numarası, y parça sayısı. Grafiğe dokun; noktayı sürükleyerek düzelt.' : stage === 'cut' ? 'Noktalar bir doğru üzerinde! Doğruyu sola uzat: şekil 0 olsaydı kaç parça olurdu? Doğru y eksenini nerede kesiyor?' : stage === 'eq' ? 'Bu doğrunun denklemi hangisi?' : 'Örüntü bir doğrusal fonksiyon!'}</Prompt>
       {stage === 'plot' && (
         <>
           <Card dark={dark}>
@@ -919,6 +925,6 @@ function GraphTask({ p, dark, onDone, footer }: Common) {
       )}
     </>
   )
-  return <Layout work={work} panel={panel} />
+  return <Layout lead={<Prompt dark={dark} kicker={p.name}>{stage === 'plot' ? 'Tablodaki her şekli bir nokta olarak işaretle: x şekil numarası, y parça sayısı. Grafiğe dokun; noktayı sürükleyerek düzelt.' : stage === 'cut' ? 'Noktalar bir doğru üzerinde! Doğruyu sola uzat: şekil 0 olsaydı kaç parça olurdu? Doğru y eksenini nerede kesiyor?' : stage === 'eq' ? 'Bu doğrunun denklemi hangisi?' : 'Örüntü bir doğrusal fonksiyon!'}</Prompt>} work={work} panel={panel} />
 }
 

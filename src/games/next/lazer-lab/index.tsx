@@ -1,13 +1,13 @@
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Check, Crosshair, FlaskConical, HelpCircle, Lightbulb, Minus, Plus, RotateCcw, RotateCw, Sparkles, Trash2, Zap } from 'lucide-react'
-import { starsFor, useFrame, type GameProps } from '../../kit'
+import { starsFor, useFrame, useWidth, type GameProps } from '../../kit'
 import { LevelDots, Nudge, Scene, SolutionList, StrategyPicker, useSolutions } from '../../kit2'
 import { Plane } from '../../../interactive/Plane'
 import { MathText } from '../../../components/MathText'
 import { useTracker } from '../../../lib/trackerContext'
 import { sfx } from '../../../lib/feedback'
 import { Lab, BEAM_COLORS, type EmitterState, type MeasureState } from './Lab'
-import { INSIGHT, MISSIONS, type Ctx, type Mission, type NudgeMsg, type Step } from './missions'
+import { INSIGHT, MISSIONS, type Ctx, type Mark, type Mission, type NudgeMsg, type Step } from './missions'
 import { bounceAngles, dist, fmtN, lineEq, norm180, norm360, slopeFrac, solutionKey, trace, type Mirror, type Pt, type Trace, type World } from './optics'
 
 /**
@@ -62,6 +62,7 @@ export default function LazerLab({ grade, onFinish }: GameProps) {
   const [revealed, setRevealed] = useState<string[]>([])
   const [ghosts, setGhosts] = useState<{ p: Pt; label: string }[]>([])
   const [measure, setMeasure] = useState<MeasureState | null>(null)
+  const [measured, setMeasured] = useState<Mark[]>([])
   const [numVal, setNumVal] = useState(0)
   const [slope, setSlope] = useState({ rise: 1, run: 1 })
   const [selected, setSelected] = useState<string | null>(null)
@@ -77,6 +78,7 @@ export default function LazerLab({ grade, onFinish }: GameProps) {
   const [lastUsed, setLastUsed] = useState<number | null>(null)
   const lastWin = useRef<{ mirrors: Mirror[]; aims: Pt[]; traces: Trace[] } | null>(null)
   const nid = useRef(1)
+  const [wrapRef, wrapW] = useWidth<HTMLDivElement>()
   const nudgeId = useRef(0)
   const animT = useRef(0)
   const animDur = useRef(1)
@@ -108,6 +110,8 @@ export default function LazerLab({ grade, onFinish }: GameProps) {
     if (animating) return
     setFired(null)
     setProg(0)
+    setNudge(null)
+    setOkMsg(null)
   }
 
   const fire = () => {
@@ -189,7 +193,7 @@ export default function LazerLab({ grade, onFinish }: GameProps) {
     if (fresh) {
       setStepSols((s) => [...s, key])
       sol.add(`${m.id}:${si}:${key}`, solLabel(m, mirrors, trs, aims, used))
-      if (step.best !== undefined && used <= step.best && !fewest.includes(m.id)) setFewest((f) => [...f, m.id])
+      if (step.best !== undefined && step.inventory > step.best && used <= step.best && !fewest.includes(m.id)) setFewest((f) => [...f, m.id])
     }
     if (!stepDone) {
       track.attempt(true)
@@ -259,6 +263,7 @@ export default function LazerLab({ grade, onFinish }: GameProps) {
     setRevealed([])
     setGhosts([])
     setMeasure(null)
+    setMeasured([])
     setSelected(null)
     setNudge(null)
     setOkMsg(null)
@@ -423,6 +428,7 @@ export default function LazerLab({ grade, onFinish }: GameProps) {
     const target = Math.round(bounceAngles(b).mirror)
     if (Math.abs(v - target) <= 2) {
       setMeasure({ ...measure, value: target, locked: true })
+      setMeasured((ms) => [...ms, { b: measure.b, k: measure.ray }])
       if (step.kind === 'measure') succeed(step.ok ? txt(step.ok, ctx) : `${target}° ölçtün!`)
     } else setMeasure({ ...measure, value: Math.max(0, Math.min(180, v)) })
   }
@@ -433,8 +439,11 @@ export default function LazerLab({ grade, onFinish }: GameProps) {
     setHintN((h) => Math.min(hints.length, h + 1))
   }
 
-  const marks = step && step.kind === 'number' && step.marks ? step.marks : null
-  const view = m.view ?? { xMin: -0.6, xMax: m.room.w + 0.6, yMin: -0.6, yMax: m.room.h + 0.6 }
+  const marks: Mark[] | null = step.kind === 'number' ? (step.marks ?? []) : step.kind === 'measure' ? measured : building || step.kind === 'strategy' ? null : []
+  const view0 = m.view ?? { xMin: -0.6, xMax: m.room.w + 0.6, yMin: -0.6, yMax: m.room.h + 0.6 }
+  // altta yakınlaştırma düğmeleri için boşluk (≈ 52 px)
+  const margin = Math.round(Math.max(0.8, Math.min(3, (52 * (view0.xMax - view0.xMin)) / Math.max(200, wrapW))) * 5) / 5
+  const view = { ...view0, yMin: view0.yMin - margin }
   const taskText = step ? txt(step.text, ctx) : ''
   const card = dark ? 'bg-slate-900/80 ring-1 ring-slate-700' : 'bg-slate-900/90 ring-1 ring-slate-700'
   const canFire = (step.kind === 'predict' && !!predict && !fired) || building
@@ -462,14 +471,14 @@ export default function LazerLab({ grade, onFinish }: GameProps) {
             <div className="mb-2 lg:hidden">
               <StepLine n={si + 1} total={m.steps.length} text={taskText} title={m.title} />
             </div>
-            <div className="ll-frame relative rounded-[22px] p-1.5">
+            <div ref={wrapRef} className="ll-frame relative mx-auto rounded-[22px] p-1.5" style={{ maxWidth: `max(320px, calc((100dvh - 250px) / ${((view.yMax - view.yMin) / (view.xMax - view.xMin)).toFixed(3)}))` }}>
               <Plane
-                key={m.id}
+                key={`${m.id}-${margin}`}
                 initial={view}
                 aspect={(view.yMax - view.yMin) / (view.xMax - view.xMin)}
                 grid={false}
                 axes={false}
-                minSpan={3}
+                minSpan={4}
                 maxSpan={(view.xMax - view.xMin) * 1.25}
                 onTap={onTap}
                 label={`Lazer laboratuvarı: ${m.title}`}
@@ -483,10 +492,11 @@ export default function LazerLab({ grade, onFinish }: GameProps) {
                   animDone={!!fired && !animating}
                   targets={visibleTargets}
                   lit={lit}
-                  predict={step.kind === 'predict' || (si > 0 && m.steps[si - 1]?.kind === 'predict' && !building) ? predict : null}
+                  predict={step.kind === 'predict' ? predict : null}
                   pick={pick && step.kind === 'point' ? { p: pick, label: step.label } : null}
                   ghosts={ghosts}
                   ghostWorld={ghosts.length > 0}
+                  hitCoords={!!(m.show.hitCoords ?? m.show.coords) || (step.kind === 'number' && stepDone)}
                   selected={selected}
                   editable={building && !animating}
                   marks={marks}
@@ -528,10 +538,10 @@ export default function LazerLab({ grade, onFinish }: GameProps) {
                   <ToolBtn onClick={removeSel} label="Aynayı kaldır"><Trash2 size={17} /></ToolBtn>
                 </div>
               )}
-              {building && m.emitters.map((e, i) => e.aim === 'lattice' && <LatticeAim key={i} label={e.label ?? 'Nişan'} d={aims[i]} color={BEAM_COLORS[i]} onChange={(d) => onAim(i, d)} />)}
+              {building && m.emitters.map((e, i) => e.aim === 'lattice' && <LatticeAim key={i} label={e.label ?? ''} d={aims[i]} color={BEAM_COLORS[i]} onChange={(d) => onAim(i, d)} />)}
             </div>
             {info && <p className="mt-2 rounded-xl bg-slate-800 px-3 py-2 text-sm font-bold text-amber-200 ring-1 ring-slate-600">{info}</p>}
-            {building && m.emitters.some((e) => e.aim === 'lattice') && <AimReadout m={m} aims={aims} />}
+            {building && m.emitters.some((e) => e.aim === 'lattice') && <AimReadout m={m} aims={aims} g={g} />}
           </div>
 
           {/* SAĞ: görev paneli */}
@@ -618,7 +628,10 @@ export default function LazerLab({ grade, onFinish }: GameProps) {
 function solLabel(m: Mission, mirrors: Mirror[], trs: Trace[], aims: Pt[], used: number) {
   const parts: string[] = []
   m.emitters.forEach((e, i) => {
-    if (e.aim === 'rotate') parts.push(`yayıcı ${Math.round(norm360((Math.atan2(aims[i].y, aims[i].x) * 180) / Math.PI))}°`)
+    if (e.aim === 'rotate') {
+      const a = Math.round((Math.atan2(aims[i].y, aims[i].x) * 180) / Math.PI)
+      parts.push(`yayıcı ${a < 0 ? `−${-a}` : a}°`)
+    }
     if (e.aim === 'lattice') parts.push(`eğim ${slopeFrac(aims[i].x, aims[i].y).text}`)
   })
   const ids = [...new Set(trs.flatMap((t) => t.used))]
@@ -661,10 +674,10 @@ function NumberPad({ value, unit, steps, min, max, onChange, onCheck }: { value:
   const big = [...steps].sort((a, b) => b - a)
   return (
     <div className="rounded-2xl bg-slate-950/60 p-3 ring-1 ring-slate-700">
-      <div className="flex items-center justify-center gap-1.5">
-        {big.map((s) => <ToolBtn key={`m${s}`} onClick={() => set(value - s)} label={`${fmtN(s, 1)} azalt`}><Minus size={14} />{fmtN(s, 1)}</ToolBtn>)}
-        <output className="min-w-24 rounded-xl bg-slate-900 px-3 py-2 text-center text-3xl font-black text-white tabular-nums ring-1 ring-rose-400/40" aria-live="polite">{fmtN(value, dec)}{unit}</output>
-        {[...big].reverse().map((s) => <ToolBtn key={`p${s}`} onClick={() => set(value + s)} label={`${fmtN(s, 1)} artır`}><Plus size={14} />{fmtN(s, 1)}</ToolBtn>)}
+      <output className="mx-auto block w-fit min-w-32 rounded-xl bg-slate-900 px-4 py-1.5 text-center text-4xl font-black text-white tabular-nums ring-1 ring-rose-400/40" aria-live="polite">{fmtN(value, dec).replace('-', '−')}{unit}</output>
+      <div className={`mt-2 grid gap-1.5 ${big.length > 1 ? 'grid-cols-4' : 'grid-cols-2'}`}>
+        {big.map((s) => <ToolBtn key={`m${s}`} onClick={() => set(value - s)} label={`${fmtN(s, 1)} azalt`}>−{fmtN(s, 1)}</ToolBtn>)}
+        {[...big].reverse().map((s) => <ToolBtn key={`p${s}`} onClick={() => set(value + s)} label={`${fmtN(s, 1)} artır`}>+{fmtN(s, 1)}</ToolBtn>)}
       </div>
       <button type="button" onClick={onCheck} className="btn-primary mt-3 min-h-12 w-full"><Check size={18} />Kontrol et</button>
     </div>
@@ -696,33 +709,45 @@ function SlopePad({ v, onChange, onCheck }: { v: { rise: number; run: number }; 
 
 function LatticeAim({ label, d, color, onChange }: { label: string; d: Pt; color: string; onChange: (d: Pt) => void }) {
   const set = (x: number, y: number) => (x || y) && onChange({ x: Math.max(-14, Math.min(14, x)), y: Math.max(-14, Math.min(14, y)) })
+  const axis = (name: string, v: number, f: (k: number) => void) => (
+    <span className="flex items-center gap-1">
+      <span className="w-6 text-sm font-black">{name}</span>
+      <ToolBtn onClick={() => f(-1)} label={`${name} azalt`}><Minus size={14} /></ToolBtn>
+      <span className="w-7 text-center font-black tabular-nums">{String(v).replace('-', '−')}</span>
+      <ToolBtn onClick={() => f(1)} label={`${name} artır`}><Plus size={14} /></ToolBtn>
+    </span>
+  )
   return (
-    <div className="flex flex-wrap items-center gap-1.5 rounded-xl bg-slate-800/80 px-2 py-1 ring-1 ring-slate-600" role="group" aria-label={`${label} nişanı`}>
-      <span className="size-3 rounded-full" style={{ background: color, boxShadow: `0 0 8px ${color}` }} />
-      <span className="text-xs font-black text-slate-300">{label}</span>
-      <span className="text-sm font-black">Δx</span>
-      <ToolBtn onClick={() => set(d.x - 1, d.y)} label="Δx azalt"><Minus size={14} /></ToolBtn>
-      <span className="w-7 text-center font-black tabular-nums">{String(d.x).replace('-', '−')}</span>
-      <ToolBtn onClick={() => set(d.x + 1, d.y)} label="Δx artır"><Plus size={14} /></ToolBtn>
-      <span className="ml-1 text-sm font-black">Δy</span>
-      <ToolBtn onClick={() => set(d.x, d.y - 1)} label="Δy azalt"><Minus size={14} /></ToolBtn>
-      <span className="w-7 text-center font-black tabular-nums">{String(d.y).replace('-', '−')}</span>
-      <ToolBtn onClick={() => set(d.x, d.y + 1)} label="Δy artır"><Plus size={14} /></ToolBtn>
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-slate-800/80 px-2 py-1 ring-1 ring-slate-600" role="group" aria-label={`${label || 'Yayıcı'} nişanı`}>
+      <span className="flex items-center gap-1.5">
+        <span className="size-3 rounded-full" style={{ background: color, boxShadow: `0 0 8px ${color}` }} />
+        {label && <span className="text-xs font-black text-slate-300">{label}</span>}
+      </span>
+      {axis('Δx', d.x, (k) => set(d.x + k, d.y))}
+      {axis('Δy', d.y, (k) => set(d.x, d.y + k))}
     </div>
   )
 }
 
-function AimReadout({ m, aims }: { m: Mission; aims: Pt[] }) {
+function AimReadout({ m, aims, g }: { m: Mission; aims: Pt[]; g: G }) {
   return (
     <div className="mt-2 flex flex-wrap gap-2">
       {m.emitters.map((e, i) => {
+        if (e.aim !== 'lattice' && g < 8) return null
         const d = aims[i]
         const s = slopeFrac(d.x, d.y)
         return (
-          <span key={i} className="inline-flex items-center gap-2 rounded-xl bg-slate-900/80 px-3 py-1.5 text-sm font-extrabold ring-1 ring-slate-700">
+          <span key={i} className="inline-flex flex-wrap items-center gap-x-2 rounded-xl bg-slate-900/80 px-3 py-1.5 text-sm font-extrabold ring-1 ring-slate-700">
             <span className="size-2.5 rounded-full" style={{ background: BEAM_COLORS[i] }} />
-            {e.label ? `${e.label}: ` : ''}eğim = <MathText text={s.text} className="text-pink-200" />
-            <span className="text-slate-400">· {lineEq(e, d)}</span>
+            {e.label ? `${e.label}: ` : ''}
+            {g >= 8 ? (
+              <>
+                eğim = <MathText text={s.text} className="text-pink-200" />
+                <span className="text-slate-400">· <MathText text={lineEq(e, d, true)} /></span>
+              </>
+            ) : (
+              <span>x {Math.abs(d.x)} {d.x >= 0 ? 'artarken' : 'azalırken'} y {Math.abs(d.y)} {d.y >= 0 ? 'artar' : 'azalır'}</span>
+            )}
           </span>
         )
       })}
@@ -741,7 +766,7 @@ function BuildStatus({ found, goal, best, used, inventory, fewest }: { found: nu
           ))}
         </span>
       </div>
-      {found > 0 && found < goal && <p className="text-sm font-bold text-amber-200">Başka bir yol bul! Aynayı başka bir yere ya da başka bir açıya koy.</p>}
+      {found > 0 && found < goal && <p className="text-sm font-bold text-amber-200">Başka bir yol bul! {inventory > 0 ? 'Aynayı başka bir yere ya da başka bir açıya koy.' : 'Yayıcıyı başka bir açıya çevir.'}</p>}
       {found >= goal && goal > 1 && <p className="text-sm font-bold text-emerald-300">Hedeflenen sayıda yol buldun. Daha fazlası da olabilir!</p>}
       {best !== undefined && inventory > best && used !== null && (
         fewest
@@ -753,6 +778,10 @@ function BuildStatus({ found, goal, best, used, inventory, fewest }: { found: nu
 }
 
 const CSS = `
+.ll-frame .ring-line{--tw-ring-color:#334155}
+.ll-frame .bg-white{background:#050a14}
+.ll-frame button{background:rgba(15,23,42,.88)!important;color:#e2e8f0!important;--tw-ring-color:#475569!important}
+.ll-frame p.text-ink-soft{color:#94a3b8}
 .ll-frame{background:linear-gradient(135deg,#334155,#0f172a 40%,#1e293b);box-shadow:0 0 0 1px #475569,0 18px 40px -18px rgba(244,63,94,.35)}
 .ll-fire{background:radial-gradient(circle at 30% 20%,#fb7185,#e11d48 55%,#9f1239);box-shadow:0 0 0 2px rgba(255,255,255,.08),0 0 22px rgba(244,63,94,.55);transition:transform .12s}
 .ll-fire:not(:disabled):active{transform:scale(.96)}

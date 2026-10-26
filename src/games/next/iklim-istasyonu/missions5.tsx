@@ -178,6 +178,7 @@ function ScaleBuild({ api, values }: { api: Api; values: number[] }) {
     setGot((g) => [...g, s])
     api.strategy(s * 10 >= max && s * 10 - max < s * 3 ? 'En büyük değeri kâğıda sığdırma' : 'Bütün değerleri bölen ölçek arama')
     if (n >= 2) {
+      api.clear()
       api.say('İki farklı ölçek, aynı veri! Sütunların birbirine göre boyları hiç değişmedi.')
       api.complete()
     } else {
@@ -450,6 +451,7 @@ function LostLog({ api, total }: { api: Api; total: number }) {
     const n = found.length + 1
     setFound((x) => [...x, key])
     if (n >= 2) {
+      api.clear()
       api.say('Birden çok grafik bütün ipuçlarına uyuyor! Bilgi eksikse tek bir doğru cevap olmayabilir.')
       api.complete()
     } else {

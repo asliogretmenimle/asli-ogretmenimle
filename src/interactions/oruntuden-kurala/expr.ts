@@ -136,8 +136,11 @@ export function show(toks: Tok[], box = false): string {
       // başta ya da "(" sonrasında eksi: tekli
       if (t === '−' && (prev === undefined || prev === '(' || prev === '×')) out += '−'
       else out += ` ${t} `
-    } else if (t === 'n') out += varSym(box)
-    else out += t
+    } else {
+      // □ yazımında örtük çarpmayı göster: 2□ → 2 × □, 3(□ − 1) → 3 × (□ − 1)
+      if (box && (t === 'n' || t === '(') && prev !== undefined && (/\d/.test(prev) || prev === ')' || prev === 'n')) out += ' × '
+      out += t === 'n' ? varSym(box) : t
+    }
   })
   return out.replace(/\s+/g, ' ').trim()
 }

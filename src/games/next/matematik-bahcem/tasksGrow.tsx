@@ -34,16 +34,16 @@ function Panel({ children, className = '' }: { children: ReactNode; className?: 
 }
 
 /** Adım tablosu (salt okunur satırlar + isteğe bağlı düzenlenebilir hücreler) */
-function StepTable({ rows, diff }: { rows: { n: number; v: ReactNode }[]; diff?: number[] }) {
+function StepTable({ rows, diff, compact }: { rows: { n: number; v: ReactNode }[]; diff?: number[]; compact?: boolean }) {
   return (
     <div className="overflow-hidden rounded-2xl bg-white ring-1 ring-green-200">
       <div className="grid grid-cols-[1fr_1.4fr] bg-green-700 text-sm font-black text-white">
         <span className="px-3 py-2">Adım</span>
-        <span className="px-3 py-2">Çiçek sayısı</span>
+        <span className="px-3 py-2">{compact ? 'Çiçek' : 'Çiçek sayısı'}</span>
       </div>
       {rows.map((r, i) => (
         <div key={r.n} className="relative grid grid-cols-[1fr_1.4fr] items-center border-t border-green-100">
-          <span className="px-3 py-2 text-lg font-black text-green-900">{r.n}. adım</span>
+          <span className="px-3 py-2 text-lg font-black whitespace-nowrap text-green-900">{compact ? `${r.n}.` : `${r.n}. adım`}</span>
           <span className="px-3 py-1.5 text-2xl font-black tabular-nums text-ink">{r.v}</span>
           {diff && diff[i] !== undefined && (
             <span className="absolute right-2 -bottom-3 z-10 rounded-full bg-orange-500 px-2 py-0.5 text-xs font-black text-white shadow">+{diff[i]}</span>
@@ -231,7 +231,7 @@ export function GrowRuleTask({ api }: { api: Api }) {
       tray={
         <Panel>
           <div className="grid gap-3 md:grid-cols-[180px_1fr]">
-            <StepTable rows={[1, 2, 3, 4].map((n) => ({ n, v: f(n) }))} />
+            <StepTable compact rows={[1, 2, 3, 4].map((n) => ({ n, v: f(n) }))} />
             <div className="grid gap-2">
               {rules.map((r, i) => {
                 const t = tested[i]

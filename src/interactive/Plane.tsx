@@ -307,7 +307,7 @@ export function Pinchable({ onScale, onMove, onRotate, onEnd, children }: { onSc
         event.stopPropagation()
         if (ended && !pinching) onEnd?.()
         if (pinching || !onMove) return
-        onMove(dx / P.unitPx, -dy / P.unitPx)
+        onMove(dx / P.unitPx, (-dy * (P.view.yMax - P.view.yMin)) / P.height)
       },
     },
     { target: ref, eventOptions: { passive: false } },

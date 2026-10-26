@@ -125,14 +125,14 @@ function MapDiff({ api, d }: { api: Api; d: MapData }) {
   return (
     <div className="grid gap-3">
       <StepBar ink={ink} steps={['Erzurum – Antalya', `Farkı ${d.D} °C olan çiftler`]} at={step} />
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_230px]">
+      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_250px]">
         <Panel ink={ink} title="🗺️ Ocak sabahı, saat 07.00">
           <TurkeyMap ink={ink} pins={pins} sel={step === 0 ? ['erzurum', 'antalya'] : sel} onPick={step === 1 ? toggle : undefined} />
           {step === 1 && (
-            <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-5">
+            <div className="mt-2 grid grid-cols-[repeat(auto-fill,minmax(124px,1fr))] gap-1.5">
               {d.ids.map((id) => (
                 <button key={id} type="button" onClick={() => toggle(id)} aria-pressed={sel.includes(id)} className={`flex min-h-12 items-center justify-between gap-1 rounded-xl px-2.5 text-sm font-extrabold ring-1 transition active:scale-95 ${sel.includes(id) ? 'bg-cyan-500 text-slate-950 ring-cyan-300' : 'bg-slate-800 text-slate-100 ring-slate-600'}`}>
-                  <span className="truncate">{CITIES[id].name}</span>
+                  <span className="min-w-0 truncate">{CITIES[id].name}</span>
                   <span className="tabular-nums" style={{ color: sel.includes(id) ? undefined : tempColor(d.temps[id]) === '#6d28d9' ? '#c4b5fd' : undefined }}>{f(d.temps[id])}°</span>
                 </button>
               ))}
@@ -274,7 +274,7 @@ function Rates({ api, d }: { api: Api; d: RateData }) {
       </Panel>
       <Panel ink={ink}>
         <LinePlot ink={ink} xs={d.hours} xLabels={d.hours.map(hh)} ys={ys} editable={step === 0 ? d.hours.map((_, i) => d.missing.includes(i)) : undefined} onSet={step === 0 ? (i, y) => { setYs((c) => c.map((v, k) => (k === i ? y : v))); setHl((h) => h.filter((x) => x !== i)) } : undefined} view={{ xMin: d.hours[0] - 0.8, xMax: d.hours[n - 1] + 0.8, yMin: -13, yMax: 11 }} yUnit="°C" hlPts={hl} seg={step >= 1 ? { onTap: tapSeg, state: segState } : undefined}
-          extra={step >= 2 ? (P) => (
+          extra={step >= 3 ? (P) => (
             <g pointerEvents="none">
               {ch.map((c, k) => {
                 const x = (P.sx(d.hours[k]) + P.sx(d.hours[k + 1])) / 2
@@ -292,7 +292,7 @@ function Rates({ api, d }: { api: Api; d: RateData }) {
         {step === 0 && <div className="mt-2 flex justify-center"><PrimaryBtn onClick={check}><ClipboardCheck size={18} />Noktaları kontrol et</PrimaryBtn></div>}
         {step === 1 && <p className="mt-2 text-center text-base font-black" style={{ color: ink.text }}>Sıcaklık hangi aralıkta en hızlı arttı (saat başına en çok)? Çizginin o parçasına dokun.</p>}
       </Panel>
-      {step === 2 && (
+      {step >= 2 && (
         <Panel ink={ink} className="animate-fade-up">
           <Ask
             api={api}
@@ -300,7 +300,7 @@ function Rates({ api, d }: { api: Api; d: RateData }) {
             unit="°C/sa"
             dec
             judge={(v) => (Math.abs(v - rate[fast]) < 1e-9 ? true : v === ch[fast] && dt[fast] > 1 ? { q: `${ch[fast]} derece toplam değişim. Bu değişim ${dt[fast]} saatte oldu: 1 saate ne kadar düşer?`, misc: 'Değişim hızını toplam değişimle karıştırdı' } : { q: `${ekS(d.temps[fast], 'abl')} ${ekS(d.temps[fast + 1], 'dat')} kaç derece? Bu kaç saatte oldu?` })}
-            onOk={() => { api.say(`En hızlı ısınma: saatte ${f(rate[fast])} °C. En büyük değişim ise ${hh(d.hours[big])}–${hh(d.hours[big + 1])} arasındaydı!`); api.complete() }}
+            onOk={() => { setStep(3); api.say(`En hızlı ısınma: saatte ${f(rate[fast])} °C. En büyük değişim ise ${hh(d.hours[big])}–${hh(d.hours[big + 1])} arasındaydı!`); api.complete() }}
           />
         </Panel>
       )}
@@ -312,7 +312,7 @@ function makeRates(): RateData {
   const t = pick([
     { hours: [6, 8, 11, 12, 15, 18], temps: [-9, -7, -1, 2, 4, -2], missing: [1, 3, 5] },
     { hours: [7, 9, 10, 13, 14, 17], temps: [-6, -4, -1, 5, 7, 1], missing: [0, 2, 4] },
-    { hours: [6, 9, 10, 12, 15, 18], temps: [-10, -7, -3, 1, 3, -2], missing: [1, 3, 5] },
+    { hours: [6, 9, 10, 12, 15, 18], temps: [-10, -8, -4, 2, 4, -1], missing: [1, 3, 5] },
   ])
   return t
 }
@@ -558,7 +558,7 @@ function Trend({ api, d }: { api: Api; d: { t: number[] } }) {
       )}
       {step >= 1 && (
         <Panel ink={ink} title={step === 1 ? 'Temmuz noktasını sürükle ya da yüksekliğine dokun' : 'Tahminin'} className="animate-fade-up">
-          <LinePlot ink={ink} xs={xs} xLabels={MONTHS} ys={[...d.t, july]} editable={step === 1 ? xs.map((_, i) => i === 6) : undefined} onSet={step === 1 ? (_, y) => setJuly(y) : undefined} view={{ xMin: 0.4, xMax: 7.6, yMin: -14, yMax: 28 }} yUnit="°C" color="#22d3ee" />
+          <LinePlot ink={ink} xs={xs} xLabels={MONTHS} ys={[...d.t, july]} dashLast editable={step === 1 ? xs.map((_, i) => i === 6) : undefined} onSet={step === 1 ? (_, y) => setJuly(y) : undefined} view={{ xMin: 0.4, xMax: 7.6, yMin: -14, yMax: 28 }} yUnit="°C" color="#22d3ee" />
           {step === 1 && (
             <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
               <Chip ink={ink} tone="info">Temmuz tahmini: {deg(july)}</Chip>

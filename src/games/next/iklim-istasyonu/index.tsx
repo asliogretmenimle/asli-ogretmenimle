@@ -68,6 +68,7 @@ export default function IklimIstasyonu({ grade, onFinish }: GameProps) {
   const stat = useRef({ fails: 0, hints: 0, itemDone: false })
   const totals = useRef({ first: 0, paths: 0 })
   const topRef = useRef<HTMLDivElement>(null)
+  const asideRef = useRef<HTMLElement>(null)
   const M = missions[idx]
 
   const api: Api = useMemo(
@@ -109,6 +110,8 @@ export default function IklimIstasyonu({ grade, onFinish }: GameProps) {
       track.item(first)
       if (first) totals.current.first++
       sfx.win()
+      // alt alta yerleşimde (dikey tablet, telefon) sonuç kartını görünür yap
+      if (!window.matchMedia('(min-width: 1024px)').matches) setTimeout(() => asideRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 700)
     }
   }, [done, track])
 
@@ -179,9 +182,9 @@ export default function IklimIstasyonu({ grade, onFinish }: GameProps) {
         </div>
       </Scene>
 
-      <aside className="flex min-w-0 flex-col gap-3 lg:sticky lg:top-20 lg:col-start-2 lg:row-start-2">
+      <aside ref={asideRef} className="flex min-w-0 flex-col gap-3 lg:sticky lg:top-20 lg:col-start-2 lg:row-start-2">
         {wide && nudgeView}
-        {M.goal && M.goal > 1 ? <SolutionList list={sol.list} goal={M.goal} /> : sol.list.length > 0 ? <SolutionList list={sol.list} /> : null}
+        {sol.list.length > 0 || (M.goal ?? 0) > 1 ? <SolutionList list={sol.list} goal={M.goal && M.goal > 1 && sol.list.length <= M.goal ? M.goal : undefined} /> : null}
         {done ? (
           <div className="rounded-2xl bg-ok-soft p-4 text-green-900 ring-1 ring-green-200 animate-fade-up">
             <p className="text-lg font-black">🎉 {M.goal && M.goal > 1 ? `${sol.list.length} farklı yol buldun!` : 'Görev tamam!'}</p>

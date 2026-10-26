@@ -120,7 +120,7 @@ export function BarChart({ ink, cats, series, max, step, labelStep, edit, hl = [
                 {Math.abs(t / ls - Math.round(t / ls)) < 1e-6 && <text x={pad.l - 7} y={Y(t) + 4} textAnchor="end" fontSize={12} fontWeight={800} fill={ink.soft}>{f(t)}</text>}
               </g>
             ))}
-            {unit && <text x={pad.l - 7} y={pad.t - 10} textAnchor="end" fontSize={11} fontWeight={900} fill={ink.soft}>{unit}</text>}
+            {unit && <text x={pad.l + 6} y={pad.t - 9} fontSize={11} fontWeight={900} fill={ink.soft}>{unit}</text>}
             <line x1={pad.l} x2={pad.l} y1={pad.t - 4} y2={base} stroke={ink.axis} strokeWidth={1.6} />
             <line x1={pad.l} x2={w - pad.r} y1={base} y2={base} stroke={ink.axis} strokeWidth={1.6} />
             {cats.map((c, i) => {
@@ -168,8 +168,7 @@ export function BarChart({ ink, cats, series, max, step, labelStep, edit, hl = [
         </div>
       </ZoomBox>
       {edit && (
-        <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-          <ToolBtn ink={ink} onClick={() => nudgeSel(-1)} label="Sütunu kısalt"><Minus size={18} /></ToolBtn>
+        <div className="mt-2 grid justify-items-center gap-2">
           <span className="flex flex-wrap justify-center gap-1">
             {cats.map((c, i) => (
               <button key={c.label} type="button" onClick={() => setSel(i)} aria-pressed={sel === i} className={`min-h-12 rounded-xl px-2.5 text-sm font-extrabold ring-1 transition ${sel === i ? (ink.dark ? 'bg-cyan-500 text-slate-950 ring-cyan-400' : 'bg-cyan-600 text-white ring-cyan-600') : ink.dark ? 'bg-slate-800 text-slate-200 ring-slate-600' : 'bg-white text-ink ring-line'}`}>
@@ -177,7 +176,11 @@ export function BarChart({ ink, cats, series, max, step, labelStep, edit, hl = [
               </button>
             ))}
           </span>
-          <ToolBtn ink={ink} onClick={() => nudgeSel(1)} label="Sütunu uzat"><Plus size={18} /></ToolBtn>
+          <span className="flex items-center gap-2">
+            <ToolBtn ink={ink} onClick={() => nudgeSel(-1)} label="Sütunu kısalt"><Minus size={18} /></ToolBtn>
+            <span className="min-w-28 text-center text-base font-black tabular-nums" style={{ color: ink.text }}>{cats[sel].label}: {f(series[0].values[sel])}</span>
+            <ToolBtn ink={ink} onClick={() => nudgeSel(1)} label="Sütunu uzat"><Plus size={18} /></ToolBtn>
+          </span>
         </div>
       )}
       {refTap && <p className="mt-1 text-center text-xs font-bold" style={{ color: ink.soft }}>{refV ? 'Kesikli çizgi sütunun tepesinden geçiyor. Başka bir sütuna dokunarak karşılaştır.' : 'Bir sütuna dokun: tepesinden karşılaştırma çizgisi çekilir.'}</p>}
@@ -206,7 +209,7 @@ export function Towers({ ink, labels, values, max, mode, onMove, onSet, meanLine
   const [drag, setDrag] = useState<{ from: number; x: number; y: number } | null>(null)
   const n = values.length
   const H = Math.round(clamp(w * 0.55, 250, 330))
-  const pad = { t: 26, b: 40, l: 34, r: 8 }
+  const pad = { t: 26, b: 40, l: 34, r: meanLine !== undefined ? 70 : 8 }
   const ph = H - pad.t - pad.b
   const base = pad.t + ph
   const slot = (w - pad.l - pad.r) / n
@@ -301,9 +304,10 @@ export function Towers({ ink, labels, values, max, mode, onMove, onSet, meanLine
             })}
             {meanLine !== undefined && (
               <g pointerEvents="none">
-                <line x1={pad.l} x2={w - pad.r} y1={Y(meanLine)} y2={Y(meanLine)} stroke={MEAN} strokeWidth={2.2} strokeDasharray="8 5" />
-                <rect x={w - pad.r - 92} y={Y(meanLine) - 21} width={90} height={18} rx={6} fill={MEAN} />
-                <text x={w - pad.r - 47} y={Y(meanLine) - 8} textAnchor="middle" fontSize={11.5} fontWeight={900} fill="#fff">ortalama {f(meanLine)}</text>
+                <line x1={pad.l} x2={w - 68} y1={Y(meanLine)} y2={Y(meanLine)} stroke={MEAN} strokeWidth={2.2} strokeDasharray="8 5" />
+                <rect x={w - 68} y={Y(meanLine) - 19} width={66} height={38} rx={8} fill={MEAN} />
+                <text x={w - 35} y={Y(meanLine) - 4} textAnchor="middle" fontSize={11} fontWeight={800} fill="#fff">ortalama</text>
+                <text x={w - 35} y={Y(meanLine) + 12} textAnchor="middle" fontSize={14} fontWeight={900} fill="#fff">{f(meanLine)}</text>
               </g>
             )}
             {drag && <rect x={drag.x - tw / 2} y={drag.y - cube / 2} width={tw - 2} height={cube - 2} rx={3} fill="url(#ii-water)" stroke="#fff" strokeWidth={2} pointerEvents="none" />}
@@ -311,14 +315,17 @@ export function Towers({ ink, labels, values, max, mode, onMove, onSet, meanLine
         </div>
       </ZoomBox>
       {mode === 'set' && sel !== null && (
-        <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-          <ToolBtn ink={ink} onClick={() => onSet?.(sel, clamp(values[sel] - 1, 0, max))} label="1 mm azalt"><Minus size={18} /></ToolBtn>
+        <div className="mt-2 grid justify-items-center gap-2">
           <span className="flex flex-wrap justify-center gap-1">
             {labels.map((l, i) => (
               <button key={l} type="button" onClick={() => setSel(i)} aria-pressed={sel === i} className={`min-h-12 min-w-12 rounded-xl px-2 text-sm font-extrabold ring-1 ${sel === i ? (ink.dark ? 'bg-cyan-500 text-slate-950 ring-cyan-400' : 'bg-cyan-600 text-white ring-cyan-600') : ink.dark ? 'bg-slate-800 text-slate-200 ring-slate-600' : 'bg-white text-ink ring-line'}`}>{l}</button>
             ))}
           </span>
-          <ToolBtn ink={ink} onClick={() => onSet?.(sel, clamp(values[sel] + 1, 0, max))} label="1 mm artır"><Plus size={18} /></ToolBtn>
+          <span className="flex items-center gap-2">
+            <ToolBtn ink={ink} onClick={() => onSet?.(sel, clamp(values[sel] - 1, 0, max))} label="1 mm azalt"><Minus size={18} /></ToolBtn>
+            <span className="min-w-28 text-center text-base font-black tabular-nums" style={{ color: ink.text }}>{labels[sel]}: {f(values[sel])} {unit}</span>
+            <ToolBtn ink={ink} onClick={() => onSet?.(sel, clamp(values[sel] + 1, 0, max))} label="1 mm artır"><Plus size={18} /></ToolBtn>
+          </span>
         </div>
       )}
       {mode === 'move' && <p className="mt-1 text-center text-xs font-bold" style={{ color: ink.soft }}>{sel !== null ? `${labels[sel]} seçildi: bloğu taşımak istediğin tüpe dokun.` : 'Bir tüpten ötekine blok sürükle ya da önce kaynağa, sonra hedefe dokun.'}</p>}
@@ -346,9 +353,11 @@ export interface LineProps {
   /** Boş alana dokununca (seçili / en yakın düzenlenebilir noktayı ayarla) */
   tapSets?: boolean
   label?: string
+  /** son parçayı kesikli çiz (tahmin) */
+  dashLast?: boolean
 }
 
-function LineLayer({ ink, xs, xLabels, ys, editable, onSet, view, yUnit, seg, hlPts = [], extra, color, sel, setSel }: LineProps & { sel: number | null; setSel: (i: number) => void }) {
+function LineLayer({ ink, xs, xLabels, ys, editable, onSet, view, yUnit, seg, hlPts = [], extra, color, sel, setSel, dashLast }: LineProps & { sel: number | null; setSel: (i: number) => void }) {
   const P = usePlane()
   const v = P.view
   const yStep = niceStep(v.yMax - v.yMin, P.height, 34)
@@ -387,7 +396,7 @@ function LineLayer({ ink, xs, xLabels, ys, editable, onSet, view, yUnit, seg, hl
           <g key={`s${k}`} onClick={seg ? () => seg.onTap(k) : undefined} data-handle={seg ? true : undefined} style={{ cursor: seg ? 'pointer' : 'default' }} role={seg ? 'button' : undefined} aria-label={seg ? `${xLabels[k]} – ${xLabels[k + 1]} aralığı` : undefined}>
             {seg && <line x1={P.sx(p.x)} y1={P.sy(p.y)} x2={P.sx(q.x)} y2={P.sy(q.y)} stroke="transparent" strokeWidth={30} strokeLinecap="round" />}
             {seg && <line x1={P.sx(p.x)} y1={P.sy(p.y)} x2={P.sx(q.x)} y2={P.sy(q.y)} stroke={stroke} strokeWidth={10} strokeLinecap="round" opacity={st ? 0.35 : 0.12} />}
-            <line x1={P.sx(p.x)} y1={P.sy(p.y)} x2={P.sx(q.x)} y2={P.sy(q.y)} stroke={stroke} strokeWidth={st === 'ok' ? 4.5 : 3} strokeLinecap="round" />
+            <line x1={P.sx(p.x)} y1={P.sy(p.y)} x2={P.sx(q.x)} y2={P.sy(q.y)} stroke={stroke} strokeWidth={st === 'ok' ? 4.5 : 3} strokeLinecap="round" strokeDasharray={dashLast && k === pts.length - 2 ? '7 6' : undefined} />
           </g>
         )
       })}
@@ -452,20 +461,25 @@ export function LinePlot(props: LineProps) {
         maxSpan={(view.xMax - view.xMin) * 2.5}
         onTap={tap}
         zoomFocus={sel !== null && selY !== null ? { x: xs[sel], y: selY } : undefined}
-        className={ink.dark ? 'ii-dark-plane' : ''}
+        className={`ii-line-plane ${ink.dark ? 'ii-dark-plane' : ''}`}
         label={label}
       >
         <LineLayer {...props} sel={sel} setSel={setSel} />
       </Plane>
       {editable && onSet && sel !== null && editable[sel] && (
-        <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-          <ToolBtn ink={ink} onClick={() => onSet(sel, clamp((ys[sel] ?? 0) - 1, Math.ceil(view.yMin), Math.floor(view.yMax)))} label="1 derece aşağı"><Minus size={18} /></ToolBtn>
-          <span className="flex flex-wrap justify-center gap-1">
-            {xs.map((_, i) => editable[i] && (
-              <button key={i} type="button" onClick={() => setSel(i)} aria-pressed={sel === i} className={`min-h-12 min-w-12 rounded-xl px-2 text-sm font-extrabold ring-1 ${sel === i ? (ink.dark ? 'bg-pink-500 text-white ring-pink-400' : 'bg-pink-600 text-white ring-pink-600') : ink.dark ? 'bg-slate-800 text-slate-200 ring-slate-600' : 'bg-white text-ink ring-line'}`}>{props.xLabels[i]}</button>
-            ))}
+        <div className="mt-2 grid justify-items-center gap-2">
+          {editable.filter(Boolean).length > 1 && (
+            <span className="flex flex-wrap justify-center gap-1">
+              {xs.map((_, i) => editable[i] && (
+                <button key={i} type="button" onClick={() => setSel(i)} aria-pressed={sel === i} className={`min-h-12 min-w-12 rounded-xl px-2 text-sm font-extrabold ring-1 ${sel === i ? (ink.dark ? 'bg-pink-500 text-white ring-pink-400' : 'bg-pink-600 text-white ring-pink-600') : ink.dark ? 'bg-slate-800 text-slate-200 ring-slate-600' : 'bg-white text-ink ring-line'}`}>{props.xLabels[i]}</button>
+              ))}
+            </span>
+          )}
+          <span className="flex items-center gap-2">
+            <ToolBtn ink={ink} onClick={() => onSet(sel, clamp((ys[sel] ?? 0) - 1, Math.ceil(view.yMin), Math.floor(view.yMax)))} label="1 derece aşağı"><Minus size={18} /></ToolBtn>
+            <span className="min-w-28 text-center text-base font-black tabular-nums" style={{ color: ink.text }}>{props.xLabels[sel]}: {f(ys[sel] ?? 0)} {props.yUnit ?? ''}</span>
+            <ToolBtn ink={ink} onClick={() => onSet(sel, clamp((ys[sel] ?? 0) + 1, Math.ceil(view.yMin), Math.floor(view.yMax)))} label="1 derece yukarı"><Plus size={18} /></ToolBtn>
           </span>
-          <ToolBtn ink={ink} onClick={() => onSet(sel, clamp((ys[sel] ?? 0) + 1, Math.ceil(view.yMin), Math.floor(view.yMax)))} label="1 derece yukarı"><Plus size={18} /></ToolBtn>
         </div>
       )}
     </div>
@@ -748,7 +762,7 @@ export function AxisBars({ ink, data, lo, setLo, lo0, unit, onFixed }: { ink: In
     <div>
       <ZoomBox controls={false} maxScale={3}>
         <div ref={ref} className="select-none" style={{ touchAction: 'none' }}>
-          <svg ref={svgRef} viewBox={`0 0 ${w} ${H}`} width="100%" height={H} role="img" aria-label={`Sütun grafiği, eksen ${ekS(lo, 'abl')} başlıyor`} className="block">
+          <svg ref={svgRef} viewBox={`0 0 ${w} ${H}`} width="100%" height={H} role="img" aria-label={`Sütun grafiği (${data.map((d) => `${d.label} ${f(d.value)} ${unit}`).join(', ')}), eksen ${ekS(lo, 'abl')} başlıyor`} className="block">
             {tk.map((t) => (
               <g key={t}>
                 <line x1={pad.l} x2={w - pad.r} y1={Y(t)} y2={Y(t)} stroke={ink.grid} />

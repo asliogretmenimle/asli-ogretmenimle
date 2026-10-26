@@ -39,6 +39,7 @@ export interface LabProps {
   pick: { p: Pt; label: string } | null
   ghosts: { p: Pt; label: string }[]
   ghostWorld: boolean
+  hitCoords: boolean
   selected: string | null
   editable: boolean
   marks: Mark[] | null
@@ -67,7 +68,7 @@ export function Lab(props: LabProps) {
   for (let y = 0; y <= room.h; y++) grid.push(<line key={`gy${y}`} y1={P.sy(y)} y2={P.sy(y)} x1={r0.x} x2={r1.x} stroke="#16243d" strokeWidth={1} />)
   const dots: ReactNode[] = []
   if (u > 16 && props.editable)
-    for (let x = 1; x < room.w; x++) for (let y = 1; y < room.h; y++) dots.push(<circle key={`d${x}-${y}`} cx={P.sx(x)} cy={P.sy(y)} r={Math.max(1.6, u * 0.045)} fill="#2b4a74" />)
+    for (let x = 1; x < room.w; x++) for (let y = 1; y < room.h; y++) dots.push(<circle key={`d${x}-${y}`} cx={P.sx(x)} cy={P.sy(y)} r={Math.min(3.2, Math.max(1.6, u * 0.045))} fill="#2b4a74" />)
 
   // ayna dünyası (oda dışındaki yansıma bölgesi)
   const g = m.ghost
@@ -249,8 +250,8 @@ export function Lab(props: LabProps) {
           {(props.marks ?? (m.show.angles ? t.bounces.flatMap((_, i): Mark[] => [{ b: i, k: 'in' }, { b: i, k: 'out' }]) : []))
             .filter((mk) => (mk.e ?? 0) === k && t.bounces[mk.b])
             .map((mk, i) => <BounceMark key={`mk${i}`} b={t.bounces[mk.b]} mark={mk} R={R} />)}
-          {m.show.coords && t.bounces.map((b, i) => <Pill key={`c${i}`} x={P.sx(b.p.x)} y={P.sy(b.p.y) + (b.dout.y > 0 || b.din.y < 0 ? 22 : -22)} text={`(${fmtN(b.p.x, 1)}, ${fmtN(b.p.y, 1)})`} color="#e2e8f0" bg="#0f172a" />)}
-          {m.show.coords && t.endKind !== 'target' && <Pill x={clampX(P.sx(t.end.x), P.width)} y={clampY(P.sy(t.end.y) + (t.end.y > room.h - 0.5 ? 20 : -20), P.height)} text={`(${fmtN(t.end.x, 1)}, ${fmtN(t.end.y, 1)})`} color="#fda4af" bg="#0f172a" />}
+          {props.hitCoords && t.bounces.map((b, i) => <Pill key={`c${i}`} x={P.sx(b.p.x)} y={P.sy(b.p.y) + (b.dout.y > 0 || b.din.y < 0 ? 22 : -22)} text={`(${fmtN(b.p.x, 1)}, ${fmtN(b.p.y, 1)})`} color="#e2e8f0" bg="#0f172a" />)}
+          {props.hitCoords && t.endKind !== 'target' && <Pill x={clampX(P.sx(t.end.x), P.width)} y={clampY(P.sy(t.end.y) + (t.end.y > room.h - 0.5 ? 20 : -20), P.height)} text={`(${fmtN(t.end.x, 1)}, ${fmtN(t.end.y, 1)})`} color="#fda4af" bg="#0f172a" />}
         </g>
       ))}
 
@@ -263,7 +264,7 @@ export function Lab(props: LabProps) {
           <circle cx={P.sx(props.predict.x)} cy={P.sy(props.predict.y)} r={14} fill="none" stroke="#fbbf24" strokeWidth={2.5} className="ll-pulse" />
           <line x1={P.sx(props.predict.x) - 20} x2={P.sx(props.predict.x) + 20} y1={P.sy(props.predict.y)} y2={P.sy(props.predict.y)} stroke="#fbbf24" strokeWidth={2} />
           <line y1={P.sy(props.predict.y) - 20} y2={P.sy(props.predict.y) + 20} x1={P.sx(props.predict.x)} x2={P.sx(props.predict.x)} stroke="#fbbf24" strokeWidth={2} />
-          <Pill x={clampX(P.sx(props.predict.x), P.width)} y={clampY(P.sy(props.predict.y) - 26, P.height)} text="Tahmin" color="#fbbf24" bg="#0f172a" />
+          <Pill x={clampX(P.sx(props.predict.x), P.width)} y={clampY(P.sy(props.predict.y) + 28, P.height)} text="Tahmin" color="#fbbf24" bg="#0f172a" />
         </g>
       )}
 
@@ -422,7 +423,7 @@ function BounceMark({ b, mark, R }: { b: Bounce; mark: Mark; R: number }) {
       break
     }
     case 'dev':
-      spec = { d1: b.din, d2: v, val: 180 - A.between, color: '#f472b6', r: R * 0.62 }
+      spec = { d1: b.din, d2: v, val: 180 - A.between, color: '#f472b6', r: R * 1.35 }
       break
   }
   const { a1, a2 } = arcBetween(spec.d1, spec.d2)

@@ -62,7 +62,8 @@ export interface Mission {
   fixed: Mirror[]
   emitters: EmitterDef[]
   angleStep: number
-  show: { angles?: boolean; normal?: boolean; coords?: boolean; slope?: boolean; legs?: boolean; axes?: boolean }
+  /** coords: hedef/nokta etiketleri; hitCoords: sekme ve bitiş noktası koordinatları (varsayılan: coords) */
+  show: { angles?: boolean; normal?: boolean; coords?: boolean; hitCoords?: boolean; slope?: boolean; legs?: boolean; axes?: boolean }
   /** köşe açısı süsü */
   corners?: { at: Pt; a1: number; a2: number; label: string }[]
   /** ilk iki sekme noktası ve bu köşe bir üçgen oluşturur */
@@ -207,7 +208,7 @@ const G6: Mission[] = [
     blocks: [],
     targets: [],
     fixed: [],
-    emitters: [{ x: 1, y: 6, dir: D(-30), aim: 'fixed' }],
+    emitters: [{ x: 5, y: 7, dir: D(-60), aim: 'fixed' }],
     angleStep: 15,
     show: { angles: true },
     corners: [{ at: { x: 11, y: 1 }, a1: 90, a2: 180, label: '90°' }],
@@ -295,7 +296,7 @@ const G7: Mission[] = [
     fixed: [],
     emitters: [{ x: 1, y: 1, dir: { x: 3, y: 1 }, aim: 'lattice' }],
     angleStep: 15,
-    show: { normal: true, coords: true, axes: true },
+    show: { normal: true, coords: true, hitCoords: false, axes: true },
     steps: [
       {
         kind: 'point',
@@ -366,16 +367,16 @@ const G7: Mission[] = [
     id: 'g7-x-ekseni',
     title: 'Zemin aynası',
     story: 'Zemin, x ekseni boyunca uzanan bir ayna. Kristal K, engelin arkasında. Koordinatlarla düşün!',
-    room: { w: 10, h: 5 },
-    view: { xMin: -0.6, xMax: 10.6, yMin: -5.6, yMax: 5.6 },
-    ghost: { x0: 0, y0: -5, x1: 10, y1: 0 },
-    walls: [seg(0, 0, 10, 0)],
+    room: { w: 12, h: 5 },
+    view: { xMin: -0.6, xMax: 12.6, yMin: -3.6, yMax: 5.6 },
+    ghost: { x0: 0, y0: -3, x1: 12, y1: 0 },
+    walls: [seg(0, 0, 12, 0)],
     blocks: [{ x0: 3.5, y0: 2.5, x1: 4.5, y1: 4.2 }],
     targets: [{ id: 'K', x: 7, y: 2, label: 'K' }],
     fixed: [],
     emitters: [{ x: 1, y: 4, dir: { x: 2, y: -1 }, aim: 'lattice' }],
     angleStep: 15,
-    show: { normal: true, coords: true, axes: true },
+    show: { normal: true, coords: true, hitCoords: false, axes: true },
     steps: [
       {
         kind: 'point',
@@ -698,7 +699,7 @@ const G8: Mission[] = [
     angleStep: 45,
     show: { coords: true, slope: true, axes: true },
     steps: [
-      { kind: 'build', inventory: 3, goal: 3, best: 2, text: 'Aynalarla ışını kristale ulaştır. Her parçanın eğimi yazılacak. En az aynayla yapabilir misin?', ok: 'Kristal yandı! Her aynada eğim nasıl değişti?', hints: ['45°’lik ayna eğimi [[1/2]]’den 2’ye çevirir.', 'Dikey (90°) ayna eğimin işaretini değiştirir.'] },
+      { kind: 'build', inventory: 3, goal: 3, best: 2, text: 'Aynalarla ışını kristale ulaştır. Her parçanın eğimi yazılacak. En az aynayla yapabilir misin?', ok: 'Kristal yandı! Her aynada eğim nasıl değişti?', hints: ['45°’lik ayna eğimi [[1/2]]’den 2’ye çevirir.', 'Dikey (90°) ayna eğimin işaretini değiştirir: [[1/2]] → −[[1/2]].'] },
       {
         kind: 'slope',
         text: 'Işının ikinci parçasının (ilk aynadan sonraki) eğimi ne?',
@@ -715,7 +716,7 @@ const G8: Mission[] = [
               : { q: 'Bu parça üzerinde iki ızgara noktası seç: x ne kadar, y ne kadar değişiyor?', tool: 'egim' },
         ok: (c) => {
           const s = segOf(c, 1)
-          return `Eğim ${slopeFrac(s.dx, s.dy).text}. 45°’lik ayna eğimi tersine çevirir (½ → 2); yatay ya da dikey ayna işaretini değiştirir (½ → −½).`
+          return `Eğim ${slopeFrac(s.dx, s.dy).text}. 45°’lik ayna eğimin çarpmaya göre tersini verir ([[1/2]] → 2); yatay ya da dikey ayna eğimin işaretini değiştirir ([[1/2]] → −[[1/2]]).`
         },
       },
       { kind: 'strategy', text: 'Yolu nasıl planladın?', options: ['Eğimin nasıl değişeceğini hesapladım', 'Kristalden geriye düşündüm', 'Yansımaları düşündüm', 'Deneyerek buldum'] },

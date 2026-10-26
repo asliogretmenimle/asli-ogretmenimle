@@ -314,11 +314,11 @@ export function slopeFrac(dx: number, dy: number): { text: string; svg: string; 
 }
 
 /** y = mx + b yazımı (segment doğrultusu ve üzerindeki bir noktadan) */
-export function lineEq(p: Pt, d: Pt): string {
+export function lineEq(p: Pt, d: Pt, html = false): string {
   const s = slopeFrac(d.x, d.y)
   if (s.m === null) return `x = ${fmtN(p.x)}`
   const b = p.y - s.m * p.x
-  const mTxt = Math.abs(s.m) < 1e-9 ? '' : Math.abs(s.m - 1) < 1e-9 ? 'x' : Math.abs(s.m + 1) < 1e-9 ? '−x' : `${s.svg}x`
+  const mTxt = Math.abs(s.m) < 1e-9 ? '' : Math.abs(s.m - 1) < 1e-9 ? 'x' : Math.abs(s.m + 1) < 1e-9 ? '−x' : `${html ? s.text : s.svg}x`
   const bTxt = Math.abs(b) < 1e-9 ? '' : b > 0 ? ` + ${fmtN(b)}` : ` − ${fmtN(-b)}`
   if (!mTxt) return `y = ${fmtN(b)}`
   return `y = ${mTxt}${bTxt}`

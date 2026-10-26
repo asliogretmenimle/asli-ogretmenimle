@@ -40,6 +40,22 @@ const KIND_NAME: Record<Rep['k'], string> = {
 
 let loadUid = 0
 
+/** Çocuk dilindeki seçimleri öğretmen raporundaki strateji adlarına eşler */
+const PICK_MAP: Record<string, string> = {
+  'Bakınca gördüm': 'Şipşak görme (saymadan)',
+  '5’ten devam ettim': '5 ve 10 çapası',
+  'Boş karelere baktım': '5 ve 10 çapası',
+  '5 ve 10’a göre baktım': '5 ve 10 çapası',
+  'Sayı doğrusunu düşündüm': 'Sayı doğrusunu düşünme',
+  'Önce onluklara baktım': 'Basamak değerine göre karşılaştırma',
+  'Önce 10’dan küçükleri seçtim': '5 ve 10 çapası',
+  'Onlukları 10’ar saydım': 'Onar ritmik sayma',
+  'Onluk ve birlikleri ayırdım': 'Onluk ve birliklere ayırma',
+  'Onar saydım': 'Onar ritmik sayma',
+  'Onlar basamağı 1 arttı': 'Onar ritmik sayma',
+  'Bir onluk ekledim': 'Onluk ve birliklere ayırma',
+}
+
 export default function SayiTreni({ grade, onFinish }: GameProps) {
   const levels = useMemo(() => buildLevels(grade), [grade])
   const track = useTracker()
@@ -512,7 +528,6 @@ export default function SayiTreni({ grade, onFinish }: GameProps) {
     if (active && L.kind !== 'load' && train.length < L.goal) out.push({ key: 'plus', plus: true, drop: 'train', label: 'Bağlama yeri' })
     if (L.kind === 'load' && phase !== 'depart' && phase !== 'done' && train.length < L.goal) out.push({ key: 'plus', plus: true })
     return out
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [L, slots, train, flag, good, fresh, sel, active, phase])
 
   const moving = phase === 'arrive' || phase === 'depart'
@@ -616,7 +631,7 @@ export default function SayiTreni({ grade, onFinish }: GameProps) {
           {(phase === 'depart' || phase === 'done') && (
             <div className="mt-3 rounded-2xl bg-emerald-50 p-3 text-center ring-1 ring-emerald-200 animate-fade-up">
               <p className="mb-2 text-base font-black text-emerald-900">{phase === 'depart' ? 'Tren tünele giriyor… Çuf çuf!' : li + 1 >= levels.length ? 'Bütün trenler yola çıktı!' : 'Tren yola çıktı!'}</p>
-              {L.picker && phase === 'done' && <StrategyPicker key={li} question={L.picker.q} options={L.picker.options} onPick={(s) => stats.current.strategies.add(s)} />}
+              {L.picker && phase === 'done' && <StrategyPicker key={li} question={L.picker.q} options={L.picker.options} onPick={(s) => { stats.current.strategies.add(s); if (PICK_MAP[s]) strat(PICK_MAP[s]) }} />}
               <BigButton onClick={nextLevel} className="mt-3 w-full" disabled={phase === 'depart'}>
                 {li + 1 >= levels.length ? <><Flag size={20} />Bitir</> : <>Sonraki istasyon<ArrowRight size={20} /></>}
               </BigButton>

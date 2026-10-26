@@ -450,7 +450,7 @@ export function ScaleSim({ p, phase, grade, onDone, nudge }: SimBase & { p: Scal
     model = (
       <div className="flex flex-wrap items-end justify-center gap-4">
         <div className="w-24 text-center"><CubesSvg heights={Array.from({ length: p.base[0] }, () => Array(p.base[0]).fill(p.base[0]))} /><p className="text-xs font-black opacity-80">eski küp</p></div>
-        <div className="w-56 max-w-full rounded-2xl bg-white/90 p-2"><CubesSvg heights={Array.from({ length: n }, () => Array(n).fill(n))} /></div>
+        <div className={`w-56 max-w-full rounded-2xl p-2 ${dark(grade) ? 'bg-slate-800/70' : 'bg-white/90'}`}>{phase === 'predict' ? <p className="grid h-40 place-items-center text-5xl font-black opacity-60">?</p> : <CubesSvg heights={Array.from({ length: n }, () => Array(n).fill(n))} />}</div>
       </div>
     )
   } else {
@@ -477,7 +477,7 @@ export function ScaleSim({ p, phase, grade, onDone, nudge }: SimBase & { p: Scal
   }
 
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="flex flex-col items-center gap-3" data-sim="scale" data-target={p.target.join(',')} data-base={p.base.join(',')}>
       {model}
       {live && (
         <>
@@ -797,7 +797,7 @@ export function MeanSim({ p, phase, grade, onDone, nudge }: SimBase & { p: MeanP
   for (let t = p.min; t <= p.max; t += step * (p.max - p.min > 40 ? 2 : 1)) ticks.push(t)
   const ink = dark(grade) ? '#e2e8f0' : '#1f2340'
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="flex flex-col items-center gap-3" data-sim="mean" data-target={p.add} data-v={v ?? ''}>
       <svg ref={svg} viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[560px]" style={{ touchAction: 'none' }} role="img" aria-label={`Nokta grafiği, ${p.what}`}>
         <line x1={16} x2={W - 16} y1={H - 40} y2={H - 40} stroke={ink} strokeWidth={2} />
         {ticks.map((t) => (

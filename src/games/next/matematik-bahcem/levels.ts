@@ -352,7 +352,7 @@ function gPredict(g: { c: number; d: number }): Level {
     prompt: '10. adımda kaç çiçek olacak? Hepsini dikmeden tahmin et, sonra bahçede gör!',
     hints: [`10. adımda kaç lale sırası olur? Her sırada ${g.d} lale.`, `Ayçiçeklerini de unutma: ${g.c} tane.`, '5. adımın iki katı doğru olur mu? Tabloda dene.'],
     goal: 1,
-    note: `10. adım: ${g.c ? `${g.c} + ` : ''}10 × ${g.d} = ${growF(g, 10)} çiçek.`,
+    note: `10. adımda 10 sıra × ${g.d} lale = ${10 * g.d} lale${g.c ? `; ${10 * g.d} + ${g.c} ayçiçeği = ${growF(g, 10)} çiçek` : ''}.`,
     grow: g,
     predictN: 10,
     picker: { q: 'Nasıl buldun?', options: ['Kuralı kullandım', 'Tabloyu devam ettirdim', `${ek(g.d, 'dist')} ritmik saydım`, 'Çizerek düşündüm'] },

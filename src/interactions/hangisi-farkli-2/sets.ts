@@ -26,7 +26,7 @@ export interface HSet { id: string; g: Grade[]; title: string; cards: [Show, Sho
 
 const L = 'ABCD'
 /** p('tek sayı', 'A') → yalnız A’da var. neg verilmezse “… değil”. */
-const p = (pos: string, has: string, neg?: string): Prop => ({ pos, neg: neg ?? `${pos} değil`, has: has.split('').map((c) => L.indexOf(c)) })
+const p = (pos: string, has: string, neg?: string): Prop => ({ pos, neg: neg ?? (pos.endsWith(' var') ? `${pos.slice(0, -4)} yok` : `${pos} değil`), has: has.split('').map((c) => L.indexOf(c)) })
 
 const C = { red: '#ef4444', blue: '#3b82f6', yellow: '#eab308', green: '#22c55e', orange: '#f97316', purple: '#a855f7' }
 const pics = (n: number, s: PicShape, c: string, o: { hollow?: boolean; small?: boolean } = {}): Show => ({ t: 'pics', items: Array.from({ length: n }, () => ({ s, c, ...o })) })
@@ -121,7 +121,7 @@ export const SETS: HSet[] = [
   {
     id: 'g3-polys', g: [3, 4], title: 'Kenarlar',
     cards: [shape('triangle', C.orange), shape('square', C.blue), shape('pentagon', C.green), shape('rectangle', C.purple)],
-    props: [p('3 kenarlı', 'A'), p('5 kenarlı', 'C'), p('4 eşit kenarlı', 'B'), p('uzun ve kısa kenarları var', 'D'), p('bütün kenarları eşit', 'ABC'), p('4 kenarlı', 'BD'), p('dik köşeleri var', 'BD')],
+    props: [p('3 kenarlı', 'A'), p('5 kenarlı', 'C'), p('4 eşit kenarlı', 'B'), p('uzun ve kısa kenarları var', 'D'), p('bütün kenarları eşit', 'ABC'), p('4 kenarlı', 'BD'), p('dik köşeleri var', 'BD', 'dik köşesi yok')],
   },
   {
     id: 'g3-unit', g: [3], title: 'Birim kesirler',
@@ -163,7 +163,7 @@ export const SETS: HSet[] = [
   {
     id: 'g4-sym', g: [4, 5], title: 'Simetri',
     cards: [shape('square', C.blue), shape('rectangle', C.green), { t: 'svg', svg: isoSvg }, shape('parallelogram', C.purple)],
-    props: [p('4 simetri doğrusu var', 'A'), p('2 simetri doğrusu var', 'B'), p('tek simetri doğrusu var', 'C'), p('simetri doğrusu yok', 'D', 'simetri doğrusu var'), p('dörtgen', 'ABD'), p('dik açıları var', 'AB')],
+    props: [p('4 simetri doğrusu var', 'A'), p('2 simetri doğrusu var', 'B'), p('tek simetri doğrusu var', 'C'), p('simetri doğrusu yok', 'D', 'simetri doğrusu var'), p('dörtgen', 'ABD'), p('dik açıları var', 'AB', 'dik açısı yok')],
   },
   {
     id: 'g4-ops', g: [4], title: 'Sonuç 100 mü?',
@@ -185,7 +185,7 @@ export const SETS: HSet[] = [
   {
     id: 'g5-polys', g: [5, 6], title: 'Çokgenler',
     cards: [shape('hexagon', C.green), shape('rhombus', C.blue), shape('rectangle', C.orange), shape('trapezoid', C.purple)],
-    props: [p('6 kenarlı', 'A'), p('4 eş kenarlı dörtgen', 'B'), p('dik açıları var', 'C'), p('yalnızca bir çift paralel kenarı var', 'D'), p('dörtgen', 'BCD'), p('bütün kenarları eşit', 'AB'), p('karşılıklı kenarları paralel', 'ABC')],
+    props: [p('6 kenarlı', 'A'), p('4 eş kenarlı dörtgen', 'B'), p('dik açıları var', 'C', 'dik açısı yok'), p('yalnızca bir çift paralel kenarı var', 'D'), p('dörtgen', 'BCD'), p('bütün kenarları eşit', 'AB'), p('karşılıklı kenarları paralel', 'ABC')],
   },
   {
     id: 'g5-area', g: [5], title: 'Alan ve çevre',
@@ -227,7 +227,7 @@ export const SETS: HSet[] = [
   {
     id: 'g6-area', g: [6, 7], title: 'Alanlar',
     cards: [{ t: 'svg', svg: paraSvg }, { t: 'svg', svg: triTallSvg }, { t: 'svg', svg: rectSvg }, { t: 'svg', svg: triShortSvg }],
-    props: [p('paralelkenar', 'A'), p('yüksekliği 8 br', 'B'), p('dik açıları var', 'C'), p('alanı 12 br²', 'D'), p('alanı 24 br²', 'ABC'), p('üçgen', 'BD'), p('tabanı 6 br', 'ABCD')],
+    props: [p('paralelkenar', 'A'), p('yüksekliği 8 br', 'B'), p('dik açıları var', 'C', 'dik açısı yok'), p('alanı 12 br²', 'D'), p('alanı 24 br²', 'ABC'), p('üçgen', 'BD'), p('tabanı 6 br', 'ABCD')],
   },
   {
     id: 'g6-div', g: [6], title: 'Bölünebilme',
@@ -279,7 +279,7 @@ export const SETS: HSet[] = [
       { t: 'pics', items: [...Array(6).fill({ s: 'circle', c: C.red }), ...Array(2).fill({ s: 'circle', c: C.blue })] },
       { t: 'pics', items: [{ s: 'circle', c: C.red }, ...Array(3).fill({ s: 'circle', c: C.blue })] },
     ],
-    props: [p('kırmızı ve mavi eş olasılıklı', 'B'), p('mavi çekme olasılığı daha büyük', 'D'), p('8 bilye var', 'C'), p('tam 3 kırmızı bilye var', 'A'), p('kırmızı çekme olasılığı [[3/4]]', 'AC'), p('4 bilye var', 'ABD')],
+    props: [p('kırmızı ve mavi eş olasılıklı', 'B'), p('mavi çekme olasılığı daha büyük', 'D'), p('8 bilye var', 'C', 'bilye sayısı 8 değil'), p('tam 3 kırmızı bilye var', 'A', 'kırmızı bilye sayısı 3 değil'), p('kırmızı çekme olasılığı [[3/4]]', 'AC'), p('4 bilye var', 'ABD', 'bilye sayısı 4 değil')],
   },
 
   // ───────── 8. sınıf ─────────

@@ -20,6 +20,20 @@ import { GrowBuildTask, GrowDesignTask, GrowPredictTask, GrowRuleTask, GrowTable
  * Farklı doğru çeviriler / kurallar / tasarımlar useSolutions ile ayrı çözüm sayılır.
  */
 
+/** Çocuk dilindeki seçimleri öğretmen raporundaki strateji adlarına eşler */
+const PICK_MAP: Record<string, string> = {
+  'Tekrar eden parçayı buldum': 'Çekirdeği bulma',
+  'Grupladım': 'Gruplayarak tahmin',
+  'Çarpmayı düşündüm': 'Gruplayarak tahmin',
+  'Tek tek saydım': 'Tek tek devam ettirme',
+  'Her çiçeğe bir eş seçtim': 'Yapıyı koruyarak çevirme',
+  'Her çiçeğe bir şekil eşledim': 'Yapıyı koruyarak çevirme',
+  'Harflerle düşündüm': 'Temsiller arası çeviri',
+  'Kuralı kullandım': 'Kuralla tahmin',
+  'Tabloyu devam ettirdim': 'Tabloda fark bulma',
+  'Çekirdeği söyledim': 'Çekirdeği bulma',
+}
+
 const readShare = () => {
   try {
     return new URLSearchParams(window.location.search).get('bahce')
@@ -110,7 +124,7 @@ export default function MatematikBahcem({ grade, onFinish }: GameProps) {
       <div className="mt-3 rounded-2xl bg-emerald-50 p-3 text-center ring-1 ring-emerald-200 animate-fade-up">
         <p className="mb-1 flex items-center justify-center gap-1.5 text-base font-black text-emerald-900"><Sprout size={18} />Tarh çiçek açtı!</p>
         <p className="text-sm font-bold text-emerald-900/85">{doneMsg}</p>
-        {L.picker && <StrategyPicker key={li} question={L.picker.q} options={L.picker.options} onPick={(s) => stats.current.strategies.add(s)} />}
+        {L.picker && <StrategyPicker key={li} question={L.picker.q} options={L.picker.options} onPick={(s) => { stats.current.strategies.add(s); const m = PICK_MAP[s] ?? (/ritmik saydım$/.test(s) ? (L.kind === 'far' ? 'Gruplayarak tahmin' : 'Kuralla tahmin') : undefined); if (m) strat(m) }} />}
         <BigButton onClick={() => next()} className="mt-3 w-full">
           {li + 1 >= levels.length ? <><Flag size={20} />Bitir</> : <>Sonraki tarh<ArrowRight size={20} /></>}
         </BigButton>

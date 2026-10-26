@@ -84,7 +84,9 @@ export function PlantTask({ api }: { api: Api }) {
   const isFix = L.kind === 'fix'
   const isRemake = L.kind === 'remake'
   const seq = seqOf(core, L.len!)
-  const cols = useCols(L.len! > 10 ? 6 : 10)
+  const maxC = useCols(10)
+  // uzun sıralarda satır başına tam çekirdekler gelsin
+  const cols = L.len! <= maxC ? maxC : Math.max(core.length, Math.floor(Math.min(8, maxC) / core.length) * core.length)
   const initial: (number | null)[] = isExtend ? seq.map((k, i) => (i < L.given! ? k : null)) : isFix ? seq.map((k, i) => L.errors![i] ?? k) : Array(L.len).fill(null)
   const editable = (i: number) => !api.finished && (isExtend ? i >= L.given! : true)
   const plot = usePlot(initial, editable)
@@ -292,7 +294,7 @@ export function CoreTask({ api }: { api: Api }) {
     }
     api.ok()
     setDone(true)
-    api.complete(`${L.note} Harflerle: ${codeOf(core)}.`)
+    api.complete(L.note)
   }
 
   const cells: GCell[] = seq.map((k, i) => ({
@@ -427,7 +429,7 @@ export function TranslateTask({ api }: { api: Api }) {
       }
       tray={<SeedTray kinds={[0, 1, 2, 3]} item="stone" onPick={(k) => place(k)} onDrop={(k, z) => place(k, z)} disabled={api.finished} title="Taş sepeti" help="Taşı patikaya sürükle ya da dokun. Taşa dokunursan kalkar." />}
       actions={
-        <Actions api={api} primary={{ label: 'Patikayı kontrol et', icon: <Sparkles size={20} />, onClick: check }} nudge={nudge} onCloseNudge={() => setNudge(null)}>
+        <Actions api={api} primary={{ label: 'Patikaya bak', icon: <Sparkles size={20} />, onClick: check }} nudge={nudge} onCloseNudge={() => setNudge(null)}>
           <SolutionList list={found} goal={L.goal} />
         </Actions>
       }
@@ -496,12 +498,15 @@ export function FamilyTask({ api }: { api: Api }) {
     api.complete(L.note)
   }
 
-  const Card = ({ c }: { c: FamCard }) => (
+  const card = (c: FamCard) => (
     <DragSource
+      key={c.id}
       value={BOXES.indexOf(c.code)}
       label={`${c.item === 'flower' ? 'Çiçek' : 'Taş'} örüntü kartı`}
       onTap={() => {
-        if (where[c.id]) put(c.id, null)
+        // başka bir kart seçiliyse ve bu kart bir kutudaysa: seçili kartı aynı kutuya koy
+        if (where[c.id] && sel && sel !== c.id) put(sel, where[c.id])
+        else if (where[c.id]) put(c.id, null)
         else setSel(sel === c.id ? null : c.id)
       }}
       onDrop={(z) => z.startsWith('box-') && put(c.id, z.slice(4))}
@@ -525,7 +530,7 @@ export function FamilyTask({ api }: { api: Api }) {
         <div className={`mt-3 rounded-3xl bg-[linear-gradient(180deg,#f0fdf4,#ecfccb)] p-3 ring-1 ring-green-200 sm:p-4 ${api.finished ? 'pointer-events-none opacity-70' : ''}`}>
           <p className="mb-2 text-xs font-bold text-green-900/70">Kartı kutuya sürükle. Ya da karta, sonra kutuya dokun. Kutudaki karta dokunursan geri gelir.</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {cards.filter((c) => !where[c.id]).map((c) => <Card key={c.id} c={c} />)}
+            {cards.filter((c) => !where[c.id]).map(card)}
           </div>
           <div className="mt-3 grid gap-2 sm:grid-cols-3">
             {BOXES.map((b) => (
@@ -535,20 +540,23 @@ export function FamilyTask({ api }: { api: Api }) {
                 role="button"
                 tabIndex={0}
                 aria-label={`${b} kutusu`}
-                onClick={() => sel && put(sel, b)}
+                onClick={(e) => {
+                  if ((e.target as Element).closest('[data-handle]')) return
+                  if (sel) put(sel, b)
+                }}
                 onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && sel && put(sel, b)}
                 className={`min-h-28 rounded-2xl border-[3px] border-dashed p-2 transition data-[over]:border-sky-400 data-[over]:bg-sky-50 ${sel ? 'border-sky-300 bg-white' : 'border-green-300 bg-white/70'}`}
               >
                 <p className="mb-1.5 text-center text-xl font-black tracking-[0.3em] text-green-900">{b}</p>
                 <div className="grid gap-1.5">
-                  {cards.filter((c) => where[c.id] === b).map((c) => <Card key={c.id} c={c} />)}
+                  {cards.filter((c) => where[c.id] === b).map(card)}
                 </div>
               </div>
             ))}
           </div>
         </div>
       }
-      actions={<Actions api={api} primary={{ label: 'Aileleri kontrol et', icon: <Layers size={20} />, onClick: check }} nudge={nudge} onCloseNudge={() => setNudge(null)} />}
+      actions={<Actions api={api} primary={{ label: 'Kontrol et', icon: <Layers size={20} />, onClick: check }} nudge={nudge} onCloseNudge={() => setNudge(null)} />}
     />
   )
 }
@@ -562,7 +570,8 @@ export function FarTask({ api }: { api: Api }) {
   const P = core.length
   const shown = seqOf(core, P * 2)
   const full = seqOf(core, n)
-  const cols = useCols(10)
+  const cols0 = useCols(10)
+  const cols = Math.max(P, Math.floor(cols0 / P) * P)
   const [groups, setGroups] = useState(0)
   const [guess, setGuess] = useState<number | null>(null)
   const [sel, setSel] = useState(false)
@@ -676,7 +685,7 @@ export function FarTask({ api }: { api: Api }) {
       actions={
         <Actions
           api={api}
-          primary={{ label: 'Tahminimi sula', icon: <Droplets size={20} />, onClick: check }}
+          primary={{ label: 'Sula ve bak', icon: <Droplets size={20} />, onClick: check }}
           secondary={
             bad && !reveal ? (
               <button type="button" onClick={() => setReveal(true)} className="inline-flex min-h-14 items-center gap-1.5 rounded-2xl bg-white px-4 text-base font-extrabold text-green-900 ring-1 ring-green-200">Bahçede dene</button>
@@ -753,7 +762,7 @@ export function DesignTask({ api }: { api: Api }) {
       if (wrongAt < 0) wrongAt = null
     }
     setFriend({ seq: fs, wrongAt })
-    plot.setCells([...s, ...fs, ...Array(len - s.length - 3).fill(null)])
+    plot.setCells([...s, ...fs])
     setPhase('friend')
     setNudge(null)
     setMarked(null)
@@ -815,6 +824,7 @@ export function DesignTask({ api }: { api: Api }) {
   }
   const again = () => {
     plot.setCells(Array(len).fill(null))
+    plot.setSel(null)
     setPhase('build')
     setFriend(null)
     setCore(null)
@@ -831,7 +841,7 @@ export function DesignTask({ api }: { api: Api }) {
       drop: e ? `cell-${i}` : undefined,
       selected: phase === 'build' && plot.sel === i,
       onTap: phase === 'build' ? (e ? () => { plot.tap(i); setNudge(null) } : undefined) : phase === 'pick' ? () => pickWrong(i) : undefined,
-      tag: isFriend ? '🐝' : g1 ? undefined : String(i + 1),
+      tag: isFriend || (phase === 'build' && i >= len - 3) ? '🐝' : g1 ? undefined : String(i + 1),
       mark: marked === i ? (phase === 'won' ? 'ok' : 'bad') : undefined,
       grow: !!isFriend,
       label: cellLabel(k, i, 'flower', e),

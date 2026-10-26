@@ -120,6 +120,15 @@ export const sentenceDone = (parts: SentencePart[], value: Record<string, number
 export const sentenceText = (parts: SentencePart[], value: Record<string, number | undefined>) =>
   parts.map((p) => (typeof p === 'string' ? p : value[p.id] !== undefined ? p.options[value[p.id]!] : '…')).join('')
 
+/** **kalın** işaretli metin (MathText ile) */
+export function Rich({ text }: { text: string }) {
+  return (
+    <>
+      {text.split('**').map((t, i) => (i % 2 ? <strong key={i} className="font-black text-brand-ink">{<MathText text={t} />}</strong> : <MathText key={i} text={t} />))}
+    </>
+  )
+}
+
 // ───────────────────────── Aşamalar ─────────────────────────
 
 export function Steps({ steps, current, dark }: { steps: { label: string; emoji?: string }[]; current: number; dark?: boolean }) {

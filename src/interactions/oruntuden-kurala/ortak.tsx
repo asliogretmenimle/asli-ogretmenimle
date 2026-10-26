@@ -35,11 +35,17 @@ export function useSession(total: number) {
 }
 
 /** Yatay tablette: çalışma alanı solda, görev paneli sağda. Dikeyde alt alta. */
-export function Layout({ work, panel }: { work: ReactNode; panel: ReactNode }) {
+export function Layout({ work, panel, lead }: { work: ReactNode; panel: ReactNode; /** görev metni: dikeyde çalışma alanının üstünde, yatayda panelin başında */ lead?: ReactNode }) {
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-      <div className="min-w-0">{work}</div>
-      <div className="flex min-w-0 flex-col gap-3">{panel}</div>
+      <div className="min-w-0">
+        {lead && <div className="mb-3 lg:hidden">{lead}</div>}
+        {work}
+      </div>
+      <div className="flex min-w-0 flex-col gap-3">
+        {lead && <div className="hidden lg:block">{lead}</div>}
+        {panel}
+      </div>
     </div>
   )
 }

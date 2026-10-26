@@ -11,7 +11,7 @@ export const meta: InteractionMeta = {
   grades: [4, 5, 6, 7, 8],
   ready: true,
   launch: 'Kibrit çöpleriyle yan yana kareler diziyorsun: 1 kare için 4 çöp, 2 kare için 7 çöp, 3 kare için 10 çöp. 100 kare için kaç çöp gerekir? Hepsini dizmeden bulmanın bir yolu var mı? Arkadaşın şekli senden farklı görürse kuralı da farklı mı olur?',
-  reflect: 'Kibrit kareleri için bir arkadaşın 1 + 3n, başka biri 4 + 3(n − 1) yazdı. İkisi de doğru olabilir mi? Şekil üzerinde göstererek açıkla.',
+  reflect: 'Kibrit karelerini bir arkadaşın “önce 1 çöp, sonra her kare için 3 çöp”, başka biri “ilk kare 4 çöp, sonraki her kare 3 çöp” diye saydı. İkisi de doğru olabilir mi? Şekil üzerinde göstererek açıkla.',
   bigIdea: 'Büyüyen bir örüntü, şekil numarası ile parça sayısı arasındaki bir ilişkidir. Her adımda eklenen miktar (yinelemeli bakış) ile şekil numarasından doğrudan hesaplama (açık kural) aynı yapıyı iki farklı yoldan anlatır. Aynı şekli farklı gruplamak farklı ama denk ifadeler verir; doğrusal örüntülerde artış miktarı eğimi, şekil 0’daki değer sabit terimi gösterir.',
   skills: {
     4: 'Şekil örüntüsünün sonraki adımını kurma, her adımdaki değişimi görme, uzak adımı tablo ve kural makinesiyle bulma',

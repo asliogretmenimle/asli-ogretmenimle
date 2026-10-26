@@ -240,7 +240,7 @@ export function NumPad({ onSubmit, neg, dec, unit, ink, disabled, label = 'Kontr
   const key = `grid h-12 place-items-center rounded-xl text-2xl font-black transition active:translate-y-[2px] active:shadow-none disabled:opacity-40 sm:h-[52px] ${dark ? 'bg-slate-700 text-slate-50 shadow-[0_3px_0_#0f172a] ring-1 ring-slate-600' : 'bg-white text-ink shadow-[0_3px_0_#d9dbe8] ring-1 ring-line'}`
   const shown = (st.minus ? '−' : '') + (st.s || '')
   return (
-    <div data-numpad className={`w-full max-w-[300px] rounded-2xl p-2.5 ${dark ? 'bg-slate-900 ring-1 ring-slate-700' : 'bg-slate-50 ring-1 ring-line'}`}>
+    <div data-numpad className={`w-[272px] max-w-full rounded-2xl p-2.5 ${dark ? 'bg-slate-900 ring-1 ring-slate-700' : 'bg-slate-50 ring-1 ring-line'}`}>
       <div className={`mb-2 flex h-14 items-center justify-center gap-2 rounded-xl text-3xl font-black tabular-nums ${dark ? 'bg-[#06101f] ring-2 ring-cyan-500/50' : 'bg-white ring-2 ring-sky-200'}`} aria-live="polite" style={dark ? { fontFamily: 'ui-monospace, Menlo, monospace', color: '#67e8f9', textShadow: '0 0 10px #22d3ee66' } : undefined}>
         <span className={shown ? (st.fresh ? 'opacity-50' : '') : dark ? 'text-slate-600' : 'text-slate-300'}>{shown || '?'}</span>
         {unit && <span className={`text-lg ${dark ? 'text-slate-400' : 'text-ink-soft'}`}>{unit}</span>}

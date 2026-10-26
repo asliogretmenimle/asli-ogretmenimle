@@ -193,7 +193,7 @@ function LineBuild({ api, d }: { api: Api; d: { city: string; temps: number[] } 
         <DataTable ink={ink} head={['Gün', ...DAYS.slice(0, n)]} rows={[['°C', ...d.temps.map(String)]]} />
       </Panel>
       <Panel ink={ink}>
-        <LinePlot ink={ink} xs={xs} xLabels={DAYS.slice(0, n)} ys={ys} editable={step === 0 ? xs.map(() => true) : undefined} onSet={step === 0 ? (i, y) => { setYs((c) => c.map((v, k) => (k === i ? y : v))); setHl((h) => h.filter((x) => x !== i)) } : undefined} view={{ xMin: 0.4, xMax: n + 0.6, yMin: 14, yMax: 40 }} yUnit="°C" hlPts={hl} seg={step >= 1 ? { onTap: tapSeg, state: segState } : undefined} />
+        <LinePlot ink={ink} xs={xs} xLabels={DAYS.slice(0, n)} ys={ys} editable={step === 0 ? xs.map(() => true) : undefined} onSet={step === 0 ? (i, y) => { setYs((c) => c.map((v, k) => (k === i ? y : v))); setHl((h) => h.filter((x) => x !== i)) } : undefined} view={{ xMin: 0.4, xMax: n + 0.6, yMin: 14, yMax: 42 }} yUnit="°C" hlPts={hl} seg={step >= 1 ? { onTap: tapSeg, state: segState } : undefined} />
         {step === 0 && <div className="mt-2 flex justify-center"><PrimaryBtn onClick={check}><ClipboardCheck size={18} />Grafiği kontrol et</PrimaryBtn></div>}
         {step === 1 && <p className="mt-2 text-center text-base font-black" style={{ color: ink.text }}>Sıcaklık en çok hangi iki gün arasında arttı? Çizginin o parçasına dokun.</p>}
       </Panel>

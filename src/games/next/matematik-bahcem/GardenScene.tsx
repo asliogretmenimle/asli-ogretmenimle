@@ -68,7 +68,8 @@ export function GardenScene({ beds, watering, bee, beeAt, cols = 10, ariaLabel, 
     const col = i % L.c
     return { x: L.x0 + L.P * (col + 0.5), y: L.top + (L.bed.title ? 26 : 0) + line * L.lineH + L.fh + 14 }
   }
-  const beePos = beeAt !== undefined && layout[0] ? pos(layout[0], Math.min(beeAt, layout[0].bed.cells.length - 1)) : { x: W - 160, y: 70 }
+  const beeCell = beeAt !== undefined && layout[0] ? pos(layout[0], Math.min(beeAt, layout[0].bed.cells.length - 1)) : null
+  const beePos = beeCell && layout[0] ? { x: beeCell.x + layout[0].P * 0.62, y: beeCell.y - layout[0].fh * 0.7 } : { x: W - 200, y: 150 }
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full select-none" role="img" aria-label={ariaLabel}>
@@ -184,7 +185,7 @@ export function GardenScene({ beds, watering, bee, beeAt, cols = 10, ariaLabel, 
                   </g>
                 )}
                 {c.mark && (
-                  <g transform={`translate(${L.P * 0.3} ${-L.fh + 4})`}>
+                  <g transform={`translate(${L.P * 0.3} ${L.bed.item === 'flower' ? -L.fh + 4 : -r - 8})`}>
                     <circle r={14} fill={c.mark === 'ok' ? '#22c55e' : '#f59e0b'} stroke="#fff" strokeWidth={3} />
                     {c.mark === 'ok' ? (
                       <path d="M-6 0 L-2 5 L7 -5" stroke="#fff" strokeWidth={3.4} fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -220,7 +221,7 @@ export function GardenScene({ beds, watering, bee, beeAt, cols = 10, ariaLabel, 
       </g>
 
       {bee && (
-        <g style={{ transform: `translate(${beePos.x + 30}px, ${beePos.y - 150}px)`, transition: motion ? 'transform .6s ease-in-out' : 'none' }}>
+        <g style={{ transform: `translate(${Math.min(W - 50, beePos.x)}px, ${beePos.y}px)`, transition: motion ? 'transform .6s ease-in-out' : 'none' }}>
           <g transform="scale(1.1)"><Bee talk /></g>
         </g>
       )}
