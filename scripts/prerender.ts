@@ -14,6 +14,7 @@ import { activitiesByGrade, notesByGrade } from '../src/data/activities/index.ts
 import type { Activity, Grade, Theme } from '../src/data/types.ts'
 import { gameMeta, gamesForGrade, type GameMeta } from '../src/games/meta.ts'
 import { toolMeta, type ToolMeta } from '../src/manipulatives/meta.ts'
+import { inTopic, topicsByGrade } from '../src/data/topics.ts'
 import type { InteractionMeta } from '../src/interactions/types.ts'
 import { categoryInfo } from '../src/interactions/types.ts'
 import { lessonAreas, lessonFaq, lessonHighlights, lessonIntro, lessonLevels } from '../src/data/onlineLesson.ts'
@@ -118,10 +119,20 @@ for (const g of grades) {
     gradeSeo(g),
     `${crumbs([{ name: info.label }])}
     <h1 class="text-3xl font-black sm:text-4xl">${esc(info.label)} Matematik Etkinlikleri ve Oyunları</h1>
-    ${p(`${esc(info.label)} matematik konuları için ${activitiesByGrade[g].length} ücretsiz etkinlik: ${themes.map((t) => esc(t.title)).join(', ')}. Her konu, somut materyalle keşfetmekten problem çözmeye uzanan bir öğrenme yoluyla ilerler.`)}
-    ${themes
-      .map((t) => `${h2(t.title)}${p(`${link(`/sinif/${g}/${t.slug}`, `${t.title} etkinlikleri`)} · ${t.topics.map(esc).join(', ')}`)}${list(themeActivities(t).map(activityLink))}`)
-      .join('')}
+    ${p(`${esc(info.label)} matematik konuları için ${activitiesByGrade[g].length} ücretsiz etkinlik: ${(topicsByGrade[g] ?? themes).map((t) => esc(t.title)).join(', ')}. Her konu, somut materyalle keşfetmekten problem çözmeye uzanan bir öğrenme yoluyla ilerler.`)}
+    ${topicsByGrade[g]
+      ? topicsByGrade[g]!
+          .map((t) => {
+            const acts = activitiesByGrade[g].filter((a) => inTopic(t, a))
+            const disc = t.interactions.map((id) => interactions.find((m) => m.id === id)).filter((m): m is InteractionMeta => !!m)
+            const tools = toolMeta.filter((m) => t.tools.includes(m.id))
+            const games = gameMeta.filter((m) => t.games.includes(m.id))
+            return `${h2(`${t.unit}. Ünite · ${t.title}`)}${p(esc(t.summary))}${list([...disc.map(interactionLink), ...acts.map(activityLink)])}${tools.length ? p(`<strong>Materyaller:</strong> ${tools.map((m) => link(`/manipulatif/${m.id}`, m.name)).join(', ')}`) : ''}${games.length ? p(`<strong>Oyunlar:</strong> ${games.map((m) => link(`/oyun/${m.id}`, m.name)).join(', ')}`) : ''}`
+          })
+          .join('')
+      : themes
+          .map((t) => `${h2(t.title)}${p(`${link(`/sinif/${g}/${t.slug}`, `${t.title} etkinlikleri`)} · ${t.topics.map(esc).join(', ')}`)}${list(themeActivities(t).map(activityLink))}`)
+          .join('')}
     ${h2(`${info.label} Matematik Oyunları`)}${list(gamesForGrade(g).map((m) => `${link(`/oyun/${m.id}`, m.name)} <span class="text-ink-soft">– ${txt(m.skills[g] ?? m.description)}</span>`))}`,
   )
 

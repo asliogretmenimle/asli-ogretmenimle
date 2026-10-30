@@ -5,6 +5,10 @@
 import { allOutcomes, outcomeByCode, themesByGrade } from '../src/data/curriculum.ts'
 import { activitiesByGrade, notesByGrade } from '../src/data/activities/index.ts'
 import { generatorKind, runGenerator } from '../src/lib/generators.ts'
+import { inTopic, topicsByGrade } from '../src/data/topics.ts'
+import { interactionById } from '../src/interactions/meta.ts'
+import { gameMetaById } from '../src/games/meta.ts'
+import { toolMetaById } from '../src/manipulatives/meta.ts'
 import type { Activity, Content, FillItem, Grade, MatchPair, QuizQuestion, SortRound, Stage } from '../src/data/types.ts'
 
 const onlyGrade = Number(process.argv[2]) || null
@@ -230,6 +234,30 @@ for (const g of [1, 2, 3, 4, 5, 6, 7, 8] as Grade[]) {
   }
   for (const slug of Object.keys(notes)) if (!themesByGrade(g).some((t) => t.slug === slug)) err(null, `grade${g}Notes: bilinmeyen tema "${slug}"`)
 }
+// Konu başlıklarıyla düzenlenen sınıflar: her etkinlik tam olarak bir konuda, bağlı içerikler mevcut ve o sınıfa uygun
+for (const [gStr, topics] of Object.entries(topicsByGrade)) {
+  const g = Number(gStr) as Grade
+  if (!topics || (onlyGrade && g !== onlyGrade)) continue
+  for (const a of activitiesByGrade[g]) {
+    const n = topics.filter((t) => inTopic(t, a)).length
+    if (n !== 1) err(a, `${n === 0 ? 'hiçbir konu başlığında yok' : `${n} konu başlığında birden var`} (src/data/topics.ts)`)
+  }
+  for (const t of topics) {
+    for (const k of t.activities) if (!k.startsWith('MAT.') && !activitiesByGrade[g].some((a) => a.id === k)) err(null, `Konu "${t.title}": bilinmeyen etkinlik ${k}`)
+    for (const id of t.interactions) {
+      const m = interactionById[id]
+      if (!m) err(null, `Konu "${t.title}": bilinmeyen etkileşim ${id}`)
+      else if (!m.grades.includes(g)) err(null, `Konu "${t.title}": ${id} ${g}. sınıfa açık değil`)
+    }
+    for (const id of t.games) {
+      const m = gameMetaById[id]
+      if (!m) err(null, `Konu "${t.title}": bilinmeyen oyun ${id}`)
+      else if (!m.grades.includes(g)) err(null, `Konu "${t.title}": ${id} ${g}. sınıfa açık değil`)
+    }
+    for (const id of t.tools) if (!toolMetaById[id]) err(null, `Konu "${t.title}": bilinmeyen materyal ${id}`)
+  }
+}
+
 const missing = relevant.filter((o) => !covered.has(o.code))
 for (const o of missing) err(null, `Etkinliği olmayan öğrenme çıktısı: ${o.code} (${o.short})`)
 

@@ -26,6 +26,13 @@ export type GameId =
   | 'lazer-lab'
   | 'trafik-simulatoru'
   | 'kristal-magarasi'
+  | 'gokkusagi-carpanlar'
+  | 'asal-agaci'
+  | 'bolen-merdiveni'
+  | 'asal-bekci'
+  | 'ozdeslik-bulmacasi'
+  | 'kok-dukkani'
+  | 'egim-parkuru'
 
 export interface GameMeta {
   id: GameId

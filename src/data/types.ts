@@ -161,7 +161,7 @@ export interface CategorizeItem {
 export type ManipulativeTool =
   | 'tenframe' | 'base10' | 'numberline' | 'fractions' | 'clock' | 'money' | 'geoboard'
   | 'symmetry' | 'angle' | 'balance' | 'algebra' | 'bargraph' | 'probability' | 'coordinate' | 'nets'
-  | 'rekenrek' | 'yuzluk' | 'sayikartlari' | 'noktakartlari' | 'dizilim' | 'carpanagaci' | 'kesirdaireleri' | 'kesirdogrusu' | 'yuzdeizgarasi' | 'orantablosu' | 'ciftdogru' | 'tangram' | 'oruntubloklari' | 'izometrik' | 'alancevre' | 'dinamikucgen' | 'donusum' | 'grafiklab' | 'egim' | 'rastgeledeney'
+  | 'rekenrek' | 'yuzluk' | 'sayikartlari' | 'noktakartlari' | 'dizilim' | 'carpanagaci' | 'kesirdaireleri' | 'kesirdogrusu' | 'yuzdeizgarasi' | 'orantablosu' | 'ciftdogru' | 'tangram' | 'oruntubloklari' | 'izometrik' | 'alancevre' | 'dinamikucgen' | 'donusum' | 'grafiklab' | 'egim' | 'rastgeledeney' | 'kalbur'
 
 /**
  * Manipülatif görevleri: her aracın kendi hedef biçimi var.

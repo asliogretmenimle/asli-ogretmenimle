@@ -24,4 +24,13 @@ import { meta as m19 } from './next/lazer-lab/meta'
 import { meta as m20 } from './next/trafik-simulatoru/meta'
 import { meta as m21 } from './next/kristal-magarasi/meta'
 
-export const nextGenMeta: GameMeta[] = [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, m21]
+// 8. sınıf konu başlıklarına göre eklenen oyunlar
+import { meta as m22 } from './next/gokkusagi-carpanlar/meta'
+import { meta as m23 } from './next/asal-agaci/meta'
+import { meta as m24 } from './next/bolen-merdiveni/meta'
+import { meta as m25 } from './next/asal-bekci/meta'
+import { meta as m26 } from './next/ozdeslik-bulmacasi/meta'
+import { meta as m27 } from './next/kok-dukkani/meta'
+import { meta as m28 } from './next/egim-parkuru/meta'
+
+export const nextGenMeta: GameMeta[] = [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, m21, m22, m23, m24, m25, m26, m27, m28]

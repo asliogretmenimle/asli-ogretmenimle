@@ -12,11 +12,24 @@
 |---|---|---|
 | Etkinlik (sınıf/tema bazlı) | 827 | `/etkinlik/:id` |
 | Kapsanan öğrenme çıktısı | 211 / 211 | `/sinif/:grade/:slug` |
-| Oyun (13 klasik + 22 yeni nesil) | 35 | `/oyun/:id` |
-| Etkileşim | 55 | `/etkilesim/:id` |
-| Sanal manipülatif (15 temel + 20 yeni) | 35 | `/manipulatif/:tool` |
+| Oyun (13 klasik + 29 yeni nesil) | 42 | `/oyun/:id` |
+| Etkileşim | 62 | `/etkilesim/:id` |
+| Sanal manipülatif (15 temel + 21 yeni) | 36 | `/manipulatif/:tool` |
 
 Sınıflara göre etkinlik sayısı: 1. sınıf 78 · 2. sınıf 97 · 3. sınıf 120 · 4. sınıf 118 · 5. sınıf 104 · 6. sınıf 102 · 7. sınıf 109 · 8. sınıf 99
+
+## 8. sınıf: konu başlıklarına göre düzen
+
+8. sınıf sayfası (`/sinif/8`) tema yerine LGS konu sırasıyla 12 konu başlığı gösterir. Her konunun altında **Etkinlikler** (Keşif Atölyesi etkileşimleri + etkinlikler), **Materyaller** (sanal manipülatifler) ve **Oyunlar** ayrı gruplar hâlinde listelenir. Eşleme `src/data/topics.ts` dosyasındadır; `pnpm validate` her 8. sınıf etkinliğinin tam olarak bir konuda olduğunu ve bağlı içeriklerin var olduğunu denetler.
+
+| Ünite | Konular |
+|---|---|
+| 1 | Çarpanlar ve Katlar · Üslü İfadeler |
+| 2 | Kareköklü İfadeler · Veri Analizi |
+| 3 | Basit Olayların Olma Olasılığı · Cebirsel İfadeler ve Özdeşlikler |
+| 4 | Doğrusal Denklemler · Eşitsizlikler |
+| 5 | Üçgenler · Eşlik ve Benzerlik |
+| 6 | Dönüşüm Geometrisi · Geometrik Cisimler |
 
 ## Teknoloji
 
@@ -96,7 +109,7 @@ Etkinlik motorları `src/engine/` altındadır:
 | Açı Topçusu | 4–8 |
 | Zar Yarışı | 4–8 |
 
-### Yeni nesil oyunlar (22)
+### Yeni nesil oyunlar (29)
 
 Keşif ve inşa odaklıdır; her biri `src/games/next/<oyun>/` klasöründedir.
 
@@ -124,8 +137,15 @@ Keşif ve inşa odaklıdır; her biri `src/games/next/<oyun>/` klasöründedir.
 | Lazer Laboratuvarı | 6–8 | Ayna ve açılarla lazeri hedefe yönlendir |
 | Trafik Simülatörü | 7–8 | Araç hareketini grafiklerle modelle |
 | Kristal Mağarası | 7–8 | Cisimlerin kesit, yüzey ve hacimlerini keşfet |
+| Gökkuşağı Çarpanları | 8 | Çarpan çiftlerini gökkuşağı yaylarıyla bağla, √n’de dur |
+| Asal Çarpan Ağacı | 8 | Sayıyı dallara ayırarak asal yapraklara ulaş, puan topla |
+| Asal Bölen Merdiveni | 8 | Asal bölen algoritmasıyla 1’e in; iki sayıda EBOB ve EKOK |
+| Asal Bekçi | 8 | Kapıdaki sayıyla aralarında asal olan sayıları geçir |
+| Özdeşlik Bulmacası | 8 | Cebir karolarıyla özdeşlikleri kur, kesip taşıyarak kanıtla |
+| Kök Dükkanı | 8 | Kareköklü paralarla alışveriş: bozdur, topla, karşılaştır |
+| Eğim Parkuru | 8 | Rampanın eğimini ayarlayıp kaykaycıyı yıldıza ulaştır |
 
-## Etkileşimler (55)
+## Etkileşimler (62)
 
 Her biri `src/interactions/<etkilesim>/` klasöründedir ve beş kategoriye ayrılır.
 
@@ -146,6 +166,13 @@ Her biri `src/interactions/<etkilesim>/` klasöründedir ve beş kategoriye ayr�
 | İşlem Zinciri Tasarla | 3–8 |
 | İşlem Doğru mu? | 3–8 |
 | Sonsuz Çözüm Atölyesi | 3–8 |
+| Çarpan Kutuları | 8 |
+| Aynı Alan, Farklı Dikdörtgen | 8 |
+| EBOB Tiyatrosu | 8 |
+| EKOK Tiyatrosu | 8 |
+| EBOB Problem Simülasyonu | 8 |
+| EKOK Problem Simülasyonu | 8 |
+| Üslü Sayılar Tablosu | 8 |
 
 ### Kesirler, ondalıklar ve oranlar
 
@@ -209,7 +236,7 @@ Her biri `src/interactions/<etkilesim>/` klasöründedir ve beş kategoriye ayr�
 | Açık Uçlu Problem Laboratuvarı | 3–8 |
 | Karşı Örnek Avcısı | 5–8 |
 
-## Sanal manipülatifler (35)
+## Sanal manipülatifler (36)
 
 ### Temel manipülatifler
 
@@ -255,6 +282,7 @@ Her biri `src/interactions/<etkilesim>/` klasöründedir ve beş kategoriye ayr�
 | Grafik Çizim Laboratuvarı | 5–8 |
 | Eğim ve Doğru Aracı | 8 |
 | Rastgele Deney Tasarımcısı | 5–8 |
+| Eratosthenes Kalburu | 6–8 |
 
 ## Klasör yapısı
 

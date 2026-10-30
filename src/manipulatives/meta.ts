@@ -46,6 +46,7 @@ export const toolMeta: ToolMeta[] = [
   { id: 'grafiklab', name: 'Grafik Çizim Laboratuvarı', description: 'Veriyi tablo, sütun, çizgi ve nokta grafiğine dönüştür.', emoji: '📈', grades: '5–8' },
   { id: 'egim', name: 'Eğim ve Doğru Aracı', description: 'Doğruyu sürükle ve iki parmakla döndür; eğim ve denklemi canlı gör.', emoji: '📉', grades: '8' },
   { id: 'rastgeledeney', name: 'Rastgele Deney Tasarımcısı', description: 'Kendi torba, çark ve zar deneyini tasarla; binlerce deneme yap.', emoji: '🎲', grades: '5–8' },
+  { id: 'kalbur', name: 'Eratosthenes Kalburu', description: 'Asal sayıların katlarını kalburdan elerek asal sayıları bul; elemenin neden karekökte bittiğini keşfet.', emoji: '🧺', grades: '6–8' },
 ]
 
 export const toolMetaById = Object.fromEntries(toolMeta.map((t) => [t.id, t])) as Record<ManipulativeTool, ToolMeta>

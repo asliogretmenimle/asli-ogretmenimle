@@ -57,4 +57,11 @@ export const interactions: Record<string, ComponentType<InteractionProps>> = {
   'matematiksel-tartisma': lazy(() => import('./matematiksel-tartisma')),
   'acik-uclu-lab': lazy(() => import('./acik-uclu-lab')),
   'stratejini-ogret': lazy(() => import('./stratejini-ogret')),
+  'carpan-kutulari': lazy(() => import('./carpan-kutulari')),
+  'dikdortgen-alanlari': lazy(() => import('./dikdortgen-alanlari')),
+  'ebob-tiyatrosu': lazy(() => import('./ebob-tiyatrosu')),
+  'ekok-tiyatrosu': lazy(() => import('./ekok-tiyatrosu')),
+  'ebob-simulasyonu': lazy(() => import('./ebob-simulasyonu')),
+  'ekok-simulasyonu': lazy(() => import('./ekok-simulasyonu')),
+  'us-oruntu-tablosu': lazy(() => import('./us-oruntu-tablosu')),
 }

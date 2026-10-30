@@ -38,4 +38,11 @@ export const games: Record<GameId, ComponentType<GameProps>> = {
   'lazer-lab': lazy(() => import('./next/lazer-lab')),
   'trafik-simulatoru': lazy(() => import('./next/trafik-simulatoru')),
   'kristal-magarasi': lazy(() => import('./next/kristal-magarasi')),
+  'gokkusagi-carpanlar': lazy(() => import('./next/gokkusagi-carpanlar')),
+  'asal-agaci': lazy(() => import('./next/asal-agaci')),
+  'bolen-merdiveni': lazy(() => import('./next/bolen-merdiveni')),
+  'asal-bekci': lazy(() => import('./next/asal-bekci')),
+  'ozdeslik-bulmacasi': lazy(() => import('./next/ozdeslik-bulmacasi')),
+  'kok-dukkani': lazy(() => import('./next/kok-dukkani')),
+  'egim-parkuru': lazy(() => import('./next/egim-parkuru')),
 }

@@ -24,6 +24,7 @@ import { donusum } from './new/donusum'
 import { grafiklab } from './new/grafiklab'
 import { egim } from './new/egim'
 import { rastgeledeney } from './new/rastgeledeney'
+import { kalbur } from './new/kalbur'
 
 export const tools: Record<ManipulativeTool, ToolDef<any>> = {
   tenframe,
@@ -61,5 +62,6 @@ export const tools: Record<ManipulativeTool, ToolDef<any>> = {
   grafiklab,
   egim,
   rastgeledeney,
+  kalbur,
 }
 

@@ -13,6 +13,8 @@ import { gradePlan } from '../data/gradePlan'
 import { searchKey } from '../lib/format'
 import { stageMeta, typeMeta } from '../components/meta'
 import { STAGE_ORDER } from '../data/activityStore'
+import { inTopic, topicsByGrade } from '../data/topics'
+import { TopicSection } from '../components/TopicSection'
 
 const GRADE_KEY = 'ao-grade'
 
@@ -245,6 +247,8 @@ function Featured({ grade }: { grade: Grade }) {
 function GradeContent({ grade }: { grade: Grade }) {
   const info = gradeInfo[grade]
   const themes = themesByGrade(grade)
+  /** Konu başlıklarıyla düzenlenen sınıflarda temalar yerine konular gösterilir */
+  const topics = topicsByGrade[grade]
   const all = useGradeActivities(grade)
   const total = all?.length ?? 0
   const [filter, setFilter] = useState<string>('all')
@@ -261,7 +265,7 @@ function GradeContent({ grade }: { grade: Grade }) {
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-2xl font-black sm:text-3xl" style={{ color: info.ink }}>{info.label} Etkinlikleri</h2>
-          <p className="text-sm font-semibold text-ink-soft">{themes.length} tema{all ? ` · ${total} etkinlik` : ''}</p>
+          <p className="text-sm font-semibold text-ink-soft">{topics ? `${topics.length} konu` : `${themes.length} tema`}{all ? ` · ${total} etkinlik` : ''}</p>
         </div>
       </div>
 
@@ -291,13 +295,29 @@ function GradeContent({ grade }: { grade: Grade }) {
             )
           })}
           <span className="mx-1 w-px shrink-0 bg-line" />
-          {themes.map((t) => (
-            <a key={t.slug} href={`#${t.slug}`} className="chip shrink-0 bg-white px-3 py-1.5 text-sm text-ink-soft ring-1 ring-line hover:text-ink">{t.title}</a>
-          ))}
+          {topics
+            ? topics.map((t) => (
+                <a key={t.slug} href={`#konu-${t.slug}`} className="chip shrink-0 bg-white px-3 py-1.5 text-sm text-ink-soft ring-1 ring-line hover:text-ink">{t.title}</a>
+              ))
+            : themes.map((t) => (
+                <a key={t.slug} href={`#${t.slug}`} className="chip shrink-0 bg-white px-3 py-1.5 text-sm text-ink-soft ring-1 ring-line hover:text-ink">{t.title}</a>
+              ))}
         </div>
       </div>
 
       {!all && <Spinner />}
+      {topics ? (
+        <div className={`space-y-12 ${all ? '' : 'hidden'}`}>
+          {all && topics.map((t) => {
+            const filtered = filter !== 'all' || stage !== 'all'
+            const list = all
+              .filter((a) => inTopic(t, a) && (filter === 'all' || a.type === filter) && (stage === 'all' || a.stage === stage))
+              .sort((x, y) => STAGE_ORDER.indexOf(x.stage) - STAGE_ORDER.indexOf(y.stage))
+            if (filtered && list.length === 0) return null
+            return <TopicSection key={t.slug} topic={t} grade={grade} activities={list} onlyActivities={filtered} />
+          })}
+        </div>
+      ) : (
       <div className={`space-y-10 ${all ? '' : 'hidden'}`}>
         {all && themes.map((t) => {
           const codes = t.outcomes.map((o) => o.code)
@@ -317,6 +337,7 @@ function GradeContent({ grade }: { grade: Grade }) {
           )
         })}
       </div>
+      )}
     </section>
   )
 }

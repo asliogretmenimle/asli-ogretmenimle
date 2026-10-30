@@ -4,6 +4,7 @@
  */
 import type { Activity, ActivityType, Grade, Stage, Theme } from '../data/types'
 import { findTheme, gradeInfo, grades, isGrade, outcomeByCode, themesByGrade } from '../data/curriculum'
+import { topicsByGrade } from '../data/topics'
 import { gameMeta, gameMetaById, type GameId, type GameMeta } from '../games/meta'
 import { toolMeta, toolMetaById, type ToolMeta } from '../manipulatives/meta'
 import { interactionById, interactionMeta } from '../interactions/meta'
@@ -186,7 +187,7 @@ export function gradeSeo(g: Grade): PageSeo {
   const path = `/sinif/${g}`
   return {
     title: withBrand(`${info.label} Matematik Etkinlikleri ve Oyunları`),
-    description: clip(`${info.label} matematik konuları için ücretsiz etkinlik ve oyunlar: ${themes.map((t) => t.title).join(', ')}. Maarif Modeli’ne uygun, Aslı Öğretmen’den.`),
+    description: clip(`${info.label} matematik konuları için ücretsiz etkinlik ve oyunlar: ${(topicsByGrade[g] ?? themes).map((t) => t.title).join(', ')}. Maarif Modeli’ne uygun, Aslı Öğretmen’den.`),
     path,
     jsonLd: graph(
       {
