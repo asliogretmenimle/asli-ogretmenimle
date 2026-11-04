@@ -441,4 +441,6 @@ export const interactionKeyword: Record<string, string> = {
   'ebob-simulasyonu': 'EBOB Problemleri',
   'ekok-simulasyonu': 'EKOK Problemleri',
   'us-oruntu-tablosu': 'Sıfırıncı ve Negatif Kuvvet',
+  'elde-ve-bozma': 'Eldeli Toplama ve Onluk Bozma Etkinliği',
+  'sayilari-karsilastir': 'Doğal Sayıları Karşılaştırma',
 }

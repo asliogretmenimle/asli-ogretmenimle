@@ -240,7 +240,7 @@ export const guides: Guide[] = [
     ],
     tools: ['sayikartlari', 'base10'],
     games: ['gizli-sayi', 'tahmin'],
-    interactions: ['basamak-laboratuvari'],
+    interactions: ['basamak-laboratuvari', 'sayilari-karsilastir'],
   },
   {
     slug: 'asal-sayilar',
