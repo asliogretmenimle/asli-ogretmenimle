@@ -11,6 +11,8 @@ import { interactionById, interactionMeta } from '../interactions/meta'
 import type { InteractionMeta } from '../interactions/types'
 import type { ManipulativeTool } from '../data/types'
 import { lessonFaq, lessonIntro } from '../data/onlineLesson'
+import { gameKeyword, interactionKeyword, outcomeKeyword, themeKeyword, toolKeyword } from '../data/seoKeywords'
+import { guideBySlug, guides, guidesUpdated, type Guide } from '../data/guides'
 
 export const SITE_URL = 'https://www.asliogretmenimle.com'
 export const SITE_NAME = 'Aslı Öğretmenimle'
@@ -63,7 +65,13 @@ export function clip(text: string, max = 158): string {
   return `${cut.slice(0, Math.max(cut.lastIndexOf(' '), max - 20)).replace(/[\s,;:·–-]+$/, '')}…`
 }
 
-const withBrand = (t: string) => `${t} | ${SITE_NAME}`
+/** Marka yalnızca sığıyorsa eklenir: Google ~60 karakterden sonrasını keser, konu kelimesi önde kalmalı */
+const withBrand = (t: string) => (t.length + SITE_NAME.length + 3 <= 65 ? `${t} | ${SITE_NAME}` : t)
+const norm = (s: string) => s.toLocaleLowerCase('tr').replace(/[^0-9a-zçğıöşüâî]/g, '')
+/** a, b'yi (ya da b, a'yı) içeriyor mu? Başlıkta aynı ifadeyi iki kez yazmamak için */
+const overlaps = (a: string, b: string) => norm(a).includes(norm(b)) || norm(b).includes(norm(a))
+const lower = (s: string) => s.toLocaleLowerCase('tr')
+const upperFirst = (s: string) => s.charAt(0).toLocaleUpperCase('tr') + s.slice(1)
 export const abs = (path: string) => `${SITE_URL}${path === '/' ? '' : path}` || SITE_URL
 const gradeRange = (g: Grade[]) => (g.length === 1 ? `${g[0]}` : `${g[0]}–${g[g.length - 1]}`)
 const ageRange = (g: Grade[]) => `${Math.min(...g) + 5}-${Math.max(...g) + 6}`
@@ -169,13 +177,51 @@ function learningResource(o: { path: string; name: string; description: string; 
 }
 
 // ---------------------------------------------------------------------------
+// Aranan konu adları (data/seoKeywords.ts)
+// ---------------------------------------------------------------------------
+
+/** Öğrenme çıktısının aranan konu adı: "Kesirleri Karşılaştırma" */
+export const outcomeKw = (code?: string) => (code ? outcomeKeyword[code] ?? outcomeByCode.get(code)?.short ?? '' : '')
+/** Temanın aranan konu adı: "Kesirler" (müfredat adı "Sayılar ve Nicelikler (2)" yerine) */
+export const themeKw = (t: Theme) => themeKeyword[`${t.grade}/${t.slug}`] ?? t.topics.slice(0, 3).join(', ')
+/** Tema sayfasının H1'i: "5. Sınıf Kesirler" */
+export const themeHeading = (t: Theme) => `${gradeInfo[t.grade].label} ${themeKw(t)}`
+export const gameKw = (m: GameMeta) => gameKeyword[m.id] ?? 'Matematik Oyunu'
+export const toolKw = (t: ToolMeta) => toolKeyword[t.id]?.keyword ?? t.name
+export const interactionKw = (m: InteractionMeta) => interactionKeyword[m.id] ?? m.name
+
+/** Etkinliğin konu başlığı: "5. Sınıf Kesirleri Karşılaştırma: Karşılaştırma stratejileri" */
+export function activityHeading(a: Activity, g: Grade) {
+  const label = gradeInfo[g].label
+  const t = plain(a.title)
+  const kw = outcomeKw(a.outcomes[0])
+  if (!kw || overlaps(t, kw)) return `${label} ${upperFirst(t)}`
+  return `${label} ${kw}: ${t}`
+}
+
+export function gameHeading(m: GameMeta) {
+  const kw = gameKw(m)
+  return overlaps(m.name, kw) ? `${m.name} – ${gradeRange(m.grades)}. Sınıf Matematik Oyunu` : `${kw}: ${m.name} (${gradeRange(m.grades)}. Sınıf)`
+}
+
+export function interactionHeading(m: InteractionMeta) {
+  const kw = interactionKw(m)
+  return overlaps(m.name, kw) ? `${kw} (${gradeRange(m.grades)}. Sınıf)` : `${kw}: ${m.name} (${gradeRange(m.grades)}. Sınıf)`
+}
+
+export function toolHeading(t: ToolMeta) {
+  const kw = toolKw(t)
+  return /^online/i.test(kw) ? `${kw} – Ücretsiz Sanal Manipülatif` : `${kw} – Ücretsiz Online Matematik Aracı`
+}
+
+// ---------------------------------------------------------------------------
 // Sayfalar
 // ---------------------------------------------------------------------------
 
 export function homeSeo(): PageSeo {
   return {
-    title: `${SITE_NAME} | Aslı Öğretmen ile Matematik Oyunları ve Etkinlikleri`,
-    description: 'Aslı Öğretmen’in 1–8. sınıf matematik oyunları, eşleştirme, boşluk doldurma ve sürükle-bırak etkinlikleri, sanal manipülatifler. Hatay’da online birebir özel ders.',
+    title: `Matematik Oyunları ve Etkinlikleri 1–8. Sınıf | ${SITE_NAME}`,
+    description: 'Aslı Öğretmen’in ücretsiz 1–8. sınıf matematik oyunları, 800’den fazla interaktif etkinlik, konu anlatımları ve sanal manipülatifler. Maarif Modeli’ne uygun, üyeliksiz.',
     path: '/',
     jsonLd: graph(...siteGraph),
   }
@@ -186,8 +232,8 @@ export function gradeSeo(g: Grade): PageSeo {
   const themes = themesByGrade(g)
   const path = `/sinif/${g}`
   return {
-    title: withBrand(`${info.label} Matematik Etkinlikleri ve Oyunları`),
-    description: clip(`${info.label} matematik konuları için ücretsiz etkinlik ve oyunlar: ${(topicsByGrade[g] ?? themes).map((t) => t.title).join(', ')}. Maarif Modeli’ne uygun, Aslı Öğretmen’den.`),
+    title: withBrand(`${info.label} Matematik Etkinlikleri ve Oyunları${g === 8 ? ' (LGS)' : ''}`),
+    description: clip(`${info.label} matematik konuları için ücretsiz interaktif etkinlik ve oyunlar: ${(topicsByGrade[g]?.map((t) => t.title) ?? themes.map(themeKw)).join(', ')}. Maarif Modeli’ne uygun.`),
     path,
     jsonLd: graph(
       {
@@ -197,7 +243,7 @@ export function gradeSeo(g: Grade): PageSeo {
         name: `${info.label} Matematik Etkinlikleri`,
         inLanguage: 'tr-TR',
         isPartOf: { '@id': SITE_ID },
-        hasPart: themes.map((t) => ({ '@type': 'WebPage', name: t.title, url: abs(`/sinif/${g}/${t.slug}`) })),
+        hasPart: themes.map((t) => ({ '@type': 'WebPage', name: themeHeading(t), url: abs(`/sinif/${g}/${t.slug}`) })),
       },
       breadcrumb([{ name: info.label, path }]),
     ),
@@ -208,22 +254,23 @@ export function themeSeo(t: Theme): PageSeo {
   const info = gradeInfo[t.grade]
   const path = `/sinif/${t.grade}/${t.slug}`
   return {
-    title: withBrand(`${t.title} – ${info.label} Matematik`),
-    description: clip(`${info.label} matematik, ${t.title}: ${t.topics.join(', ')}. ${t.outcomes.map((o) => o.short).join(', ')} için etkinlik ve oyunlar.`),
+    title: withBrand(`${themeHeading(t)} Etkinlikleri`),
+    description: clip(`${themeHeading(t)} etkinlikleri ve oyunları: ${t.outcomes.map((o) => lower(outcomeKw(o.code))).join(', ')}. Ücretsiz, interaktif, Maarif Modeli’ne uygun.`),
     path,
     jsonLd: graph(
       {
         '@type': 'CollectionPage',
         '@id': `${abs(path)}#page`,
         url: abs(path),
-        name: `${t.title} (${info.label})`,
+        name: themeHeading(t),
+        alternateName: `${t.title} (${info.label})`,
         inLanguage: 'tr-TR',
         isPartOf: { '@id': SITE_ID },
         about: t.topics.map((name) => ({ '@type': 'Thing', name })),
       },
       breadcrumb([
         { name: info.label, path: `/sinif/${t.grade}` },
-        { name: t.title, path },
+        { name: themeKw(t), path },
       ]),
     ),
   }
@@ -235,9 +282,10 @@ export function activitySeo(a: Activity, g: Grade): PageSeo {
   const theme = oc?.theme
   const path = `/etkinlik/${a.id}`
   const title = plain(a.title)
-  const description = clip(`${info.label} matematik ${typeLabel[a.type].toLowerCase()} etkinliği: ${title}. ${plain(a.instructions)}${oc ? ` Konu: ${oc.short}.` : ''}`)
+  const kw = outcomeKw(a.outcomes[0])
+  const description = clip(`${info.label} ${kw ? lower(kw) : 'matematik'} etkinliği (${lower(typeLabel[a.type])}): ${/[.!?…]$/.test(title) ? title : `${title}.`} ${plain(a.instructions)} Ücretsiz ve online; telefonda, tablette ve akıllı tahtada çalışır.`)
   return {
-    title: withBrand(`${title} – ${info.label} ${typeLabel[a.type]} Etkinliği`),
+    title: withBrand(activityHeading(a, g)),
     description,
     path,
     jsonLd: graph(
@@ -252,7 +300,7 @@ export function activitySeo(a: Activity, g: Grade): PageSeo {
       }),
       breadcrumb([
         { name: info.label, path: `/sinif/${g}` },
-        ...(theme ? [{ name: theme.title, path: `/sinif/${g}/${theme.slug}` }] : []),
+        ...(theme ? [{ name: themeKw(theme), path: `/sinif/${g}/${theme.slug}` }] : []),
         { name: title, path },
       ]),
     ),
@@ -262,8 +310,8 @@ export function activitySeo(a: Activity, g: Grade): PageSeo {
 export function gamesIndexSeo(): PageSeo {
   const path = '/oyunlar'
   return {
-    title: withBrand('Matematik Oyunları (1–8. Sınıf)'),
-    description: clip(`Ücretsiz, eğitici matematik oyunları: ${gameMeta.slice(0, 8).map((m) => m.name).join(', ')} ve daha fazlası. Her oyun seçilen sınıfa göre zorlaşır.`),
+    title: withBrand('Matematik Oyunları 1–8. Sınıf (Ücretsiz)'),
+    description: clip(`Ücretsiz, eğitici online matematik oyunları: ${[...new Set(gameMeta.map((m) => lower(gameKw(m))))].slice(0, 9).join(', ')} ve daha fazlası. Her oyun seçilen sınıfa göre zorlaşır.`),
     path,
     jsonLd: graph(
       {
@@ -282,9 +330,9 @@ export function gamesIndexSeo(): PageSeo {
 export function gameSeo(m: GameMeta): PageSeo {
   const path = `/oyun/${m.id}`
   const range = gradeRange(m.grades)
-  const description = clip(`${m.name}: ${plain(m.description)} ${range}. sınıflar için ücretsiz matematik oyunu; telefon, tablet ve bilgisayarda oynanır.`)
+  const description = clip(`${m.name}: ${range}. sınıflar için ücretsiz online ${lower(gameKw(m))}. ${plain(m.description)} Telefon, tablet ve bilgisayarda üyeliksiz oynanır.`)
   return {
-    title: withBrand(`${m.name} – ${range}. Sınıf Matematik Oyunu`),
+    title: withBrand(gameHeading(m)),
     description,
     path,
     jsonLd: graph(
@@ -308,8 +356,8 @@ export function gameSeo(m: GameMeta): PageSeo {
 export function toolsIndexSeo(): PageSeo {
   const path = '/manipulatifler'
   return {
-    title: withBrand('Sanal Manipülatifler – Dijital Matematik Materyalleri'),
-    description: clip(`Ücretsiz sanal matematik manipülatifleri: ${toolMeta.slice(0, 8).map((t) => t.name).join(', ')} ve daha fazlası. Derste akıllı tahtada, evde tablette kullanın.`),
+    title: withBrand('Sanal Manipülatifler – Online Matematik Araçları'),
+    description: clip(`Ücretsiz sanal matematik manipülatifleri: ${toolMeta.slice(0, 9).map((t) => lower(toolKw(t).replace(/^Online /, ''))).join(', ')} ve daha fazlası. Akıllı tahtada ve tablette kullanın.`),
     path,
     jsonLd: graph(
       {
@@ -327,11 +375,12 @@ export function toolsIndexSeo(): PageSeo {
 
 export function toolSeo(t: ToolMeta): PageSeo {
   const path = `/manipulatif/${t.id}`
-  const description = clip(`${t.name} (sanal manipülatif): ${plain(t.description)} ${t.grades}. sınıf matematik için ücretsiz, etkileşimli dijital materyal.`)
+  const aliases = toolKeyword[t.id]?.aliases ?? []
+  const description = clip(`${toolKw(t)}${aliases.length ? ` (${aliases.slice(0, 2).join(', ')})` : ''}: ${plain(t.description)} ${t.grades}. sınıf için ücretsiz; akıllı tahtada, tablette ve telefonda çalışır.`)
   const gs = t.grades.split(/[–-]/).map(Number).filter(isGrade)
   const span = gs.length === 2 ? grades.filter((g) => g >= gs[0] && g <= gs[1]) : gs
   return {
-    title: withBrand(`${t.name} – Sanal Manipülatif (${t.grades}. Sınıf)`),
+    title: withBrand(toolHeading(t)),
     description,
     path,
     jsonLd: graph(
@@ -370,9 +419,9 @@ export function interactionsIndexSeo(): PageSeo {
 export function interactionSeo(m: InteractionMeta): PageSeo {
   const path = `/etkilesim/${m.id}`
   const range = gradeRange(m.grades)
-  const description = clip(`${m.name}: ${plain(m.description)} ${range}. sınıf için ücretsiz, etkileşimli matematik etkinliği.`)
+  const description = clip(`${interactionKw(m)}: ${plain(m.description)} ${range}. sınıf için ücretsiz, interaktif matematik etkinliği; akıllı tahtada ve tablette çalışır.`)
   return {
-    title: withBrand(`${m.name} – ${range}. Sınıf Etkileşimli Matematik`),
+    title: withBrand(interactionHeading(m)),
     description,
     path,
     jsonLd: graph(
@@ -388,6 +437,61 @@ export function interactionSeo(m: InteractionMeta): PageSeo {
       breadcrumb([
         { name: 'Keşif Atölyesi', path: '/etkilesimler' },
         { name: m.name, path },
+      ]),
+    ),
+  }
+}
+
+export const GUIDES_PATH = '/rehber'
+
+export function guidesIndexSeo(): PageSeo {
+  const path = GUIDES_PATH
+  return {
+    title: withBrand('Matematik Konu Anlatımı – Örnekli Rehberler'),
+    description: clip(`Kısa ve örnekli matematik konu anlatımları: ${guides.slice(0, 6).map((g) => lower(g.seoTitle.split('?')[0])).join(', ')} ve daha fazlası. Her rehberde interaktif etkinlikler.`),
+    path,
+    jsonLd: graph(
+      {
+        '@type': 'CollectionPage',
+        url: abs(path),
+        name: 'Matematik Konu Anlatımları',
+        inLanguage: 'tr-TR',
+        isPartOf: { '@id': SITE_ID },
+        hasPart: guides.map((g) => ({ '@type': 'Article', headline: g.title, url: abs(`${GUIDES_PATH}/${g.slug}`) })),
+      },
+      breadcrumb([{ name: 'Konu Anlatımları', path }]),
+    ),
+  }
+}
+
+export function guideSeo(g: Guide): PageSeo {
+  const path = `${GUIDES_PATH}/${g.slug}`
+  return {
+    title: withBrand(g.seoTitle),
+    description: clip(g.description),
+    path,
+    jsonLd: graph(
+      {
+        '@type': 'Article',
+        '@id': `${abs(path)}#article`,
+        url: abs(path),
+        mainEntityOfPage: abs(path),
+        headline: g.title,
+        description: g.description,
+        inLanguage: 'tr-TR',
+        isAccessibleForFree: true,
+        dateModified: guidesUpdated,
+        author: { '@id': TEACHER_ID },
+        publisher: orgRef,
+        image: OG_IMAGE,
+        educationalLevel: g.grades.map((x) => gradeInfo[x].label),
+        about: g.outcomes.map((c) => ({ '@type': 'Thing', name: outcomeKw(c) })),
+      },
+      { '@type': 'FAQPage', mainEntity: g.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+      teacher,
+      breadcrumb([
+        { name: 'Konu Anlatımları', path: GUIDES_PATH },
+        { name: g.title, path },
       ]),
     ),
   }
@@ -462,6 +566,7 @@ export function seoForPath(pathname: string, findActivity: (id: string) => Activ
     if (a === 'manipulatifler') return toolsIndexSeo()
     if (a === 'etkilesimler') return interactionsIndexSeo()
     if (a === 'yaklasim') return approachSeo()
+    if (a === GUIDES_PATH.slice(1)) return guidesIndexSeo()
     if (a === ONLINE_LESSON_PATH.slice(1)) return onlineLessonSeo()
     if (a === 'rapor') return privateSeo('Öğrenci raporu', p)
     return null
@@ -479,6 +584,10 @@ export function seoForPath(pathname: string, findActivity: (id: string) => Activ
   if (a === 'manipulatif') {
     const t = toolMetaById[b as ManipulativeTool]
     return t ? toolSeo(t) : null
+  }
+  if (a === GUIDES_PATH.slice(1)) {
+    const gd = guideBySlug[b]
+    return gd ? guideSeo(gd) : null
   }
   if (a === 'etkilesim') {
     const m = interactionById[b]

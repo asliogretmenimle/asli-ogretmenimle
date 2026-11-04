@@ -5,8 +5,10 @@ import '@fontsource-variable/nunito'
 import './index.css'
 import App from './App'
 import { installChunkReload } from './lib/chunkReload'
+import { captureSeoArticle } from './lib/seoArticle'
 
 installChunkReload()
+captureSeoArticle()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

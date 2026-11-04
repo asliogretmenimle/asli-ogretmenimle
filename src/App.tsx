@@ -15,6 +15,7 @@ const load = {
   report: () => import('./pages/Report'),
   games: () => import('./pages/Games'),
   onlineLesson: () => import('./pages/OnlineLesson'),
+  guide: () => import('./pages/Guide'),
 }
 
 const ThemePage = lazy(load.theme)
@@ -28,6 +29,8 @@ const ReportView = lazy(() => load.report().then((m) => ({ default: m.ReportView
 const GamesIndex = lazy(() => load.games().then((m) => ({ default: m.GamesIndex })))
 const GamePage = lazy(() => load.games().then((m) => ({ default: m.GamePage })))
 const OnlineLesson = lazy(load.onlineLesson)
+const GuidesIndex = lazy(() => load.guide().then((m) => ({ default: m.GuidesIndex })))
+const GuidePage = lazy(() => load.guide().then((m) => ({ default: m.GuidePage })))
 
 /** Sayfa açıldıktan sonra, tarayıcı boştayken diğer sayfaların kodunu indir: menü geçişleri beklemeden açılır */
 function usePrefetchPages() {
@@ -69,6 +72,8 @@ export default function App() {
           <Route path="manipulatif/:tool" element={<ManipulativePage />} />
           <Route path="oyunlar" element={<GamesIndex />} />
           <Route path="oyun/:id" element={<GamePage />} />
+          <Route path="rehber" element={<GuidesIndex />} />
+          <Route path="rehber/:slug" element={<GuidePage />} />
           <Route path="yaklasim" element={<Approach />} />
           <Route path="online-ozel-ders" element={<OnlineLesson />} />
           <Route path="etkilesimler" element={<InteractionsIndex />} />

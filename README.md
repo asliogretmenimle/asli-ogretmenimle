@@ -35,6 +35,10 @@ pnpm preview      # üretim çıktısını yerelde dene
 
 - `pnpm build`, Vite derlemesinden sonra `scripts/prerender.ts` çalıştırır: her etkinlik, oyun, tema, keşif ve manipülatif sayfası için `dist/` içine kendi başlığı, açıklaması, canonical adresi, Open Graph etiketleri, JSON-LD'si ve okunabilir içeriği olan ayrı bir `.html` yazar. Ayrıca `sitemap.xml` ve gerçek 404 durum kodu döndüren `404.html` üretir.
 - Başlık ve açıklama metinleri tek yerde, `src/lib/seo.ts` içinde üretilir. Aynı fonksiyonlar tarayıcıda sayfalar arası geçişte de kullanılır (`usePageTitle`).
+- Başlıklar müfredat adlarından değil, **aranan konu adlarından** kurulur: `src/data/seoKeywords.ts` her öğrenme çıktısı, tema, oyun, manipülatif ve etkileşim için Google'da aranan ifadeyi tutar (ör. `MAT.5.1.4` → “Kesirleri Karşılaştırma”, `pizza` → “Kesir Oyunu”). Yeni içerik eklerken buraya da bir satır ekleyin; eksik olanlar ve yinelenen başlıklar `pnpm build` sırasında uyarı olarak yazılır.
+- Konu anlatımları (`/rehber/...`) `src/data/guides.ts` içindedir; her rehber bağlı olduğu öğrenme çıktılarının etkinliklerine, oyunlara ve araçlara bağlanır, etkinlik sayfaları da rehbere geri bağlantı verir.
+- Prerender sayfanın altına bir `<section id="seo-article">` (örnek sorular ve cevaplar, açıklamalar, iç bağlantılar) yazar. React `#root`'u silerken bu bölüm `src/lib/seoArticle.ts` ile korunup sayfanın altına geri konur; böylece Google'ın JavaScript çalıştırdıktan sonra gördüğü sayfada da kalır.
+- Her derleme `docs/seo-envanter.csv` dosyasını yeniler: her adresin hedef kelimesi, title, description, H1 ve kelime sayısı.
 - Online özel ders sayfasının (`/online-ozel-ders`) metinleri `src/data/onlineLesson.ts` içindedir.
 - Alan adı `src/lib/seo.ts` içindeki `SITE_URL`, `index.html` ve `public/robots.txt` dosyalarında yazılıdır (`https://www.asliogretmenimle.com`).
 - Yayından sonra: [Google Search Console](https://search.google.com/search-console)'a alan adını ekleyin ve `https://www.asliogretmenimle.com/sitemap.xml` adresini gönderin.

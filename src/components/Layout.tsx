@@ -1,9 +1,10 @@
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Blocks, FlaskConical, Gamepad2, GraduationCap, Laptop, Menu, Volume2, VolumeX, X } from 'lucide-react'
+import { Blocks, BookOpen, FlaskConical, Gamepad2, GraduationCap, Laptop, Menu, Volume2, VolumeX, X } from 'lucide-react'
 import { setSound, soundOn } from '../lib/feedback'
-import { ONLINE_LESSON_PATH, notFoundSeo, privateSeo, seoForPath } from '../lib/seo'
+import { GUIDES_PATH, ONLINE_LESSON_PATH, notFoundSeo, privateSeo, seoForPath } from '../lib/seo'
 import { applySeo } from '../lib/seoHead'
+import { seoArticleFor } from '../lib/seoArticle'
 import { cachedActivity } from '../data/activityStore'
 import { gradeInfo, grades } from '../data/curriculum'
 import { ErrorBoundary } from './ErrorBoundary'
@@ -75,9 +76,23 @@ const NAV = [
   { to: '/oyunlar', label: 'Oyunlar', icon: Gamepad2 },
   { to: '/etkilesimler', label: 'Keşif Atölyesi', icon: FlaskConical },
   { to: '/manipulatifler', label: 'Manipülatifler', icon: Blocks },
+  { to: GUIDES_PATH, label: 'Konu Anlatımı', icon: BookOpen },
   { to: '/yaklasim', label: 'Yaklaşımımız', icon: GraduationCap },
   { to: ONLINE_LESSON_PATH, label: 'Online Ders', icon: Laptop },
 ]
+
+/** Önceden üretilmiş sayfa bilgisini (örnek sorular, bağlantılar) React içeriğinin altına geri koyar (bkz. lib/seoArticle.ts) */
+function SeoArticleSlot() {
+  const ref = useRef<HTMLDivElement>(null)
+  const { pathname } = useLocation()
+  useEffect(() => {
+    const n = seoArticleFor(pathname)
+    if (!n || !ref.current) return
+    ref.current.appendChild(n)
+    return () => n.remove()
+  }, [pathname])
+  return <div ref={ref} />
+}
 
 export default function Layout() {
   const { pathname } = useLocation()
@@ -121,6 +136,7 @@ export default function Layout() {
           </Suspense>
         </ErrorBoundary>
       </main>
+      <SeoArticleSlot />
       {!focusMode && (
         <footer className="mt-12 border-t border-line bg-white/60">
           <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8 text-sm text-ink-soft sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]">
@@ -159,6 +175,8 @@ export function usePageTitle(title?: string) {
   const { pathname } = useLocation()
   useEffect(() => {
     const s = seoForPath(pathname, cachedActivity)
+    // Etkinlik verisi henüz yüklenmedi: önceden üretilmiş <head>'i bırak (yoksa tarayıcı/Googlebot bir an noindex görür)
+    if (!s && title === undefined) return
     if (!s) applySeo(title ? privateSeo(title, pathname) : notFoundSeo(pathname))
     else applySeo(s.noindex && title ? { ...s, title: privateSeo(title, pathname).title } : s)
   }, [pathname, title])

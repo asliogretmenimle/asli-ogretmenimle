@@ -8,6 +8,7 @@ import { stageMeta, themeIcon } from '../components/meta'
 import { usePageTitle } from '../components/Layout'
 import { ShareButton } from '../components/ShareButton'
 import { MathText } from '../components/MathText'
+import { themeHeading } from '../lib/seo'
 import NotFound from './NotFound'
 
 export default function ThemePage() {
@@ -41,8 +42,8 @@ export default function ThemePage() {
             <Icon size={28} strokeWidth={2.4} />
           </span>
           <div>
-            <p className="text-sm font-extrabold" style={{ color: info.ink }}>{info.label} · {idx + 1}. tema</p>
-            <h1 className="text-2xl leading-tight font-black text-ink sm:text-4xl">{theme.title}</h1>
+            <p className="text-sm font-extrabold" style={{ color: info.ink }}>{info.label} · {idx + 1}. tema · {theme.title}</p>
+            <h1 className="text-2xl leading-tight font-black text-ink sm:text-4xl">{themeHeading(theme)}</h1>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {theme.topics.map((tp) => <span key={tp} className="chip bg-white/80 text-ink">{tp}</span>)}
             </div>
