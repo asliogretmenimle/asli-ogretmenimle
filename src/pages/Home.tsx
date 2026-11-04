@@ -88,9 +88,8 @@ function Landing() {
   return (
     <>
       {/* Sınıf seçimi */}
-      <section className="mx-auto mt-10 max-w-6xl px-4" aria-labelledby="sinif-sec">
+      <section className="mx-auto mt-10 max-w-6xl px-4">
         <SectionTitle title="Sınıf seçin" desc="Her sınıfın konuları, öğretim programındaki sırasıyla." />
-        <h2 id="sinif-sec" className="sr-only">Sınıf seçin</h2>
         <div className="grid grid-cols-4 gap-2.5 sm:gap-3 md:grid-cols-8">
           {grades.map((g) => <GradeTile key={g} g={g} last={last === g} />)}
         </div>
@@ -105,7 +104,7 @@ function Landing() {
               <span className="grid size-11 place-items-center rounded-xl" style={{ background: s.tint, color: s.ink }}><s.icon size={22} /></span>
               <span className="mt-4 text-lg font-bold text-ink">{s.title}</span>
               <span className="mt-1 text-sm font-semibold text-ink-soft">{s.desc}</span>
-              <span className="mt-4 flex items-center justify-between text-sm font-bold text-ink-soft">
+              <span className="mt-auto flex items-center justify-between pt-4 text-sm font-bold text-ink-soft">
                 {s.count}
                 <ArrowRight size={17} className="transition group-hover:translate-x-0.5 group-hover:text-ink" />
               </span>
@@ -179,7 +178,7 @@ function SearchResults({ q }: { q: string }) {
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {g.hits.map((h) => (
                 <Link key={h.key} to={h.to} className="flex items-center gap-3 rounded-xl bg-white p-3.5 ring-1 ring-line transition hover:shadow-[var(--shadow-lift)]">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-paper text-xl" aria-hidden>{h.emoji ?? h.title.charAt(0)}</span>
+                  <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-paper text-xl font-bold text-ink-soft" aria-hidden>{h.emoji ?? h.badge}</span>
                   <span className="min-w-0">
                     <span className="block truncate font-bold text-ink">{h.title}</span>
                     <span className="block truncate text-xs font-semibold text-ink-soft">{h.sub}</span>

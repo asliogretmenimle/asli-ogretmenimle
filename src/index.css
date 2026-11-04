@@ -82,7 +82,7 @@
 }
 /* Liste sayfalarında tek tip süzgeç düğmesi (sınıf, kategori) */
 @utility pill {
-  @apply inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full bg-white px-3.5 text-sm font-bold whitespace-nowrap text-ink-soft ring-1 ring-line transition hover:text-ink aria-pressed:bg-ink aria-pressed:text-white aria-pressed:ring-ink;
+  @apply inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full bg-white px-3.5 text-sm font-bold whitespace-nowrap text-ink-soft ring-1 ring-line transition hover:text-ink aria-pressed:bg-ink aria-pressed:text-white aria-pressed:ring-ink aria-pressed:hover:text-white;
 }
 
 /* Kesir gösterimi */

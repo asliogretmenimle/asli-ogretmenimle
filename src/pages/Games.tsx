@@ -83,6 +83,7 @@ export function GamesIndex() {
         categories={GAME_KINDS}
         category={f.category}
         onCategory={f.setCategory}
+        allLabel="Tüm oyunlar"
       />
       <p className="mb-3 text-sm font-semibold text-ink-soft">{list.length} oyun</p>
       {list.length ? (
@@ -151,7 +152,7 @@ function GameView({ m }: { m: GameMeta }) {
             <ChevronLeft size={22} />
           </Link>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[11px] font-extrabold sm:text-xs" style={{ color: info.ink }}>Oyunlar · {info.label}</p>
+            <p className="truncate text-[11px] font-bold text-ink-soft sm:text-xs">Oyunlar · {info.label}</p>
             <h1 className="truncate text-base leading-tight font-black sm:text-lg"><span aria-hidden>{m.emoji}</span> {m.name}</h1>
           </div>
           <ShareButton title={m.name} className="max-sm:[&>span]:hidden" />
@@ -178,7 +179,7 @@ function GameView({ m }: { m: GameMeta }) {
                   <p className="mb-2 text-xs font-extrabold tracking-wide text-ink-soft uppercase">Sınıfını seç</p>
                   <div className="flex flex-wrap justify-center gap-1.5">
                     {m.grades.map((g) => (
-                      <button key={g} type="button" onClick={() => setGrade(g)} aria-pressed={g === grade} className="grid size-11 place-items-center rounded-xl border-2 text-lg font-black transition" style={{ background: g === grade ? gradeInfo[g].color : '#fff', color: g === grade ? '#fff' : gradeInfo[g].ink, borderColor: g === grade ? gradeInfo[g].color : `${gradeInfo[g].color}55` }}>
+                      <button key={g} type="button" onClick={() => setGrade(g)} aria-pressed={g === grade} className="pill size-11 justify-center px-0 text-base" aria-label={`${g}. sınıf`}>
                         {g}
                       </button>
                     ))}
@@ -186,7 +187,7 @@ function GameView({ m }: { m: GameMeta }) {
                 </div>
               )}
               {m.skills[grade] && (
-                <p className="mt-4 inline-block rounded-2xl px-4 py-2 text-sm font-extrabold" style={{ background: info.soft, color: info.ink }}>
+                <p className="mt-4 inline-block rounded-xl bg-paper px-4 py-2 text-sm font-bold text-ink-soft">
                   {info.label}: {m.skills[grade]}
                 </p>
               )}
@@ -194,7 +195,7 @@ function GameView({ m }: { m: GameMeta }) {
               <ol className="mx-auto mt-5 max-w-md space-y-2 text-left">
                 {m.howTo.map((s, i) => (
                   <li key={i} className="flex items-start gap-2.5 font-bold">
-                    <span className="grid size-6 shrink-0 place-items-center rounded-full text-xs font-black text-white" style={{ background: m.color }}>{i + 1}</span>
+                    <span className="grid size-6 shrink-0 place-items-center rounded-full bg-paper text-xs font-bold text-ink-soft ring-1 ring-line">{i + 1}</span>
                     <span>{s}</span>
                   </li>
                 ))}

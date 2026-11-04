@@ -1,9 +1,9 @@
 import { Suspense, lazy, useEffect } from 'react'
-import { Route, Routes, useParams } from 'react-router-dom'
-import { isGrade } from './data/curriculum'
+import { Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import Home from './pages/Home'
+import GradePage from './pages/Grade'
 import NotFound from './pages/NotFound'
 
 const load = {
@@ -45,12 +45,6 @@ function usePrefetchPages() {
     const id = idle ? window.requestIdleCallback(run, { timeout: 4000 }) : window.setTimeout(run, 2500)
     return () => (idle ? window.cancelIdleCallback(id) : window.clearTimeout(id))
   }, [])
-}
-
-/** /sinif/3 → o sınıfın etkinlikleriyle ana sayfa */
-function GradePage() {
-  const { grade } = useParams()
-  return isGrade(Number(grade)) ? <Home /> : <NotFound />
 }
 
 const Loading = () => (

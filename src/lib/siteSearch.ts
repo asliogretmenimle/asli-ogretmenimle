@@ -15,6 +15,8 @@ export interface SearchHit {
   title: string
   sub: string
   emoji?: string
+  /** Emoji yoksa kartta gösterilen kısa işaret (ör. sınıf numarası) */
+  badge?: string
 }
 
 export interface SearchGroup {
@@ -41,10 +43,14 @@ export function useSiteSearch(q: string, limit = 6): { groups: SearchGroup[]; lo
 
     const gradeHits = grades
       .filter((g) => match(`${g} ${g}. sınıf ${gradeInfo[g].label} ${gradeInfo[g].level}`))
-      .map((g) => ({ key: `g${g}`, to: `/sinif/${g}`, title: `${gradeInfo[g].label} Matematik`, sub: 'Tüm konular ve etkinlikler' }))
+      .map((g) => ({ key: `g${g}`, to: `/sinif/${g}`, title: `${gradeInfo[g].label} Matematik`, sub: 'Tüm konular ve etkinlikler', badge: String(g) }))
     const themeHits = themes
       .filter((t) => match(`${t.title} ${t.topics.join(' ')} ${t.grade}. sınıf`))
-      .map((t) => ({ key: `t${t.grade}-${t.slug}`, to: `/sinif/${t.grade}/${t.slug}`, title: t.title, sub: `${t.grade}. Sınıf · ${t.topics.slice(0, 3).join(', ')}` }))
+      .map((t) => {
+        // Tema adları sınıflar arasında tekrar eder ("Sayılar ve Nicelikler (2)"): başlıkta aranan alt konuyu göster
+        const hit = t.topics.filter((tp) => words.some((w) => searchKey(tp).includes(w)))
+        return { key: `t${t.grade}-${t.slug}`, to: `/sinif/${t.grade}/${t.slug}`, title: hit.length ? hit.join(', ') : t.title, sub: `${t.grade}. Sınıf · ${t.title}`, badge: String(t.grade) }
+      })
     const toolHits = toolMeta
       .filter((t) => match(`${t.name} ${t.description} manipülatif materyal`))
       .map((t) => ({ key: t.id, to: `/manipulatif/${t.id}`, title: t.name, sub: `Manipülatif · ${t.grades}. sınıf`, emoji: t.emoji }))
@@ -56,13 +62,13 @@ export function useSiteSearch(q: string, limit = 6): { groups: SearchGroup[]; lo
       .map((m) => ({ key: m.id, to: `/etkilesim/${m.id}`, title: m.name, sub: `Etkileşim · ${range(m.grades)}. sınıf`, emoji: m.emoji }))
     const guideHits = guides
       .filter((g) => match(`${g.title} ${g.intro} konu anlatımı`))
-      .map((g) => ({ key: g.slug, to: `${GUIDES_PATH}/${g.slug}`, title: g.title, sub: `Konu anlatımı · ${range(g.grades)}. sınıf` }))
+      .map((g) => ({ key: g.slug, to: `${GUIDES_PATH}/${g.slug}`, title: g.title, sub: `Konu anlatımı · ${range(g.grades)}. sınıf`, emoji: '📖' }))
     const actHits = (all ?? [])
       .filter((a) => {
         const ocs = a.outcomes.map((c) => outcomeByCode.get(c))
         return match([a.title, a.instructions, activityTheme(a)?.title, ...ocs.map((o) => `${o?.short ?? ''} ${o?.title ?? ''}`), ...a.outcomes, typeMeta[a.type].label].join(' '))
       })
-      .map((a) => ({ key: a.id, to: `/etkinlik/${a.id}`, title: a.title, sub: `${activityGrade(a)}. Sınıf · ${outcomeByCode.get(a.outcomes[0])?.short ?? ''}` }))
+      .map((a) => ({ key: a.id, to: `/etkinlik/${a.id}`, title: a.title, sub: `${activityGrade(a)}. Sınıf · ${outcomeByCode.get(a.outcomes[0])?.short ?? ''}`, badge: String(activityGrade(a)) }))
 
     const groups = [
       group('Sınıflar', gradeHits),

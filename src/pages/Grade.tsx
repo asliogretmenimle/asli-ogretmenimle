@@ -74,7 +74,7 @@ function GradeView({ grade }: { grade: Grade }) {
       <nav className="-mx-4 mb-6 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none]" aria-label="Sınıflar">
         {grades.map((x) => (
           <Link key={x} to={`/sinif/${x}`} replace aria-current={x === grade ? 'page' : undefined} className={`pill min-w-11 justify-center ${x === grade ? 'bg-ink text-white ring-ink hover:text-white' : ''}`}>
-            {x}<span className="hidden sm:inline">. sınıf</span>
+            <span>{x}<span className="hidden sm:inline">. sınıf</span></span>
           </Link>
         ))}
       </nav>

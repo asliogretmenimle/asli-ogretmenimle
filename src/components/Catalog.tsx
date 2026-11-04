@@ -56,6 +56,7 @@ export function FilterBar({
   categories,
   category,
   onCategory,
+  allLabel = 'Tüm konular',
 }: {
   q: string
   onQ: (v: string) => void
@@ -65,6 +66,7 @@ export function FilterBar({
   categories?: { id: string; label: string }[]
   category?: string | null
   onCategory?: (c: string | null) => void
+  allLabel?: string
 }) {
   return (
     <div className="mb-6 space-y-3">
@@ -89,14 +91,14 @@ export function FilterBar({
           <button type="button" className="pill" aria-pressed={!grade} onClick={() => onGrade(null)}>Tüm sınıflar</button>
           {grades.map((g) => (
             <button key={g} type="button" className="pill min-w-11 justify-center" aria-pressed={grade === g} onClick={() => onGrade(grade === g ? null : g)} aria-label={`${g}. sınıf`}>
-              {g}<span className="hidden sm:inline">. sınıf</span>
+              <span>{g}<span className="hidden sm:inline">. sınıf</span></span>
             </button>
           ))}
         </div>
       </div>
       {categories && onCategory && (
         <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:flex-wrap md:px-0" role="group" aria-label="Konu">
-          <button type="button" className="pill" aria-pressed={!category} onClick={() => onCategory(null)}>Tüm konular</button>
+          <button type="button" className="pill" aria-pressed={!category} onClick={() => onCategory(null)}>{allLabel}</button>
           {categories.map((c) => (
             <button key={c.id} type="button" className="pill" aria-pressed={category === c.id} onClick={() => onCategory(category === c.id ? null : c.id)}>{c.label}</button>
           ))}
@@ -110,7 +112,7 @@ export function FilterBar({
 export function ItemCard({ to, emoji, title, desc, meta, soon }: { to: string; emoji: string; title: string; desc: string; meta: string; soon?: boolean }) {
   const body = (
     <>
-      <span className="grid aspect-[2/1] place-items-center bg-[#f2f4f8]" aria-hidden>
+      <span className="grid aspect-[5/2] place-items-center bg-[#f2f4f8]" aria-hidden>
         <span className="text-5xl transition duration-300 group-hover:scale-110">{emoji}</span>
       </span>
       <span className="flex flex-1 flex-col p-4">

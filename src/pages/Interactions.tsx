@@ -120,7 +120,7 @@ function InteractionView({ m }: { m: InteractionMeta }) {
             <ChevronLeft size={22} />
           </Link>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[11px] font-extrabold sm:text-xs" style={{ color: categoryInfo[m.category].color }}>Etkileşimler · {categoryInfo[m.category].label}</p>
+            <p className="truncate text-[11px] font-bold text-ink-soft sm:text-xs">Etkileşimler · {categoryInfo[m.category].label}</p>
             <h1 className="truncate text-base leading-tight font-black sm:text-lg"><span aria-hidden>{m.emoji}</span> {m.name}</h1>
           </div>
           <ShareButton title={m.name} className="max-sm:[&>span]:hidden" />
@@ -146,14 +146,14 @@ function InteractionView({ m }: { m: InteractionMeta }) {
                   <p className="mb-2 text-xs font-extrabold tracking-wide text-ink-soft uppercase">Sınıfını seç</p>
                   <div className="flex flex-wrap justify-center gap-1.5">
                     {m.grades.map((g) => (
-                      <button key={g} type="button" onClick={() => setGrade(g)} aria-pressed={g === grade} className="grid size-12 place-items-center rounded-xl border-2 text-lg font-black transition" style={{ background: g === grade ? gradeInfo[g].color : '#fff', color: g === grade ? '#fff' : gradeInfo[g].ink, borderColor: g === grade ? gradeInfo[g].color : `${gradeInfo[g].color}55` }}>
+                      <button key={g} type="button" onClick={() => setGrade(g)} aria-pressed={g === grade} className="pill size-12 justify-center px-0 text-base" aria-label={`${g}. sınıf`}>
                         {g}
                       </button>
                     ))}
                   </div>
                 </div>
               )}
-              {m.skills?.[grade] && <p className="mt-4 inline-block rounded-2xl px-4 py-2 text-sm font-extrabold" style={{ background: info.soft, color: info.ink }}>{info.label}: {m.skills[grade]}</p>}
+              {m.skills?.[grade] && <p className="mt-4 inline-block rounded-xl bg-paper px-4 py-2 text-sm font-bold text-ink-soft">{info.label}: {m.skills[grade]}</p>}
               <div>
                 <button type="button" onClick={start} className="btn-primary mt-6 min-w-56 text-lg" autoFocus><Play size={20} fill="currentColor" />Keşfetmeye başla</button>
               </div>

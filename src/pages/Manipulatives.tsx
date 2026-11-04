@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ChevronLeft, RotateCcw } from 'lucide-react'
+import { ArrowRight, ChevronLeft, LayoutDashboard, RotateCcw } from 'lucide-react'
 import { tools } from '../manipulatives/registry'
 import { toolGrades, toolMeta as toolList, toolMetaById } from '../manipulatives/meta'
 import { categoryInfo } from '../interactions/types'
@@ -8,6 +8,7 @@ import { activityGrade, useAllActivities } from '../data/activityStore'
 import { ActivityCard } from '../components/Cards'
 import { ShareButton } from '../components/ShareButton'
 import { usePageTitle } from '../components/Layout'
+import { BOARD_PATH } from '../lib/seo'
 import type { ManipulativeTool } from '../data/types'
 import { CardGrid, EmptyState, FilterBar, ItemCard, PageHeader, useCatalogFilters } from '../components/Catalog'
 import NotFound from './NotFound'
@@ -23,6 +24,14 @@ export function ManipulativesIndex() {
   return (
     <div className="mx-auto max-w-6xl px-4 pt-8 sm:pt-10">
       <PageHeader title="Sanal Manipülatifler" desc={`${toolList.length} dijital materyal. Akıllı tahtada ya da tablette serbestçe kullanılır; kurulum ve üyelik gerekmez.`} />
+      <Link to={BOARD_PATH} className="group mb-6 flex items-center gap-4 rounded-2xl bg-white p-4 ring-1 ring-line transition hover:shadow-[var(--shadow-lift)]">
+        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#fff5e8] text-[#b8660b]"><LayoutDashboard size={22} /></span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-bold text-ink">Matematik Tuvali</span>
+          <span className="block text-sm font-semibold text-ink-soft">Bütün materyaller tek ekranda: blokları, şeritleri ve şekilleri yan yana kullanın.</span>
+        </span>
+        <ArrowRight size={18} className="shrink-0 text-ink-soft transition group-hover:translate-x-0.5" />
+      </Link>
       <FilterBar
         q={f.q}
         onQ={f.setQ}
