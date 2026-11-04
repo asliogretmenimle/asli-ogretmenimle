@@ -3,7 +3,7 @@ import type { ActionSpec, Tile } from './types'
 import { Icon } from './icons'
 import { Popup } from './Popup'
 import { ALL_ACTIONS, actionOrder, applyAction } from './actions'
-import { api, commit, getState, selectionBox, setState, useStore, viewport } from './store'
+import { api, batch, commit, getState, selectionBox, setState, useStore, viewport } from './store'
 
 type Slot = 'bar' | 'more' | 'music' | 'author'
 
@@ -48,8 +48,7 @@ function ActionButton({ a, tiles, inMenu }: { a: ActionSpec; tiles: Tile[]; inMe
         // Güncel parçalarla çalış (seçim sonrası değişmiş olabilir)
         const ids = new Set(tiles.map((t) => t.id))
         const cur = getState().tiles.filter((t) => ids.has(t.id))
-        a.click?.(cur, api)
-        commit()
+        batch(() => a.click?.(cur, api))
       }}
     >
       {a.icon && (!a.text || inMenu) && <Icon name={a.icon} size={inMenu ? 20 : 24} />}

@@ -220,7 +220,21 @@ function scheduleSave() {
 // Geçmiş (geri al / yinele)
 // ---------------------------------------------------------------------------
 
+let batchDepth = 0
+
+/** fn içindeki tüm değişiklikler geri alma geçmişinde tek adım olur */
+export function batch(fn: () => void) {
+  batchDepth++
+  try {
+    fn()
+  } finally {
+    batchDepth--
+    if (!batchDepth) commit()
+  }
+}
+
 export function commit() {
+  if (batchDepth) return
   const s = state
   if (s.tiles === s.committed) return
   setState({ past: [...s.past.slice(-HISTORY_MAX + 1), s.committed], future: [], committed: s.tiles })

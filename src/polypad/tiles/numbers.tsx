@@ -48,6 +48,9 @@ const centerOf = (ts: Tile[]) => {
 
 const allTiles = () => getState().tiles
 
+/** Üst üste bırakınca birleştirme açık mı (Ayarlar › Parça birleştirme) */
+const merging = () => getState().settings.merge
+
 // Polypad renkleri (S.yellow Polypad'de turuncudur)
 const P = {
   yellow: '#fd8c00',
@@ -81,7 +84,7 @@ const barDefault = (v: number) => BAR[(((Math.round(v) - 1) % 10) + 10) % 10]
 const LABEL_H = 20 * K
 
 function tileGeom(t: Tile) {
-  const v = Math.max(1, Math.round(t.p.value ?? 1))
+  const v = Math.max(1, Math.round(Math.abs(t.p.value ?? 1)))
   const w = Math.max(1, Math.min(v, Math.round(t.p.width ?? 1)))
   const rows = Math.ceil(v / w)
   const W = w * UNIT
@@ -89,7 +92,7 @@ function tileGeom(t: Tile) {
   return { v, w, rows, W, H, full: Math.floor(v / w), rem: v % w }
 }
 
-const tileLabelShown = (t: Tile) => (t.p.value ?? 1) >= 5 && t.p.labels !== 'hidden'
+const tileLabelShown = (t: Tile) => Math.abs(t.p.value ?? 1) >= 5 && t.p.labels !== 'hidden'
 
 function tileOutline(t: Tile): Pt[] {
   const { w, full, rem, W, H } = tileGeom(t)
@@ -104,9 +107,30 @@ const tileCell = (t: Tile, i: number) => {
   return { x: -W / 2 + ((i % w) + 0.5) * UNIT, y: -H / 2 + (Math.floor(i / w) + 0.5) * UNIT }
 }
 
+/** Karonun işaretli değeri */
+const tileVal = (t: Tile) => Math.round(t.p.value ?? 1)
+
+/** Karo rengi: negatifler kırmızı (Polypad Fp), pozitifler önceki rengini ya da basamak rengini alır */
+function tileColorFor(v: number, prev?: string) {
+  if (v < 0) return P.red
+  if (prev && prev !== P.red) return prev
+  const a = Math.abs(v)
+  return a >= 100 ? HI[100] : a >= 10 ? HI[10] : HI[1]
+}
+
+/** Değeri değişen karo: sol üst köşesi yerinde kalır; tek sıra karolar 10'a kadar yatay uzar */
+function retileValue(t: Tile, v: number): Partial<Tile> {
+  const g = tileGeom(t)
+  const a = Math.abs(v)
+  const w = Math.max(1, Math.min(a, g.w === 1 ? 10 : g.w))
+  const corner = toWorld(t, { x: -g.W / 2, y: -g.H / 2 })
+  const c = rotate({ x: (w * UNIT) / 2, y: (Math.ceil(a / w) * UNIT) / 2 }, t.rot)
+  return { x: corner.x + c.x, y: corner.y + c.y, color: tileColorFor(v, t.color), p: { ...t.p, value: v, width: w } }
+}
+
 const numberTile: TileDef = {
   type: 'number-tile',
-  name: (t) => (t.p.value > 1 ? `${t.p.value} sayı karosu` : '1 sayı karosu'),
+  name: (t) => `${tileVal(t)} sayı karosu`,
   create: (p) => ({ color: HI[p.value ?? 1] ?? HI[1], p: { width: p.width ?? 1, value: p.value ?? 1 } }),
   bounds: (t) => {
     const { W, H } = tileGeom(t)
@@ -115,12 +139,13 @@ const numberTile: TileDef = {
   outline: tileOutline,
   render: (t) => {
     const { v, w, rows, W, H, full, rem } = tileGeom(t)
-    const color = t.color ?? HI[1]
+    const neg = (t.p.value ?? 1) < 0
+    const color = t.color ?? (neg ? P.red : HI[1])
     let grid = ''
     for (let i = 1; i < w; i++) grid += `M${round(-W / 2 + i * UNIT)} ${-H / 2}v${(rem && i > rem ? full : rows) * UNIT}`
     for (let j = 1; j < rows; j++) grid += `M${-W / 2} ${round(-H / 2 + j * UNIT)}h${W}`
     const s = Math.floor(v / w)
-    const label = `${w} × ${s}`
+    const label = `${neg ? '−' : ''}${w} × ${s}`
     const lw = (label.length + (rem ? String(rem).length + 3 : 0)) * 8 * K + 12
     return (
       <>
@@ -140,7 +165,7 @@ const numberTile: TileDef = {
   },
   // Genişlik tutamağı: sol üst köşe sabit kalır
   handles: (t) => {
-    if ((t.p.value ?? 1) <= 1) return []
+    if (Math.abs(t.p.value ?? 1) <= 1) return []
     const { W, H } = tileGeom(t)
     return [{ id: 'w', x: W / 2, y: -H / 2 }]
   },
@@ -156,6 +181,28 @@ const numberTile: TileDef = {
   },
   colorable: true,
   gridSnap: true,
+  // Üst üste bırakılan karolar toplanır; zıt işaretliler birbirini götürür
+  dropHint: (t, dropped) => {
+    const ds = dropped.filter((d) => d.type === 'number-tile')
+    if (!ds.length || !merging()) return null
+    const total = tileVal(t) + sum(ds.map(tileVal))
+    if (total === 0) return '0'
+    return ds.some((d) => Math.sign(tileVal(d)) !== Math.sign(tileVal(t))) ? '−' : '+'
+  },
+  onDrop: (t, dropped, api) => {
+    const ds = dropped.filter((d) => d.type === 'number-tile')
+    if (!ds.length || !merging()) return
+    const total = tileVal(t) + sum(ds.map(tileVal))
+    api.remove(ds.map((d) => d.id))
+    if (total === 0) {
+      api.remove([t.id])
+      api.sound('pop')
+      return
+    }
+    api.update(t.id, retileValue(t, total), true)
+    api.select([t.id])
+    api.sound('snap')
+  },
 }
 
 function splitNumberTile(t: Tile): Omit<Tile, 'id'>[] {
@@ -165,13 +212,13 @@ function splitNumberTile(t: Tile): Omit<Tile, 'id'>[] {
   if (rows === 1) {
     for (let i = 0; i < v; i++) {
       const c = toWorld(t, tileCell(t, i))
-      out.push({ type: 'number-tile', x: c.x, y: c.y, rot: t.rot, color: t.color, p: { ...t.p, value: 1, width: 1 } })
+      out.push({ type: 'number-tile', x: c.x, y: c.y, rot: t.rot, color: t.color, p: { ...t.p, value: Math.sign(tileVal(t)) || 1, width: 1 } })
     }
   } else {
     for (let r = 0; r < rows; r++) {
       const a = r < rows - 1 ? w : rem || w
       const c = toWorld(t, { x: -W / 2 + (a * UNIT) / 2, y: -H / 2 + (r + 0.5) * UNIT })
-      out.push({ type: 'number-tile', x: c.x, y: c.y, rot: t.rot, color: t.color, p: { ...t.p, value: a, width: a } })
+      out.push({ type: 'number-tile', x: c.x, y: c.y, rot: t.rot, color: t.color, p: { ...t.p, value: (Math.sign(tileVal(t)) || 1) * a, width: a } })
     }
   }
   return out
@@ -269,6 +316,21 @@ const numberCube: TileDef = {
   },
   rotatable: false,
   colorable: true,
+  // Üst üste bırakılan küpler toplanır: en büyük basamaklara yeniden gruplanır
+  dropHint: (_t, dropped) => (merging() && dropped.some((d) => d.type === 'number-cube') ? '+' : null),
+  onDrop: (t, dropped, api) => {
+    const cs = dropped.filter((d) => d.type === 'number-cube')
+    if (!cs.length || !merging()) return
+    const all = [t, ...cs]
+    const dims = regroupCubes(all) ?? all.map(cubeDims)
+    const pos = organizeCubes(dims, { x: t.x, y: t.y })
+    replace(
+      api,
+      all,
+      dims.map((d, i) => ({ type: 'number-cube', x: pos[i].x, y: pos[i].y, rot: 0, color: cubeColor(d[0] * d[1] * d[2]), p: { vx: d[0], vy: d[1], vz: d[2] } })),
+      'snap',
+    )
+  },
 }
 
 /** Bölme yönü (Polypad): vx>1 ve vy=1 → vx; vy=1 → vz; yoksa vy */
@@ -427,6 +489,7 @@ const snapCube: TileDef = {
     cs[i] = SNAP_COLORS[(SNAP_COLORS.indexOf(cs[i]) + 1) % SNAP_COLORS.length]
     api.update(t.id, { color: undefined, p: { ...t.p, colors: cs.join(','), value: cs.length } }, true)
   },
+  dropHint: (_t, dropped) => (merging() && dropped.some((d) => d.type === 'snap-cube') ? '+' : null),
   // Üzerine bırakılan küpler, bırakıldığı yana eklenir
   onDrop: (t, dropped, api) => {
     const cubes = dropped.filter((d) => d.type === 'snap-cube')
@@ -447,6 +510,7 @@ const snapCube: TileDef = {
     const c = toWorld(t, { x: W / 2 - W0 / 2 - before * SI, y: 0 })
     api.remove(cubes.map((d) => d.id))
     api.update(t.id, { x: c.x, y: c.y, color: undefined, p: { ...t.p, colors: cs.join(','), value: cs.length } }, true)
+    api.select([t.id])
     api.sound('snap')
   },
 }
@@ -505,6 +569,24 @@ const numberBar: TileDef = {
   },
   colorable: true,
   gridSnap: true,
+  // Üst üste bırakılan çubuklar uç uca eklenir (toplam uzunlukta tek çubuk)
+  dropHint: (t, dropped) => {
+    const bs = dropped.filter((d) => d.type === 'number-bar')
+    if (!bs.length || !merging()) return null
+    return t.p.value + sum(bs.map((b) => b.p.value)) <= 100 ? '+' : null
+  },
+  onDrop: (t, dropped, api) => {
+    const bs = dropped.filter((d) => d.type === 'number-bar')
+    if (!bs.length || !merging()) return
+    const total = t.p.value + sum(bs.map((b) => b.p.value))
+    if (total > 100) return
+    const adjustable = total > 10 || [t, ...bs].some((b) => b.p.adjustable)
+    const c = keepLeft(t, t.p.value * UNIT, total * UNIT)
+    api.remove(bs.map((b) => b.id))
+    api.update(t.id, { x: c.x, y: c.y, color: adjustable ? P.teal : barDefault(total), p: { ...t.p, value: total, denominator: 0, adjustable } }, true)
+    api.select([t.id])
+    api.sound('snap')
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -639,6 +721,7 @@ const tenFrame: TileDef = {
   gridSnap: true,
   rotatable: false,
   watch: true,
+  dropHint: (_t, dropped) => (dropped.some((d) => d.type === 'ten-frame-counter') ? '⟶' : null),
   onDrop: snapCounters,
 }
 
@@ -655,7 +738,18 @@ const counter: TileDef = {
   edgeSnap: false,
   colorable: true,
   onDoubleTap: (t, api) => api.update(t.id, flipCounter(t), true),
+  // Zıt işaretli pul üstüne bırakılınca ikisi birbirini götürür (sıfır çifti)
+  dropHint: (t, dropped) => (opposite(t, dropped) ? '0' : null),
+  onDrop: (t, dropped, api) => {
+    const o = opposite(t, dropped)
+    if (!o) return
+    api.remove([t.id, o.id])
+    api.sound('pop')
+  },
 }
+
+/** Bırakılanlar arasında hedefle aynı türde ve zıt işaretli ilk parça */
+const opposite = (t: Tile, dropped: Tile[]) => dropped.find((d) => d.type === t.type && (d.p.value === -1) !== (t.p.value === -1))
 
 const flipCounter = (t: Tile): Partial<Tile> => ({ color: undefined, p: { ...t.p, value: t.p.value === -1 ? 1 : -1 } })
 
@@ -804,6 +898,16 @@ function qProps(q: Q, frac: boolean) {
   return r.d === 1 ? { value: r.n, valueStr: undefined, labels: undefined } : { value: qVal(r), valueStr: frac ? `${r.n}/${r.d}` : String(round(qVal(r), 6)), labels: frac ? 'fraction' : 'decimal' }
 }
 
+/** İşlem sonucu kartın özellikleri: kesirliyse hedefin gösterim biçimi korunur */
+function cardResult(q: Q, src: Tile[], base: Record<string, unknown> = {}) {
+  const frac = src.some(isFractional)
+  const r = qProps(q, frac)
+  const keep = r.labels && base.labels && frac ? { labels: base.labels } : {}
+  return { ...base, ...r, ...keep }
+}
+
+const qNeg = (q: Q): Q => ({ n: -q.n, d: q.d })
+
 async function editCard(t: Tile, api: PadApi) {
   const cur = cardParts(t)
   const s = await api.prompt('Kartın değeri (ör. 12, 3/4, 0,5 ya da x)', cur.text ?? `${cur.whole ? `${cur.whole} ` : ''}${cur.num}/${cur.den}`)
@@ -867,14 +971,28 @@ const numberCard: TileDef = {
   },
   colorable: true,
   onTap: (t, api) => void editCard(t, api),
-  // Bir kartı diğerinin üstüne bırakmak onları toplar (Polypad birleştirme)
+  // Bir kartı diğerinin üstüne bırakmak onları toplar; negatif kart bırakmak çıkarır (Polypad birleştirme)
+  dropHint: (t, dropped) => {
+    const cards = dropped.filter((d) => d.type === 'number-card' && cardQ(d))
+    const q0 = cardQ(t)
+    if (!cards.length || !q0 || !merging()) return null
+    const added = cards.reduce((acc, d) => qAdd(acc, cardQ(d)!), { n: 0, d: 1 } as Q)
+    if (qNorm(qAdd(q0, added)).n === 0) return '0'
+    return qVal(added) < 0 ? '−' : '+'
+  },
   onDrop: (t, dropped, api) => {
     const cards = dropped.filter((d) => d.type === 'number-card' && cardQ(d))
     const q0 = cardQ(t)
-    if (!cards.length || !q0 || !getState().settings.merge) return
-    const q = cards.reduce((acc, d) => qAdd(acc, cardQ(d)!), q0)
+    if (!cards.length || !q0 || !merging()) return
+    const q = qNorm(cards.reduce((acc, d) => qAdd(acc, cardQ(d)!), q0))
     api.remove(cards.map((d) => d.id))
-    api.update(t.id, { color: undefined, p: { ...t.p, ...qProps(q, [t, ...cards].some(isFractional)) } }, true)
+    if (q.n === 0) {
+      api.remove([t.id])
+      api.sound('pop')
+      return
+    }
+    api.update(t.id, { color: undefined, p: cardResult(q, [t, ...cards], t.p) }, true)
+    api.select([t.id])
     api.sound('click')
   },
 }
@@ -1133,6 +1251,11 @@ const primeDisk: TileDef = {
     )
   },
   rotatable: false,
+  dropHint: (t, dropped) => {
+    const disks = dropped.filter((d) => d.type === 'prime-disk')
+    if (!disks.length) return null
+    return Math.abs(disks.reduce((a, d) => a * d.p.value, t.p.value)) <= 9999999 ? '×' : null
+  },
   // Bir daireyi diğerinin üstüne bırakmak çarpar
   onDrop: (t, dropped, api) => {
     const disks = dropped.filter((d) => d.type === 'prime-disk')
@@ -1141,6 +1264,7 @@ const primeDisk: TileDef = {
     if (Math.abs(v) > 9999999) return api.sound('error')
     api.remove(disks.map((d) => d.id))
     api.updateP(t.id, { value: v }, true)
+    api.select([t.id])
     api.sound('snap')
   },
 }
@@ -1241,7 +1365,25 @@ const numberDot: TileDef = {
     return rectBox(R * 2, R * 2)
   },
   render: (t) => <>{dotArt(dotFactors(t))}</>,
+  // Üst üste bırakılan dizilimler toplanır; toplam yeniden asal çarpanlarına göre dizilir
+  dropHint: (t, dropped) => {
+    const ds = dropped.filter((d) => d.type === 'number-dot')
+    if (!ds.length || !merging()) return null
+    return dotValue(t) + sum(ds.map(dotValue)) <= 144 ? '+' : null
+  },
+  onDrop: (t, dropped, api) => {
+    const ds = dropped.filter((d) => d.type === 'number-dot')
+    if (!ds.length || !merging()) return
+    const total = dotValue(t) + sum(ds.map(dotValue))
+    if (total > 144) return
+    api.remove(ds.map((d) => d.id))
+    api.updateP(t.id, { factors: (total === 1 ? [1] : primeFactors(total)).join('-'), value: undefined }, true)
+    api.select([t.id])
+    api.sound('snap')
+  },
 }
+
+const dotValue = (t: Tile) => dotFactors(t).reduce((a, b) => a * b, 1)
 
 const setDots = (fs: number[]) => ({ p: { factors: fs.join('-'), value: undefined } })
 
@@ -1418,6 +1560,32 @@ const handTile: TileDef = {
   },
   colorable: true,
   flippable: true,
+  // Üst üste bırakılan eller toplanır: bir elde en çok 5 parmak, artanı yanındaki ele geçer
+  dropHint: (_t, dropped) => (merging() && dropped.some((d) => d.type === 'hand-tile') ? '+' : null),
+  onDrop: (t, dropped, api) => {
+    const hs = dropped.filter((d) => d.type === 'hand-tile')
+    if (!hs.length || !merging()) return
+    let total = (t.p.value ?? 0) + sum(hs.map((h) => h.p.value ?? 0))
+    const first = Math.min(5, total)
+    total -= first
+    api.updateP(t.id, { value: first })
+    const keep: string[] = [t.id]
+    const extra = toWorld(t, { x: t.flip ? -HAND_W : HAND_W, y: 0 })
+    hs.forEach((h, i) => {
+      if (total <= 0) {
+        api.remove([h.id])
+        return
+      }
+      const v = Math.min(5, total)
+      total -= v
+      // Artan parmaklar, hedefin yanına dizilen ellere geçer
+      api.update(h.id, { x: extra.x + (t.flip ? -1 : 1) * i * HAND_W, y: extra.y, rot: t.rot, flip: !t.flip, p: { ...h.p, value: v } })
+      keep.push(h.id)
+    })
+    api.commit()
+    api.select(keep)
+    api.sound('snap')
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -1507,6 +1675,14 @@ const dot: TileDef = {
   rotatable: false,
   edgeSnap: false,
   colorable: true,
+  // Nokta ile karşı nokta birbirini götürür
+  dropHint: (t, dropped) => (opposite(t, dropped) ? '0' : null),
+  onDrop: (t, dropped, api) => {
+    const o = opposite(t, dropped)
+    if (!o) return
+    api.remove([t.id, o.id])
+    api.sound('pop')
+  },
 }
 
 const BOX = 130 * K * 0.8
@@ -1590,6 +1766,11 @@ const dotMachine: TileDef = {
   watch: true,
   rotatable: false,
   colorable: true,
+  // Noktalar bırakıldıkları kutuda sayılır
+  dropHint: (_t, dropped) => (dropped.some((d) => d.type === 'dot') ? '⟶' : null),
+  onDrop: (_t, dropped, api) => {
+    if (dropped.some((d) => d.type === 'dot')) api.sound('snap')
+  },
 }
 
 /** Patlat: her kutuda tabana ulaşan noktalar birleşip soldaki kutuya geçer */
@@ -1681,6 +1862,11 @@ const bucket: TileDef = {
   watch: true,
   rotatable: false,
   colorable: true,
+  // +1/−1 karoları kovanın içinde sayılır
+  dropHint: (_t, dropped) => (dropped.some(unitAlgebra) ? '⟶' : null),
+  onDrop: (_t, dropped, api) => {
+    if (dropped.some(unitAlgebra)) api.sound('snap')
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -1725,6 +1911,34 @@ const bySize = (ts: Tile[], v: (t: Tile) => number) => ts.reduce((a, b) => (v(b)
 
 export const numbersActions: ActionSpec[] = [
   // --- Sayı kartları ---------------------------------------------------------
+  {
+    id: 'card-add',
+    type: 'button',
+    tileTypes: ['number-card'],
+    label: 'Topla',
+    icon: 'add',
+    show: (ts) => ts.length > 1 && ts.every((t) => cardQ(t)),
+    click: (ts, api) => {
+      const q = qNorm(ts.reduce((acc, t) => qAdd(acc, cardQ(t)!), { n: 0, d: 1 } as Q))
+      const c = centerOf(ts)
+      replace(api, ts, [{ type: 'number-card', x: c.x, y: c.y, rot: 0, p: cardResult(q, ts) }], 'click')
+    },
+  },
+  {
+    id: 'card-subtract',
+    type: 'button',
+    tileTypes: ['number-card'],
+    label: 'Çıkar',
+    icon: 'minus',
+    show: (ts) => ts.length > 1 && ts.every((t) => cardQ(t)),
+    click: (ts, api) => {
+      // En soldaki (eşitse en üstteki) karttan diğerleri çıkarılır
+      const order = [...ts].sort((a, b) => (Math.abs(a.x - b.x) > 1 ? a.x - b.x : a.y - b.y))
+      const q = qNorm(order.slice(1).reduce((acc, t) => qAdd(acc, qNeg(cardQ(t)!)), cardQ(order[0])!))
+      const c = centerOf(ts)
+      replace(api, ts, [{ type: 'number-card', x: c.x, y: c.y, rot: 0, p: cardResult(q, ts) }], 'click')
+    },
+  },
   {
     id: 'card-merge',
     type: 'button',
@@ -1785,13 +1999,14 @@ export const numbersActions: ActionSpec[] = [
   {
     id: 'negate',
     type: 'button',
-    tileTypes: ['dot', 'number-card'],
+    tileTypes: ['dot', 'number-card', 'number-tile'],
     label: 'Ters işaret',
     icon: 'turn',
     text: true,
     click: (ts, api) => {
       for (const t of ts) {
         if (t.type === 'dot') api.update(t.id, { color: undefined, p: { ...t.p, value: t.p.value === -1 ? 1 : -1 } })
+        else if (t.type === 'number-tile') api.update(t.id, { color: tileColorFor(-tileVal(t), t.color), p: { ...t.p, value: -tileVal(t) } })
         else {
           const q = cardQ(t)
           if (q) api.update(t.id, { color: t.color && t.color !== valueColor(cardNum(t)) ? t.color : undefined, p: { ...t.p, ...qProps({ n: -q.n, d: q.d }, isFractional(t)), labels: t.p.labels } })
@@ -1811,12 +2026,15 @@ export const numbersActions: ActionSpec[] = [
     text: true,
     show: (ts) => ts.length > 1,
     click: (ts, api) => {
-      const total = sum(ts.map((t) => Math.round(t.p.value ?? 1)))
+      // İşaretli toplam: zıt karolar birbirini götürür
+      const total = sum(ts.map(tileVal))
+      if (total === 0) return replace(api, ts, [])
       const b = worldBounds(ts, tileOutline)
-      const width = Math.max(1, Math.min(total, Math.round(b.w / UNIT)))
-      const src = bySize(ts, (t) => t.p.value ?? 1)
-      const H = Math.ceil(total / width) * UNIT
-      replace(api, ts, [{ type: 'number-tile', x: b.x + (width * UNIT) / 2, y: b.y + H / 2, rot: 0, color: src.color, p: { ...src.p, value: total, width } }], 'click')
+      const width = Math.max(1, Math.min(Math.abs(total), Math.round(b.w / UNIT)))
+      const same = ts.filter((t) => Math.sign(tileVal(t)) === Math.sign(total))
+      const src = bySize(same.length ? same : ts, (t) => Math.abs(tileVal(t)))
+      const H = Math.ceil(Math.abs(total) / width) * UNIT
+      replace(api, ts, [{ type: 'number-tile', x: b.x + (width * UNIT) / 2, y: b.y + H / 2, rot: 0, color: tileColorFor(total, src.color), p: { ...src.p, value: total, width } }], 'click')
     },
   },
   {
@@ -1826,7 +2044,7 @@ export const numbersActions: ActionSpec[] = [
     label: 'Böl',
     icon: 'split',
     text: true,
-    show: (ts) => ts.some((t) => (t.p.value ?? 1) > 1),
+    show: (ts) => ts.some((t) => Math.abs(t.p.value ?? 1) > 1),
     click: (ts, api) => replace(api, ts, ts.flatMap(splitNumberTile)),
   },
 

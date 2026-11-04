@@ -7,6 +7,7 @@ import { eraseStroke, strokePath } from './tiles/basic'
 import { cutAlong } from './actions'
 import {
   api,
+  batch,
   commit,
   getState,
   makeTile,
@@ -124,6 +125,8 @@ export function Canvas() {
   const pending = useRef<(() => void) | null>(null)
   const [marquee, setMarquee] = useState<Box | null>(null)
   const [draft, setDraft] = useState<{ tool: Tool; a: Pt; b: Pt } | null>(null)
+  const [dropHover, setDropHover] = useState<{ id: string; hint: string | null } | null>(null)
+  const hoverKey = useRef('')
   const [, force] = useState(0)
 
   const selSet = useMemo(() => new Set(sel), [sel])
@@ -516,12 +519,19 @@ export function Canvas() {
           dx += snap.x
           dy += snap.y
         }
-        schedule(() =>
+        schedule(() => {
           updateTiles(g.ids, (t) => {
             const o = g.orig.get(t.id)
             return o ? { x: o.x + dx, y: o.y + dy } : null
-          }),
-        )
+          })
+          // Bırakılabilecek hedefi vurgula (ör. kartın üstüne kart: +)
+          const hit = findDropTarget(g.ids)
+          const key = hit ? `${hit.target.id}|${hit.hint}` : ''
+          if (key !== hoverKey.current) {
+            hoverKey.current = key
+            setDropHover(hit ? { id: hit.target.id, hint: hit.hint } : null)
+          }
+        })
         return
       }
     }
@@ -590,6 +600,10 @@ export function Canvas() {
     gesture.current = null
     flush()
     if (getState().dragging) setState({ dragging: false })
+    if (hoverKey.current) {
+      hoverKey.current = ''
+      setDropHover(null)
+    }
     const cancelled = e.type === 'pointercancel'
     const s = local(e)
     const w = toW(s)
@@ -684,22 +698,9 @@ export function Canvas() {
   }
 
   function dropOnto(ids: string[]) {
-    const st = getState()
-    const set = new Set(ids)
-    const dropped = st.tiles.filter((t) => set.has(t.id))
-    if (!dropped.length) return
-    for (let i = st.tiles.length - 1; i >= 0; i--) {
-      const target = st.tiles[i]
-      if (set.has(target.id)) continue
-      const def = getDef(target.type)
-      if (!def?.onDrop) continue
-      const b = worldBox(target)
-      const inside = dropped.filter((d) => d.x >= b.x && d.x <= b.x + b.w && d.y >= b.y && d.y <= b.y + b.h)
-      if (inside.length) {
-        def.onDrop(target, inside, api)
-        return
-      }
-    }
+    const hit = findDropTarget(ids)
+    if (!hit) return
+    batch(() => getDef(hit.target.type)!.onDrop!(hit.target, hit.inside, api))
   }
 
   function createShape(tl: Tool, a: Pt, b: Pt, dragged: boolean) {
@@ -804,6 +805,7 @@ export function Canvas() {
           )}
         </g>
         <Overlay tiles={tiles} sel={sel} view={view} tool={tool} editing={editing} rotateOn={settings.rotate} />
+        {dropHover && <DropHighlight tiles={tiles} hover={dropHover} view={view} />}
         {marquee && (
           <rect
             x={marquee.x * view.z + view.x}
@@ -816,6 +818,27 @@ export function Canvas() {
       </svg>
     </div>
   )
+}
+
+/** Taşınan parçaların bırakılacağı hedef (en üstteki, onDrop'u olan ve bırakmayı kabul eden parça) */
+function findDropTarget(ids: string[]): { target: Tile; inside: Tile[]; hint: string | null } | null {
+  const st = getState()
+  const set = new Set(ids)
+  const dropped = st.tiles.filter((t) => set.has(t.id))
+  if (!dropped.length) return null
+  for (let i = st.tiles.length - 1; i >= 0; i--) {
+    const target = st.tiles[i]
+    if (set.has(target.id)) continue
+    const def = getDef(target.type)
+    if (!def?.onDrop) continue
+    const b = worldBox(target)
+    const inside = dropped.filter((d) => d.x >= b.x && d.x <= b.x + b.w && d.y >= b.y && d.y <= b.y + b.h)
+    if (!inside.length) continue
+    if (!def.dropHint) return { target, inside, hint: null }
+    const hint = def.dropHint(target, inside)
+    if (hint !== null) return { target, inside, hint }
+  }
+  return null
 }
 
 const pointLabel = (n: number) => String.fromCharCode(65 + (n % 26)) + (n >= 26 ? String(Math.floor(n / 26)) : '')
@@ -849,6 +872,31 @@ function PageRect({ view, bg, w, h }: { view: { x: number; y: number; z: number 
   const pw = w * 32
   const ph = h * 32
   return <rect x={view.x - (pw / 2) * view.z} y={view.y - (ph / 2) * view.z} width={pw * view.z} height={ph * view.z} fill={bg} className="pp-page" />
+}
+
+/** Bırakma hedefinin parlayan çerçevesi ve işlem rozeti */
+function DropHighlight({ tiles, hover, view }: { tiles: Tile[]; hover: { id: string; hint: string | null }; view: { x: number; y: number; z: number } }) {
+  const t = tiles.find((x) => x.id === hover.id)
+  const def = t && getDef(t.type)
+  if (!t || !def) return null
+  const pts = (def.outline?.(t) ?? boxCorners(pad(def.bounds(t), 3))).map((p) => {
+    const w = toWorld(t, p)
+    return { x: w.x * view.z + view.x, y: w.y * view.z + view.y }
+  })
+  const b = boundsOf(pts)
+  return (
+    <g className="pp-drop" style={{ pointerEvents: 'none' }}>
+      <path d={`M${pts.map((p) => `${p.x} ${p.y}`).join('L')}Z`} className="pp-drop-outline" />
+      {hover.hint && (
+        <g transform={`translate(${b.x + b.w} ${b.y})`} className="pp-drop-badge">
+          <circle r={15} />
+          <text textAnchor="middle" dominantBaseline="central">
+            {hover.hint}
+          </text>
+        </g>
+      )}
+    </g>
+  )
 }
 
 function Draft({ tool, a, b }: { tool: Tool; a: Pt; b: Pt }) {

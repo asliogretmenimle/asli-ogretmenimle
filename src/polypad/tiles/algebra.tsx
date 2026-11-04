@@ -131,6 +131,31 @@ const fractionBar: TileDef = {
   },
   colorable: true,
   edgeSnap: true,
+  dropHint: (t, dropped) => (dropped.some((d) => d.type === 'fraction-bar' && d.p.denominator === t.p.denominator) ? '+' : null),
+  onDrop: (t, dropped, api) => {
+    const same = dropped.filter((d) => d.type === 'fraction-bar' && d.p.denominator === t.p.denominator)
+    if (!same.length) return
+    // Hedefin sol ucundan başlayarak sağa doğru: dolu bütünler ve kalan
+    const den = t.p.denominator
+    let total = t.p.count + same.reduce((n, d) => n + d.p.count, 0)
+    const counts: number[] = []
+    if (total <= den) counts.push(total)
+    else
+      while (total > 0) {
+        counts.push(Math.min(den, total))
+        total -= den
+      }
+    const pw = barWhole(t) / den
+    let x = -barSize(t).w / 2
+    const out = counts.map((count) => {
+      const c = toWorld(t, { x: x + (pw * count) / 2, y: 0 })
+      x += pw * count
+      return { ...mk('fraction-bar', { ...t.p, count }, c.x, c.y, t.rot), color: t.color, flip: t.flip }
+    })
+    api.remove([t.id, ...same.map((d) => d.id)])
+    api.add(out, true)
+    api.sound('snap')
+  },
 }
 
 function splitBar(tile: Tile): Omit<Tile, 'id'>[] {
@@ -214,6 +239,27 @@ const fractionCircle: TileDef = {
   },
   colorable: true,
   rotStep: 15,
+  dropHint: (t, dropped) => (t.p.denominator > 1 && dropped.some((d) => d.type === 'fraction-circle' && d.p.denominator === t.p.denominator) ? '+' : null),
+  onDrop: (t, dropped, api) => {
+    const d = t.p.denominator
+    const same = dropped.filter((o) => o.type === 'fraction-circle' && o.p.denominator === d)
+    if (d <= 1 || !same.length) return
+    // Dilimler hedefin başladığı açıdan devam eder; bütünü aşan kısım yanında yeni daire olur
+    let total = t.p.count + same.reduce((n, o) => n + o.p.count, 0)
+    const groups: number[] = []
+    while (total > 0) {
+      groups.push(Math.min(d, total))
+      total -= d
+    }
+    const step = radiusOf(t) * 2 + 24
+    const out = groups.map((count, g) => {
+      const c = toWorld(t, { x: g * step, y: 0 })
+      return { ...mk('fraction-circle', { ...t.p, count }, g ? c.x : t.x, g ? c.y : t.y, t.rot), color: t.color, flip: t.flip }
+    })
+    api.remove([t.id, ...same.map((o) => o.id)])
+    api.add(out, true)
+    api.sound('snap')
+  },
 }
 
 function splitCircle(tile: Tile): Omit<Tile, 'id'>[] {
@@ -313,7 +359,51 @@ const algebra: TileDef = {
   },
   gridSnap: true,
   rotStep: 90,
+  dropHint: (t, dropped) => {
+    const algs = dropped.filter((d) => d.type === 'algebra')
+    if (!algs.length || algs.length !== dropped.length) return null
+    if (algs.some((d) => isOpposite(t, d))) return '0'
+    return algs.every((d) => isSameKind(t, d) && algParts(String(d.p.expr)).neg === algParts(String(t.p.expr)).neg) ? '+' : null
+  },
+  onDrop: (t, dropped, api) => {
+    const algs = dropped.filter((d) => d.type === 'algebra')
+    const opp = algs.find((d) => isOpposite(t, d))
+    if (opp) {
+      // Sıfır çifti: ikisi de yok olur
+      api.remove([t.id, opp.id])
+      api.sound('pop')
+      return
+    }
+    if (!algs.length || !algs.every((d) => isSameKind(t, d))) return
+    // Aynı karolar hedefin yanına (yerel x ekseninde) kenar kenara dizilir
+    const { w } = algSize(t)
+    const ids = new Set(algs.map((d) => d.id))
+    const others = api.all().filter((o) => o.type === 'algebra' && !ids.has(o.id) && o.id !== t.id && isSameKind(t, o))
+    const taken = (lx: number) => others.some((o) => {
+      const l = toLocal(t, o)
+      return Math.abs(l.x - lx) < w / 3 && Math.abs(l.y) < w / 3
+    })
+    const used: number[] = []
+    for (const d of algs) {
+      const dir = toLocal(t, d).x < 0 ? -1 : 1
+      let k = 1
+      while (taken(dir * k * w) || used.includes(dir * k)) k++
+      used.push(dir * k)
+      const c = toWorld(t, { x: dir * k * w, y: 0 })
+      api.update(d.id, { x: c.x, y: c.y, rot: t.rot, flip: t.flip })
+    }
+    api.select(algs.map((d) => d.id))
+    api.commit()
+    api.sound('snap')
+  },
 }
+
+/** Aynı tür ve aynı bölünmüşlükte iki karo (işaret hariç) */
+const isSameKind = (a: Tile, b: Tile) =>
+  algParts(String(a.p.expr)).base === algParts(String(b.p.expr)).base && (a.p.splitH ?? 1) === (b.p.splitH ?? 1) && (a.p.splitV ?? 1) === (b.p.splitV ?? 1)
+
+/** Sıfır çifti: aynı tür, zıt işaret */
+const isOpposite = (a: Tile, b: Tile) => b.type === 'algebra' && isSameKind(a, b) && algParts(String(a.p.expr)).neg !== algParts(String(b.p.expr)).neg
 
 const isQuarterTurned = (t: Tile) => Math.round(((t.rot % 180) + 180) % 180) === 90
 
@@ -514,6 +604,50 @@ const balance: TileDef = {
   watch: true,
   rotatable: false,
   edgeSnap: false,
+  dropHint: (t, dropped) => (dropped.some((d) => panSide(t, d) !== 0) ? '⟶' : null),
+  onDrop: (t, dropped, api) => {
+    // Kefenin üstüne bırakılan parçalar kefeye (ya da üstteki parçaların üstüne) oturur
+    const all = api.all()
+    const { left, right } = panSums(t, all)
+    const tilt = left > right ? -TILT : left < right ? TILT : 0
+    const ids = new Set(dropped.map((d) => d.id))
+    const moved: string[] = []
+    for (const d of dropped) {
+      const side = panSide(t, d)
+      if (!side) continue
+      const b = api.box(d)
+      const cx = side * Math.cos(rad(tilt)) * B_L
+      const surface = PIVOT_Y + side * Math.sin(rad(tilt)) * B_L + PAN_DROP
+      const l = toLocal(t, d)
+      const x = clamp(l.x, cx - PAN_W / 2 + b.w / 2, cx + PAN_W / 2 - b.w / 2)
+      // Aynı sütundaki (bırakılmamış ya da önceden yerleşmiş) parçaların en üstü
+      let top = surface
+      for (const o of all) {
+        if (o.id === t.id || (ids.has(o.id) && !moved.includes(o.id)) || o.id === d.id) continue
+        if (tileValue(o, {}) == null || panSide(t, o) !== side) continue
+        const ob = api.box(o)
+        const ol = toLocal(t, { x: ob.x + ob.w / 2, y: ob.y })
+        if (Math.abs(ol.x - x) < (ob.w + b.w) / 2 - 2) top = Math.min(top, ol.y)
+      }
+      const w = toWorld(t, { x, y: top - b.h / 2 })
+      api.update(d.id, { x: w.x, y: w.y })
+      moved.push(d.id)
+    }
+    if (!moved.length) return
+    api.commit()
+    api.sound('snap')
+  },
+}
+
+/** Parça hangi kefenin sütununda: -1 sol, 1 sağ, 0 hiçbiri (yalnızca değeri olan parçalar) */
+function panSide(t: Tile, o: Tile): -1 | 0 | 1 {
+  if (tileValue(o, {}) == null) return 0
+  const l = toLocal(t, o)
+  const panY = PIVOT_Y + PAN_DROP
+  if (l.y > panY + 6 || l.y < panY - 320) return 0
+  if (Math.abs(l.x + B_L) <= PAN_W / 2) return -1
+  if (Math.abs(l.x - B_L) <= PAN_W / 2) return 1
+  return 0
 }
 
 // ---------------------------------------------------------------------------
@@ -593,6 +727,7 @@ const functionMachine: TileDef = {
   },
   colorable: true,
   edgeSnap: false,
+  dropHint: (t, dropped) => (dropped.some((d) => d.type === 'number-card' && toLocal(t, d).x <= -FM_W / 4) ? '⟶' : null),
   onTap: async (t, api, info) => {
     if (info.act !== 'rule' || t.p.hidden) return
     const s = await api.prompt(t.p.inputs === 2 ? 'Kural (a ve b kullanın)' : 'Kural (x kullanın)', String(t.p.rule))

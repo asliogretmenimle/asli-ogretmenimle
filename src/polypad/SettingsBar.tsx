@@ -58,6 +58,7 @@ export function SettingsBar() {
   const grid = useStore((st) => st.grid)
   const tool = useStore((st) => st.tool)
   const hasTiles = useStore((st) => st.tiles.length > 0)
+  const z = useStore((st) => st.view.z)
   const [pop, setPop] = useState<'grid' | 'download' | null>(null)
   const [busy, setBusy] = useState(false)
   const close = useCallback(() => setPop(null), [])
@@ -126,8 +127,11 @@ export function SettingsBar() {
         )}
       </div>
       <div className="pp-settings-group">
-        <Btn icon="zoom-in" tip="Yakınlaştır" onClick={() => zoom(1.25)} />
         <Btn icon="zoom-out" tip="Uzaklaştır" onClick={() => zoom(0.8)} />
+        <button type="button" className="pp-zoom-label" onClick={() => zoom(1 / z)} aria-label="Yakınlaştırmayı %100 yap" title="%100">
+          %{Math.round(z * 100)}
+        </button>
+        <Btn icon="zoom-in" tip="Yakınlaştır" onClick={() => zoom(1.25)} />
         <Btn icon="move" tip="Kaydır" onClick={() => setState({ tool: tool === 'pan' ? 'move' : 'pan' })} active={tool === 'pan'} />
       </div>
     </div>

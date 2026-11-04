@@ -208,7 +208,7 @@ export const CATALOG: Category[] = [
       {
         key: 'number-bars',
         title: 'Sayı Çubukları',
-        groups: [g([...[1, 10, 2, 9, 3, 8, 4, 7, 5, 6].map((v) => s('number-bar', `Sayı çubuğu ${v}`, { value: v })), s('number-bar', 'Ayarlanabilir sayı çubuğu', { value: 25, adjustable: true })], { max: 130 })],
+        groups: [g([...[1, 10, 2, 9, 3, 8, 4, 7, 5, 6].map((v) => s('number-bar', `Sayı çubuğu ${v}`, { value: v })), { ...s('number-bar', 'Ayarlanabilir sayı çubuğu', { value: 25, adjustable: true }), edit: { key: 'value', numeric: true, label: 'Çubuğun uzunluğu' } }], { max: 130 })],
       },
       {
         key: 'number-frames',
@@ -221,7 +221,7 @@ export const CATALOG: Category[] = [
       {
         key: 'number-cards',
         title: 'Sayı Kartları',
-        groups: [g([...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000].map((v) => s('number-card', `Sayı kartı ${v}`, { value: v })), s('number-card', 'Değişken kart', { valueStr: '25' })], { max: 56 })],
+        groups: [g([...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000].map((v) => s('number-card', `Sayı kartı ${v}`, { value: v })), { ...s('number-card', 'İstediğin sayı', { valueStr: '25' }), edit: { key: 'valueStr', label: 'Kartın sayısı' } }], { max: 56 })],
       },
       {
         key: 'number-line',
@@ -241,12 +241,12 @@ export const CATALOG: Category[] = [
       {
         key: 'primes',
         title: 'Asal Çarpan Daireleri',
-        groups: [g([...range(1, 20), 25].map((v) => s('prime-disk', `${v} asal çarpan dairesi`, { value: v })), { max: 48 })],
+        groups: [g([...range(1, 20).map((v) => s('prime-disk', `${v} asal çarpan dairesi`, { value: v })), { ...s('prime-disk', 'İstediğin sayı', { value: 25 }), edit: { key: 'value', numeric: true, label: 'Dairenin sayısı' } }], { max: 48 })],
       },
       {
         key: 'number-dots',
         title: 'Nokta Dizilimleri',
-        groups: [g([...range(2, 17).map((v) => s('number-dot', `${v} nokta`, { value: v }, String(v))), s('number-dot', 'Nokta dizilimi', { value: 18 })], { max: 56 })],
+        groups: [g([...range(2, 17).map((v) => s('number-dot', `${v} nokta`, { value: v }, String(v))), { ...s('number-dot', 'İstediğin sayı', { value: 18 }), edit: { key: 'value', numeric: true, label: 'Nokta sayısı' } }], { max: 56 })],
       },
       {
         key: 'number-grid',
@@ -337,7 +337,7 @@ export const CATALOG: Category[] = [
         key: 'functions',
         title: 'Fonksiyon Makineleri',
         groups: [
-          g([...range(1, 8).map((v) => s('number-card', `Sayı kartı ${v}`, { value: v })), s('number-card', 'Değişken kart', { valueStr: '10' })], { max: 44 }),
+          g([...range(1, 8).map((v) => s('number-card', `Sayı kartı ${v}`, { value: v })), { ...s('number-card', 'İstediğin sayı', { valueStr: '10' }), edit: { key: 'valueStr', label: 'Kartın sayısı' } }], { max: 44 }),
           g([s('function-machine', 'Fonksiyon makinesi', { inputs: 1 }), s('function-machine', 'İki girdili fonksiyon makinesi', { inputs: 2 })], { max: 120 }),
         ],
       },

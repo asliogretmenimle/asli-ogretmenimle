@@ -482,7 +482,7 @@ const eqSource = (t: Tile) => {
 const equation: TileDef = {
   type: 'equation',
   name: () => 'Denklem',
-  create: () => ({ color: C.dark, p: { src: '', size: 28 } }),
+  create: (p) => ({ color: C.dark, p: { src: p.src ?? '', size: p.size ?? 28 } }),
   bounds: (t) => {
     const { box } = typeset(eqSource(t), t.p.size ?? 28)
     return pad({ x: -box.w / 2, y: -(box.asc + box.desc) / 2, w: box.w, h: box.asc + box.desc }, 8)

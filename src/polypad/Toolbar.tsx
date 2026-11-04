@@ -393,6 +393,7 @@ export function Toolbar() {
     <div className="pp-toolbar-wrap">
       <div className="pp-toolbar" role="region" aria-label="Araç çubuğu">
         <ToolButton id="move" icon="cursor" tip="Taşıma aracı [V]" active={tool === 'move'} onClick={() => setTool('move')} />
+        <span className="pp-tool-sep" aria-hidden />
         <ToolButton id="pen" icon="pen" tip="Çizim araçları [P]" active={group === 'pen'} onClick={() => setTool(group === 'pen' ? tool : 'pen:pen')} />
         {group === 'pen' && <Brushes />}
         <ToolButton id="line" icon="geo-line" tip="Çizgi [L]" active={group === 'line'} onClick={() => setTool(group === 'line' ? tool : 'line:straight')} />
@@ -419,6 +420,7 @@ export function Toolbar() {
         )}
         <ToolButton id="text" icon="text" tip="Metin kutusu [T]" active={tool === 'text:text'} onClick={() => setTool('text:text')} />
         <ToolButton id="equation" icon="equation" tip="Denklem [Q]" active={tool === 'text:equation'} onClick={() => setTool('text:equation')} />
+        <span className="pp-tool-sep" aria-hidden />
         <Recorder />
         <ColorPicker />
       </div>

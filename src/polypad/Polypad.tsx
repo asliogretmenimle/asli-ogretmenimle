@@ -150,6 +150,38 @@ function TextEditor() {
   )
 }
 
+/** Boş tuvalde karşılama kartı */
+function EmptyState() {
+  const empty = useStore((s) => s.tiles.length === 0)
+  const sidebar = useStore((s) => s.sidebarOpen && s.settings.showSidebar)
+  if (!empty) return null
+  return (
+    <div className="pp-empty" aria-live="polite">
+      <div className="pp-empty-art" aria-hidden>
+        <svg viewBox="0 0 120 80" width="120" height="80">
+          <path d="M14 66L34 31L54 66Z" fill="#fd8c00" />
+          <rect x="58" y="34" width="30" height="30" rx="2" fill="#0f82f2" transform="rotate(-8 73 49)" />
+          <path d="M92 66l9-16h18l-9 16z" fill="#bfc212" />
+          <circle cx="96" cy="22" r="11" fill="#cd0e66" />
+          <path d="M40 12l5 9h-10z" fill="#22ab24" />
+        </svg>
+      </div>
+      <h2>Tuvale hoş geldin!</h2>
+      <p>{sidebar ? 'Soldaki parçalardan birini buraya sürükle ya da üstüne dokun.' : 'Sol üstteki Parçalar düğmesine dokunup bir parça seç.'}</p>
+      <div className="pp-empty-actions">
+        {!sidebar && (
+          <button type="button" className="pp-btn pp-btn-blue pp-btn-small" onClick={() => setState({ sidebarOpen: true, tab: 'tiles' })}>
+            Parçaları aç
+          </button>
+        )}
+        <button type="button" className="pp-btn pp-btn-small" onClick={() => setState({ sidebarOpen: true, tab: 'library' })}>
+          Hazır örneklere göz at
+        </button>
+      </div>
+    </div>
+  )
+}
+
 /** Uygulama içi metin isteme penceresi (api.prompt) */
 function AskDialog() {
   const ask = useStore((s) => s.ask)
@@ -211,6 +243,7 @@ export default function Polypad() {
       <Sidebar />
       <main className="pp-main">
         <Canvas />
+        <EmptyState />
         <SettingsBar />
         <ActionBar />
         <Toolbar />

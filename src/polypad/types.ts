@@ -133,6 +133,11 @@ export interface TileDef {
   watch?: boolean
   /** Başka parçalar bu parçanın üzerine bırakıldığında (bırakılanların merkezi bu parçanın sınırları içindeyse) */
   onDrop?: (t: Tile, dropped: Tile[], api: PadApi) => void
+  /**
+   * Sürüklerken hedefin üstünde gösterilecek simge (ör. '+', '−', '×', '0').
+   * null dönerse bu bırakma geçersizdir: hedef vurgulanmaz, onDrop çağrılmaz. Verilmezse onDrop her zaman çağrılır.
+   */
+  dropHint?: (t: Tile, dropped: Tile[]) => string | null
 }
 
 export type SoundKind = 'click' | 'pop' | 'roll' | 'snap' | 'win' | 'error'
@@ -173,6 +178,8 @@ export interface Source {
   cap?: string
   /** Küçük resim boyut çarpanı (varsayılan 1) */
   scale?: number
+  /** Kenar çubuğunda değeri yazılabilen kaynak (ör. istenen sayıda sayı kartı) */
+  edit?: { key: string; numeric?: boolean; label: string }
 }
 
 export interface SourceGroup {

@@ -27,15 +27,15 @@ const EXAMPLES: { title: string; desc: string; grade: string; make: Maker }[] = 
   },
   {
     title: 'Onluk taban blokları',
-    desc: '243 sayısını yüzlük, onluk ve birliklerle modelle; bir onluğu parçalayarak 10 birlik elde et.',
+    desc: '243 sayısını yüzlük, onluk ve birliklerle modelle; bir onluğu bölerek 10 birlik elde et.',
     grade: '2–4',
     make: () => [
-      text('243 sayısını bloklarla göster. Bir onluğu seçip “Parçala” ile birliklere ayır.', 0, -260, 480),
-      T('number-tile', { width: 10, value: 100 }, -280, 0),
-      T('number-tile', { width: 10, value: 100 }, -80, 0),
-      ...[0, 1, 2, 3].map((i) => T('number-tile', { width: 10, value: 10 }, 80 + i * 44, 0)),
-      ...[0, 1, 2].map((i) => T('number-tile', { width: 1, value: 1 }, 290, -60 + i * 44)),
-      T('number-card', { value: 243 }, 0, 220),
+      text('243 sayısını bloklarla göster. Bir onluğu seçip “Böl” ile birliklere ayır; iki onluğu üst üste bırakıp topla.', 0, -260, 560),
+      T('number-tile', { width: 10, value: 100 }, -470, 20),
+      T('number-tile', { width: 10, value: 100 }, -120, 20),
+      ...[0, 1, 2, 3].map((i) => T('number-tile', { width: 10, value: 10 }, 110 + i * 48, 20, { rot: 90 })),
+      ...[0, 1, 2].map((i) => T('number-tile', { width: 1, value: 1 }, 340, -60 + i * 48)),
+      T('number-card', { value: 243 }, 0, 260),
     ],
   },
   {
@@ -102,7 +102,7 @@ const EXAMPLES: { title: string; desc: string; grade: string; make: Maker }[] = 
     title: 'Asal çarpanlar',
     desc: 'Asal çarpan dairelerini birbirinin üstüne bırakarak çarp, büyük sayıları çarpanlarına ayır.',
     grade: '6',
-    make: () => [2, 3, 4, 6, 12, 18].map((v, i) => T('prime-disk', { value: v }, -250 + i * 100, 0)),
+    make: () => [2, 3, 4, 6, 12, 18].map((v, i) => T('prime-disk', { value: v }, -330 + (i % 3) * 330, -110 + Math.floor(i / 3) * 230)),
   },
   {
     title: 'Mantık devresi',
