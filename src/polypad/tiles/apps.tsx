@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import type { PadApi, Pt, RenderCtx, Tile, TileDef } from '../types'
+import type { ActionSpec, PadApi, Pt, RenderCtx, Tile, TileDef } from '../types'
 import { UNIT, deg, mod, regularPolygon, pathOf, toLocal, toWorld } from '../geom'
-import { midiFreq } from '../sound'
-import { C, FONT, Label, action, edge, rectBox, toggle } from './kit'
-import { api as storeApi } from '../store'
+import { midiFreq, playNote } from '../sound'
+import { C, FONT, Label, edge, rectBox } from './kit'
+import { api as storeApi, getState, useStore } from '../store'
 
 // Bileşenler içinden (zamanlayıcılar) parça güncellemek için. Döngüsel içe aktarma güvenli:
 // store yalnızca çalışma anında kullanılır, modül yüklenirken değil.
@@ -13,102 +13,188 @@ const withApi = (fn: (a: PadApi) => void) => fn(storeApi)
 // Müzik
 // ---------------------------------------------------------------------------
 
-const SOLFEGE = ['Do', 'Re', 'Mi', 'Fa', 'Sol', 'La', 'Si']
+const NOTE_NAMES = ['Do', 'Do♯', 'Re', 'Re♯', 'Mi', 'Fa', 'Fa♯', 'Sol', 'Sol♯', 'La', 'La♯', 'Si']
 const WHITE_STEPS = [0, 2, 4, 5, 7, 9, 11]
 const KW = 24
 const KH = 96
 const PIANO_START = 60
+/** Nota sınıfı renkleri (Polypad "Renkler" etiketleri gibi: her nota kendi renginde) */
+const PITCH_COLORS = ['#eb4726', '#fd8c00', '#bfc212', '#22ab24', '#009ea6', '#0f82f2', '#6d3bbf', '#cd0e66', '#b16200', '#187819', '#0b5ba9', '#900a47']
+
+/** Müzik ölçekleri (yarım ses aralıkları) */
+const SCALES: Record<string, number[]> = {
+  major: [0, 2, 4, 5, 7, 9, 11],
+  minor: [0, 2, 3, 5, 7, 8, 10],
+  chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+  blues: [0, 3, 5, 6, 7, 10],
+  pentatonic: [0, 2, 4, 7, 9],
+}
+const inScale = (scale: string | undefined, midi: number) => !SCALES[scale ?? 'major'] || scale === 'chromatic' || SCALES[scale ?? 'major'].includes(mod(midi - PIANO_START, 12))
+
+/** Ses düzeyiyle nota çal (ayarlarda ses ya da müzik açıksa) */
+function playVol(freq: number, dur: number, wave: OscillatorType, volume: number | undefined) {
+  const st = getState().settings
+  if (!st.sound && !st.music) return
+  const v = Math.max(0, Math.min(10, volume ?? 1))
+  if (v > 0) playNote(freq, dur, wave, Math.min(0.6, 0.18 * v))
+}
 
 /** İki oktav: 14 beyaz, 10 siyah tuş */
 const pianoKeys = (() => {
-  const white: { midi: number; x: number; name: string }[] = []
+  const white: { midi: number; x: number; idx: number }[] = []
   const black: { midi: number; x: number }[] = []
   for (let o = 0; o < 2; o++)
     WHITE_STEPS.forEach((s, i) => {
       const idx = o * 7 + i
       const x = -168 + idx * KW
-      white.push({ midi: PIANO_START + o * 12 + s, x, name: SOLFEGE[i] })
+      white.push({ midi: PIANO_START + o * 12 + s, x, idx })
       if (i !== 2 && i !== 6) black.push({ midi: PIANO_START + o * 12 + s + 1, x: x + KW - 7 })
     })
   return { white, black }
 })()
 
+/** Tuş etiketi: sayılar, modüler sayılar, nota adları ya da renk */
+function keyLabel(t: Tile, midi: number, idx: number) {
+  const mode = pianoLabels(t)
+  const m = midi + (t.p.note ?? 0)
+  if (mode === 'number') return String(idx + 1)
+  if (mode === 'modular') return String((idx % 7) + 1)
+  if (mode === 'text') return NOTE_NAMES[mod(m, 12)]
+  return ''
+}
+const pianoLabels = (t: Tile): string => (t.p.labels === true ? 'text' : t.p.labels || 'hidden')
+
 const piano: TileDef = {
   type: 'piano',
   name: () => 'Klavye',
+  create: () => ({ p: { labels: 'number', note: 0, musicScale: 'major', volume: 1 } }),
   bounds: () => rectBox(348, 108),
   edgeSnap: false,
-  render: (t) => (
-    <>
-      <rect x={-174} y={-54} width={348} height={108} rx={8} fill="#3a3645" />
-      {pianoKeys.white.map((k) => (
-        <g key={k.midi}>
-          <rect data-act="key" data-v={k.midi} x={k.x} y={-48} width={KW} height={KH} rx={3} fill={t.p.lit === k.midi ? '#87c1f9' : '#fff'} stroke="#3a3645" strokeWidth={1} />
-          {t.p.labels && (
-            <Label x={k.x + KW / 2} y={36} size={9} color="#555">
-              {k.name}
-            </Label>
-          )}
-        </g>
-      ))}
-      {pianoKeys.black.map((k) => (
-        <rect key={k.midi} data-act="key" data-v={k.midi} x={k.x} y={-48} width={14} height={58} rx={2} fill={t.p.lit === k.midi ? '#0f82f2' : '#242436'} />
-      ))}
-    </>
-  ),
+  render: (t) => {
+    const mode = pianoLabels(t)
+    const shift = t.p.note ?? 0
+    return (
+      <>
+        <rect x={-174} y={-54} width={348} height={108} rx={8} fill="#3a3645" />
+        {pianoKeys.white.map((k) => {
+          const m = k.midi + shift
+          const dim = !inScale(t.p.musicScale, m)
+          return (
+            <g key={k.midi}>
+              <rect data-act="key" data-v={k.midi} x={k.x} y={-48} width={KW} height={KH} rx={3} fill={t.p.lit === k.midi ? '#87c1f9' : dim ? '#d6d6de' : '#fff'} stroke="#3a3645" strokeWidth={1} />
+              {mode === 'color' ? (
+                <circle cx={k.x + KW / 2} cy={34} r={5} fill={PITCH_COLORS[mod(m, 12)]} style={{ pointerEvents: 'none' }} />
+              ) : (
+                mode !== 'hidden' && (
+                  <Label x={k.x + KW / 2} y={36} size={mode === 'text' ? 8 : 10} color="#555">
+                    {keyLabel(t, k.midi, k.idx)}
+                  </Label>
+                )
+              )}
+            </g>
+          )
+        })}
+        {pianoKeys.black.map((k) => {
+          const m = k.midi + shift
+          return (
+            <g key={k.midi}>
+              <rect data-act="key" data-v={k.midi} x={k.x} y={-48} width={14} height={58} rx={2} fill={t.p.lit === k.midi ? '#0f82f2' : inScale(t.p.musicScale, m) ? '#242436' : '#6a6a78'} />
+              {mode === 'color' && <circle cx={k.x + 7} cy={2} r={3.5} fill={PITCH_COLORS[mod(m, 12)]} style={{ pointerEvents: 'none' }} />}
+            </g>
+          )
+        })}
+      </>
+    )
+  },
   onTap: (t, api, info) => {
     if (info.act !== 'key') return
     const m = Number(info.v)
-    api.note(midiFreq(m), 0.7)
+    playVol(midiFreq(m + (t.p.note ?? 0)), 0.7, 'triangle', t.p.volume)
     api.updateP(t.id, { lit: m })
     setTimeout(() => {
       if (api.get(t.id)?.p.lit === m) api.updateP(t.id, { lit: null })
     }, 260)
   },
-  actions: (t) => [toggle(t, 'labels', 'Nota adlarını göster', 'label')],
 }
 
 const STEPS = 16
 const ROWS = 8
 const CELL = 18
-const PITCHES = [72, 71, 69, 67, 65, 64, 62, 60]
-const ROW_NAMES = ['Do', 'Si', 'La', 'Sol', 'Fa', 'Mi', 'Re', 'Do']
 const ROW_COLORS = ['#cd0e66', '#6d3bbf', '#0f82f2', '#009ea6', '#22ab24', '#bfc212', '#fd8c00', '#eb4726']
-const GX = -133
-const GY = -72
+const DRUMS = ['Zil', 'Ziller', 'Tom 1', 'Tom 2', 'Trampet', 'Alkış', 'Kaval', 'Davul']
+const DRUM_FREQ = [1600, 1200, 330, 240, 200, 900, 160, 70]
+
+/** Satırların (yukarıdan aşağı) MIDI perdeleri: seçilen ölçekten Do4'ten başlayarak */
+function songPitches(scale: string | undefined): number[] {
+  const steps = SCALES[scale ?? 'major'] ?? SCALES.major
+  const out: number[] = []
+  for (let i = 0; i < ROWS; i++) out.push(PIANO_START + steps[i % steps.length] + 12 * Math.floor(i / steps.length))
+  return out.reverse()
+}
+
+/** Parça ızgarasının ölçüleri (satır yüksekliği / sütun genişliği çarpanlarına göre) */
+function songGeom(t: Tile) {
+  const cw = CELL * (t.p.colSize ?? 1)
+  const rh = CELL * (t.p.rowSize ?? 1)
+  const lw = t.p.labels === 'hidden' ? 8 : 30
+  const w = lw + STEPS * cw + 8
+  const h = ROWS * rh + 12
+  return { cw, rh, w, h, gx: -w / 2 + lw, gy: -h / 2 + 6 }
+}
+
+/** Bir hücre çalınınca: perdeli ya da vurmalı ses */
+function songNote(t: Tile, row: number) {
+  const scale = t.p.musicScale ?? 'major'
+  if (scale === 'none') return
+  if (scale === 'percussion') return playVol(DRUM_FREQ[row], row < 2 ? 0.08 : 0.16, row < 2 || row === 5 ? 'square' : 'sine', t.p.volume)
+  playVol(midiFreq(songPitches(scale)[row]), 0.3, 'triangle', t.p.volume)
+}
 
 function SongView({ t, thumb }: { t: Tile; thumb: boolean }) {
   const [step, setStep] = useState(-1)
-  const cells = useRef<number[]>(t.p.cells)
-  cells.current = t.p.cells
+  const cur = useRef(t)
+  cur.current = t
   const playing = !!t.p.playing && !thumb
-  const bpm: number = t.p.bpm
+  const bpm = (t.p.bpm ?? 120) * (t.p.tempo ?? 1)
   useEffect(() => {
     if (!playing) {
       setStep(-1)
       return
     }
-    let s = 0
+    const tt = cur.current
+    // Sıra kipinde boş sütunlar atlanır
+    const cols = tt.p.playbackType === 'sequence' ? [...new Set<number>((tt.p.cells as number[]).map((c) => Math.floor(c / ROWS)))].sort((x, y) => x - y) : Array.from({ length: STEPS }, (_, i) => i)
+    const total = Math.max(1, cols.length) * Math.max(1, tt.p.loops ?? 1)
+    let n = 0
     const tick = () => {
-      setStep(s)
-      const now = s
-      cells.current.filter((c) => Math.floor(c / ROWS) === now).forEach((c) => withApi((a) => a.note(midiFreq(PITCHES[c % ROWS]), 0.3)))
-      s = (s + 1) % STEPS
+      if (n >= total || !cols.length) {
+        withApi((a) => a.updateP(tt.id, { playing: false }))
+        return
+      }
+      const col = cols[n % cols.length]
+      setStep(col)
+      ;(cur.current.p.cells as number[]).filter((c) => Math.floor(c / ROWS) === col).forEach((c) => songNote(cur.current, c % ROWS))
+      n++
     }
     tick()
     const id = window.setInterval(tick, 60000 / bpm / 2)
     return () => window.clearInterval(id)
   }, [playing, bpm])
   const on = new Set<number>(t.p.cells)
+  const g = songGeom(t)
+  const scale = t.p.musicScale ?? 'major'
+  const pitches = songPitches(scale)
+  const bar = Math.max(1, t.p.barLength ?? 4)
   return (
     <>
-      <rect x={-161} y={-78} width={322} height={156} rx={8} fill="#fff" stroke="#3a3645" strokeWidth={2} />
-      {ROW_NAMES.map((n, r) => (
-        <Label key={r} x={-144} y={GY + r * CELL + CELL / 2} size={9} color="#555">
-          {n}
-        </Label>
-      ))}
-      {step >= 0 && <rect x={GX + step * CELL} y={GY} width={CELL} height={ROWS * CELL} fill="#fec680" opacity={0.5} />}
+      <rect x={-g.w / 2} y={-g.h / 2} width={g.w} height={g.h} rx={8} fill="#fff" stroke="#3a3645" strokeWidth={2} />
+      {t.p.labels !== 'hidden' &&
+        Array.from({ length: ROWS }, (_, r) => (
+          <Label key={r} x={g.gx - 14} y={g.gy + r * g.rh + g.rh / 2} size={Math.min(9, g.rh * 0.5)} color="#555">
+            {t.p.labels === 'number' ? ROWS - r : scale === 'percussion' ? DRUMS[r].slice(0, 4) : NOTE_NAMES[mod(pitches[r], 12)]}
+          </Label>
+        ))}
+      {step >= 0 && <rect x={g.gx + step * g.cw} y={g.gy} width={g.cw} height={ROWS * g.rh} fill="#fec680" opacity={0.5} />}
       {Array.from({ length: STEPS * ROWS }, (_, i) => {
         const s = Math.floor(i / ROWS)
         const r = i % ROWS
@@ -117,15 +203,23 @@ function SongView({ t, thumb }: { t: Tile; thumb: boolean }) {
             key={i}
             data-act="cell"
             data-v={i}
-            x={GX + s * CELL + 1.5}
-            y={GY + r * CELL + 1.5}
-            width={CELL - 3}
-            height={CELL - 3}
+            x={g.gx + s * g.cw + 1.5}
+            y={g.gy + r * g.rh + 1.5}
+            width={g.cw - 3}
+            height={g.rh - 3}
             rx={3}
-            fill={on.has(i) ? ROW_COLORS[r] : s % 4 === 0 ? '#e6e6ee' : '#f2f2f6'}
+            fill={on.has(i) ? ROW_COLORS[r] : Math.floor(s / bar) % 2 === 0 ? '#e6e6ee' : '#f2f2f6'}
           />
         )
       })}
+      {t.p.showGrid && t.p.playbackType !== 'sequence' && (
+        <path
+          d={Array.from({ length: Math.floor((STEPS - 1) / bar) }, (_, k) => `M${g.gx + (k + 1) * bar * g.cw} ${g.gy}v${ROWS * g.rh}`).join('')}
+          stroke="#3a3645"
+          strokeWidth={1.5}
+          style={{ pointerEvents: 'none' }}
+        />
+      )}
     </>
   )
 }
@@ -133,8 +227,24 @@ function SongView({ t, thumb }: { t: Tile; thumb: boolean }) {
 const song: TileDef = {
   type: 'song',
   name: () => 'Parça',
-  create: () => ({ p: { cells: [7, 13, 21, 31, 39, 45, 53, 59, 64 + 7, 64 + 13, 64 + 21, 64 + 31, 64 + 39, 64 + 45, 64 + 53, 64 + 63], bpm: 120, playing: false } }),
-  bounds: () => rectBox(322, 156),
+  create: () => ({
+    p: {
+      cells: [7, 13, 21, 31, 39, 45, 53, 59, 64 + 7, 64 + 13, 64 + 21, 64 + 31, 64 + 39, 64 + 45, 64 + 53, 64 + 63],
+      bpm: 120,
+      playing: false,
+      loops: 1,
+      playbackType: 'timeline',
+      labels: 'text',
+      barLength: 4,
+      musicScale: 'major',
+      tempo: 1,
+      volume: 1,
+    },
+  }),
+  bounds: (t) => {
+    const g = songGeom(t)
+    return rectBox(g.w, g.h)
+  },
   edgeSnap: false,
   render: (t, ctx) => <SongView t={t} thumb={!!ctx.thumb} />,
   onTap: (t, api, info) => {
@@ -142,15 +252,9 @@ const song: TileDef = {
     const i = Number(info.v)
     const cells: number[] = t.p.cells
     const has = cells.includes(i)
-    if (!has) api.note(midiFreq(PITCHES[i % ROWS]), 0.3)
+    if (!has) songNote(t, i % ROWS)
     api.updateP(t.id, { cells: has ? cells.filter((c) => c !== i) : [...cells, i] }, true)
   },
-  actions: (t) => [
-    action('play', t.p.playing ? 'Durdur' : 'Çal', t.p.playing ? 'pause' : 'play', (tile, api) => api.updateP(tile.id, (p) => ({ playing: !p.playing })), !!t.p.playing),
-    action('slower', `Yavaşlat (${t.p.bpm})`, 'minus', (tile, api) => api.updateP(tile.id, (p) => ({ bpm: Math.max(40, p.bpm - 20) }), true)),
-    action('faster', `Hızlandır (${t.p.bpm})`, 'plus', (tile, api) => api.updateP(tile.id, (p) => ({ bpm: Math.min(240, p.bpm + 20) }), true)),
-    action('clear', 'Temizle', 'reset', (tile, api) => api.updateP(tile.id, { cells: [] }, true)),
-  ],
 }
 
 // ---------------------------------------------------------------------------
@@ -402,11 +506,6 @@ const logicMetronome: TileDef = {
       <LogicPorts t={t} ctx={ctx} outs={[t.p.on ? 1 : 0]} />
     </>
   ),
-  actions: (t) => [
-    action('pause', t.p.paused ? 'Başlat' : 'Durdur', t.p.paused ? 'play' : 'pause', (tile, api) => api.updateP(tile.id, (p) => ({ paused: !p.paused }), true)),
-    action('slower', `Yavaşlat (${t.p.bpm} vuruş/dk)`, 'minus', (tile, api) => api.updateP(tile.id, (p) => ({ bpm: Math.max(15, p.bpm - 15) }), true)),
-    action('faster', `Hızlandır (${t.p.bpm} vuruş/dk)`, 'plus', (tile, api) => api.updateP(tile.id, (p) => ({ bpm: Math.min(300, p.bpm + 15) }), true)),
-  ],
 }
 
 const logicBulb: TileDef = {
@@ -432,12 +531,12 @@ const logicBulb: TileDef = {
   onTap: disconnect,
 }
 
-function SpeakerFx({ on, thumb }: { on: boolean; thumb: boolean }) {
+function SpeakerFx({ on, thumb, note, volume }: { on: boolean; thumb: boolean; note: number; volume: number | undefined }) {
   const prev = useRef(on)
   useEffect(() => {
-    if (on && !prev.current && !thumb) withApi((a) => a.note(660, 0.3, 'square'))
+    if (on && !prev.current && !thumb) playVol(660 * 2 ** (note / 12), 0.3, 'square', volume)
     prev.current = on
-  }, [on, thumb])
+  }, [on, thumb, note, volume])
   return null
 }
 
@@ -446,13 +545,13 @@ const logicSpeaker: TileDef = {
   type: 'logic-speaker',
   name: () => 'Hoparlör',
   watch: true,
-  create: () => ({ p: { inputs: [null] } }),
+  create: () => ({ p: { inputs: [null], note: 0, volume: 1 } }),
   bounds: () => ({ x: -40, y: -24, w: 76, h: 48 }),
   render: (t, ctx) => {
     const on = inVals(t, tilesOf(t, ctx))[0] === 1
     return (
       <>
-        <SpeakerFx on={on} thumb={!!ctx.thumb} />
+        <SpeakerFx on={on} thumb={!!ctx.thumb} note={t.p.note ?? 0} volume={t.p.volume} />
         <path d="M-36 0H-14" stroke={INK} strokeWidth={2} />
         <rect x={-14} y={-9} width={10} height={18} fill={on ? C.blue : '#cfcfd8'} stroke={INK} strokeWidth={2} />
         <path d="M-4 -9L12 -20V20L-4 9Z" fill={on ? C.lBlue : '#e6e6ee'} stroke={INK} strokeWidth={2} strokeLinejoin="round" />
@@ -628,12 +727,118 @@ const SQ = UNIT * 1.5
 const HALF = SQ * 4
 const FILES = 'abcdefgh'
 
+const BACK_RANK = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
+
+type ChessPc = { id: string; piece: string; dark: boolean; c: number; r: number }
+
+/** Tahtanın üstündeki taşlar ve kareleri */
+function boardPieces(board: Tile, tiles: Tile[]): ChessPc[] {
+  const out: ChessPc[] = []
+  for (const x of tiles) {
+    if (x.type !== 'chess-piece') continue
+    const l = toLocal(board, x)
+    const c = Math.floor((l.x + HALF) / SQ)
+    const r = Math.floor((l.y + HALF) / SQ)
+    if (c >= 0 && c < 8 && r >= 0 && r < 8) out.push({ id: x.id, piece: x.p.piece, dark: !!x.p.dark, c, r })
+  }
+  return out
+}
+
+/** Bir taşın gidebileceği kareler (rok ve geçerken alma olmadan). attack: piyonun yalnızca çapraz tehdidi */
+function chessMoves(pcs: ChessPc[], pc: ChessPc, attack = false): [number, number][] {
+  const at = (c: number, r: number) => pcs.find((q) => q.c === c && q.r === r && q.id !== pc.id)
+  const inB = (c: number, r: number) => c >= 0 && c < 8 && r >= 0 && r < 8
+  const out: [number, number][] = []
+  const tryAdd = (c: number, r: number) => {
+    if (!inB(c, r)) return false
+    const o = at(c, r)
+    if (o && o.dark === pc.dark) return false
+    out.push([c, r])
+    return !o
+  }
+  const slide = (dirs: [number, number][]) => {
+    for (const [dc, dr] of dirs) for (let k = 1; k < 8 && tryAdd(pc.c + dc * k, pc.r + dr * k); k++);
+  }
+  const fwd = pc.dark ? 1 : -1
+  switch (pc.piece) {
+    case 'p':
+      for (const dc of [-1, 1]) {
+        const o = at(pc.c + dc, pc.r + fwd)
+        if (inB(pc.c + dc, pc.r + fwd) && (attack || (o && o.dark !== pc.dark))) out.push([pc.c + dc, pc.r + fwd])
+      }
+      if (!attack && inB(pc.c, pc.r + fwd) && !at(pc.c, pc.r + fwd)) {
+        out.push([pc.c, pc.r + fwd])
+        const start = pc.dark ? 1 : 6
+        if (pc.r === start && !at(pc.c, pc.r + 2 * fwd)) out.push([pc.c, pc.r + 2 * fwd])
+      }
+      break
+    case 'n':
+      for (const [dc, dr] of [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]]) tryAdd(pc.c + dc, pc.r + dr)
+      break
+    case 'k':
+      for (let dc = -1; dc <= 1; dc++) for (let dr = -1; dr <= 1; dr++) if (dc || dr) tryAdd(pc.c + dc, pc.r + dr)
+      break
+    case 'r':
+      slide([[1, 0], [-1, 0], [0, 1], [0, -1]])
+      break
+    case 'b':
+      slide([[1, 1], [1, -1], [-1, 1], [-1, -1]])
+      break
+    default:
+      slide([[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]])
+  }
+  return out
+}
+
+/** "İpuçları": seçili taşın gidebileceği kareler (tehlikede: güvenliyse mavi, tehdit altındaysa kırmızı) */
+function ChessHints({ t }: { t: Tile }) {
+  const sel = useStore((s) => s.sel)
+  const tiles = useStore((s) => s.tiles)
+  if (sel.length !== 1) return null
+  const pcs = boardPieces(t, tiles)
+  const pc = pcs.find((q) => q.id === sel[0])
+  if (!pc) return null
+  return (
+    <g style={{ pointerEvents: 'none' }}>
+      {chessMoves(pcs, pc).map(([c, r]) => {
+        let fill: string = C.yellow
+        if (t.p.highlight === 'danger') {
+          const next = pcs.filter((q) => !(q.c === c && q.r === r) || q.id === pc.id).map((q) => (q.id === pc.id ? { ...q, c, r } : q))
+          const danger = next.some((q) => q.dark !== pc.dark && chessMoves(next, q, true).some(([cc, rr]) => cc === c && rr === r))
+          fill = danger ? C.red : C.blue
+        }
+        return <circle key={`${c},${r}`} cx={-HALF + c * SQ + SQ / 2} cy={-HALF + r * SQ + SQ / 2} r={SQ * 0.18} fill={fill} opacity={0.85} />
+      })}
+    </g>
+  )
+}
+
+/** Taşları başlangıç dizilişine koyar (karışık: şah dışındaki taşlar rastgele) */
+function resetChess(board: Tile, api: PadApi, random = false) {
+  api.remove(boardPieces(board, api.all()).map((q) => q.id))
+  const pick = (k: string) => (k === 'k' ? 'k' : random ? ['q', 'r', 'b', 'n', 'p'][Math.floor(Math.random() * 5)] : k)
+  const add: Omit<Tile, 'id'>[] = []
+  const put = (c: number, r: number, piece: string, dark: boolean) => {
+    const w = toWorld(board, { x: -HALF + c * SQ + SQ / 2, y: -HALF + r * SQ + SQ / 2 })
+    add.push({ type: 'chess-piece', x: w.x, y: w.y, rot: board.rot, p: dark ? { piece, dark } : { piece } })
+  }
+  for (let c = 0; c < 8; c++) {
+    put(c, 0, pick(BACK_RANK[c]), true)
+    put(c, 1, pick('p'), true)
+    put(c, 6, pick('p'), false)
+    put(c, 7, pick(BACK_RANK[c]), false)
+  }
+  api.add(add, false)
+  api.sound('snap')
+}
+
 const chessBoard: TileDef = {
   type: 'chess-board',
   name: () => 'Satranç tahtası',
+  create: () => ({ p: { highlight: 'off' } }),
   bounds: () => rectBox(HALF * 2 + 36, HALF * 2 + 36),
   edgeSnap: false,
-  render: () => (
+  render: (t, ctx) => (
     <>
       <rect x={-HALF - 18} y={-HALF - 18} width={HALF * 2 + 36} height={HALF * 2 + 36} rx={6} fill="#7a5230" />
       {Array.from({ length: 64 }, (_, i) => {
@@ -651,6 +856,7 @@ const chessBoard: TileDef = {
           </Label>
         </g>
       ))}
+      {t.p.highlight && t.p.highlight !== 'off' && !ctx.thumb && <ChessHints t={t} />}
     </>
   ),
   onDrop: (t, dropped, api) => {
@@ -824,7 +1030,10 @@ const pad2 = (n: number) => String(Math.floor(n)).padStart(2, '0')
 const tip = (angle: number, len: number): Pt => ({ x: Math.sin((angle * Math.PI) / 180) * len, y: -Math.cos((angle * Math.PI) / 180) * len })
 const angleOf = (l: Pt) => mod(deg(Math.atan2(l.x, -l.y)), 360)
 
-function Face({ t, h, m, s, digital }: { t: Tile; h: number; m: number; s?: number; digital: string }) {
+function Face({ t, h, m, s: sec, digital }: { t: Tile; h: number; m: number; s?: number; digital: string }) {
+  // Saniye ibresi ve dijital saniyeler "Saniyeler" seçeneğine bağlı
+  const s = t.p.showSeconds === false ? undefined : sec
+  if (t.p.showSeconds === false) digital = digital.split(':').slice(0, 2).join(':')
   const hourTip = tip(h, 38)
   const minTip = tip(m, 58)
   return (
@@ -886,9 +1095,9 @@ const clock: TileDef = {
   type: 'clock',
   name: (t) => (t.p.clock === 'live' ? 'Canlı saat' : t.p.clock === 'geared' ? 'Dişli saat' : 'Serbest saat'),
   create: (p) => {
-    if (p.clock === 'geared') return { p: { clock: 'geared', min: Math.round((Number(p.ms) || 0) / 60) % 720 } }
-    if (p.clock === 'free') return { p: { clock: 'free', h: Number(p.h) || 0, m: Number(p.m) || 0, s: Number(p.s) || 0 } }
-    return { p: { clock: 'live' } }
+    if (p.clock === 'geared') return { p: { clock: 'geared', min: Math.round((Number(p.ms) || 0) / 60) % 720, showSeconds: true } }
+    if (p.clock === 'free') return { p: { clock: 'free', h: Number(p.h) || 0, m: Number(p.m) || 0, s: Number(p.s) || 0, showSeconds: true } }
+    return { p: { clock: 'live', showSeconds: true } }
   },
   bounds: (t) => ({ x: -R - 2, y: -R - 2, w: 2 * R + 4, h: 2 * R + 4 + (t.p.digital ? 36 : 0) }),
   edgeSnap: false,
@@ -916,7 +1125,7 @@ const clock: TileDef = {
       return [
         { id: 'h', ...tip(mod(t.p.h, 12) * 30, 38), show: 'always', hidden: true },
         { id: 'm', ...tip(t.p.m * 6, 58), show: 'always', hidden: true },
-        { id: 's', ...tip(t.p.s * 6, 62), show: 'always', hidden: true },
+        ...(t.p.showSeconds === false ? [] : [{ id: 's', ...tip(t.p.s * 6, 62), show: 'always' as const, hidden: true }]),
       ]
     return []
   },
@@ -933,7 +1142,6 @@ const clock: TileDef = {
     if (id === 'h') return { p: { ...t.p, h: mod(Math.round(a / 6) / 5, 12) } }
     return { p: { ...t.p, [id]: Math.round(a / 6) % 60 } }
   },
-  actions: (t) => [toggle(t, 'digital', 'Dijital saati göster', 'clock'), toggle(t, 'noNumbers', 'Sayıları gizle', 'hash')],
 }
 
 // ---------------------------------------------------------------------------
@@ -974,3 +1182,272 @@ const domino: TileDef = {
 }
 
 export const appsTiles: TileDef[] = [piano, song, logicButton, logicSwitch, logicMetronome, logicBulb, logicSpeaker, logicDisplay, logicGate, chessBoard, chessPiece, currency, clock, domino]
+
+// ---------------------------------------------------------------------------
+// Para bozma / birleştirme / düzenleme
+// ---------------------------------------------------------------------------
+
+/** Para birimlerinin değerleri (TRY kuruş cinsinden tamsayı, diğerleri sent/peni) */
+const DENOMS: Record<string, number[]> = {
+  TRY: [1, 5, 10, 25, 50, 100, 500, 1000, 2000, 5000, 10000, 20000],
+  USD: [1, 5, 10, 25, 100],
+  EUR: [1, 2, 5, 10, 20, 50, 100, 200],
+  GBP: [1, 2, 5, 10, 20, 50, 100, 200],
+}
+const toInt = (cur: string, v: number) => (cur === 'TRY' ? Math.round(v * 100) : v)
+const fromInt = (cur: string, n: number) => (cur === 'TRY' ? n / 100 : n)
+
+/** Açgözlü yöntemle toplamı verilen değerlere böler (yalnızca sınırdan küçük değerler) */
+function greedy(cur: string, total: number, below = Infinity): number[] {
+  const ds = (DENOMS[cur] ?? []).filter((d) => d < below && d <= total)
+  const out: number[] = []
+  let sum = 0
+  for (let i = ds.length - 1; i >= 0 && sum < total; ) {
+    if (sum + ds[i] <= total) {
+      sum += ds[i]
+      out.push(ds[i])
+    } else i--
+  }
+  return sum === total ? out : []
+}
+
+/** Bir paranın bozuk hâli (kendisinden küçük değerlerle) */
+const changeOf = (t: Tile) => greedy(t.p.currency, toInt(t.p.currency, t.p.value), toInt(t.p.currency, t.p.value)).map((n) => fromInt(t.p.currency, n))
+
+const byCurrency = (ts: Tile[]) => Object.keys(DENOMS).map((c) => ts.filter((t) => t.type === 'currency' && t.p.currency === c)).filter((g) => g.length)
+
+/** Bir grubu daha büyük değerlere çevirir; değişmiyorsa undefined */
+function cashInOf(group: Tile[]): number[] | undefined {
+  const cur = group[0].p.currency
+  const vals = group.map((t) => toInt(cur, t.p.value))
+  const res = greedy(cur, vals.reduce((a, b) => a + b, 0))
+  if (!res.length) return
+  const key = (a: number[]) => [...a].sort((x, y) => x - y).join(',')
+  if (key(res) === key(vals)) return
+  return res.map((n) => fromInt(cur, n))
+}
+
+const moneySize = (cur: string, v: number) => {
+  const m = money(cur, v)
+  return m.kind === 'note' ? { w: NOTE_W, h: NOTE_H } : { w: m.r * 2, h: m.r * 2 }
+}
+
+/** Paraları değere göre satırlara dizer: aynı değerler aynı satırda, en çok 10 sütun */
+function moneyGrid(cur: string, values: number[]): Pt[] {
+  const sizes = values.map((v) => moneySize(cur, v))
+  const cw = Math.max(...sizes.map((z) => z.w)) + 10
+  const ch = Math.max(...sizes.map((z) => z.h)) + 10
+  const counts = new Map<number, number>()
+  values.forEach((v) => counts.set(v, (counts.get(v) ?? 0) + 1))
+  const grouped = [...counts.values()].some((n) => n >= 3) || values.length > 10
+  let col = -1
+  let row = 0
+  const cells: [number, number][] = values.map((v, i) => {
+    if (!grouped) return [i % 10, Math.floor(i / 10)]
+    const newRow = i > 0 && (col + 1 >= 10 || v !== values[i - 1])
+    col = newRow ? 0 : col + 1
+    if (newRow) row++
+    return [col, row]
+  })
+  const mx = Math.max(...cells.map((c) => c[0]))
+  const my = Math.max(...cells.map((c) => c[1]))
+  return cells.map(([c, r]) => ({ x: (c - mx / 2) * cw, y: (r - my / 2) * ch }))
+}
+
+const centerOf = (ts: Tile[]) => {
+  const xs = ts.map((t) => t.x)
+  const ys = ts.map((t) => t.y)
+  return { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: (Math.min(...ys) + Math.max(...ys)) / 2 }
+}
+
+// ---------------------------------------------------------------------------
+// Eylem çubuğu (Polypad eylemleri)
+// ---------------------------------------------------------------------------
+
+const p = (patch: Record<string, unknown>) => ({ p: patch })
+const all = (ts: Tile[], f: (t: Tile) => boolean) => ts.every(f)
+
+const SCALE_OPTIONS = [
+  { key: 'major', label: 'Majör' },
+  { key: 'minor', label: 'Minör' },
+  { key: 'chromatic', label: 'Kromatik' },
+  { key: 'blues', label: 'Blues' },
+  { key: 'pentatonic', label: 'Pentatonik' },
+]
+
+export const appsActions: ActionSpec[] = [
+  // Parça (song)
+  { id: 'song-play', type: 'button', tileTypes: ['song'], label: 'Çal', icon: 'play', location: 'bar', order: 0, show: (ts) => ts.some((t) => !t.p.playing), click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { playing: true })) },
+  { id: 'song-pause', type: 'button', tileTypes: ['song'], label: 'Durdur', icon: 'pause', location: 'bar', order: 1, show: (ts) => ts.some((t) => t.p.playing), click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { playing: false })) },
+  { id: 'loops', type: 'input', tileTypes: ['song'], label: 'Tekrar:', value: 'number', range: [1, 100], get: (t) => t.p.loops ?? 1, set: (v: number) => p({ loops: Math.round(v) }) },
+  {
+    id: 'playback',
+    type: 'select',
+    tileTypes: ['song'],
+    label: 'Çalma:',
+    location: 'music',
+    options: [
+      { key: 'timeline', label: 'Zaman çizelgesi' },
+      { key: 'sequence', label: 'Sıra' },
+    ],
+    get: (t) => t.p.playbackType ?? 'timeline',
+    set: (v: string) => p({ playbackType: v }),
+  },
+  {
+    id: 'song-labels',
+    type: 'select',
+    tileTypes: ['song'],
+    label: 'Etiketler:',
+    location: 'music',
+    show: (ts) => all(ts, (t) => t.p.musicScale !== 'percussion'),
+    options: [
+      { key: 'hidden', label: 'Yok' },
+      { key: 'number', label: 'Sayılar' },
+      { key: 'text', label: 'Notalar' },
+    ],
+    get: (t) => t.p.labels || 'text',
+    set: (v: string) => p({ labels: v }),
+  },
+  { id: 'showGrid', type: 'checkbox', tileTypes: ['song'], label: 'Dikey çizgiler:', location: 'music', show: (ts) => all(ts, (t) => t.p.playbackType !== 'sequence'), get: (t) => !!t.p.showGrid, set: (v: boolean) => p({ showGrid: v }) },
+  { id: 'rowSize', type: 'input', tileTypes: ['song'], label: 'Satır yüksekliği:', location: 'music', value: 'number', range: [0.5, 10], step: 0.5, get: (t) => t.p.rowSize ?? 1, set: (v: number) => p({ rowSize: v }) },
+  { id: 'colSize', type: 'input', tileTypes: ['song'], label: 'Sütun genişliği:', location: 'music', value: 'number', range: [0.25, 10], step: 0.25, get: (t) => t.p.colSize ?? 1, set: (v: number) => p({ colSize: v }) },
+  { id: 'bar-length', type: 'input', tileTypes: ['song'], label: 'Ölçü uzunluğu:', location: 'music', value: 'number', range: [1, 16], get: (t) => t.p.barLength ?? 4, set: (v: number) => p({ barLength: Math.round(v) }) },
+  {
+    id: 'song-scale',
+    type: 'select',
+    tileTypes: ['song', 'piano'],
+    label: 'Müzik ölçeği:',
+    location: 'music',
+    options: [...SCALE_OPTIONS, { key: 'percussion', label: 'Vurmalı' }, { key: 'none', label: 'Yok' }],
+    get: (t) => t.p.musicScale ?? 'major',
+    // Vurmalı yalnızca parçada anlamlı
+    set: (v: string, t) => p({ musicScale: v === 'percussion' && t.type !== 'song' ? 'major' : v }),
+  },
+  { id: 'song-tempo', type: 'input', tileTypes: ['song'], label: 'Tempo:', location: 'music', value: 'number', range: [0.25, 4], step: 0.25, get: (t) => t.p.tempo ?? 1, set: (v: number) => p({ tempo: v }) },
+  { id: 'song-slower', type: 'button', tileTypes: ['song'], label: 'Yavaşlat', icon: 'minus', location: 'more', click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { bpm: Math.max(40, (t.p.bpm ?? 120) - 20) })) },
+  { id: 'song-faster', type: 'button', tileTypes: ['song'], label: 'Hızlandır', icon: 'add', location: 'more', click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { bpm: Math.min(240, (t.p.bpm ?? 120) + 20) })) },
+  { id: 'song-clear', type: 'button', tileTypes: ['song'], label: 'Temizle', icon: 'reset', location: 'more', click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { cells: [], playing: false })) },
+
+  // Klavye
+  {
+    id: 'audio-labels',
+    type: 'select',
+    tileTypes: ['piano'],
+    label: 'Etiketler:',
+    location: 'music',
+    options: [
+      { key: 'hidden', label: 'Yok' },
+      { key: 'number', label: 'Sayılar' },
+      { key: 'modular', label: 'Modüler sayılar' },
+      { key: 'text', label: 'Notalar' },
+      { key: 'color', label: 'Renkler' },
+    ],
+    get: (t) => pianoLabels(t),
+    set: (v: string) => p({ labels: v }),
+  },
+  { id: 'key', type: 'input', tileTypes: ['piano'], label: 'Başlangıç notası:', location: 'music', value: 'number', range: [-24, 24], show: (ts) => all(ts, (t) => pianoLabels(t) !== 'hidden'), get: (t) => t.p.note ?? 0, set: (v: number) => p({ note: Math.round(v) }) },
+
+  // Hoparlör
+  { id: 'pitch', type: 'input', tileTypes: ['logic-speaker'], label: 'Nota:', location: 'music', value: 'number', range: [-50, 50], get: (t) => t.p.note ?? 0, set: (v: number) => p({ note: Math.round(v) }) },
+  { id: 'volume', type: 'input', tileTypes: ['piano', 'logic-speaker', 'song'], label: 'Ses düzeyi:', location: 'music', value: 'number', range: [0, 10], get: (t) => t.p.volume ?? 1, set: (v: number) => p({ volume: v }) },
+
+  // Metronom
+  { id: 'metronome-play', type: 'button', tileTypes: ['logic-metronome'], label: 'Başlat', icon: 'play', show: (ts) => all(ts, (t) => !!t.p.paused), click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { paused: false })) },
+  { id: 'metronome-pause', type: 'button', tileTypes: ['logic-metronome'], label: 'Durdur', icon: 'pause', show: (ts) => ts.some((t) => !t.p.paused), click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { paused: true })) },
+  { id: 'bpm', type: 'input', tileTypes: ['logic-metronome'], label: 'Vuruş/dk:', value: 'number', range: [10, 200], get: (t) => t.p.bpm ?? 60, set: (v: number) => p({ bpm: Math.max(1, Math.min(240, Math.round(v))) }) },
+
+  // Satranç
+  {
+    id: 'hints',
+    type: 'select',
+    tileTypes: ['chess-board'],
+    label: 'İpuçları:',
+    options: [
+      { key: 'off', label: 'Yok' },
+      { key: 'moves', label: 'Hamleler' },
+      { key: 'danger', label: 'Tehlike' },
+    ],
+    get: (t) => t.p.highlight || 'off',
+    set: (v: string) => p({ highlight: v }),
+  },
+  { id: 'chess-reset', type: 'button', tileTypes: ['chess-board'], label: 'Sıfırla', click: (ts, api) => ts.forEach((t) => resetChess(t, api)) },
+  { id: 'randomise', type: 'button', tileTypes: ['chess-board'], label: 'Karıştır', icon: 'random', text: true, location: 'more', click: (ts, api) => ts.forEach((t) => resetChess(t, api, true)) },
+
+  // Saat
+  { id: 'seconds', type: 'checkbox', tileTypes: ['clock'], label: 'Saniyeler:', get: (t) => t.p.showSeconds !== false, set: (v: boolean) => p({ showSeconds: v }) },
+  { id: 'clock-digital', type: 'checkbox', tileTypes: ['clock'], label: 'Dijital saat:', location: 'more', get: (t) => !!t.p.digital, set: (v: boolean) => p({ digital: v }) },
+  { id: 'clock-numbers', type: 'checkbox', tileTypes: ['clock'], label: 'Sayılar:', location: 'more', get: (t) => !t.p.noNumbers, set: (v: boolean) => p({ noNumbers: !v }) },
+
+  // Paralar
+  {
+    id: 'make-change',
+    type: 'button',
+    tileTypes: ['currency'],
+    label: 'Bozdur',
+    icon: 'split-dots',
+    text: true,
+    show: (ts) => {
+      const n = ts.reduce((s, t) => s + changeOf(t).length, 0)
+      return n >= 1 && n <= 200
+    },
+    click: (ts, api) => {
+      const add: Omit<Tile, 'id'>[] = []
+      const gone: string[] = []
+      for (const t of ts) {
+        const parts = changeOf(t)
+        if (!parts.length) continue
+        gone.push(t.id)
+        const size = Math.max(...parts.map((v) => Math.max(moneySize(t.p.currency, v).w, moneySize(t.p.currency, v).h)))
+        const rad = parts.length === 1 ? 0 : size * 0.55 * Math.max(1, parts.length / 4)
+        const a0 = Math.random() * Math.PI
+        parts.forEach((v, i) => {
+          const a = a0 + (2 * Math.PI * i) / parts.length
+          add.push({ type: 'currency', x: t.x + Math.cos(a) * rad, y: t.y + Math.sin(a) * rad, rot: t.rot, p: { currency: t.p.currency, value: v } })
+        })
+      }
+      api.remove(gone)
+      api.add(add)
+      api.sound('pop')
+    },
+  },
+  {
+    id: 'cash-in',
+    type: 'button',
+    tileTypes: ['currency'],
+    label: 'Birleştir',
+    icon: 'combine-dots',
+    text: true,
+    show: (ts) => ts.length > 1 && byCurrency(ts).some((g) => !!cashInOf(g)),
+    click: (ts, api) => {
+      const add: Omit<Tile, 'id'>[] = []
+      for (const g of byCurrency(ts)) {
+        const res = cashInOf(g)
+        if (!res) continue
+        const cur = g[0].p.currency
+        const c = centerOf(g)
+        const vals = [...res].sort((x, y) => y - x)
+        const pos = moneyGrid(cur, vals)
+        api.remove(g.map((t) => t.id))
+        vals.forEach((v, i) => add.push({ type: 'currency', x: c.x + pos[i].x, y: c.y + pos[i].y, rot: 0, p: { currency: cur, value: v } }))
+      }
+      if (add.length) api.add(add)
+      api.sound('snap')
+    },
+  },
+  {
+    id: 'organize',
+    type: 'button',
+    tileTypes: ['currency'],
+    label: 'Düzenle',
+    show: (ts) => ts.length > 1 && byCurrency(ts).some((g) => g.length > 1),
+    click: (ts, api) => {
+      for (const g of byCurrency(ts)) {
+        if (g.length <= 1) continue
+        const c = centerOf(g)
+        const sorted = [...g].sort((a, b) => b.p.value - a.p.value || a.y - b.y || a.x - b.x)
+        const pos = moneyGrid(g[0].p.currency, sorted.map((t) => t.p.value))
+        sorted.forEach((t, i) => api.update(t.id, { x: c.x + pos[i].x, y: c.y + pos[i].y, rot: 0 }))
+      }
+    },
+  },
+]

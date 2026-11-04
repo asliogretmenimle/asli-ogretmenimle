@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
-import type { Props, Pt, Tile, TileDef } from '../types'
+import type { ActionSpec, Props, Pt, Tile, TileDef } from '../types'
 import { UNIT, boundsOf, deg, dist, fmt, pad, rad, round, toLocal, toWorld } from '../geom'
-import { C, FONT, Label, action, toggle } from './kit'
+import { C, FONT, Label } from './kit'
+import { compile } from './expr'
 
 // ---------------------------------------------------------------------------
 // Çizgi kalınlığı / stili
@@ -202,12 +203,6 @@ const text: TileDef = {
   text: { key: 'text', multiline: true, label: 'Metin' },
   colorable: true,
   edgeSnap: false,
-  actions: (t) => [
-    action('smaller', 'Yazıyı küçült', 'minus', (tile, api) => api.updateP(tile.id, (p) => ({ size: Math.max(10, (p.size ?? 20) - 2) }), true)),
-    action('bigger', 'Yazıyı büyüt', 'plus', (tile, api) => api.updateP(tile.id, (p) => ({ size: Math.min(96, (p.size ?? 20) + 2) }), true)),
-    action('align', 'Hizalama', 'label', (tile, api) => api.updateP(tile.id, (p) => ({ align: p.align === 'left' ? 'center' : p.align === 'center' ? 'right' : 'left' }), true)),
-    action('fill', 'Arka plan', 'grid', (tile, api) => api.updateP(tile.id, (p) => (p.fill ? { fill: null, stroke: null, shadow: false } : { fill: '#dfe189', stroke: '#111111', shadow: true }), true), !!t.p.fill),
-  ],
 }
 
 // ---------------------------------------------------------------------------
@@ -449,16 +444,51 @@ function typeset(src: string, size: number) {
   return hit
 }
 
+/** Değişkensiz, eşittirsiz ifadeler hesaplanabilir */
+const evalFn = (src: string) => (src && !src.includes('=') && !/[a-zçğıöşü]/i.test(src.replace(/sqrt|pi|sin|cos|tan|log|ln|abs/g, '')) ? compile(src) : null)
+
+function gcd(a: number, b: number): number {
+  return b ? gcd(b, a % b) : Math.abs(a)
+}
+
+/** Sonucu ondalık, kesir ya da tam sayılı kesir olarak yazar */
+export function formatResult(v: number, mode: string) {
+  if (!Number.isFinite(v)) return '?'
+  if (mode !== 'decimal' && !Number.isInteger(v)) {
+    for (let d = 2; d <= 1000; d++) {
+      const n = Math.round(v * d)
+      if (Math.abs(n / d - v) < 1e-9) {
+        const g = gcd(n, d)
+        const nn = n / g
+        const dd = d / g
+        if (mode === 'mixed' && Math.abs(nn) > dd) {
+          const whole = Math.trunc(nn / dd)
+          return `${whole} ${Math.abs(nn % dd)}/${dd}`
+        }
+        return `${nn}/${dd}`
+      }
+    }
+  }
+  return String(Math.round(v * 1e6) / 1e6).replace('.', ',')
+}
+
+const eqSource = (t: Tile) => {
+  const src: string = t.p.src ?? ''
+  if (!t.p.evaluate) return src
+  const f = evalFn(src)
+  return f ? `${src} = ${formatResult(f(), t.p.labels ?? 'fraction')}` : src
+}
+
 const equation: TileDef = {
   type: 'equation',
   name: () => 'Denklem',
   create: () => ({ color: C.dark, p: { src: '', size: 28 } }),
   bounds: (t) => {
-    const { box } = typeset(t.p.src, t.p.size ?? 28)
+    const { box } = typeset(eqSource(t), t.p.size ?? 28)
     return pad({ x: -box.w / 2, y: -(box.asc + box.desc) / 2, w: box.w, h: box.asc + box.desc }, 8)
   },
   render: (t, ctx) => {
-    const { box, nodes } = typeset(t.p.src, t.p.size ?? 28)
+    const { box, nodes } = typeset(eqSource(t), t.p.size ?? 28)
     const h = box.asc + box.desc
     return (
       <>
@@ -472,10 +502,6 @@ const equation: TileDef = {
   text: { key: 'src', label: 'Denklem (ör. x^2 + 3/4 = sqrt(9))' },
   colorable: true,
   edgeSnap: false,
-  actions: () => [
-    action('smaller', 'Küçült', 'minus', (tile, api) => api.updateP(tile.id, (p) => ({ size: Math.max(12, (p.size ?? 28) - 4) }), true)),
-    action('bigger', 'Büyüt', 'plus', (tile, api) => api.updateP(tile.id, (p) => ({ size: Math.min(120, (p.size ?? 28) + 4) }), true)),
-  ],
 }
 
 // ---------------------------------------------------------------------------
@@ -574,6 +600,8 @@ const line: TileDef = {
         <path d={d} fill="none" stroke={color} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={dashFor(t.p.dash, w)} />
         {t.p.arrowB && <path d={arrowHead(pts.b, tangentFrom(t, 'b', pts), w)} fill={color} stroke={color} strokeWidth={1} strokeLinejoin="round" />}
         {t.p.arrowA && <path d={arrowHead(pts.a, tangentFrom(t, 'a', pts), w)} fill={color} stroke={color} strokeWidth={1} strokeLinejoin="round" />}
+        {t.p.dotA && <circle cx={pts.a.x} cy={pts.a.y} r={w + 2.5} fill={color} />}
+        {t.p.dotB && <circle cx={pts.b.x} cy={pts.b.y} r={w + 2.5} fill={color} />}
       </>
     )
   },
@@ -588,7 +616,7 @@ const line: TileDef = {
       const m = { x: (t.p.a.x + t.p.b.x) / 2, y: (t.p.a.y + t.p.b.y) / 2 }
       hs.push({ id: 'c', x: (c.x + m.x) / 2, y: (c.y + m.y) / 2 })
     }
-    if (t.p.style === 'custom') hs.push({ id: 'm', x: (t.p.a.x + t.p.b.x) / 2 + (t.p.m ?? 0), y: (t.p.a.y + t.p.b.y) / 2 })
+    if (t.p.style === 'custom' && !t.p.pointsLocked) hs.push({ id: 'm', x: (t.p.a.x + t.p.b.x) / 2 + (t.p.m ?? 0), y: (t.p.a.y + t.p.b.y) / 2 })
     return hs
   },
   onHandle: (t, id, l, api, phase) => {
@@ -623,11 +651,6 @@ const line: TileDef = {
   rotatable: false,
   colorable: true,
   edgeSnap: false,
-  actions: (t) => [
-    action('style', 'Çizgi türü', 'link', (tile, api) => api.updateP(tile.id, (p) => ({ style: p.style === 'straight' ? 'curved' : p.style === 'curved' ? 'custom' : 'straight', c: undefined, m: 0 }), true)),
-    toggle(t, 'arrowA', 'Başta ok', 'arrowL'),
-    toggle(t, 'arrowB', 'Sonda ok', 'arrowR'),
-  ],
 }
 
 // ---------------------------------------------------------------------------
@@ -686,16 +709,44 @@ const geoSegment: TileDef = {
   bounds: (t) => pad(boundsOf([t.p.a, t.p.b]), 8),
   render: (t) => {
     const { a, b } = t.p
-    const d = `M${a.x} ${a.y}L${b.x} ${b.y}`
+    const kind: string = t.p.lineType ?? 'segment'
+    const l = dist(a, b) || 1
+    const ux = (b.x - a.x) / l
+    const uy = (b.y - a.y) / l
+    const far = 4000
+    // Doğru: iki yana, ışın: b yönünde sonsuza uzanır
+    const s0 = kind === 'line' ? { x: a.x - ux * far, y: a.y - uy * far } : a
+    const s1 = kind === 'segment' ? b : { x: b.x + ux * far, y: b.y + uy * far }
+    const d = `M${s0.x} ${s0.y}L${s1.x} ${s1.y}`
+    const color = t.color ?? C.dark
+    const w = t.p.w ?? 3
+    const arrows: string = t.p.arrows ?? ''
+    const m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+    const marks: string = t.p.marks ?? ''
+    const n = marks.endsWith('2') ? 2 : 1
     return (
       <>
-        <Hit d={d} />
+        <Hit d={`M${a.x} ${a.y}L${b.x} ${b.y}`} />
         <path d={d} {...geoStroke(t)} />
-        <circle cx={a.x} cy={a.y} r={4} fill={t.color ?? C.dark} />
-        <circle cx={b.x} cy={b.y} r={4} fill={t.color ?? C.dark} />
-        {t.p.length && (
-          <Label x={(a.x + b.x) / 2} y={(a.y + b.y) / 2 - 14} size={13} color={t.color ?? C.dark}>
-            {fmt(dist(a, b) / UNIT)}
+        <circle cx={a.x} cy={a.y} r={4} fill={color} />
+        <circle cx={b.x} cy={b.y} r={4} fill={color} />
+        {(arrows === 'end' || arrows === 'both') && <path d={arrowHead(b, a, w)} fill={color} />}
+        {(arrows === 'start' || arrows === 'both') && <path d={arrowHead(a, b, w)} fill={color} />}
+        {marks.startsWith('bar') &&
+          Array.from({ length: n }, (_, i) => {
+            const o = (i - (n - 1) / 2) * 6
+            const c = { x: m.x + ux * o, y: m.y + uy * o }
+            return <path key={i} d={`M${c.x - uy * 8} ${c.y + ux * 8}L${c.x + uy * 8} ${c.y - ux * 8}`} stroke={color} strokeWidth={2} />
+          })}
+        {marks.startsWith('arrow') &&
+          Array.from({ length: n }, (_, i) => {
+            const o = (i - (n - 1) / 2) * 7 + 4
+            const tip = { x: m.x + ux * o, y: m.y + uy * o }
+            return <path key={i} d={`M${tip.x - ux * 7 - uy * 6} ${tip.y - uy * 7 + ux * 6}L${tip.x} ${tip.y}L${tip.x - ux * 7 + uy * 6} ${tip.y - uy * 7 - ux * 6}`} fill="none" stroke={color} strokeWidth={2} />
+          })}
+        {(t.p.length || t.p.label) && (
+          <Label x={m.x} y={m.y - 16} size={14} color={color}>
+            {t.p.label || fmt(dist(a, b) / UNIT)}
           </Label>
         )}
       </>
@@ -712,7 +763,6 @@ const geoSegment: TileDef = {
   colorable: true,
   rotatable: false,
   edgeSnap: false,
-  actions: (t) => [toggle(t, 'length', 'Uzunluğu göster', 'ruler')],
 }
 
 const geoCircle: TileDef = {
@@ -727,6 +777,7 @@ const geoCircle: TileDef = {
         <Hit d={d} />
         <path d={d} {...geoStroke(t)} />
         <circle r={4} fill={t.color ?? C.dark} />
+        {t.p.label && <Label y={-t.p.r - 12} size={14} color={t.color ?? C.dark}>{t.p.label}</Label>}
         {t.p.radius && (
           <>
             <path d={`M0 0H${t.p.r}`} {...geoStroke(t)} strokeWidth={1.5} strokeDasharray="4 4" />
@@ -742,7 +793,6 @@ const geoCircle: TileDef = {
   onHandle: (t, _id, l) => ({ p: { ...t.p, r: Math.max(6, round(Math.hypot(l.x, l.y))) } }),
   colorable: true,
   edgeSnap: false,
-  actions: (t) => [toggle(t, 'radius', 'Yarıçapı göster', 'ruler')],
 }
 
 const geoRect: TileDef = {
@@ -775,7 +825,6 @@ const geoRect: TileDef = {
   onHandle: (t, _id, l) => ({ p: { ...t.p, w2: Math.max(8, round(Math.abs(l.x) * 2)), h2: Math.max(8, round(Math.abs(l.y) * 2)) } }),
   colorable: true,
   edgeSnap: false,
-  actions: (t) => [toggle(t, 'sides', 'Kenar uzunlukları', 'ruler')],
 }
 
 const geoAngle: TileDef = {
@@ -828,3 +877,175 @@ const geoAngle: TileDef = {
 }
 
 export const basicTiles: TileDef[] = [stroke, text, equation, line, geoPoint, geoSegment, geoCircle, geoRect, geoAngle]
+
+/** Eylem çubuğu (Polypad eylemleri) */
+const pp = (patch: Record<string, unknown>) => ({ p: patch })
+const GEO = ['geo-segment', 'geo-circle', 'geo-rect', 'geo-angle', 'geo-point']
+
+export const basicActions: ActionSpec[] = [
+  // Bağlantı çizgisi
+  {
+    id: 'line-style',
+    type: 'select',
+    tileTypes: ['line'],
+    label: 'Tür:',
+    location: 'more',
+    options: [
+      { key: 'straight', label: 'Düz' },
+      { key: 'curved', label: 'Eğri' },
+      { key: 'custom', label: 'Kırık' },
+    ],
+    get: (t) => t.p.style,
+    set: (v: string) => pp({ style: v, c: undefined, m: 0 }),
+  },
+  {
+    id: 'length',
+    type: 'input',
+    tileTypes: ['line'],
+    label: 'Uzunluk:',
+    location: 'more',
+    value: 'number',
+    show: (ts) => ts.every((t) => t.p.style === 'straight'),
+    get: (t) => round(dist(t.p.a, t.p.b) / UNIT, 2),
+    set: (v: number, t) => {
+      // Başlangıç ucu sabit, bitiş ucu aynı yönde uzar
+      const { a, b } = t.p
+      const l = dist(a, b) || 1
+      const nb = { x: a.x + ((b.x - a.x) / l) * v * UNIT, y: a.y + ((b.y - a.y) / l) * v * UNIT }
+      return lineFrom({ ...t, p: { ...t.p, links: { ...(t.p.links ?? {}), b: null } } }, toWorld(t, a), toWorld(t, nb))
+    },
+  },
+  ...(['a', 'b'] as const).map(
+    (end): ActionSpec => ({
+      id: `${end === 'a' ? 'start' : 'end'}-style`,
+      type: 'select',
+      tileTypes: ['line'],
+      label: end === 'a' ? 'Başlangıç ucu:' : 'Bitiş ucu:',
+      location: 'more',
+      options: [
+        { key: 'none', label: 'Yok' },
+        { key: 'arrow', label: 'Ok' },
+        { key: 'endpoint', label: 'Nokta' },
+      ],
+      get: (t) => (t.p[`arrow${end.toUpperCase()}`] ? 'arrow' : t.p[`dot${end.toUpperCase()}`] ? 'endpoint' : 'none'),
+      set: (v: string) => pp({ [`arrow${end.toUpperCase()}`]: v === 'arrow', [`dot${end.toUpperCase()}`]: v === 'endpoint' }),
+    }),
+  ),
+  {
+    id: 'lock-points',
+    type: 'button',
+    tileTypes: ['line'],
+    label: 'Noktaları kilitle',
+    text: true,
+    show: (ts) => ts.every((t) => t.p.style === 'custom' && !t.p.pointsLocked),
+    click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { pointsLocked: true })),
+  },
+
+  // Denklem
+  {
+    id: 'set-eval',
+    type: 'button',
+    tileTypes: ['equation'],
+    label: 'Hesapla',
+    icon: 'calculate',
+    text: true,
+    order: 1,
+    show: (ts) => ts.every((t) => !t.p.evaluate && !!evalFn(t.p.src ?? '')),
+    click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { evaluate: true })),
+  },
+  {
+    id: 'unset-eval',
+    type: 'button',
+    tileTypes: ['equation'],
+    label: 'Sonucu gizle',
+    text: true,
+    order: 1,
+    show: (ts) => ts.every((t) => t.p.evaluate),
+    click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { evaluate: false })),
+  },
+  {
+    id: 'value-display',
+    type: 'select',
+    tileTypes: ['equation'],
+    label: 'Sonuç biçimi:',
+    location: 'more',
+    options: [
+      { key: 'decimal', label: 'Ondalık' },
+      { key: 'fraction', label: 'Kesir' },
+      { key: 'mixed', label: 'Tam sayılı kesir' },
+    ],
+    get: (t) => t.p.labels ?? 'fraction',
+    set: (v: string) => pp({ labels: v }),
+  },
+  { id: 'eq-size', type: 'input', tileTypes: ['equation'], label: 'Yazı boyutu:', location: 'more', value: 'number', range: [12, 120], step: 4, get: (t) => t.p.size ?? 28, set: (v: number) => pp({ size: v }) },
+
+  // Metin kutusu (Polypad'de biçimlendirme metin içinde; boyut, hizalama ve arka plan ⋯ menüsünde)
+  { id: 'text-size', type: 'input', tileTypes: ['text'], label: 'Yazı boyutu:', location: 'more', value: 'number', range: [10, 96], step: 2, get: (t) => t.p.size ?? 20, set: (v: number) => pp({ size: v }) },
+  {
+    id: 'text-align',
+    type: 'select',
+    tileTypes: ['text'],
+    label: 'Hizalama:',
+    location: 'more',
+    options: [
+      { key: 'left', label: 'Sola' },
+      { key: 'center', label: 'Ortaya' },
+      { key: 'right', label: 'Sağa' },
+    ],
+    get: (t) => t.p.align ?? 'left',
+    set: (v: string) => pp({ align: v }),
+  },
+  { id: 'text-fill', type: 'checkbox', tileTypes: ['text'], label: 'Arka plan:', location: 'more', get: (t) => !!t.p.fill, set: (v: boolean) => pp(v ? { fill: '#dfe189', stroke: '#111111' } : { fill: null, stroke: null }) },
+  { id: 'drop-shadow', type: 'checkbox', tileTypes: ['text'], label: 'Gölge:', author: true, location: 'more', get: (t) => !!t.p.shadow, set: (v: boolean) => pp({ shadow: v }) },
+
+  // Geometrik çizimler
+  {
+    id: 'geo-line-style',
+    type: 'select',
+    tileTypes: ['geo-segment'],
+    label: 'Çizgi türü:',
+    location: 'more',
+    options: [
+      { key: 'line', label: 'Doğru' },
+      { key: 'ray', label: 'Işın' },
+      { key: 'segment', label: 'Doğru parçası' },
+    ],
+    get: (t) => t.p.lineType ?? 'segment',
+    set: (v: string) => pp({ lineType: v }),
+  },
+  {
+    id: 'arrows',
+    type: 'select',
+    tileTypes: ['geo-segment'],
+    label: 'Oklar:',
+    location: 'more',
+    options: [
+      { key: '', label: 'Yok' },
+      { key: 'start', label: 'Başta' },
+      { key: 'end', label: 'Sonda' },
+      { key: 'both', label: 'İki uçta' },
+    ],
+    get: (t) => t.p.arrows ?? '',
+    set: (v: string) => pp({ arrows: v }),
+  },
+  {
+    id: 'marks',
+    type: 'select',
+    tileTypes: ['geo-segment'],
+    label: 'İşaret:',
+    location: 'more',
+    options: [
+      { key: '', label: 'Yok' },
+      { key: 'bar', label: 'Tek çizgi' },
+      { key: 'bar2', label: 'Çift çizgi' },
+      { key: 'arrow', label: 'Tek ok' },
+      { key: 'arrow2', label: 'Çift ok' },
+    ],
+    get: (t) => t.p.marks ?? '',
+    set: (v: string) => pp({ marks: v }),
+  },
+  { id: 'geo-label', type: 'input', tileTypes: GEO, label: 'Etiket:', location: 'more', value: 'text', get: (t) => t.p.label ?? '', set: (v: string) => pp({ label: v }) },
+  { id: 'show-length', type: 'checkbox', tileTypes: ['geo-segment'], label: 'Uzunluğu göster:', location: 'more', get: (t) => !!t.p.length, set: (v: boolean) => pp({ length: v }) },
+  { id: 'show-radius', type: 'checkbox', tileTypes: ['geo-circle'], label: 'Yarıçapı göster:', location: 'more', get: (t) => !!t.p.radius, set: (v: boolean) => pp({ radius: v }) },
+  { id: 'show-sides', type: 'checkbox', tileTypes: ['geo-rect'], label: 'Kenar uzunlukları:', location: 'more', get: (t) => !!t.p.sides, set: (v: boolean) => pp({ sides: v }) },
+]

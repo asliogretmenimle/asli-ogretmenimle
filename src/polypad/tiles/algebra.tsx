@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
-import type { PadApi, Props, Pt, Tile, TileDef } from '../types'
-import { UNIT, boundsOf, clamp, fmt, pathOf, rad, round, toLocal, toWorld } from '../geom'
-import { C, FONT, Label, action, edge, rectBox, toggle } from './kit'
+import type { ActionSpec, PadApi, Props, Pt, Tile, TileDef } from '../types'
+import { UNIT, boundsOf, clamp, fmt, pathOf, rad, rotate, round, toLocal, toWorld } from '../geom'
+import { C, FONT, Label, edge, rectBox } from './kit'
 import { compile, rhs, type Vars } from './expr'
 import { getDef } from './index'
 
@@ -27,17 +27,17 @@ function Frac({ n, d, x = 0, y = 0, size = 13, color = '#fff' }: { n: ReactNode;
   )
 }
 
-type LabelKind = 'fraction' | 'decimal' | 'percent' | 'none'
-const LABEL_CYCLE: LabelKind[] = ['fraction', 'decimal', 'percent', 'none']
-const nextLabel = (k: LabelKind) => LABEL_CYCLE[(LABEL_CYCLE.indexOf(k) + 1) % LABEL_CYCLE.length]
-const labelName: Record<LabelKind, string> = { fraction: 'Kesir', decimal: 'Ondalık', percent: 'Yüzde', none: 'Etiket yok' }
+/** Etiket türü; Polypad anahtarları (percentage, hidden, degree) ve eski adlar (percent, none) kabul edilir */
+type LabelKind = 'fraction' | 'decimal' | 'percent' | 'degree' | 'none'
+const labelKind = (k: unknown): LabelKind =>
+  k === 'percentage' || k === 'percent' ? 'percent' : k === 'hidden' || k === 'none' ? 'none' : k === 'decimal' ? 'decimal' : k === 'degree' ? 'degree' : 'fraction'
 
-/** Kesir parçası etiketi (1/d) */
-function PieceLabel({ d, kind, x, y, size, color, unit }: { d: number; kind: LabelKind; x: number; y: number; size: number; color: string; unit?: boolean }) {
+/** Kesir parçası etiketi (n/d; birim kesirlerde n = 1) */
+function PieceLabel({ n = 1, d, kind, x, y, size, color, unit }: { n?: number; d: number; kind: LabelKind; x: number; y: number; size: number; color: string; unit?: boolean }) {
   if (kind === 'none') return null
-  if (d === 1 || unit) return <Label x={x} y={y} size={size * 1.15} color={color}>1</Label>
-  if (kind === 'fraction') return <Frac n={1} d={d} x={x} y={y} size={size} color={color} />
-  const text = kind === 'decimal' ? fmt(1 / d, 3) : `%${fmt(100 / d, 1)}`
+  if ((d === 1 && n === 1) || unit) return <Label x={x} y={y} size={size * 1.15} color={color}>1</Label>
+  if (kind === 'fraction') return d === 1 ? <Label x={x} y={y} size={size * 1.15} color={color}>{n}</Label> : <Frac n={n} d={d} x={x} y={y} size={size} color={color} />
+  const text = kind === 'decimal' ? fmt(n / d, 3) : kind === 'degree' ? `${fmt((360 * n) / d, 1)}°` : `%${fmt((100 * n) / d, 1)}`
   return <Label x={x} y={y} size={size * (text.length > 4 ? 0.82 : 1)} color={color}>{text}</Label>
 }
 
@@ -45,24 +45,60 @@ function PieceLabel({ d, kind, x, y, size, color, unit }: { d: number; kind: Lab
 const FR_COLORS = ['#cd0e66', '#eb4726', '#fd8c00', '#bfc212', '#22ab24', '#009ea6', '#0f82f2', '#6d3bbf', '#900a47', '#b16200', '#006f74', '#4c2986']
 const frColor = (t: Tile) => t.color ?? FR_COLORS[(t.p.denominator - 1) % FR_COLORS.length]
 
-const labelActions = (t: Tile) =>
-  action('labels', `Etiket: ${labelName[(t.p.labels ?? 'fraction') as LabelKind]}`, 'label', (tile, api) => api.updateP(tile.id, (p) => ({ labels: nextLabel(p.labels ?? 'fraction') }), true))
+/** "3/4", "1 1/2", "0,75" gibi metinleri sayıya çevirir */
+export function parseNum(v: unknown): number {
+  if (typeof v === 'number') return v
+  const s = String(v ?? '').trim().replace(',', '.')
+  const mixed = /^(-?)(\d+)\s+(\d+)\/(\d+)$/.exec(s)
+  if (mixed) return (mixed[1] ? -1 : 1) * (Number(mixed[2]) + Number(mixed[3]) / Number(mixed[4]))
+  const frac = /^(-?[\d.]+)\/(-?[\d.]+)$/.exec(s)
+  if (frac) return Number(frac[1]) / Number(frac[2])
+  return s === '' ? NaN : Number(s)
+}
 
-async function askInt(api: PadApi, label: string, value: number, min: number, max: number) {
-  const s = await api.prompt(label, String(value))
-  if (s == null) return null
-  const n = Math.round(Number(s.replace(',', '.')))
-  return Number.isFinite(n) ? clamp(n, min, max) : null
+/** Ondalık sayıyı kesre yaklaştırır (sürekli kesir) */
+function toFraction(x: number, maxDen = 1000): [number, number] {
+  let h1 = 1
+  let h0 = 0
+  let k1 = 0
+  let k0 = 1
+  let b = x
+  for (let i = 0; i < 30; i++) {
+    const a = Math.floor(b)
+    ;[h1, h0] = [a * h1 + h0, h1]
+    ;[k1, k0] = [a * k1 + k0, k1]
+    if (k1 > maxDen || Math.abs(x - h1 / k1) < 1e-9) break
+    b = 1 / (b - a)
+  }
+  return [h1, k1]
+}
+
+/** Sayıyı ondalık, kesir ya da tam sayılı kesir olarak yazar */
+function formatAs(v: number, kind: string): string {
+  if (kind === 'fraction' || kind === 'mixed') {
+    const [n, d] = toFraction(v)
+    if (d === 1) return String(n)
+    if (kind === 'mixed' && Math.abs(n) > d) {
+      const w = Math.trunc(n / d)
+      return `${w} ${Math.abs(n - w * d)}/${d}`
+    }
+    return `${n}/${d}`
+  }
+  return fmt(v, 4)
 }
 
 // ---------------------------------------------------------------------------
 // Kesir şeritleri
 // ---------------------------------------------------------------------------
 
-const BAR_W = 12 * UNIT
 const BAR_H = UNIT * 1.25
 
-const barSize = (t: Tile) => ({ pw: BAR_W / t.p.denominator, w: (BAR_W / t.p.denominator) * t.p.count })
+/** Bütün şeridin genişliği (Ölçek, birim cinsinden) */
+const barWhole = (t: Tile) => (t.p.size ?? 12) * UNIT
+const barSize = (t: Tile) => {
+  const pw = barWhole(t) / t.p.denominator
+  return { pw, w: pw * t.p.count }
+}
 
 const fractionBar: TileDef = {
   type: 'fraction-bar',
@@ -76,46 +112,33 @@ const fractionBar: TileDef = {
   render: (t) => {
     const { pw, w } = barSize(t)
     const color = frColor(t)
-    const kind = (t.p.labels ?? 'fraction') as LabelKind
+    const kind = labelKind(t.p.labels)
     const size = clamp(pw / 3.2, 8, 14)
+    const combine = !!t.p.combine && t.p.count > 1
     return (
       <>
         <rect x={-w / 2} y={-BAR_H / 2} width={w} height={BAR_H} fill={color} stroke={edge(color)} strokeWidth={1.5} rx={2} />
-        {t.p.count > 1 && (
+        {t.p.count > 1 && !combine && (
           <path d={Array.from({ length: t.p.count - 1 }, (_, i) => `M${-w / 2 + (i + 1) * pw} ${-BAR_H / 2}v${BAR_H}`).join('')} stroke={edge(color)} strokeWidth={1.5} />
         )}
-        {Array.from({ length: t.p.count }, (_, i) => (
-          <PieceLabel key={i} d={t.p.denominator} kind={kind} x={-w / 2 + (i + 0.5) * pw} y={0} size={size} color="#fff" />
-        ))}
+        {combine ? (
+          <PieceLabel n={t.p.count} d={t.p.denominator} kind={kind} x={0} y={0} size={clamp(w / 6, 9, 15)} color="#fff" />
+        ) : (
+          Array.from({ length: t.p.count }, (_, i) => <PieceLabel key={i} d={t.p.denominator} kind={kind} x={-w / 2 + (i + 0.5) * pw} y={0} size={size} color="#fff" />)
+        )}
       </>
     )
   },
   colorable: true,
   edgeSnap: true,
-  actions: (t) => [
-    labelActions(t),
-    ...(t.p.count > 1
-      ? [
-          action('split', 'Parçalara ayır', 'split', (tile, api) => {
-            const { pw, w } = barSize(tile)
-            const pieces = Array.from({ length: tile.p.count }, (_, i) => {
-              const c = toWorld(tile, { x: -w / 2 + (i + 0.5) * pw, y: 0 })
-              return { ...mk('fraction-bar', { ...tile.p, count: 1 }, c.x, c.y, tile.rot), color: tile.color, flip: tile.flip }
-            })
-            api.remove([tile.id])
-            api.add(pieces)
-          }),
-        ]
-      : []),
-    action('count', 'Parça sayısı', 'hash', async (tile, api) => {
-      const n = await askInt(api, `Parça sayısı (1–${tile.p.denominator * 3})`, tile.p.count, 1, tile.p.denominator * 3)
-      if (n != null) api.updateP(tile.id, { count: n }, true)
-    }),
-    action('denominator', 'Payda', 'fraction', async (tile, api) => {
-      const n = await askInt(api, 'Payda (1–24)', tile.p.denominator, 1, 24)
-      if (n != null) api.updateP(tile.id, (p) => ({ denominator: n, count: Math.min(p.count, n * 3) }), true)
-    }),
-  ],
+}
+
+function splitBar(tile: Tile): Omit<Tile, 'id'>[] {
+  const { pw, w } = barSize(tile)
+  return Array.from({ length: tile.p.count }, (_, i) => {
+    const c = toWorld(tile, { x: -w / 2 + (i + 0.5) * pw, y: 0 })
+    return { ...mk('fraction-bar', { ...tile.p, count: 1, combine: undefined }, c.x, c.y, tile.rot), color: tile.color, flip: tile.flip }
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -123,9 +146,10 @@ const fractionBar: TileDef = {
 // merkez etrafında döner ve ayrılan dilimler bütündeki yerlerinde kalır.
 // ---------------------------------------------------------------------------
 
-const CR = 2.5 * UNIT
+/** Daire yarıçapı (Yarıçap, birim cinsinden) */
+const radiusOf = (t: Tile) => (t.p.size ?? 2.5) * UNIT
 
-function sectorPts(a0: number, a1: number, r = CR): Pt[] {
+function sectorPts(a0: number, a1: number, r: number): Pt[] {
   const steps = Math.max(2, Math.ceil(((a1 - a0) / 360) * 48))
   const arc = Array.from({ length: steps + 1 }, (_, i) => {
     const a = rad(a0 + ((a1 - a0) * i) / steps)
@@ -139,45 +163,50 @@ const circleSpan = (t: Tile) => {
   return { a, total: Math.min(360, a * t.p.count) }
 }
 
-function sectorPath(a0: number, a1: number) {
-  if (a1 - a0 >= 360) return `M${CR} 0A${CR} ${CR} 0 1 1 ${-CR} 0A${CR} ${CR} 0 1 1 ${CR} 0Z`
-  const p0 = { x: CR * Math.cos(rad(a0)), y: CR * Math.sin(rad(a0)) }
-  const p1 = { x: CR * Math.cos(rad(a1)), y: CR * Math.sin(rad(a1)) }
-  return `M0 0L${round(p0.x)} ${round(p0.y)}A${CR} ${CR} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${round(p1.x)} ${round(p1.y)}Z`
+function sectorPath(a0: number, a1: number, r: number) {
+  if (a1 - a0 >= 360) return `M${r} 0A${r} ${r} 0 1 1 ${-r} 0A${r} ${r} 0 1 1 ${r} 0Z`
+  const p0 = { x: r * Math.cos(rad(a0)), y: r * Math.sin(rad(a0)) }
+  const p1 = { x: r * Math.cos(rad(a1)), y: r * Math.sin(rad(a1)) }
+  return `M0 0L${round(p0.x)} ${round(p0.y)}A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${round(p1.x)} ${round(p1.y)}Z`
 }
 
 const fractionCircle: TileDef = {
   type: 'fraction-circle',
   name: (t) => (t.p.denominator === 1 ? 'Bütün daire' : `${t.p.count}/${t.p.denominator} daire`),
   create: (p) => ({ p: { denominator: p.denominator ?? 1, count: p.count ?? p.denominator ?? 1, labels: p.labels ?? 'fraction', showUnitLabel: p.showUnitLabel ?? true } }),
-  outline: (t) => sectorPts(-90, -90 + circleSpan(t).total),
+  outline: (t) => sectorPts(-90, -90 + circleSpan(t).total, radiusOf(t)),
   bounds: (t) => {
     const { total } = circleSpan(t)
-    if (total >= 360) return rectBox(CR * 2, CR * 2)
-    return boundsOf(sectorPts(-90, -90 + total))
+    const R = radiusOf(t)
+    if (total >= 360) return rectBox(R * 2, R * 2)
+    return boundsOf(sectorPts(-90, -90 + total, R))
   },
   render: (t) => {
     const { a, total } = circleSpan(t)
+    const R = radiusOf(t)
     const color = frColor(t)
-    const kind = (t.p.labels ?? 'fraction') as LabelKind
+    const kind = labelKind(t.p.labels)
     const d = t.p.denominator
-    const size = clamp(28 - d * 1.4, 10, 16)
-    const whole = d === 1
+    const size = clamp((28 - d * 1.4) * (R / (2.5 * UNIT)), 9, 18)
+    const whole = d === 1 || total >= 360
+    const combine = !!t.p.combine && t.p.count > 1
+    const parts = combine ? 1 : t.p.count
+    const span = combine ? total : a
     return (
       <>
-        {whole ? (
-          <path d={sectorPath(-90, 270)} fill={color} stroke={edge(color)} strokeWidth={1.5} />
+        {d === 1 ? (
+          <path d={sectorPath(-90, 270, R)} fill={color} stroke={edge(color)} strokeWidth={1.5} />
         ) : (
-          Array.from({ length: t.p.count }, (_, i) => (
-            <path key={i} d={sectorPath(-90 + i * a, -90 + Math.min(360, (i + 1) * a))} fill={color} stroke={edge(color)} strokeWidth={1.5} strokeLinejoin="round" />
+          Array.from({ length: parts }, (_, i) => (
+            <path key={i} d={sectorPath(-90 + i * span, -90 + Math.min(360, (i + 1) * span), R)} fill={color} stroke={edge(color)} strokeWidth={1.5} strokeLinejoin="round" />
           ))
         )}
-        {whole
-          ? t.p.showUnitLabel !== false && kind !== 'none' && <Label size={22} color="#fff">1</Label>
-          : Array.from({ length: t.p.count }, (_, i) => {
-              const m = rad(-90 + (i + 0.5) * a)
-              const r = d === 2 ? CR * 0.45 : CR * 0.62
-              return <PieceLabel key={i} d={d} kind={kind} x={r * Math.cos(m)} y={r * Math.sin(m)} size={size} color="#fff" />
+        {d === 1
+          ? t.p.showUnitLabel !== false && kind !== 'none' && <Label size={22 * (R / (2.5 * UNIT))} color="#fff">{kind === 'degree' ? '360°' : kind === 'percent' ? '%100' : '1'}</Label>
+          : Array.from({ length: parts }, (_, i) => {
+              const m = rad(-90 + (i + 0.5) * span)
+              const rr = (combine ? whole : d === 2) ? R * 0.45 : R * 0.62
+              return <PieceLabel key={i} n={combine ? t.p.count : 1} d={d} kind={kind} x={rr * Math.cos(m)} y={rr * Math.sin(m)} size={size} color="#fff" />
             })}
         {total < 360 && <circle r={2.5} fill={edge(color)} />}
       </>
@@ -185,26 +214,25 @@ const fractionCircle: TileDef = {
   },
   colorable: true,
   rotStep: 15,
-  actions: (t) => [
-    labelActions(t),
-    ...(t.p.count > 1
-      ? [
-          action('split', 'Dilimlere ayır', 'split', (tile, api) => {
-            const { a } = circleSpan(tile)
-            const pieces = Array.from({ length: tile.p.count }, (_, i) => ({
-              ...mk('fraction-circle', { ...tile.p, count: 1 }, tile.x, tile.y, (tile.rot + (tile.flip ? -1 : 1) * i * a) % 360),
-              color: tile.color,
-            }))
-            api.remove([tile.id])
-            api.add(pieces)
-          }),
-        ]
-      : []),
-    action('count', 'Dilim sayısı', 'hash', async (tile, api) => {
-      const n = await askInt(api, `Dilim sayısı (1–${tile.p.denominator})`, tile.p.count, 1, tile.p.denominator)
-      if (n != null) api.updateP(tile.id, { count: n }, true)
-    }),
-  ],
+}
+
+function splitCircle(tile: Tile): Omit<Tile, 'id'>[] {
+  const { a } = circleSpan(tile)
+  return Array.from({ length: tile.p.count }, (_, i) => ({
+    ...mk('fraction-circle', { ...tile.p, count: 1, combine: undefined }, tile.x, tile.y, (tile.rot + (tile.flip ? -1 : 1) * i * a) % 360),
+    color: tile.color,
+  }))
+}
+
+/** Paydayı değiştirerek kesri yeniden adlandırır (1/2 → 2/4); değeri korunur */
+function renamePatch(t: Tile, dir: 1 | -1): Partial<Tile> | null {
+  const { count, denominator: den } = t.p
+  for (let o = den + dir; dir > 0 ? o <= 64 : o >= 1; o += dir) {
+    const c = (count / den) * o
+    if (Math.abs(c - Math.round(c)) > 1e-9) continue
+    return { color: undefined, p: { ...t.p, denominator: o, count: Math.round(c) } }
+  }
+  return null
 }
 
 // ---------------------------------------------------------------------------
@@ -230,6 +258,13 @@ const algParts = (expr: string) => {
   return { neg, base: ALG[base] ? base : '1' }
 }
 
+/** Bölünmüş karonun boyutu: genişlik splitV'ye (dikey kesimler), yükseklik splitH'ye (yatay kesimler) bölünür */
+const algDen = (t: Tile) => (t.p.splitH ?? 1) * (t.p.splitV ?? 1)
+const algSize = (t: Tile) => {
+  const s = ALG[algParts(String(t.p.expr)).base]
+  return { w: s.w / (t.p.splitV ?? 1), h: s.h / (t.p.splitH ?? 1) }
+}
+
 /** Cebir karosunun değeri (x, y değişken değerleriyle) */
 export function algebraValue(expr: string, vars: Vars = { x: 3, y: 2 }) {
   const { neg, base } = algParts(expr)
@@ -239,6 +274,8 @@ export function algebraValue(expr: string, vars: Vars = { x: 3, y: 2 }) {
   return neg ? -v : v
 }
 
+const algLabelHidden = (t: Tile) => t.p.labels === 'hidden' || !!t.p.hideLabel
+
 const algebra: TileDef = {
   type: 'algebra',
   name: (t) => {
@@ -247,25 +284,28 @@ const algebra: TileDef = {
   },
   create: (p) => ({ p: { expr: String(p.expr ?? '1') } }),
   bounds: (t) => {
-    const s = ALG[algParts(t.p.expr).base]
+    const s = algSize(t)
     return rectBox(s.w, s.h)
   },
   outline: (t) => {
-    const s = ALG[algParts(t.p.expr).base]
+    const s = algSize(t)
     return [{ x: -s.w / 2, y: -s.h / 2 }, { x: s.w / 2, y: -s.h / 2 }, { x: s.w / 2, y: s.h / 2 }, { x: -s.w / 2, y: s.h / 2 }]
   },
   render: (t) => {
     const { neg, base } = algParts(t.p.expr)
     const s = ALG[base]
+    const { w, h } = algSize(t)
     const color = neg ? NEG : s.color
-    const size = base === '1' ? 15 : 18
+    const d = algDen(t)
+    const text = `${neg ? '−' : ''}${s.label}${d > 1 ? `/${d}` : ''}`
+    const size = Math.min(base === '1' ? 15 : 18, (Math.min(w, h) * 0.8 + 4) / Math.max(1, text.length * 0.42))
     return (
       <>
-        <rect x={-s.w / 2} y={-s.h / 2} width={s.w} height={s.h} fill={color} stroke={edge(color)} strokeWidth={1.5} rx={2} />
-        {!t.p.hideLabel && (
+        <rect x={-w / 2} y={-h / 2} width={w} height={h} fill={color} stroke={edge(color)} strokeWidth={1.5} rx={2} />
+        {!algLabelHidden(t) && w >= 12 && h >= 12 && (
           // Uzun karolarda etiket karo ile birlikte döner; dik karoda da okunur kalsın diye döndürmeyi geri al
           <g transform={`rotate(${-t.rot})`}>
-            <Label size={size} color="#fff">{`${neg ? '−' : ''}${s.label}`}</Label>
+            <Label size={size} color="#fff">{text}</Label>
           </g>
         )}
       </>
@@ -273,12 +313,22 @@ const algebra: TileDef = {
   },
   gridSnap: true,
   rotStep: 90,
-  actions: (t) => [
-    action('flip-sign', 'İşaretini değiştir', 'reset', (tile, api) =>
-      api.updateP(tile.id, (p) => ({ expr: String(p.expr).startsWith('-') ? String(p.expr).slice(1) : `-${p.expr}` }), true),
-    ),
-    toggle(t, 'hideLabel', 'Etiketi gizle', 'eyeOff'),
-  ],
+}
+
+const isQuarterTurned = (t: Tile) => Math.round(((t.rot % 180) + 180) % 180) === 90
+
+/** Karoyu ikiye böler: 'v' dikey kesim (genişlik yarıya), 'h' yatay kesim (yükseklik yarıya) — ekrana göre */
+function splitAlgebra(t: Tile, dir: 'v' | 'h'): Omit<Tile, 'id'>[] {
+  // Karo çeyrek dönmüşse ekrandaki dikey kesim karonun kendi yatay kesimidir
+  const local = isQuarterTurned(t) ? (dir === 'v' ? 'h' : 'v') : dir
+  const { w, h } = algSize(t)
+  const gap = 2
+  return [-1, 1].map((sgn) => {
+    const off = local === 'v' ? { x: sgn * (w / 4 + gap), y: 0 } : { x: 0, y: sgn * (h / 4 + gap) }
+    const c = toWorld(t, off)
+    const p = local === 'v' ? { splitV: (t.p.splitV ?? 1) * 2 } : { splitH: (t.p.splitH ?? 1) * 2 }
+    return { type: 'algebra', x: c.x, y: c.y, rot: t.rot, flip: t.flip, color: t.color, p: { ...t.p, ...p } }
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -345,14 +395,6 @@ const token: TileDef = {
   },
   colorable: true,
   edgeSnap: false,
-  actions: (t) => [
-    action('value', 'Değeri değiştir', 'edit', async (tile, api) => {
-      const s = await api.prompt('Pulun değeri', fmt(tile.p.value ?? 1, 4))
-      const n = s == null ? NaN : Number(s.replace(',', '.'))
-      if (Number.isFinite(n)) api.updateP(tile.id, { value: n }, true)
-    }),
-    ...(t.p.shape === 'weight' ? [] : [toggle(t, 'showValue', 'Değeri göster', 'label')]),
-  ],
 }
 
 // ---------------------------------------------------------------------------
@@ -366,7 +408,7 @@ const PAN_W = 170
 const TILT = 8
 
 const numOf = (v: unknown) => {
-  const n = typeof v === 'number' ? v : Number(String(v ?? '').replace(',', '.'))
+  const n = parseNum(v)
   return Number.isFinite(n) ? n : 0
 }
 
@@ -376,7 +418,7 @@ export function tileValue(t: Tile, vars: Vars): number | null {
     case 'token':
       return numOf(t.p.value ?? 1)
     case 'algebra':
-      return algebraValue(String(t.p.expr), vars)
+      return algebraValue(String(t.p.expr), vars) / algDen(t)
     case 'number-card':
       return t.p.valueStr != null ? numOf(t.p.valueStr) : numOf(t.p.value)
     case 'number-tile':
@@ -419,6 +461,8 @@ function panSums(t: Tile, tiles: Tile[]) {
   return { left: round(left, 6), right: round(right, 6), nl, nr }
 }
 
+const balanceLabels = (t: Tile) => t.p.sums !== false && t.p.labels !== 'hidden'
+
 const balance: TileDef = {
   type: 'balance',
   name: () => 'Terazi',
@@ -439,7 +483,7 @@ const balance: TileDef = {
         <g style={{ transform: `translate(${ex}px, ${ey}px)`, transition: tr }}>
           <path d={`M0 0L${-PAN_W / 2 + 10} ${PAN_DROP}M0 0L${PAN_W / 2 - 10} ${PAN_DROP}`} stroke="#8a8a99" strokeWidth={1.5} />
           <path d={`M${-PAN_W / 2} ${PAN_DROP}H${PAN_W / 2}l-12 12H${-PAN_W / 2 + 12}Z`} fill="#c9c9d6" stroke="#77778a" strokeWidth={1.5} strokeLinejoin="round" />
-          {t.p.sums && n > 0 && (
+          {balanceLabels(t) && n > 0 && (
             <Label y={PAN_DROP + 26} size={14} color="#242436">{fmt(sum)}</Label>
           )}
         </g>
@@ -458,7 +502,7 @@ const balance: TileDef = {
         </g>
         {pan(-1, left, nl)}
         {pan(1, right, nr)}
-        {t.p.sums && !ctx.thumb && (nl > 0 || nr > 0) && (
+        {balanceLabels(t) && !ctx.thumb && (nl > 0 || nr > 0) && (
           <g transform="translate(0 98)">
             <rect x={-54} y={-13} width={108} height={26} rx={13} fill={sign === '=' ? C.green : '#fff'} stroke={sign === '=' ? 'none' : '#ccc'} />
             <Label size={14} color={sign === '=' ? '#fff' : '#242436'}>{`${fmt(left)} ${sign} ${fmt(right)}`}</Label>
@@ -470,20 +514,6 @@ const balance: TileDef = {
   watch: true,
   rotatable: false,
   edgeSnap: false,
-  actions: (t) => [
-    toggle(t, 'sums', 'Toplamları göster', 'label'),
-    action('vars', 'Değişken değerleri', 'edit', async (tile, api) => {
-      const v = { x: 3, y: 2, ...(tile.p.vars ?? {}) }
-      const s = await api.prompt('Değişken değerleri (ör. x = 3; y = 2)', `x = ${fmt(v.x, 4)}; y = ${fmt(v.y, 4)}`)
-      if (s == null) return
-      const next = { ...v }
-      for (const part of s.split(';')) {
-        const m = /^\s*([a-zA-Z])\s*=\s*(-?[\d.,]+)\s*$/.exec(part)
-        if (m) next[m[1] as 'x'] = Number(m[2].replace(',', '.'))
-      }
-      api.updateP(tile.id, { vars: next }, true)
-    }),
-  ],
 }
 
 // ---------------------------------------------------------------------------
@@ -498,8 +528,29 @@ const OUT: Pt = { x: SLOT_X, y: 0 }
 
 function cardValue(t: Tile): number | null {
   if (t.type !== 'number-card') return null
-  const n = t.p.valueStr != null ? Number(String(t.p.valueStr).replace(',', '.')) : Number(t.p.value)
+  const n = t.p.valueStr != null ? parseNum(t.p.valueStr) : Number(t.p.value)
   return Number.isFinite(n) ? n : null
+}
+
+/** Kural doğrusal mı (f(x) = m·x + c)? Öyleyse m ve c */
+function linearOf(rule: string): { m: number; c: number } | null {
+  const f = compile(rhs(rule))
+  if (!f) return null
+  const at = (x: number) => f({ x, a: x, n: x })
+  const c = at(0)
+  const m = at(1) - c
+  if (![c, m].every(Number.isFinite) || Math.abs(m) < 1e-12) return null
+  for (const x of [2, -3, 7.5]) if (Math.abs(at(x) - (m * x + c)) > 1e-6 * (1 + Math.abs(at(x)))) return null
+  return { m, c }
+}
+
+/** Doğrusal kuralın tersi: x = (y − c) / m */
+function inverseRule({ m, c }: { m: number; c: number }) {
+  const num = Math.abs(c) < 1e-12 ? 'x' : `x ${c > 0 ? '−' : '+'} ${fmt(Math.abs(c), 4)}`
+  if (Math.abs(m - 1) < 1e-12) return num
+  const body = Math.abs(c) < 1e-12 ? num : `(${num})`
+  if (Math.abs(m + 1) < 1e-12) return `−${body}`
+  return `${body} / ${m < 0 ? `(−${fmt(-m, 4)})` : fmt(m, 4)}`
 }
 
 const functionMachine: TileDef = {
@@ -533,7 +584,7 @@ const functionMachine: TileDef = {
         <rect x={-FM_W / 2} y={-h / 2} width={FM_W} height={h} rx={14} fill={color} stroke={edge(color)} strokeWidth={2} />
         <rect x={-FM_W / 2 + 12} y={-22} width={FM_W - 24} height={44} rx={8} fill="#fff" data-act="rule" />
         <Label size={String(t.p.rule).length > 12 ? 13 : 17} color={valid ? '#242436' : C.red}>
-          {t.p.hidden ? '?' : String(t.p.rule)}
+          {t.p.hidden ? '?' : `${t.p.invert ? 'x = ' : ''}${String(t.p.rule)}`}
         </Label>
         <circle cx={-FM_W / 2 + 18} cy={-h / 2 + 16} r={4} fill="#fff" opacity={0.7} />
         <circle cx={-FM_W / 2 + 32} cy={-h / 2 + 16} r={4} fill="#fff" opacity={0.7} />
@@ -587,21 +638,15 @@ const functionMachine: TileDef = {
       out = null
       if (Number.isFinite(res)) {
         const w = toWorld(t, OUT)
-        const value = round(res, 4)
-        const card = mk('number-card', Number.isInteger(value) ? { value } : { value, valueStr: fmt(value, 4) }, w.x, w.y, t.rot)
+        const value = round(res, 6)
+        const kind = String(t.p.labels ?? 'decimal')
+        const card = mk('number-card', Number.isInteger(value) ? { value } : { value, valueStr: formatAs(value, kind) }, w.x, w.y, t.rot)
         out = api.add([card], false)[0] ?? null
         api.sound('pop')
       } else api.sound('error')
     }
     api.updateP(t.id, { slots, out }, true)
   },
-  actions: (t) => [
-    action('rule', 'Kuralı düzenle', 'edit', async (tile, api) => {
-      const s = await api.prompt(tile.p.inputs === 2 ? 'Kural (a ve b kullanın)' : 'Kural (x kullanın)', String(tile.p.rule))
-      if (s != null && s.trim()) api.updateP(tile.id, { rule: s.trim() }, true)
-    }),
-    toggle(t, 'hidden', 'Gizemli kural (gizle)', 'eyeOff'),
-  ],
 }
 
 // ---------------------------------------------------------------------------
@@ -648,14 +693,22 @@ function plot(src: string, vars: Vars, X: (x: number) => number, Y: (y: number) 
 const axes: TileDef = {
   type: 'axes',
   name: () => 'Koordinat düzlemi',
-  create: () => ({ p: { w: 320, h: 320, xmin: -5, xmax: 5, ymin: -5, ymax: 5, grid: true, fns: [], pts: [] } }),
+  create: () => ({ p: { w: 320, h: 320, xmin: -5, xmax: 5, ymin: -5, ymax: 5, xstep: 1, ystep: 1, grid: true, fns: [], pts: [] } }),
   bounds: (t) => rectBox(t.p.w, t.p.h),
   render: (t, ctx) => {
     const { w, h, xmin, xmax, ymin, ymax } = t.p as { w: number; h: number; xmin: number; xmax: number; ymin: number; ymax: number }
     const X = (x: number) => -w / 2 + ((x - xmin) / (xmax - xmin)) * w
     const Y = (y: number) => h / 2 - ((y - ymin) / (ymax - ymin)) * h
-    const sx = niceStep(xmax - xmin, w)
-    const sy = niceStep(ymax - ymin, h)
+    // Adım verilmişse onu kullan (çok sık çizgi olmasın diye katlarına çık)
+    const fit = (st: number | undefined, range: number, px: number) => {
+      if (!(st && st > 0)) return niceStep(range, px)
+      let k = st
+      while (range / k > px / 14) k *= 2
+      return k
+    }
+    const sx = fit(t.p.xstep, xmax - xmin, w)
+    const sy = fit(t.p.ystep, ymax - ymin, h)
+    const arrows = t.p.arrows ?? 'none'
     const xs: number[] = []
     for (let v = Math.ceil(xmin / sx) * sx; v <= xmax + 1e-9; v += sx) xs.push(round(v, 6))
     const ys: number[] = []
@@ -678,7 +731,17 @@ const axes: TileDef = {
           <path d={xs.map((x) => `M${round(X(x), 1)} ${-h / 2}v${h}`).join('') + ys.map((y) => `M${-w / 2} ${round(Y(y), 1)}h${w}`).join('')} stroke="#e3e3ea" strokeWidth={1} />
         )}
         <path d={`M${-w / 2} ${ay}H${w / 2}M${ax} ${-h / 2}V${h / 2}`} stroke="#3a3645" strokeWidth={1.5} />
-        <path d={`M${w / 2 - 7} ${ay - 4}L${w / 2} ${ay}L${w / 2 - 7} ${ay + 4}M${ax - 4} ${-h / 2 + 7}L${ax} ${-h / 2}L${ax + 4} ${-h / 2 + 7}`} fill="none" stroke="#3a3645" strokeWidth={1.5} />
+        {arrows !== 'none' && (
+          <path
+            d={
+              `M${w / 2 - 7} ${ay - 4}L${w / 2} ${ay}L${w / 2 - 7} ${ay + 4}M${ax - 4} ${-h / 2 + 7}L${ax} ${-h / 2}L${ax + 4} ${-h / 2 + 7}` +
+              (arrows === 'both' ? `M${-w / 2 + 7} ${ay - 4}L${-w / 2} ${ay}L${-w / 2 + 7} ${ay + 4}M${ax - 4} ${h / 2 - 7}L${ax} ${h / 2}L${ax + 4} ${h / 2 - 7}` : '')
+            }
+            fill="none"
+            stroke="#3a3645"
+            strokeWidth={1.5}
+          />
+        )}
         {!ctx.thumb && (
           <g fontSize={10} fontFamily={FONT} fill="#615e6a" style={{ pointerEvents: 'none', userSelect: 'none' }}>
             {xs.filter((x) => x !== 0 && X(x) < w / 2 - 10).map((x) => (
@@ -733,33 +796,6 @@ const axes: TileDef = {
     else fns.splice(i, 1)
     api.updateP(t.id, { fns }, true)
   },
-  actions: (t) => [
-    action('add-fn', 'Fonksiyon ekle', 'plus', async (tile, api) => {
-      const s = await api.prompt('Fonksiyon (ör. y = 2x + 1, y = a·x² + b)', 'y = ')
-      if (s == null || !rhs(s).trim()) return
-      if (!compile(rhs(s))) {
-        api.sound('error')
-        return
-      }
-      api.updateP(tile.id, (p) => ({ fns: [...(p.fns ?? []), s.trim()] }), true)
-    }),
-    action('add-pt', 'Nokta ekle', 'chart', async (tile, api) => {
-      const s = await api.prompt('Nokta (x; y)', '2; 3')
-      const m = s && /^\s*\(?\s*(-?[\d.,]+)\s*;\s*(-?[\d.,]+)\s*\)?\s*$/.exec(s)
-      if (!m) return
-      api.updateP(tile.id, (p) => ({ pts: [...(p.pts ?? []), { x: Number(m[1].replace(',', '.')), y: Number(m[2].replace(',', '.')) }] }), true)
-    }),
-    toggle(t, 'grid', 'Izgara', 'grid'),
-    action('range', 'Eksen aralığı', 'ruler', async (tile, api) => {
-      const { xmin, xmax, ymin, ymax } = tile.p
-      const s = await api.prompt('Aralık: xmin; xmax; ymin; ymax', [xmin, xmax, ymin, ymax].map((v: number) => fmt(v, 4)).join('; '))
-      if (!s) return
-      const v = s.split(';').map((x) => Number(x.trim().replace(',', '.')))
-      if (v.length !== 4 || !v.every(Number.isFinite) || v[0] >= v[1] || v[2] >= v[3]) return
-      api.updateP(tile.id, { xmin: v[0], xmax: v[1], ymin: v[2], ymax: v[3] }, true)
-    }),
-    ...(t.p.fns?.length || t.p.pts?.length ? [action('clear', 'Grafikleri temizle', 'trash', (tile, api) => api.updateP(tile.id, { fns: [], pts: [] }, true))] : []),
-  ],
 }
 
 // ---------------------------------------------------------------------------
@@ -824,17 +860,6 @@ const table: TileDef = {
     if (s == null) return
     api.updateP(t.id, { rows: rows.map((row, a) => (a === i ? row.map((cell, b) => (b === j ? s : cell)) : row)) }, true)
   },
-  actions: (t) => {
-    const { r, c } = tableSize(t)
-    return [
-      action('add-row', 'Satır ekle', 'plus', (tile, api) => api.updateP(tile.id, (p) => ({ rows: [...p.rows, p.rows[0].map(() => '')] }), true)),
-      ...(r > 2 ? [action('del-row', 'Satır sil', 'minus', (tile: Tile, api: PadApi) => api.updateP(tile.id, (p) => ({ rows: p.rows.slice(0, -1) }), true))] : []),
-      action('add-col', 'Sütun ekle', 'table', (tile, api) =>
-        api.updateP(tile.id, (p) => ({ rows: p.rows.map((row: string[], i: number) => [...row, i === 0 ? String.fromCharCode(65 + row.length) : '']) }), true),
-      ),
-      ...(c > 1 ? [action('del-col', 'Sütun sil', 'split', (tile: Tile, api: PadApi) => api.updateP(tile.id, (p) => ({ rows: p.rows.map((row: string[]) => row.slice(0, -1)) }), true))] : []),
-    ]
-  },
 }
 
 // ---------------------------------------------------------------------------
@@ -888,21 +913,673 @@ const slider: TileDef = {
   colorable: true,
   rotatable: false,
   edgeSnap: false,
-  actions: () => [
-    action('range', 'En küçük; en büyük; adım', 'ruler', async (tile, api) => {
-      const s = await api.prompt('En küçük; en büyük; adım', [tile.p.min, tile.p.max, tile.p.step].map((v: number) => fmt(v, 4)).join('; '))
-      if (!s) return
-      const v = s.split(';').map((x) => Number(x.trim().replace(',', '.')))
-      if (v.length !== 3 || !v.every(Number.isFinite) || v[0] >= v[1] || v[2] < 0) return
-      api.updateP(tile.id, (p) => ({ min: v[0], max: v[1], step: v[2], value: clamp(p.value, v[0], v[1]) }), true)
-    }),
-    action('name', 'Değişken adı', 'edit', async (tile, api) => {
-      const s = await api.prompt('Değişken adı (tek harf)', tile.p.variable)
-      const m = s && /^\s*([a-zA-Z])\s*$/.exec(s)
-      if (m) api.updateP(tile.id, { variable: m[1] }, true)
-    }),
-  ],
 }
 
 export const algebraTiles: TileDef[] = [fractionBar, fractionCircle, algebra, token, balance, functionMachine, axes, table, slider]
 
+// ---------------------------------------------------------------------------
+// Eylem çubuğu (Polypad eylemleri)
+// ---------------------------------------------------------------------------
+
+const isNum = (v: unknown) => Number.isFinite(parseNum(v))
+const SERIES = [C.pink, C.blue, C.green, C.orange, C.purple, C.teal]
+
+/** Tablonun başlık satırı ve boş olmayan veri satırları */
+function tableData(t: Tile) {
+  const rows: string[][] = t.p.rows ?? []
+  return { head: rows[0] ?? [], body: rows.slice(1).filter((r) => r.some((c) => String(c).trim() !== '')) }
+}
+const hasChartData = (t: Tile) => {
+  const { head, body } = tableData(t)
+  return head.length >= 2 && body.some((r) => r.slice(1).some(isNum))
+}
+const hasXYData = (t: Tile) => tableData(t).body.some((r) => isNum(r[0]) && isNum(r[1]))
+
+/** Yeni parçayı seçimin sağına yerleştirir */
+function placeRight(tiles: Tile[], api: PadApi, tile: Omit<Tile, 'id'>) {
+  const boxes = tiles.map((t) => api.box(t))
+  const right = Math.max(...boxes.map((b) => b.x + b.w))
+  const top = Math.min(...boxes.map((b) => b.y))
+  const b = getDef(tile.type)?.bounds({ ...tile, id: '' } as Tile) ?? { x: 0, y: 0, w: 0, h: 0 }
+  return { ...tile, x: right + 100 + b.w / 2, y: top + b.h / 2 }
+}
+
+function chartFromTables(tables: Tile[], api: PadApi, kind?: string) {
+  const first = tableData(tables[0])
+  const labels = first.body.map((r, i) => String(r[0] || i + 1))
+  const series = tables.flatMap((t) => {
+    const { head, body } = tableData(t)
+    return head.slice(1).map((name, j) => ({ name: String(name || String.fromCharCode(65 + j)), values: body.map((r) => (isNum(r[j + 1]) ? parseNum(r[j + 1]) : 0)) }))
+  })
+  const chart = mk('chart', kind ? { kind } : {}, 0, 0)
+  chart.p = { ...chart.p, labels, series: series.map((s, i) => ({ ...s, color: SERIES[i % SERIES.length] })) }
+  api.add([placeRight(tables, api, chart)])
+}
+
+function pieFromTable(t: Tile, api: PadApi) {
+  const { body } = tableData(t)
+  const pie = mk('pie-chart', {}, 0, 0)
+  pie.p = { ...pie.p, data: body.filter((r) => isNum(r[1])).map((r, i) => ({ label: String(r[0] || i + 1), v: parseNum(r[1]) })) }
+  api.add([placeRight([t], api, pie)])
+}
+
+function scatterFromTables(tables: Tile[], api: PadApi) {
+  const pts = tables.flatMap((t) => tableData(t).body.filter((r) => isNum(r[0]) && isNum(r[1])).map((r) => ({ x: parseNum(r[0]), y: parseNum(r[1]) })))
+  const lim = (vs: number[]) => {
+    const lo = Math.min(0, Math.floor(Math.min(...vs)))
+    const hi = Math.max(1, Math.ceil(Math.max(...vs)))
+    const pad = Math.max(1, Math.round((hi - lo) * 0.1))
+    return [lo < 0 ? lo - pad : 0, hi + pad]
+  }
+  const [xmin, xmax] = lim(pts.map((p) => p.x))
+  const [ymin, ymax] = lim(pts.map((p) => p.y))
+  const ax = mk('axes', {}, 0, 0)
+  ax.p = { ...ax.p, xmin, xmax, ymin, ymax, xstep: niceStep(xmax - xmin, 320), ystep: niceStep(ymax - ymin, 320), pts }
+  api.add([placeRight(tables, api, ax)])
+}
+
+/** Kaydırıcı canlandırması: kaydırıcı kimliği → requestAnimationFrame numarası */
+const sliderAnim = new Map<string, number>()
+
+function stopSlider(id: string, api: PadApi) {
+  const raf = sliderAnim.get(id)
+  if (raf != null) cancelAnimationFrame(raf)
+  sliderAnim.delete(id)
+  api.commit()
+}
+
+function playSlider(t: Tile, api: PadApi) {
+  const id = t.id
+  const { min, max } = t.p
+  if (!(max > min)) return
+  const dur = Math.max(0.1, Number(t.p.duration ?? 4)) * 1000
+  const motion = t.p.motion ?? 'bounce'
+  const offset = clamp((t.p.value - min) / (max - min), 0, 1)
+  const t0 = performance.now()
+  const tick = (now: number) => {
+    if (!api.get(id)) return void sliderAnim.delete(id)
+    const phase = (motion === 'once' && offset >= 1 ? 0 : offset) + (now - t0) / dur
+    let f: number
+    if (motion === 'once') f = Math.min(1, phase)
+    else if (motion === 'loop') f = phase % 1
+    else {
+      const q = phase % 2
+      f = q <= 1 ? q : 2 - q
+    }
+    api.updateP(id, { value: round(min + (max - min) * f, 3) })
+    if (motion === 'once' && phase >= 1) return stopSlider(id, api)
+    sliderAnim.set(id, requestAnimationFrame(tick))
+  }
+  sliderAnim.set(id, requestAnimationFrame(tick))
+}
+
+/** Denklem karosu grafiği çizilebilir mi (y = … ya da yalnızca sağ taraf) */
+const graphFn = (t: Tile): string | null => {
+  const src = String(t.p.src ?? '').trim()
+  if (!src) return null
+  if (src.includes('=') && !/^\s*y\s*=/.test(src)) return null
+  if (!compile(rhs(src))) return null
+  return src.includes('=') ? src : `y = ${src}`
+}
+
+const fractionTypes = ['fraction-bar', 'fraction-circle']
+const LABEL_OPTS = [
+  { key: 'fraction', label: 'Kesir' },
+  { key: 'percentage', label: 'Yüzde' },
+  { key: 'decimal', label: 'Ondalık' },
+]
+
+export const algebraActions: ActionSpec[] = [
+  // Kesir şeritleri ve daireleri
+  {
+    id: 'rename-up',
+    type: 'button',
+    tileTypes: fractionTypes,
+    label: 'Yeniden adlandır (paydayı büyüt)',
+    icon: 'fraction-up',
+    order: 1,
+    click: (ts, api) => ts.forEach((t) => {
+      const patch = renamePatch(t, 1)
+      if (patch) api.update(t.id, patch)
+    }),
+  },
+  {
+    id: 'rename-down',
+    type: 'button',
+    tileTypes: fractionTypes,
+    label: 'Yeniden adlandır (paydayı küçült)',
+    icon: 'fraction-down',
+    order: 2,
+    click: (ts, api) => ts.forEach((t) => {
+      const patch = renamePatch(t, -1)
+      if (patch) api.update(t.id, patch)
+    }),
+  },
+  {
+    id: 'merge-fraction-bar',
+    type: 'button',
+    tileTypes: ['fraction-bar'],
+    label: 'Birleştir',
+    icon: 'merge',
+    text: true,
+    order: 3,
+    show: (ts) => ts.length > 1 && ts.every((t) => t.p.denominator === ts[0].p.denominator),
+    click: (ts, api) => {
+      // En soldaki ucun yerinde, ilk şeridin yönünde tek şerit
+      const ends = ts.map((t) => toWorld(t, { x: -barSize(t).w / 2, y: 0 }))
+      const i = ends.reduce((b, e, k) => (e.x < ends[b].x ? k : b), 0)
+      const first = ts[i]
+      const count = ts.reduce((n, t) => n + t.p.count, 0)
+      const w = (barWhole(first) / first.p.denominator) * count
+      const c = rotate({ x: w / 2, y: 0 }, first.rot)
+      const tile = { ...mk('fraction-bar', { ...first.p, count }, ends[i].x + c.x, ends[i].y + c.y, first.rot), color: first.color }
+      api.remove(ts.map((t) => t.id))
+      api.add([tile])
+      api.sound('snap')
+    },
+  },
+  {
+    id: 'merge-fraction-circle',
+    type: 'button',
+    tileTypes: ['fraction-circle'],
+    label: 'Birleştir',
+    icon: 'merge',
+    text: true,
+    order: 3,
+    show: (ts) => ts.length > 1 && ts[0].p.denominator > 1 && ts.every((t) => t.p.denominator === ts[0].p.denominator),
+    click: (ts, api) => {
+      const d = ts[0].p.denominator
+      let left = ts.reduce((n, t) => n + t.p.count, 0)
+      const groups: number[] = []
+      while (left > 0) {
+        groups.push(Math.min(d, left))
+        left -= d
+      }
+      const cx = ts.reduce((n, t) => n + t.x, 0) / ts.length
+      const cy = ts.reduce((n, t) => n + t.y, 0) / ts.length
+      const step = radiusOf(ts[0]) * 2 + 24
+      const out = groups.map((count, g) => ({ ...mk('fraction-circle', { ...ts[0].p, count, combine: undefined }, cx + (g - (groups.length - 1) / 2) * step, cy, 0), color: ts[0].color }))
+      api.remove(ts.map((t) => t.id))
+      api.add(out)
+      api.sound('snap')
+    },
+  },
+  {
+    id: 'split-fraction',
+    type: 'button',
+    tileTypes: fractionTypes,
+    label: 'Ayır',
+    icon: 'split',
+    text: true,
+    order: 4,
+    show: (ts) => ts.some((t) => t.p.count > 1) && ts.every((t) => !t.p.combine),
+    click: (ts, api) => {
+      const many = ts.filter((t) => t.p.count > 1)
+      const pieces = many.flatMap((t) => (t.type === 'fraction-bar' ? splitBar(t) : splitCircle(t)))
+      api.remove(many.map((t) => t.id))
+      api.add(pieces)
+      api.sound('pop')
+    },
+  },
+  {
+    id: 'fraction-labels',
+    type: 'select',
+    tileTypes: fractionTypes,
+    label: 'Etiketler:',
+    location: 'more',
+    options: [...LABEL_OPTS, { key: 'hidden', label: 'Yok' }],
+    show: (ts) => ts.some((t) => t.type === 'fraction-bar'),
+    get: (t) => (labelKind(t.p.labels) === 'percent' ? 'percentage' : labelKind(t.p.labels) === 'none' ? 'hidden' : labelKind(t.p.labels)),
+    set: (v: string) => ({ p: { labels: v } }),
+  },
+  {
+    id: 'fraction-circle-labels',
+    type: 'select',
+    tileTypes: ['fraction-circle'],
+    label: 'Etiketler:',
+    location: 'more',
+    options: [...LABEL_OPTS, { key: 'degree', label: 'Derece' }, { key: 'hidden', label: 'Yok' }],
+    get: (t) => (labelKind(t.p.labels) === 'percent' ? 'percentage' : labelKind(t.p.labels) === 'none' ? 'hidden' : labelKind(t.p.labels)),
+    set: (v: string) => ({ p: { labels: v } }),
+  },
+  {
+    id: 'fraction-bar-scale',
+    type: 'input',
+    tileTypes: ['fraction-bar'],
+    label: 'Ölçek:',
+    location: 'more',
+    value: 'number',
+    range: [1, 20],
+    get: (t) => t.p.size ?? 12,
+    set: (v: number) => ({ p: { size: clamp(Math.round(v), 1, 20) } }),
+  },
+  {
+    id: 'fraction-circle-radius',
+    type: 'input',
+    tileTypes: ['fraction-circle'],
+    label: 'Yarıçap:',
+    location: 'more',
+    value: 'number',
+    range: [1, 10],
+    step: 0.5,
+    get: (t) => t.p.size ?? 2.5,
+    set: (v: number) => ({ p: { size: clamp(Math.round(v * 2) / 2, 1, 10) } }),
+  },
+  {
+    id: 'fraction-unit',
+    type: 'checkbox',
+    tileTypes: fractionTypes,
+    label: 'Birim kesirler:',
+    icon: 'merge',
+    location: 'more',
+    show: (ts) => ts.some((t) => t.p.count > 1),
+    get: (t) => !t.p.combine,
+    set: (v: boolean) => ({ p: { combine: !v } }),
+  },
+
+  // Cebir karoları
+  {
+    id: 'negate',
+    type: 'button',
+    tileTypes: ['algebra'],
+    label: 'Ters işaretlisi',
+    icon: 'turn',
+    text: true,
+    click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { expr: String(t.p.expr).startsWith('-') ? String(t.p.expr).slice(1) : `-${t.p.expr}` })),
+  },
+  {
+    id: 'merge-algebra',
+    type: 'button',
+    tileTypes: ['algebra'],
+    label: 'Birleştir',
+    icon: 'merge',
+    text: true,
+    show: (ts) => ts.length > 1 && ts.every((t) => t.p.expr === ts[0].p.expr) && Math.abs(ts.reduce((n, t) => n + 1 / algDen(t), 0) - 1) < 1e-9,
+    click: (ts, api) => {
+      const x = ts.reduce((n, t) => n + t.x, 0) / ts.length
+      const y = ts.reduce((n, t) => n + t.y, 0) / ts.length
+      const t0 = ts[0]
+      api.remove(ts.map((t) => t.id))
+      api.add([{ type: 'algebra', x, y, rot: t0.rot, flip: t0.flip, color: t0.color, p: { ...t0.p, splitH: 1, splitV: 1 } }])
+      api.sound('snap')
+    },
+  },
+  {
+    id: 'splitV',
+    type: 'button',
+    tileTypes: ['algebra'],
+    label: 'Dikey böl',
+    icon: 'split-v',
+    show: (ts) => ts.every((t) => (isQuarterTurned(t) ? (t.p.splitH ?? 1) : (t.p.splitV ?? 1)) < 8),
+    click: (ts, api) => {
+      api.remove(ts.map((t) => t.id))
+      api.add(ts.flatMap((t) => splitAlgebra(t, 'v')))
+    },
+  },
+  {
+    id: 'splitH',
+    type: 'button',
+    tileTypes: ['algebra'],
+    label: 'Yatay böl',
+    icon: 'split-h',
+    show: (ts) => ts.every((t) => (isQuarterTurned(t) ? (t.p.splitV ?? 1) : (t.p.splitH ?? 1)) < 8),
+    click: (ts, api) => {
+      api.remove(ts.map((t) => t.id))
+      api.add(ts.flatMap((t) => splitAlgebra(t, 'h')))
+    },
+  },
+  {
+    id: 'algebra-denominator',
+    type: 'input',
+    tileTypes: ['algebra'],
+    label: 'Payda (yatay; dikey):',
+    icon: 'split-h',
+    location: 'more',
+    value: 'text',
+    get: (t) => `${t.p.splitH ?? 1}; ${t.p.splitV ?? 1}`,
+    set: (v: string) => {
+      const [h, w] = String(v).split(/[;x×\s]+/).filter(Boolean).map(Number)
+      if (![h, w].every(Number.isFinite)) return
+      return { p: { splitH: clamp(Math.round(h), 1, 8), splitV: clamp(Math.round(w), 1, 8) } }
+    },
+  },
+  {
+    id: 'algebra-show-labels',
+    type: 'checkbox',
+    tileTypes: ['algebra', 'balance'],
+    label: 'Etiketleri göster:',
+    icon: 'numbers',
+    location: 'more',
+    get: (t) => (t.type === 'balance' ? balanceLabels(t) : !algLabelHidden(t)),
+    set: (v: boolean) => ({ p: { labels: v ? undefined : 'hidden', hideLabel: undefined, sums: v } }),
+  },
+
+  // Terazi (değişken değerleri: Polypad'de cebir karolarındaki yazar ayarı)
+  ...(['x', 'y'] as const).map(
+    (k): ActionSpec => ({
+      id: `balance-${k}`,
+      type: 'input',
+      tileTypes: ['balance'],
+      label: `${k} değeri:`,
+      value: 'number',
+      author: true,
+      get: (t) => (t.p.vars ?? {})[k] ?? (k === 'x' ? 3 : 2),
+      set: (v: number, t) => ({ p: { vars: { x: 3, y: 2, ...(t.p.vars ?? {}), [k]: v } } }),
+    }),
+  ),
+
+  // Pul (Polypad: Parça ağırlığı, yazar ayarı)
+  { id: 'token-weight', type: 'input', tileTypes: ['token'], label: 'Parça ağırlığı:', value: 'number', author: true, location: 'more', get: (t) => t.p.value ?? 1, set: (v: number) => ({ p: { value: v } }) },
+
+  // Fonksiyon makinesi
+  {
+    id: 'tabulate',
+    type: 'button',
+    tileTypes: ['function-machine'],
+    label: 'Tablo oluştur',
+    icon: 'grid',
+    text: true,
+    show: (ts) => ts.length === 1,
+    click: ([t], api) => {
+      const f = compile(rhs(String(t.p.rule)))
+      const two = t.p.inputs === 2
+      const inputs = two ? [1, 2, 3, 4, 5].map((a) => [a, 2]) : [0, 1, 2, 3, 4, 5].map((x) => [x])
+      const out = (v: number[]) => {
+        const r = f ? f(two ? { a: v[0], b: v[1], x: v[0], y: v[1] } : { x: v[0], a: v[0], n: v[0] }) : NaN
+        return Number.isFinite(r) ? formatAs(round(r, 6), String(t.p.labels ?? 'decimal')) : '?'
+      }
+      const rows = [two ? ['a', 'b', 'Çıktı'] : ['x', 'Çıktı'], ...inputs.map((v) => [...v.map(String), out(v)])]
+      const b = api.box(t)
+      const tb = mk('table', {}, t.x, 0)
+      tb.p = { ...tb.p, rows }
+      api.add([{ ...tb, y: b.y + b.h + 40 + (rows.length * CH) / 2 }])
+    },
+  },
+  {
+    id: 'toggleExpression',
+    type: 'checkbox',
+    tileTypes: ['function-machine'],
+    label: 'Kuralı göster:',
+    location: 'more',
+    get: (t) => !t.p.hidden,
+    set: (v: boolean) => ({ p: { hidden: !v } }),
+  },
+  {
+    id: 'toggleInverse',
+    type: 'checkbox',
+    tileTypes: ['function-machine'],
+    label: 'Ters çevir:',
+    location: 'more',
+    show: (ts) => ts.every((t) => t.p.inputs !== 2 && !!linearOf(String(t.p.rule))),
+    get: (t) => !!t.p.invert,
+    set: (v: boolean, t) => {
+      if (v && !t.p.invert) {
+        const lin = linearOf(String(t.p.rule))
+        return lin ? { p: { invert: true, ruleOrig: t.p.rule, rule: inverseRule(lin) } } : undefined
+      }
+      if (!v && t.p.invert) return { p: { invert: false, rule: t.p.ruleOrig ?? t.p.rule, ruleOrig: undefined } }
+    },
+  },
+  {
+    id: 'fm-labels',
+    type: 'select',
+    tileTypes: ['function-machine'],
+    label: 'Çıktı:',
+    location: 'more',
+    options: [
+      { key: 'decimal', label: 'Ondalık' },
+      { key: 'fraction', label: 'Kesir' },
+      { key: 'mixed', label: 'Tam sayılı kesir' },
+    ],
+    get: (t) => t.p.labels ?? 'decimal',
+    set: (v: string) => ({ p: { labels: v } }),
+  },
+  {
+    id: 'fm-inputs',
+    type: 'select',
+    tileTypes: ['function-machine'],
+    label: 'Girdiler:',
+    location: 'more',
+    options: [
+      { key: '1', label: 'Bir' },
+      { key: '2', label: 'İki' },
+    ],
+    get: (t) => String(t.p.inputs === 2 ? 2 : 1),
+    set: (v: string, t) => {
+      const n = v === '2' ? 2 : 1
+      if (n === (t.p.inputs === 2 ? 2 : 1)) return
+      const rule = String(t.p.rule)
+      const fits = n === 2 ? /[ab]/.test(rule) : /[xn]/.test(rule)
+      return { p: { inputs: n, slots: [], invert: false, ruleOrig: undefined, rule: fits ? rule : n === 2 ? 'a · b' : 'x + 3' } }
+    },
+  },
+
+  // Koordinat düzlemi
+  ...(['x', 'y'] as const).map(
+    (k): ActionSpec => ({
+      id: `${k}-axis`,
+      type: 'input',
+      tileTypes: ['axes'],
+      label: `${k.toUpperCase()} ekseni:`,
+      value: 'number',
+      range: [0.01, 1e6],
+      get: (t) => t.p[`${k}step`] ?? 1,
+      set: (v: number, t) => {
+        const old = t.p[`${k}step`] ?? 1
+        if (!(v > 0) || v === old) return
+        const r = v / old
+        return { p: { [`${k}step`]: v, [`${k}min`]: round(t.p[`${k}min`] * r, 6), [`${k}max`]: round(t.p[`${k}max`] * r, 6) } }
+      },
+    }),
+  ),
+  {
+    id: 'graph-equation',
+    type: 'button',
+    tileTypes: ['equation', 'axes'],
+    label: 'Grafiğini çiz',
+    icon: 'axes',
+    order: 2,
+    show: (ts) => ts.some((t) => t.type === 'equation') && ts.every((t) => t.type !== 'equation' || !!graphFn(t)),
+    click: (ts, api) => {
+      const eqs = ts.filter((t) => t.type === 'equation')
+      const cx = eqs.reduce((n, t) => n + t.x, 0) / eqs.length
+      const cy = eqs.reduce((n, t) => n + t.y, 0) / eqs.length
+      const near = (list: Tile[]) => list.filter((t) => t.type === 'axes').sort((a, b) => Math.hypot(a.x - cx, a.y - cy) - Math.hypot(b.x - cx, b.y - cy))[0]
+      const target = near(ts) ?? near(api.all())
+      const fns = eqs.map(graphFn).filter((f): f is string => !!f)
+      if (target) {
+        api.updateP(target.id, (p) => ({ fns: [...(p.fns ?? []), ...fns.filter((f) => !(p.fns ?? []).includes(f))] }))
+        return
+      }
+      const ax = mk('axes', {}, 0, 0)
+      ax.p = { ...ax.p, fns }
+      api.add([placeRight(eqs, api, ax)], false)
+    },
+  },
+  {
+    id: 'axes-arrows',
+    type: 'select',
+    tileTypes: ['axes'],
+    label: 'Oklar:',
+    location: 'more',
+    options: [
+      { key: 'both', label: 'İki yönde' },
+      { key: 'positive', label: 'Pozitif yönde' },
+      { key: 'none', label: 'Yok' },
+    ],
+    get: (t) => t.p.arrows ?? 'none',
+    set: (v: string) => ({ p: { arrows: v } }),
+  },
+  { id: 'axes-grid', type: 'checkbox', tileTypes: ['axes'], label: 'Izgara:', icon: 'grid', location: 'more', get: (t) => !!t.p.grid, set: (v: boolean) => ({ p: { grid: v } }) },
+  {
+    id: 'axes-add-fn',
+    type: 'button',
+    tileTypes: ['axes'],
+    label: 'Fonksiyon ekle',
+    icon: 'graph',
+    location: 'more',
+    show: (ts) => ts.length === 1,
+    click: async ([t], api) => {
+      const s = await api.prompt('Fonksiyon (ör. y = 2x + 1, y = a·x² + b)', 'y = ')
+      if (s == null || !rhs(s).trim()) return
+      if (!compile(rhs(s))) return api.sound('error')
+      api.updateP(t.id, (p) => ({ fns: [...(p.fns ?? []), s.trim()] }), true)
+    },
+  },
+  {
+    id: 'axes-add-point',
+    type: 'button',
+    tileTypes: ['axes'],
+    label: 'Nokta ekle',
+    icon: 'scatter',
+    location: 'more',
+    show: (ts) => ts.length === 1,
+    click: async ([t], api) => {
+      const s = await api.prompt('Nokta (x; y)', '2; 3')
+      const m = s && /^\s*\(?\s*(-?[\d.,]+)\s*;\s*(-?[\d.,]+)\s*\)?\s*$/.exec(s)
+      if (!m) return
+      api.updateP(t.id, (p) => ({ pts: [...(p.pts ?? []), { x: parseNum(m[1]), y: parseNum(m[2]) }] }), true)
+    },
+  },
+  {
+    id: 'axes-clear',
+    type: 'button',
+    tileTypes: ['axes'],
+    label: 'Grafikleri temizle',
+    icon: 'delete',
+    location: 'more',
+    show: (ts) => ts.some((t) => t.p.fns?.length || t.p.pts?.length),
+    click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { fns: [], pts: [] })),
+  },
+
+  // Tablo
+  { id: 'scatter-plot', type: 'button', tileTypes: ['table'], label: 'Serpme grafiği', icon: 'scatter', show: (ts) => ts.some(hasXYData), click: (ts, api) => scatterFromTables(ts, api) },
+  { id: 'column-chart', type: 'button', tileTypes: ['table'], label: 'Sütun grafiği', icon: 'column-chart', show: (ts) => ts.some(hasChartData), click: (ts, api) => chartFromTables(ts, api) },
+  { id: 'area-chart', type: 'button', tileTypes: ['table'], label: 'Alan grafiği', icon: 'area-chart', show: (ts) => ts.some(hasChartData), click: (ts, api) => chartFromTables(ts, api, 'area') },
+  { id: 'pie-chart', type: 'button', tileTypes: ['table'], label: 'Daire grafiği', icon: 'pie-chart', show: (ts) => ts.length === 1 && hasChartData(ts[0]), click: ([t], api) => pieFromTable(t, api) },
+  {
+    id: 'transpose',
+    type: 'button',
+    tileTypes: ['table'],
+    label: 'Satır ve sütunları değiştir',
+    icon: 'swap',
+    click: (ts, api) =>
+      ts.forEach((t) => {
+        const rows: string[][] = t.p.rows
+        api.updateP(t.id, { rows: rows[0].map((_, j) => rows.map((r) => r[j] ?? '')) })
+      }),
+  },
+  { id: 'table-add-row', type: 'button', tileTypes: ['table'], label: 'Satır ekle', icon: 'add', location: 'more', click: (ts, api) => ts.forEach((t) => api.updateP(t.id, (p) => ({ rows: [...p.rows, p.rows[0].map(() => '')] }))) },
+  {
+    id: 'table-del-row',
+    type: 'button',
+    tileTypes: ['table'],
+    label: 'Satır sil',
+    icon: 'minus',
+    location: 'more',
+    show: (ts) => ts.every((t) => t.p.rows.length > 2),
+    click: (ts, api) => ts.forEach((t) => api.updateP(t.id, (p) => ({ rows: p.rows.slice(0, -1) }))),
+  },
+  {
+    id: 'table-add-col',
+    type: 'button',
+    tileTypes: ['table'],
+    label: 'Sütun ekle',
+    icon: 'add',
+    location: 'more',
+    click: (ts, api) => ts.forEach((t) => api.updateP(t.id, (p) => ({ rows: p.rows.map((row: string[], i: number) => [...row, i === 0 ? String.fromCharCode(65 + row.length) : '']) }))),
+  },
+  {
+    id: 'table-del-col',
+    type: 'button',
+    tileTypes: ['table'],
+    label: 'Sütun sil',
+    icon: 'minus',
+    location: 'more',
+    show: (ts) => ts.every((t) => t.p.rows[0].length > 1),
+    click: (ts, api) => ts.forEach((t) => api.updateP(t.id, (p) => ({ rows: p.rows.map((row: string[]) => row.slice(0, -1)) }))),
+  },
+
+  // Değişken kaydırıcısı
+  {
+    id: 'slider-name',
+    type: 'input',
+    tileTypes: ['slider'],
+    label: 'Ad:',
+    value: 'text',
+    get: (t) => t.p.variable,
+    set: (v: string) => {
+      const m = /[A-Za-z]/.exec(String(v))
+      return m ? { p: { variable: m[0] } } : undefined
+    },
+  },
+  {
+    id: 'slider-range',
+    type: 'input',
+    tileTypes: ['slider'],
+    label: 'Aralık:',
+    value: 'text',
+    get: (t) => `${fmt(t.p.min, 4)}; ${fmt(t.p.max, 4)}`,
+    set: (v: string, t) => {
+      const [a, b] = String(v).split(';').map(parseNum)
+      if (!Number.isFinite(a) || !Number.isFinite(b) || a >= b) return
+      return { p: { min: a, max: b, value: clamp(t.p.value, a, b) } }
+    },
+  },
+  {
+    id: 'slider-play',
+    type: 'button',
+    tileTypes: ['slider'],
+    label: 'Oynat',
+    icon: 'play',
+    show: (ts) => ts.some((t) => !sliderAnim.has(t.id)),
+    click: (ts, api) => ts.forEach((t) => !sliderAnim.has(t.id) && playSlider(t, api)),
+  },
+  {
+    id: 'slider-pause',
+    type: 'button',
+    tileTypes: ['slider'],
+    label: 'Durdur',
+    icon: 'pause',
+    show: (ts) => ts.some((t) => sliderAnim.has(t.id)),
+    click: (ts, api) => ts.forEach((t) => sliderAnim.has(t.id) && stopSlider(t.id, api)),
+  },
+  {
+    id: 'slider-increment',
+    type: 'input',
+    tileTypes: ['slider'],
+    label: 'Artış:',
+    location: 'more',
+    value: 'number',
+    range: [0.001, 1e6],
+    step: 0.05,
+    get: (t) => t.p.step,
+    set: (v: number) => ({ p: { step: v } }),
+  },
+  {
+    id: 'slider-duration',
+    type: 'input',
+    tileTypes: ['slider'],
+    label: 'Süre (sn):',
+    location: 'more',
+    value: 'number',
+    range: [0.1, 10],
+    step: 0.5,
+    get: (t) => t.p.duration ?? 4,
+    set: (v: number) => ({ p: { duration: v } }),
+  },
+  {
+    id: 'slider-motion',
+    type: 'select',
+    tileTypes: ['slider'],
+    label: 'Hareket:',
+    location: 'more',
+    options: [
+      { key: 'bounce', label: 'Gidip gel' },
+      { key: 'loop', label: 'Döngü' },
+      { key: 'once', label: 'Bir kez' },
+    ],
+    get: (t) => t.p.motion ?? 'bounce',
+    set: (v: string) => ({ p: { motion: v } }),
+  },
+]

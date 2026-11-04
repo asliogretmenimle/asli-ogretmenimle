@@ -12,7 +12,7 @@
  *   render içinde küçük bir React bileşeni döndürün ve ctx.thumb iken animasyonu kapatın.
  */
 import type { ReactNode } from 'react'
-import type { ActionDef, Box, PadApi, Props, Pt, Tile, TileDef } from '../types'
+import type { Box, PadApi, Props, Pt, Tile, TileDef } from '../types'
 import { boundsOf, centerPts, round, shade, toWorld } from '../geom'
 
 export { C, PALETTE, STROKE } from '../colors'
@@ -75,18 +75,6 @@ export const ICONS = {
   clock: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2',
   trash: 'M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3',
 } as const
-
-export const action = (id: string, label: string, icon: keyof typeof ICONS, run: ActionDef['run'], active?: boolean): ActionDef => ({
-  id,
-  label,
-  icon: <Icon d={ICONS[icon]} />,
-  run,
-  active,
-})
-
-/** Bir p alanını açıp kapatan eylem */
-export const toggle = (t: Tile, key: string, label: string, icon: keyof typeof ICONS) =>
-  action(`toggle-${key}`, label, icon, (tile, api) => api.updateP(tile.id, (p) => ({ [key]: !p[key] }), true), !!t.p[key])
 
 /** Sayıyı api.prompt ile soran yardımcı */
 export async function askNumber(api: PadApi, label: string, value: number, min = -Infinity, max = Infinity): Promise<number | null> {

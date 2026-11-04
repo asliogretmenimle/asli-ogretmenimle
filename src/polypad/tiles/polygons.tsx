@@ -1,6 +1,6 @@
-import type { Pt, Tile, TileDef } from '../types'
+import type { ActionSpec, Pt, Tile, TileDef } from '../types'
 import { SIDE, UNIT, centerPts, deg, dist, fmt, pathOf, regularPolygon, round, turtle } from '../geom'
-import { C, Label, action, edge, recenter, toggle } from './kit'
+import { C, FONT, Label, edge, recenter } from './kit'
 import { PENTAGONS } from './pentagons'
 
 const S = SIDE
@@ -79,34 +79,83 @@ function Measures({ pts, angles, sides, color }: { pts: Pt[]; angles?: boolean; 
   )
 }
 
-const measureActions = (t: Tile) => [toggle(t, 'angles', 'Açıları göster', 'angle'), toggle(t, 'sides', 'Kenar uzunluklarını göster', 'ruler')]
+// ---------------------------------------------------------------------------
+// Ortak çizim: ölçek, köşe yuvarlama, delikler, etiket
+// ---------------------------------------------------------------------------
 
-function Poly({ t, pts }: { t: Tile; pts: Pt[] }) {
+const sc = (t: Tile) => (typeof t.p.scale === 'number' && t.p.scale > 0 ? t.p.scale : 1)
+const mul = (pts: Pt[], k: number) => (k === 1 ? pts : pts.map((p) => ({ x: p.x * k, y: p.y * k })))
+const boxOf = (pts: Pt[]) => {
+  const xs = pts.map((p) => p.x)
+  const ys = pts.map((p) => p.y)
+  return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }
+}
+
+/** Köşeleri r yarıçapıyla yuvarlatılmış kapalı yol */
+function roundedPath(pts: Pt[], r: number) {
+  if (r <= 0) return pathOf(pts)
+  const n = pts.length
+  let d = ''
+  for (let i = 0; i < n; i++) {
+    const a = pts[(i - 1 + n) % n]
+    const p = pts[i]
+    const b = pts[(i + 1) % n]
+    const la = dist(a, p)
+    const lb = dist(p, b)
+    const k = Math.min(r, la / 2, lb / 2)
+    const p1 = { x: p.x + ((a.x - p.x) / la) * k, y: p.y + ((a.y - p.y) / la) * k }
+    const p2 = { x: p.x + ((b.x - p.x) / lb) * k, y: p.y + ((b.y - p.y) / lb) * k }
+    d += `${i ? 'L' : 'M'}${round(p1.x)} ${round(p1.y)}Q${round(p.x)} ${round(p.y)} ${round(p2.x)} ${round(p2.y)}`
+  }
+  return d + 'Z'
+}
+
+/** Parçanın üzerindeki yazı etiketi (yazar seçeneği); döndürülmüyorsa hep dik durur */
+function TextLabel({ t, color }: { t: Tile; color: string }) {
+  if (!t.p.textLabel) return null
+  const size = 18 + 2 * (t.p.textLabelFontSize ?? 0)
+  const upright = !t.p.textLabelRotate
+  return (
+    <g transform={upright ? `${t.flip ? 'scale(-1 1) ' : ''}rotate(${-t.rot})` : undefined} style={{ pointerEvents: 'none' }}>
+      <text textAnchor="middle" dominantBaseline="central" fontSize={size} fontWeight={700} fontFamily={FONT} fill={color}>
+        {t.p.textLabel}
+      </text>
+    </g>
+  )
+}
+
+function Poly({ t, pts, holes }: { t: Tile; pts: Pt[]; holes?: Pt[][] }) {
   const color = t.color ?? '#0f82f2'
+  const r = (t.p.cornerRadius ?? 0) * UNIT
+  const d = roundedPath(pts, r) + (holes ?? []).map((h) => pathOf(h)).join('')
   return (
     <>
-      <path d={pathOf(pts)} fill={color} stroke={edge(color)} strokeWidth={1.5} strokeLinejoin="round" />
+      <path d={d} fill={color} fillRule="evenodd" stroke={edge(color)} strokeWidth={1.5} strokeLinejoin="round" />
       {(t.p.angles || t.p.sides) && <Measures pts={pts} angles={t.p.angles} sides={t.p.sides} color="#fff" />}
+      <TextLabel t={t} color={textColor(color)} />
     </>
   )
 }
+
+const textColor = (hex: string) => {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex)
+  if (!m) return '#fff'
+  const n = parseInt(m[1], 16)
+  return 0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255) > 160 ? '#242436' : '#fff'
+}
+
+const polyPts = (t: Tile) => mul(shapeOf(t.p.shape).pts, sc(t))
 
 const polygon: TileDef = {
   type: 'polygon',
   name: () => 'Çokgen',
   create: (p) => ({ color: shapeOf(p.shape).color }),
-  outline: (t) => shapeOf(t.p.shape).pts,
-  bounds: (t) => {
-    const pts = shapeOf(t.p.shape).pts
-    const xs = pts.map((p) => p.x)
-    const ys = pts.map((p) => p.y)
-    return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }
-  },
-  render: (t) => <Poly t={t} pts={shapeOf(t.p.shape).pts} />,
+  outline: polyPts,
+  bounds: (t) => boxOf(polyPts(t)),
+  render: (t) => <Poly t={t} pts={polyPts(t)} />,
   colorable: true,
   flippable: true,
   gridSnap: true,
-  actions: measureActions,
 }
 
 // ---------------------------------------------------------------------------
@@ -115,117 +164,95 @@ const polygon: TileDef = {
 
 const snapHalf = (v: number) => Math.max(0.5, Math.round(v * 2) / 2)
 
+const rectPts = (t: Tile) => {
+  const w = (t.p.w * UNIT * sc(t)) / 2
+  const h = (t.p.h * UNIT * sc(t)) / 2
+  return [{ x: -w, y: -h }, { x: w, y: -h }, { x: w, y: h }, { x: -w, y: h }]
+}
+
 const rectangle: TileDef = {
   type: 'rectangle',
   name: () => 'Dikdörtgen',
   create: () => ({ color: C.blue, p: { w: 4, h: 3, sides: true } }),
-  outline: (t) => {
-    const w = (t.p.w * UNIT) / 2
-    const h = (t.p.h * UNIT) / 2
-    return [{ x: -w, y: -h }, { x: w, y: -h }, { x: w, y: h }, { x: -w, y: h }]
-  },
-  bounds: (t) => ({ x: (-t.p.w * UNIT) / 2, y: (-t.p.h * UNIT) / 2, w: t.p.w * UNIT, h: t.p.h * UNIT }),
+  outline: rectPts,
+  bounds: (t) => boxOf(rectPts(t)),
   render: (t, ctx) => {
-    const w = t.p.w * UNIT
-    const h = t.p.h * UNIT
+    const k = sc(t)
+    const w = t.p.w * UNIT * k
+    const h = t.p.h * UNIT * k
     const color = t.color ?? C.blue
+    const u = UNIT * k
     return (
       <>
-        <rect x={-w / 2} y={-h / 2} width={w} height={h} fill={color} stroke={edge(color)} strokeWidth={1.5} />
+        <path d={roundedPath(rectPts(t), (t.p.cornerRadius ?? 0) * UNIT)} fill={color} stroke={edge(color)} strokeWidth={1.5} filter={t.p.shadow ? 'url(#pp-shadow)' : undefined} />
         {t.p.grid && (
           <path
-            d={[...Array(Math.ceil(t.p.w) - 1)].map((_, i) => `M${-w / 2 + (i + 1) * UNIT} ${-h / 2}v${h}`).join('') + [...Array(Math.ceil(t.p.h) - 1)].map((_, i) => `M${-w / 2} ${-h / 2 + (i + 1) * UNIT}h${w}`).join('')}
+            d={[...Array(Math.max(0, Math.ceil(t.p.w) - 1))].map((_, i) => `M${-w / 2 + (i + 1) * u} ${-h / 2}v${h}`).join('') + [...Array(Math.max(0, Math.ceil(t.p.h) - 1))].map((_, i) => `M${-w / 2} ${-h / 2 + (i + 1) * u}h${w}`).join('')}
             stroke="rgba(255,255,255,.55)"
             strokeWidth={1}
           />
         )}
         {t.p.sides && !ctx.thumb && (
           <>
-            <Label y={-h / 2 - 11} size={12}>{fmt(t.p.w)}</Label>
-            <Label x={w / 2 + 6} anchor="start" size={12}>{fmt(t.p.h)}</Label>
+            <Label y={-h / 2 - 11} size={12}>{fmt(t.p.w * k)}</Label>
+            <Label x={w / 2 + 6} anchor="start" size={12}>{fmt(t.p.h * k)}</Label>
           </>
         )}
-        {t.p.area && <Label size={14} color="#fff">Alan = {fmt(t.p.w * t.p.h)}</Label>}
+        {t.p.area && <Label size={14} color="#fff">Alan = {fmt(t.p.w * t.p.h * k * k)}</Label>}
+        <TextLabel t={t} color={textColor(color)} />
       </>
     )
   },
-  handles: (t) => [{ id: 'size', x: (t.p.w * UNIT) / 2, y: (t.p.h * UNIT) / 2 }],
-  onHandle: (t, _id, l) => ({ p: { ...t.p, w: snapHalf((l.x * 2) / UNIT), h: snapHalf((l.y * 2) / UNIT) } }),
+  handles: (t) => [{ id: 'size', x: (t.p.w * UNIT * sc(t)) / 2, y: (t.p.h * UNIT * sc(t)) / 2 }],
+  onHandle: (t, _id, l) => ({ p: { ...t.p, w: snapHalf((l.x * 2) / UNIT / sc(t)), h: snapHalf((l.y * 2) / UNIT / sc(t)) } }),
   colorable: true,
   gridSnap: true,
-  actions: (t) => [toggle(t, 'sides', 'Kenar uzunlukları', 'ruler'), toggle(t, 'area', 'Alanı göster', 'label'), toggle(t, 'grid', 'Birim kareler', 'grid')],
 }
+
+const regPts = (t: Tile) => regularPolygon(t.p.n, t.p.side * UNIT * sc(t))
 
 const regPolygon: TileDef = {
   type: 'reg-polygon',
   name: (t) => `Düzgün ${t.p.n}-gen`,
   create: () => ({ color: C.pink, p: { n: 6, side: 2 } }),
-  outline: (t) => regularPolygon(t.p.n, t.p.side * UNIT),
-  bounds: (t) => {
-    const r = (t.p.side * UNIT) / (2 * Math.sin(Math.PI / t.p.n))
-    return { x: -r, y: -r, w: 2 * r, h: 2 * r }
-  },
-  render: (t) => <Poly t={t} pts={regularPolygon(t.p.n, t.p.side * UNIT)} />,
+  outline: regPts,
+  bounds: (t) => boxOf(regPts(t)),
+  render: (t) => <Poly t={t} pts={regPts(t)} />,
   handles: (t) => {
-    const p = regularPolygon(t.p.n, t.p.side * UNIT)[0]
+    const p = regPts(t)[0]
     return [{ id: 'size', x: p.x, y: p.y }]
   },
   onHandle: (t, _id, l) => {
-    const r = Math.hypot(l.x, l.y)
+    const r = Math.hypot(l.x, l.y) / sc(t)
     const side = 2 * r * Math.sin(Math.PI / t.p.n)
     return { p: { ...t.p, side: snapHalf(side / UNIT) } }
   },
   colorable: true,
-  actions: (t) => [
-    action('fewer', 'Kenar sayısını azalt', 'minus', (tile, api) => api.updateP(tile.id, (p) => ({ n: Math.max(3, p.n - 1) }), true)),
-    action('more', 'Kenar sayısını artır', 'plus', (tile, api) => api.updateP(tile.id, (p) => ({ n: Math.min(20, p.n + 1) }), true)),
-    ...measureActions(t),
-  ],
 }
+
+const customPts = (t: Tile) => mul(t.p.pts as Pt[], sc(t))
 
 const customPolygon: TileDef = {
   type: 'custom-polygon',
   name: () => 'Serbest çokgen',
-  create: () => ({
+  create: (p) => ({
     color: C.green,
-    p: { pts: centerPts([{ x: 0, y: -40 }, { x: 60, y: -80 }, { x: 30, y: 30 }, { x: -30, y: 30 }, { x: -60, y: -40 }].map((p) => ({ x: p.x * 1.1, y: p.y * 1.1 }))) },
+    p: { pts: p.pts ?? centerPts([{ x: 0, y: -40 }, { x: 60, y: -80 }, { x: 30, y: 30 }, { x: -30, y: 30 }, { x: -60, y: -40 }].map((q) => ({ x: q.x * 1.1, y: q.y * 1.1 }))) },
   }),
-  outline: (t) => t.p.pts,
-  bounds: (t) => {
-    const pts: Pt[] = t.p.pts
-    const xs = pts.map((p) => p.x)
-    const ys = pts.map((p) => p.y)
-    return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }
-  },
-  render: (t) => <Poly t={t} pts={t.p.pts} />,
-  handles: (t) => (t.p.pts as Pt[]).map((p, i) => ({ id: String(i), x: p.x, y: p.y })),
+  outline: customPts,
+  bounds: (t) => boxOf(customPts(t)),
+  render: (t) => <Poly t={t} pts={customPts(t)} holes={((t.p.holes ?? []) as Pt[][]).map((h) => mul(h, sc(t)))} />,
+  handles: (t) => (t.p.fixVertices ? [] : customPts(t).map((p, i) => ({ id: String(i), x: p.x, y: p.y }))),
   onHandle: (t, id, l, _api, phase) => {
+    const k = sc(t)
     const pts = (t.p.pts as Pt[]).slice()
-    pts[Number(id)] = { x: round(l.x), y: round(l.y) }
-    if (phase !== 'end') return { p: { ...t.p, pts } }
-    const r = recenter(t, pts)
+    pts[Number(id)] = { x: round(l.x / k), y: round(l.y / k) }
+    if (phase !== 'end' || t.p.holes?.length) return { p: { ...t.p, pts } }
+    const r = recenter({ ...t }, pts)
     return { x: r.x, y: r.y, p: { ...t.p, pts: r.pts } }
   },
   colorable: true,
-  actions: (t) => [
-    action('add', 'Köşe ekle', 'plus', (tile, api) => {
-      const pts = tile.p.pts as Pt[]
-      // En uzun kenarın ortasına köşe ekle
-      let best = 0
-      pts.forEach((p, i) => {
-        if (dist(p, pts[(i + 1) % pts.length]) > dist(pts[best], pts[(best + 1) % pts.length])) best = i
-      })
-      const a = pts[best]
-      const b = pts[(best + 1) % pts.length]
-      const next = [...pts.slice(0, best + 1), { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, ...pts.slice(best + 1)]
-      api.updateP(tile.id, { pts: next }, true)
-    }),
-    action('remove', 'Köşe sil', 'minus', (tile, api) => {
-      const pts = tile.p.pts as Pt[]
-      if (pts.length > 3) api.updateP(tile.id, { pts: pts.slice(0, -1) }, true)
-    }),
-    ...measureActions(t),
-  ],
+  flippable: true,
 }
 
 const circle: TileDef = {
@@ -249,6 +276,7 @@ const circle: TileDef = {
             <Label x={t.p.r / 2} y={-10} size={12} color="#fff">r = {fmt(t.p.r / UNIT)}</Label>
           </>
         )}
+        <TextLabel t={t} color={textColor(color)} />
       </>
     )
   },
@@ -260,7 +288,95 @@ const circle: TileDef = {
   },
   rotatable: true,
   colorable: true,
-  actions: (t) => (t.p.isEllipse ? [] : [toggle(t, 'radius', 'Yarıçapı göster', 'ruler')]),
 }
 
 export const polygonTiles: TileDef[] = [polygon, rectangle, regPolygon, customPolygon, circle]
+
+// ---------------------------------------------------------------------------
+// Eylem çubuğu (Polypad: scale, circle radius, custom-polygon vertices, yazar etiketleri)
+// ---------------------------------------------------------------------------
+
+const SCALABLE = ['polygon', 'reg-polygon', 'rectangle', 'custom-polygon']
+const LABELLED = ['polygon', 'reg-polygon', 'rectangle', 'custom-polygon', 'circle']
+const pp = (patch: Record<string, unknown>) => ({ p: patch })
+
+export const polygonActions: ActionSpec[] = [
+  {
+    id: 'scale',
+    type: 'input',
+    tileTypes: SCALABLE,
+    label: 'Ölçek:',
+    icon: 'geo-scale',
+    location: 'more',
+    value: 'number',
+    range: [0.1, 10],
+    step: 0.1,
+    get: (t) => sc(t),
+    // Parça merkezi 0,0 olduğundan ölçeklenirken yerinde kalır
+    set: (v: number) => pp({ scale: v }),
+  },
+  // Polypad'de olmayan ama öğretmenlerin kullandığı ölçüler: ⋯ menüsünde
+  { id: 'show-angles', type: 'checkbox', tileTypes: ['polygon', 'reg-polygon', 'custom-polygon'], label: 'Açıları göster:', icon: 'geo-angle', location: 'more', get: (t) => !!t.p.angles, set: (v: boolean) => pp({ angles: v }) },
+  { id: 'show-sides', type: 'checkbox', tileTypes: ['polygon', 'reg-polygon', 'custom-polygon', 'rectangle'], label: 'Kenar uzunlukları:', icon: 'resize', location: 'more', get: (t) => !!t.p.sides, set: (v: boolean) => pp({ sides: v }) },
+  { id: 'show-area', type: 'checkbox', tileTypes: ['rectangle'], label: 'Alanı göster:', location: 'more', get: (t) => !!t.p.area, set: (v: boolean) => pp({ area: v }) },
+  { id: 'show-units', type: 'checkbox', tileTypes: ['rectangle'], label: 'Birim kareler:', icon: 'grid', location: 'more', get: (t) => !!t.p.grid, set: (v: boolean) => pp({ grid: v }) },
+  { id: 'sides-count', type: 'input', tileTypes: ['reg-polygon'], label: 'Kenar sayısı:', location: 'more', value: 'number', range: [3, 20], get: (t) => t.p.n, set: (v: number) => pp({ n: Math.round(v) }) },
+  {
+    id: 'fix-vertices',
+    type: 'button',
+    tileTypes: ['custom-polygon'],
+    label: 'Köşeleri kilitle',
+    location: 'more',
+    show: (ts) => ts.every((t) => !t.p.fixVertices),
+    click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { fixVertices: true })),
+  },
+  {
+    id: 'unfix-vertices',
+    type: 'button',
+    tileTypes: ['custom-polygon'],
+    label: 'Köşelerin kilidini aç',
+    location: 'more',
+    show: (ts) => ts.some((t) => t.p.fixVertices),
+    click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { fixVertices: false })),
+  },
+  { id: 'fix-vertices-count', type: 'checkbox', tileTypes: ['custom-polygon'], label: 'Köşe ekle ya da sil:', location: 'more', get: (t) => !!t.p.editCount, set: (v: boolean) => pp({ editCount: v }) },
+  {
+    id: 'add-vertex',
+    type: 'button',
+    tileTypes: ['custom-polygon'],
+    label: 'Köşe ekle',
+    icon: 'add',
+    show: (ts) => ts.length === 1 && !!ts[0].p.editCount && !ts[0].p.fixVertices,
+    click: ([t], api) => {
+      const pts = t.p.pts as Pt[]
+      let best = 0
+      pts.forEach((p, i) => {
+        if (dist(p, pts[(i + 1) % pts.length]) > dist(pts[best], pts[(best + 1) % pts.length])) best = i
+      })
+      const a = pts[best]
+      const b = pts[(best + 1) % pts.length]
+      api.updateP(t.id, { pts: [...pts.slice(0, best + 1), { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, ...pts.slice(best + 1)] })
+    },
+  },
+  {
+    id: 'remove-vertex',
+    type: 'button',
+    tileTypes: ['custom-polygon'],
+    label: 'Köşe sil',
+    icon: 'minus',
+    show: (ts) => ts.length === 1 && !!ts[0].p.editCount && !ts[0].p.fixVertices && (ts[0].p.pts as Pt[]).length > 3,
+    click: ([t], api) => api.updateP(t.id, { pts: (t.p.pts as Pt[]).slice(0, -1) }),
+  },
+  { id: 'radius', type: 'input', tileTypes: ['circle'], label: 'Yarıçap:', location: 'more', value: 'number', range: [0.25, 50], step: 0.5, get: (t) => round(t.p.r / UNIT, 2), set: (v: number) => pp({ r: v * UNIT }) },
+  { id: 'radius-y', type: 'input', tileTypes: ['circle'], label: 'Dikey yarıçap:', location: 'more', value: 'number', range: [0.25, 50], step: 0.5, show: (ts) => ts.every((t) => t.p.isEllipse), get: (t) => round(t.p.ry / UNIT, 2), set: (v: number) => pp({ ry: v * UNIT }) },
+  { id: 'toggle-ellipse-control', type: 'checkbox', tileTypes: ['circle'], label: 'Elips:', location: 'more', get: (t) => !!t.p.isEllipse, set: (v: boolean, t) => pp({ isEllipse: v, ry: (t as Tile).p.ry ?? (t as Tile).p.r }) },
+  { id: 'show-radius', type: 'checkbox', tileTypes: ['circle'], label: 'Yarıçapı göster:', location: 'more', show: (ts) => ts.every((t) => !t.p.isEllipse), get: (t) => !!t.p.radius, set: (v: boolean) => pp({ radius: v }) },
+
+  // Yazar seçenekleri
+  { id: 'label', type: 'input', tileTypes: LABELLED, label: 'Etiket:', icon: 'text', author: true, value: 'text', get: (t) => t.p.textLabel ?? '', set: (v: string) => pp({ textLabel: v || undefined }) },
+  { id: 'labelFontSize', type: 'input', tileTypes: LABELLED, label: 'Yazı boyutu:', author: true, value: 'number', range: [1, 15], show: (ts) => ts.some((t) => t.p.textLabel), get: (t) => 5 + (t.p.textLabelFontSize ?? 0), set: (v: number) => pp({ textLabelFontSize: v - 5 }) },
+  { id: 'textLabelRotate', type: 'checkbox', tileTypes: LABELLED, label: 'Etiket dönsün:', author: true, location: 'more', show: (ts) => ts.some((t) => t.p.textLabel), get: (t) => !!t.p.textLabelRotate, set: (v: boolean) => pp({ textLabelRotate: v }) },
+  { id: 'tileWeight', type: 'input', tileTypes: LABELLED, label: 'Parça ağırlığı:', author: true, location: 'more', value: 'text', get: (t) => t.p.weight ?? '', set: (v: string) => pp({ weight: v === '' ? undefined : Number(String(v).replace(',', '.')) }) },
+  { id: 'cornerRadius', type: 'input', tileTypes: SCALABLE, label: 'Köşe yuvarlaklığı:', icon: 'rounded-corner', author: true, location: 'more', value: 'number', range: [0, 10], step: 0.1, get: (t) => t.p.cornerRadius ?? 0, set: (v: number) => pp({ cornerRadius: v }) },
+  { id: 'drop-shadow', type: 'checkbox', tileTypes: ['rectangle'], label: 'Gölge:', author: true, location: 'more', get: (t) => !!t.p.shadow, set: (v: boolean) => pp({ shadow: v }) },
+]

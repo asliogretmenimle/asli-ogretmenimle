@@ -22,6 +22,7 @@ export type Tool =
   | 'geo:angle'
   | 'text:text'
   | 'text:equation'
+  | 'cut'
 
 export type GridId = 'none' | 'square2-grid' | 'square-checked' | 'square-dots' | 'tri-dots' | 'tri2-dots' | 'square-grid' | 'tri-grid' | 'tri2-grid'
 
@@ -117,6 +118,8 @@ export interface State {
   ask: { label: string; value: string; resolve: (v: string | null) => void } | null
   /** Kaydırma aracı: tuvalde boş alana dokunmak kaydırır */
   recording: boolean
+  /** Bir parça sürükleniyor/döndürülüyor (eylem çubuğu gizlenir) */
+  dragging: boolean
 }
 
 const STORAGE_KEY = 'ao-tuval-v1'
@@ -163,6 +166,7 @@ let state: State = {
   editing: null,
   ask: null,
   recording: false,
+  dragging: false,
 }
 
 const listeners = new Set<() => void>()

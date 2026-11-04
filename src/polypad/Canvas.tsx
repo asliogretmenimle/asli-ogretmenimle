@@ -4,6 +4,7 @@ import { getDef } from './tiles'
 import { GridPattern, snapToGrid } from './grid'
 import { boundsOf, boxCorners, boxesIntersect, deg, dist, pad, rotate, round, toLocal, toWorld, uid } from './geom'
 import { eraseStroke, strokePath } from './tiles/basic'
+import { cutAlong } from './actions'
 import {
   api,
   commit,
@@ -30,13 +31,16 @@ import {
 const TileView = memo(function TileView({ t, selected, tiles, hc, z }: { t: Tile; selected: boolean; tiles?: Tile[]; hc: boolean; z?: number }) {
   const def = getDef(t.type)
   if (!def) return null
+  // Gizli parçalar yalnızca yazar modunda soluk görünür
+  if (t.p.hidden && !getState().authoring) return null
   const tf = `translate(${round(t.x)} ${round(t.y)})${t.rot ? ` rotate(${round(t.rot)})` : ''}${t.flip ? ' scale(-1 1)' : ''}`
   return (
-    <g data-tid={t.id} transform={tf} className={t.locked ? 'pp-tile locked' : 'pp-tile'}>
+    <g data-tid={t.id} transform={tf} className={t.locked ? 'pp-tile locked' : 'pp-tile'} opacity={t.p.hidden ? 0.35 : undefined} aria-label={t.p.altText}>
       {def.render(t, { selected, tiles, hc })}
       {/* Her zaman tutulabilen tutamaklar parçanın kendi katmanında: üstteki parçalar onları örter */}
       {z !== undefined &&
         !t.locked &&
+        !t.p.hideHandles &&
         def.handles!(t)
           .filter((h) => h.show === 'always')
           .map((h) => <circle key={h.id} data-tid={t.id} data-handle={h.id} className="pp-handle" cx={h.x} cy={h.y} r={14 / z} fill="transparent" />)}
@@ -284,6 +288,10 @@ export function Canvas() {
       erase(w)
       return
     }
+    if (tl === 'cut') {
+      gesture.current = { k: 'create', tool: tl, a: w, b: w, sa: s }
+      return
+    }
     if (tl.startsWith('line:') || tl.startsWith('geo:')) {
       const a = tl.startsWith('geo:') ? snapGeoPoint(w) : w
       gesture.current = { k: 'create', tool: tl, a, b: a, sa: s }
@@ -311,7 +319,7 @@ export function Canvas() {
       const actEl = target.closest('[data-act]')
       const movable = ids.filter((i) => {
         const x = state.tiles.find((tt) => tt.id === i)
-        return x && !x.locked
+        return x && !x.locked && !x.p.lockVertex && x.p.status !== 'fixed'
       })
       const orig = new Map(state.tiles.filter((x) => movable.includes(x.id)).map((x) => [x.id, { x: x.x, y: x.y }]))
       gesture.current = {
@@ -453,6 +461,7 @@ export function Canvas() {
         const t = getState().tiles.find((x) => x.id === g.id)
         const def = t && getDef(t.type)
         if (!t || !def?.onHandle) return
+        if (!getState().dragging) setState({ dragging: true })
         schedule(() => {
           const cur = getState().tiles.find((x) => x.id === g.id)
           if (!cur) return
@@ -462,6 +471,7 @@ export function Canvas() {
         return
       }
       case 'rotate': {
+        if (!getState().dragging) setState({ dragging: true })
         const a = Math.atan2(w.y - g.c.y, w.x - g.c.x)
         let d = deg(a - g.a0)
         const one = g.ids.length === 1 ? g.orig.get(g.ids[0]) : undefined
@@ -483,6 +493,7 @@ export function Canvas() {
         if (!g.ids.length) return
         if (!g.moved) {
           g.moved = true
+          setState({ dragging: true })
           // Köşe yakalama hazırlığı
           const st = getState()
           const set = new Set(g.ids)
@@ -572,11 +583,13 @@ export function Canvas() {
       flush()
       // Kalan parmak yeni bir hareket başlatmasın
       if (pointers.current.size === 0) gesture.current = null
+      if (getState().dragging) setState({ dragging: false })
       return
     }
     if (pointers.current.size > 0) return
     gesture.current = null
     flush()
+    if (getState().dragging) setState({ dragging: false })
     const cancelled = e.type === 'pointercancel'
     const s = local(e)
     const w = toW(s)
@@ -690,6 +703,11 @@ export function Canvas() {
   }
 
   function createShape(tl: Tool, a: Pt, b: Pt, dragged: boolean) {
+    if (tl === 'cut') {
+      if (dragged && cutAlong(a, b)) sound('pop')
+      setState({ tool: 'move' })
+      return
+    }
     const st = getState()
     const color = st.color
     const w = LINE_W[st.strokeWidth]
@@ -850,6 +868,7 @@ function Draft({ tool, a, b }: { tool: Tool; a: Pt; b: Pt }) {
     const mx = (a.x + b.x) / 2
     return <path d={`M${a.x} ${a.y}H${mx}V${b.y}H${b.x}`} {...common} />
   }
+  if (tool === 'cut') return <path d={`M${a.x} ${a.y}L${b.x} ${b.y}`} {...common} stroke="#eb4726" strokeWidth={2.5} />
   return <path d={`M${a.x} ${a.y}L${b.x} ${b.y}`} {...common} />
 }
 
@@ -866,7 +885,7 @@ function Overlay({ tiles, sel, view, tool, editing, rotateOn }: { tiles: Tile[];
   // Tek seçili parçanın tutamakları
   const only = selected.length === 1 ? selected[0] : null
   const odef = only && getDef(only.type)
-  if (only && odef?.handles && tool === 'move' && !only.locked) {
+  if (only && odef?.handles && tool === 'move' && !only.locked && !only.p.hideHandles) {
     const t = only
     for (const h of odef.handles(t)) {
       const p = sc(toWorld(t, h))
@@ -891,7 +910,7 @@ function Overlay({ tiles, sel, view, tool, editing, rotateOn }: { tiles: Tile[];
 
   let rot: React.ReactNode = null
   const lockedAll = selected.every((t) => t.locked)
-  const canRotate = rotateOn && !lockedAll && tool === 'move' && selected.every((t) => getDef(t.type)?.rotatable !== false)
+  const canRotate = rotateOn && !lockedAll && tool === 'move' && selected.every((t) => getDef(t.type)?.rotatable !== false && !t.p.cannotRotate)
   if (canRotate) {
     let anchor: Pt
     let dir: Pt

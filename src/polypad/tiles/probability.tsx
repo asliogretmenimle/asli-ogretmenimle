@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react'
-import type { PadApi, Pt, Tile, TileDef } from '../types'
+import type { ActionSpec, PadApi, Pt, Tile, TileDef } from '../types'
 import { fmt, mod, pathOf, regularPolygon, shade, textOn, toWorld } from '../geom'
-import { C, FONT, Label, UNIT, action, askNumber, edge, randInt, rectBox, toggle } from './kit'
+import { C, FONT, Label, UNIT, askNumber, edge, randInt, rectBox } from './kit'
 
 // ---------------------------------------------------------------------------
 // Ortak yardımcılar
@@ -71,10 +71,8 @@ function sectorPath(r: number, a0: number, a1: number, r0 = 0) {
   return `M${q0.x} ${q0.y}L${p0.x} ${p0.y}A${r} ${r} 0 ${large} 1 ${p1.x} ${p1.y}L${q1.x} ${q1.y}A${r0} ${r0} 0 ${large} 0 ${q0.x} ${q0.y}Z`
 }
 
-const roller = (go: (t: Tile, api: PadApi) => void) => ({
-  onTap: (t: Tile, api: PadApi) => go(t, api),
-  actions: (_t: Tile, _api: PadApi) => [action('roll', 'Zar at', 'dice', go)],
-})
+/** Sonuç geçmişi ("Tabloya dök" için); en son 500 sonuç tutulur */
+const pushHist = (p: Record<string, unknown>, v: string) => [...((p.hist as string[]) ?? []).slice(-499), v]
 
 // ---------------------------------------------------------------------------
 // Zar
@@ -121,8 +119,10 @@ function DieFace({ t }: { t: Tile }) {
 }
 
 function rollDie(t: Tile, api: PadApi) {
-  const n = dieFaces(t)?.length ?? 6
-  api.updateP(t.id, (p) => ({ i: randInt(0, n - 1), roll: (p.roll ?? 0) + 1 }), true)
+  const faces = dieFaces(t)
+  const n = faces?.length ?? 6
+  const i = randInt(0, n - 1)
+  api.updateP(t.id, (p) => ({ i, roll: (p.roll ?? 0) + 1, hist: pushHist(p, String(faces ? faces[i] : i + 1)) }), true)
   api.sound('roll')
 }
 
@@ -143,7 +143,7 @@ const dice: TileDef = {
     </Anim>
   ),
   colorable: true,
-  ...roller(rollDie),
+  onTap: rollDie,
 }
 
 // ---------------------------------------------------------------------------
@@ -182,7 +182,8 @@ function CoinFace({ heads }: { heads: boolean }) {
 }
 
 function flipCoin(t: Tile, api: PadApi) {
-  api.updateP(t.id, (p) => ({ side: Math.random() < 0.5 ? 'H' : 'T', roll: (p.roll ?? 0) + 1 }), true)
+  const side = Math.random() < 0.5 ? 'H' : 'T'
+  api.updateP(t.id, (p) => ({ side, roll: (p.roll ?? 0) + 1, hist: pushHist(p, side === 'H' ? 'Yazı' : 'Tura') }), true)
   api.sound('pop')
 }
 
@@ -198,7 +199,6 @@ const coin: TileDef = {
   ),
   rotatable: false,
   onTap: flipCoin,
-  actions: () => [action('flip', 'Parayı at', 'rotate', flipCoin)],
 }
 
 // ---------------------------------------------------------------------------
@@ -208,22 +208,74 @@ const coin: TileDef = {
 const RW = UNIT * 3.8
 const RH = UNIT * 2.8
 
+type Dist = { key: string; label: string; short: string; params: { label: string; int?: boolean; range?: [number, number] }[]; defaults: number[]; get: (a: number, b: number) => number }
+
+const uniform = () => Math.random() || 1e-12
+/** Polypad'deki dağılımlar */
+const DISTS: Dist[] = [
+  { key: 'discrete', label: 'Kesikli düzgün', short: '', params: [{ label: 'En küçük:', int: true }, { label: 'En büyük:', int: true }], defaults: [1, 10], get: (a, b) => randInt(Math.min(a, b), Math.max(a, b)) },
+  { key: 'bernoulli', label: 'Bernoulli', short: 'Bernoulli', params: [{ label: 'p', range: [0, 1] }], defaults: [0.5], get: (p) => (Math.random() < p ? 1 : 0) },
+  {
+    key: 'binomial',
+    label: 'Binom',
+    short: 'Binom',
+    params: [{ label: 'p', range: [0, 1] }, { label: 'n', range: [1, 1000], int: true }],
+    defaults: [0.5, 10],
+    get: (p, n) => Array.from({ length: Math.round(n) }).reduce<number>((s) => s + (Math.random() < p ? 1 : 0), 0),
+  },
+  {
+    key: 'poisson',
+    label: 'Poisson',
+    short: 'Poisson',
+    params: [{ label: 'λ', range: [0, 1000] }],
+    defaults: [1],
+    get: (l) => {
+      // Knuth yöntemi
+      const L = Math.exp(-l)
+      let k = 0
+      let q = 1
+      do {
+        k++
+        q *= Math.random()
+      } while (q > L && k < 10000)
+      return k - 1
+    },
+  },
+  { key: 'geometric', label: 'Geometrik', short: 'Geometrik', params: [{ label: 'p', range: [0, 1] }], defaults: [0.5], get: (p) => (p <= 0 ? 0 : p >= 1 ? 1 : Math.ceil(Math.log(uniform()) / Math.log(1 - p)) || 0) },
+  { key: 'continuous', label: 'Sürekli düzgün', short: 'Sürekli', params: [{ label: 'En küçük:' }, { label: 'En büyük:' }], defaults: [0, 1], get: (a, b) => a + Math.random() * (b - a) },
+  {
+    key: 'normal',
+    label: 'Normal',
+    short: 'Normal',
+    params: [{ label: 'μ' }, { label: 'σ²', range: [0, 1e6] }],
+    defaults: [0, 1],
+    get: (m, v) => m + Math.sqrt(Math.max(0, v)) * Math.sqrt(-2 * Math.log(uniform())) * Math.cos(2 * Math.PI * Math.random()),
+  },
+  { key: 'exponential', label: 'Üstel', short: 'Üstel', params: [{ label: 'λ' }], defaults: [1], get: (l) => -Math.log(uniform()) / (l || 1) },
+  { key: 'cauchy', label: 'Cauchy', short: 'Cauchy', params: [], defaults: [], get: () => Math.tan(Math.PI * (Math.random() - 0.5)) },
+]
+
+const distOf = (t: Tile) => DISTS.find((d) => d.key === (t.p.dist ?? 'discrete')) ?? DISTS[0]
+/** Parametreler (eski parçalarda min/max) */
+const rngParam = (t: Tile, i: 0 | 1) => (i === 0 ? (t.p.p1 ?? t.p.min) : (t.p.p2 ?? t.p.max)) ?? distOf(t).defaults[i]
+const rngText = (v: number) => (Number.isInteger(v) ? fmt(v, 0) : fmt(v, 3))
+
 function generate(t: Tile, api: PadApi) {
-  const lo = Math.min(t.p.min, t.p.max)
-  const hi = Math.max(t.p.min, t.p.max)
-  api.updateP(t.id, (p) => ({ value: randInt(lo, hi), n: (p.n ?? 0) + 1 }), true)
+  const v = distOf(t).get(rngParam(t, 0), rngParam(t, 1))
+  api.updateP(t.id, (p) => ({ value: v, n: (p.n ?? 0) + 1, hist: pushHist(p, rngText(v)) }), true)
   api.sound('click')
 }
 
 async function editRange(t: Tile, api: PadApi, key: 'min' | 'max') {
-  const v = await askNumber(api, key === 'min' ? 'En küçük sayı' : 'En büyük sayı', t.p[key], -1e6, 1e6)
-  if (v != null) api.updateP(t.id, { [key]: Math.round(v) }, true)
+  const i = key === 'min' ? 0 : 1
+  const v = await askNumber(api, key === 'min' ? 'En küçük sayı' : 'En büyük sayı', rngParam(t, i), -1e6, 1e6)
+  if (v != null) api.updateP(t.id, i === 0 ? { p1: Math.round(v), min: undefined } : { p2: Math.round(v), max: undefined }, true)
 }
 
 const random: TileDef = {
   type: 'random',
   name: () => 'Rastgele sayı üreteci',
-  create: () => ({ color: C.teal, p: { min: 1, max: 10, value: null, n: 0 } }),
+  create: () => ({ color: C.green, p: { dist: 'discrete', p1: 1, p2: 10, value: null, n: 0 } }),
   bounds: () => rectBox(RW, RH),
   render: (t) => {
     const color = t.color ?? C.teal
@@ -234,21 +286,29 @@ const random: TileDef = {
         <rect x={-RW / 2} y={-RH / 2} width={RW} height={RH} rx={10} fill={color} stroke={edge(color)} strokeWidth={1.5} />
         <rect x={-RW / 2 + 8} y={-RH / 2 + 8} width={RW - 16} height={RH * 0.56} rx={6} fill="#fff" />
         <Anim k={t.p.n ?? 0} frames={POP} duration={300}>
-          <Label y={-RH / 2 + 8 + RH * 0.28} size={String(v ?? '?').length > 4 ? 20 : 30} weight={800}>
-            {v == null ? '?' : fmt(v, 0)}
+          <Label y={-RH / 2 + 8 + RH * 0.28} size={v == null ? 30 : Math.max(14, Math.min(30, 110 / rngText(v).length))} weight={800}>
+            {v == null ? '?' : rngText(v)}
           </Label>
         </Anim>
-        <rect data-act="min" x={-RW / 2 + 6} y={RH / 2 - 26} width={RW / 2 - 12} height={22} rx={5} fill="rgba(255,255,255,.18)" />
-        <rect data-act="max" x={6} y={RH / 2 - 26} width={RW / 2 - 12} height={22} rx={5} fill="rgba(255,255,255,.18)" />
-        <Label x={-RW / 4} y={RH / 2 - 15} size={13} color={ink}>
-          {fmt(t.p.min, 0)}
-        </Label>
-        <Label y={RH / 2 - 15} size={13} color={ink}>
-          –
-        </Label>
-        <Label x={RW / 4} y={RH / 2 - 15} size={13} color={ink}>
-          {fmt(t.p.max, 0)}
-        </Label>
+        {distOf(t).key === 'discrete' ? (
+          <>
+            <rect data-act="min" x={-RW / 2 + 6} y={RH / 2 - 26} width={RW / 2 - 12} height={22} rx={5} fill="rgba(255,255,255,.18)" />
+            <rect data-act="max" x={6} y={RH / 2 - 26} width={RW / 2 - 12} height={22} rx={5} fill="rgba(255,255,255,.18)" />
+            <Label x={-RW / 4} y={RH / 2 - 15} size={13} color={ink}>
+              {fmt(rngParam(t, 0), 0)}
+            </Label>
+            <Label y={RH / 2 - 15} size={13} color={ink}>
+              –
+            </Label>
+            <Label x={RW / 4} y={RH / 2 - 15} size={13} color={ink}>
+              {fmt(rngParam(t, 1), 0)}
+            </Label>
+          </>
+        ) : (
+          <Label y={RH / 2 - 15} size={11} color={ink}>
+            {[distOf(t).short, ...distOf(t).params.map((q, i) => `${q.label.replace(':', '')}=${fmt(rngParam(t, i as 0 | 1), 2)}`)].join(' ')}
+          </Label>
+        )}
       </>
     )
   },
@@ -257,11 +317,6 @@ const random: TileDef = {
     if (info.act === 'min' || info.act === 'max') void editRange(t, api, info.act)
     else generate(t, api)
   },
-  actions: () => [
-    action('gen', 'Sayı üret', 'dice', generate),
-    action('min', 'En küçük sayı', 'minus', (t, api) => void editRange(t, api, 'min')),
-    action('max', 'En büyük sayı', 'plus', (t, api) => void editRange(t, api, 'max')),
-  ],
 }
 
 // ---------------------------------------------------------------------------
@@ -337,7 +392,10 @@ function SpinnerView({ t, thumb }: { t: Tile; thumb?: boolean }) {
 
 function spin(t: Tile, api: PadApi) {
   const extra = 720 + Math.random() * 720
-  api.updateP(t.id, (p) => ({ angle: (p.angle ?? 0) + extra, spins: (p.spins ?? 0) + 1 }), true)
+  const angle = (t.p.angle ?? 0) + extra
+  const secs = sectorsOf(t)
+  const label = secs[resultIndex(secs, angle)]?.label ?? ''
+  api.updateP(t.id, (p) => ({ angle, spins: (p.spins ?? 0) + 1, hist: pushHist(p, label) }), true)
   api.sound('click')
   window.setTimeout(() => api.sound('pop'), SPIN_MS)
 }
@@ -355,11 +413,6 @@ const spinner: TileDef = {
   bounds: spinnerBounds,
   render: (t, ctx) => <SpinnerView t={t} thumb={ctx.thumb} />,
   onTap: spin,
-  actions: () => [
-    action('spin', 'Çevir', 'rotate', spin),
-    action('fewer', 'Dilim sayısını azalt', 'minus', (t, api) => api.updateP(t.id, (p) => ({ n: Math.max(2, p.n - 1) }), true)),
-    action('more', 'Dilim sayısını artır', 'plus', (t, api) => api.updateP(t.id, (p) => ({ n: Math.min(24, p.n + 1) }), true)),
-  ],
 }
 
 async function editSectors(t: Tile, api: PadApi) {
@@ -395,17 +448,6 @@ const customSpinner: TileDef = {
   bounds: spinnerBounds,
   render: (t, ctx) => <SpinnerView t={t} thumb={ctx.thumb} />,
   onTap: spin,
-  actions: () => [
-    action('spin', 'Çevir', 'rotate', spin),
-    action('edit', 'Dilimleri düzenle', 'edit', (t, api) => void editSectors(t, api)),
-    action('add', 'Dilim ekle', 'plus', (t, api) =>
-      api.updateP(t.id, (p) => {
-        const s = p.sectors as Sector[]
-        return s.length >= 24 ? {} : { sectors: [...s, { label: String.fromCharCode(65 + (s.length % 26)), w: 1 }] }
-      }, true),
-    ),
-    action('remove', 'Dilim sil', 'minus', (t, api) => api.updateP(t.id, (p) => ((p.sectors as Sector[]).length > 1 ? { sectors: (p.sectors as Sector[]).slice(0, -1) } : {}), true)),
-  ],
 }
 
 // ---------------------------------------------------------------------------
@@ -413,7 +455,6 @@ const customSpinner: TileDef = {
 // ---------------------------------------------------------------------------
 
 type Series = { name: string; color: string; values: number[] }
-const KINDS = ['column', 'row', 'line', 'area'] as const
 const KIND_NAME: Record<string, string> = { column: 'Sütun grafiği', row: 'Çubuk grafiği', line: 'Çizgi grafiği', area: 'Alan grafiği' }
 
 function defaultSeries(kind: string): Series[] {
@@ -436,7 +477,8 @@ function defaultSeries(kind: string): Series[] {
 function ChartView({ t }: { t: Tile }) {
   const { w, h } = t.p as { w: number; h: number }
   const kind: string = t.p.kind ?? 'column'
-  const stacked = t.p.layout === 'stacked'
+  const pct = t.p.layout === 'percentage'
+  const stacked = t.p.layout === 'stacked' || pct
   const series = (t.p.series as Series[]) ?? []
   const labels = (t.p.labels as string[]) ?? []
   const n = Math.max(1, ...series.map((s) => s.values.length), labels.length)
@@ -450,7 +492,10 @@ function ChartView({ t }: { t: Tile }) {
   const y1 = h / 2 - mb
   const pw = x1 - x0
   const ph = y1 - y0
-  const val = (s: Series, i: number) => Math.max(0, s.values[i] ?? 0)
+  const raw = (s: Series, i: number) => Math.max(0, s.values[i] ?? 0)
+  const rawSums = Array.from({ length: n }, (_, i) => series.reduce((a, s) => a + raw(s, i), 0))
+  // Yüzde düzeninde her kategori 100'e ölçeklenir
+  const val = (s: Series, i: number) => (pct ? (rawSums[i] ? (raw(s, i) / rawSums[i]) * 100 : 0) : raw(s, i))
   const sums = Array.from({ length: n }, (_, i) => series.reduce((a, s) => a + val(s, i), 0))
   const max = Math.max(1, ...(stacked ? sums : series.flatMap((s) => s.values.map((v) => Math.max(0, v)))))
   const step = niceStep(max, 5)
@@ -595,22 +640,6 @@ const chart: TileDef = {
   handles: (t) => [{ id: 'size', x: t.p.w / 2, y: t.p.h / 2 }],
   onHandle: (t, _id, l) => ({ p: { ...t.p, w: Math.max(150, Math.round(l.x * 2)), h: Math.max(110, Math.round(l.y * 2)) } }),
   rotatable: false,
-  actions: (t) => [
-    action('data', 'Veriyi düzenle', 'edit', (tile, api) => void editSeries(tile, api)),
-    action('labels', 'Etiketleri düzenle', 'label', (tile, api) => void editLabels(tile, api)),
-    action('kind', 'Grafik türünü değiştir', 'chart', (tile, api) =>
-      api.updateP(tile.id, (p) => ({ kind: KINDS[(KINDS.indexOf(p.kind ?? 'column') + 1) % KINDS.length] }), true),
-    ),
-    action('stack', 'Yığılmış', 'table', (tile, api) => api.updateP(tile.id, (p) => ({ layout: p.layout === 'stacked' ? undefined : 'stacked' }), true), t.p.layout === 'stacked'),
-    action('add', 'Seri ekle', 'plus', (tile, api) =>
-      api.updateP(tile.id, (p) => {
-        const s = p.series as Series[]
-        if (s.length >= 8) return {}
-        const len = Math.max(1, ...s.map((x) => x.values.length))
-        return { series: [...s, { name: String.fromCharCode(65 + s.length), color: SERIES_COLORS[s.length % SERIES_COLORS.length], values: Array.from({ length: len }, () => randInt(1, 8)) }] }
-      }, true),
-    ),
-  ],
 }
 
 // ---------------------------------------------------------------------------
@@ -705,17 +734,6 @@ const pieChart: TileDef = {
   },
   render: (t) => <PieView t={t} />,
   rotatable: false,
-  actions: () => [
-    action('data', 'Veriyi düzenle', 'edit', (t, api) => void editSlices(t, api)),
-    action('add', 'Dilim ekle', 'plus', (t, api) =>
-      api.updateP(t.id, (p) => {
-        const d = p.data as Slice[]
-        return d.length >= 12 ? {} : { data: [...d, { label: String.fromCharCode(65 + d.length), v: randInt(1, 6) }] }
-      }, true),
-    ),
-    action('remove', 'Dilim sil', 'minus', (t, api) => api.updateP(t.id, (p) => ((p.data as Slice[]).length > 1 ? { data: (p.data as Slice[]).slice(0, -1) } : {}), true)),
-    action('kind', 'Daire / halka', 'chart', (t, api) => api.updateP(t.id, (p) => ({ kind: p.kind === 'donut' ? 'pie' : 'donut' }), true)),
-  ],
 }
 
 // ---------------------------------------------------------------------------
@@ -737,9 +755,14 @@ function fiveNumbers(data: number[]) {
 
 function BoxView({ t }: { t: Tile }) {
   const data = ((t.p.data as number[]) ?? []).filter(Number.isFinite)
-  const f = fiveNumbers(data)
-  let lo = f.min
-  let hi = f.max
+  const f5 = fiveNumbers(data)
+  // Aykırı değerler: çeyrekler arası açıklığın 1,5 katının dışındakiler (bıyıklar içerideki en uç değere uzanır)
+  const iqr = f5.q3 - f5.q1
+  const outl = t.p.outliers ? data.filter((v) => v < f5.q1 - 1.5 * iqr || v > f5.q3 + 1.5 * iqr) : []
+  const inner = t.p.outliers ? data.filter((v) => !outl.includes(v)) : data
+  const f = { ...f5, min: inner.length ? Math.min(...inner) : f5.min, max: inner.length ? Math.max(...inner) : f5.max }
+  let lo = f5.min
+  let hi = f5.max
   if (hi - lo < 1e-9) {
     lo -= 1
     hi += 1
@@ -777,6 +800,9 @@ function BoxView({ t }: { t: Tile }) {
               {fmt(v)}
             </Label>
           ))}
+          {outl.map((v, i) => (
+            <circle key={`o${i}`} cx={X(v)} cy={by} r={4} fill="#fff" stroke="#242436" strokeWidth={1.5} />
+          ))}
         </>
       )}
       {t.p.dots &&
@@ -813,7 +839,6 @@ const boxWhisker: TileDef = {
   render: (t) => <BoxView t={t} />,
   colorable: true,
   rotatable: false,
-  actions: (t) => [action('data', 'Veriyi düzenle', 'edit', (tile, api) => void editData(tile, api)), toggle(t, 'dots', 'Veri noktalarını göster', 'more')],
 }
 
 // ---------------------------------------------------------------------------
@@ -946,22 +971,31 @@ function CardFace({ code }: { code: string }) {
   )
 }
 
+/** Deste (üst üste konmuş kartlar): cards === 'deck', p.order üstteki kart başta */
+const isPile = (t: Tile) => t.p.cards === 'deck'
+const pileOf = (t: Tile): string[] => (isPile(t) ? ((t.p.order as string[]) ?? []) : [String(t.p.cards)])
+/** Desteler varsayılan olarak kapalı, tek kartlar açık durur */
+const isDown = (t: Tile) => (isPile(t) ? t.p.down !== false : !!t.p.down)
+const cardCount = (t: Tile) => pileOf(t).length
+
 function drawCard(t: Tile, api: PadApi) {
-  const order = (t.p.order as string[]) ?? []
-  if (!order.length) {
+  const order = pileOf(t)
+  if (!isPile(t) || !order.length) {
     api.sound('error')
     return
   }
   const [top, ...rest] = order
-  const drawn = 52 - rest.length
+  const drawn = (t.p.drawn ?? 0) + 1
   const pos = toWorld(t, { x: CW + 18 + ((drawn - 1) % 6) * 10, y: ((drawn - 1) % 6) * 6 })
-  api.updateP(t.id, { order: rest })
+  // Tek kart kalınca deste sıradan bir karta dönüşür
+  if (rest.length === 1) api.update(t.id, { p: { cards: rest[0], n: 0, down: isDown(t) } })
+  else api.updateP(t.id, { order: rest, drawn })
   api.add([{ type: 'card', x: pos.x, y: pos.y, rot: t.rot, p: { cards: top, n: 0 } }], false)
   api.sound('click')
 }
 
 function flipCard(t: Tile, api: PadApi) {
-  api.updateP(t.id, (p) => ({ down: !p.down, n: (p.n ?? 0) + 1 }), true)
+  api.updateP(t.id, (p) => ({ down: !isDown(t), n: (p.n ?? 0) + 1 }), true)
   api.sound('click')
 }
 
@@ -978,11 +1012,11 @@ const card: TileDef = {
   type: 'card',
   name: (t) => {
     const c: string = t.p.cards
-    if (c === 'deck') return `Deste (${(t.p.order ?? []).length} kart)`
+    if (c === 'deck') return `Deste (${cardCount(t)} kart)`
     if (c === 'JJ') return 'Joker'
     return `${SUIT_NAME[c[1]] ?? ''} ${RANK_NAME[c[0]] ?? c[0]}`
   },
-  create: (p) => (p.cards === 'deck' ? { p: { cards: 'deck', order: shuffled(fullDeck()) } } : { p: { cards: p.cards ?? 'AS', n: 0 } }),
+  create: (p) => (p.cards === 'deck' ? { p: { cards: 'deck', order: shuffled(fullDeck()), down: true } } : { p: { cards: p.cards ?? 'AS', n: 0 } }),
   bounds: (t) => (t.p.cards === 'deck' ? { x: -CW / 2 - 6, y: -CH / 2 - 6, w: CW + 6, h: CH + 6 } : rectBox(CW, CH)),
   outline: () => [
     { x: -CW / 2, y: -CH / 2 },
@@ -1003,11 +1037,14 @@ const card: TileDef = {
             </Label>
           </>
         )
+      const top = (t.p.order as string[])[0]
       return (
         <>
           {left > 2 && <CardBack x={-6} y={-6} />}
           {left > 1 && <CardBack x={-3} y={-3} />}
-          <CardBack />
+          <Anim k={t.p.n ?? 0} frames={FLIP1} duration={300}>
+            {isDown(t) ? <CardBack /> : <CardFace code={top} />}
+          </Anim>
           <circle cx={CW / 2 - 4} cy={CH / 2 - 4} r={12} fill="#242436" />
           <Label x={CW / 2 - 4} y={CH / 2 - 4} size={10} color="#fff">
             {left}
@@ -1017,25 +1054,7 @@ const card: TileDef = {
     }
     return <Anim k={t.p.n ?? 0} frames={FLIP1} duration={300}>{t.p.down ? <CardBack /> : <CardFace code={t.p.cards} />}</Anim>
   },
-  onTap: (t, api) => (t.p.cards === 'deck' ? drawCard(t, api) : flipCard(t, api)),
-  actions: (t) => {
-    if (t.p.cards === 'deck')
-      return [
-        action('draw', 'Kart çek', 'arrowR', drawCard),
-        action('shuffle', 'Karıştır (desteyi tamamla)', 'shuffle', (tile, api) => {
-          api.updateP(tile.id, { order: shuffled(fullDeck()) }, true)
-          api.sound('roll')
-        }),
-      ]
-    const out = [action('flip', 'Kartı çevir', 'flipH', flipCard, !!t.p.down)]
-    if (t.p.cards !== 'JJ')
-      out.push(
-        action('suit', 'Takımı değiştir', 'shuffle', (tile, api) => cycleCard(tile, api, 'suit', 1)),
-        action('down', 'Değeri azalt', 'minus', (tile, api) => cycleCard(tile, api, 'rank', -1)),
-        action('up', 'Değeri artır', 'plus', (tile, api) => cycleCard(tile, api, 'rank', 1)),
-      )
-    return out
-  },
+  onTap: (t, api) => (isPile(t) && cardCount(t) > 1 ? drawCard(t, api) : flipCard(t, api)),
 }
 
 // ---------------------------------------------------------------------------
@@ -1125,7 +1144,8 @@ function PolyDie({ t }: { t: Tile }) {
 
 function rollPoly(t: Tile, api: PadApi) {
   const n: number = t.p.faceCount ?? 4
-  api.updateP(t.id, (p) => ({ value: randInt(1, n), roll: (p.roll ?? 0) + 1 }), true)
+  const value = randInt(1, n)
+  api.updateP(t.id, (p) => ({ value, roll: (p.roll ?? 0) + 1, hist: pushHist(p, String(value)) }), true)
   api.sound('roll')
 }
 
@@ -1150,7 +1170,276 @@ const polyhedralDice: TileDef = {
     </Anim>
   ),
   colorable: true,
-  ...roller(rollPoly),
+  onTap: rollPoly,
 }
 
 export const probabilityTiles: TileDef[] = [dice, coin, random, spinner, customSpinner, chart, pieChart, boxWhisker, card, polyhedralDice]
+
+// ---------------------------------------------------------------------------
+// Eylem çubuğu (Polypad eylemleri)
+// ---------------------------------------------------------------------------
+
+const ROLLERS: Record<string, (t: Tile, api: PadApi) => void> = {
+  dice: rollDie,
+  'polyhedral-dice': rollPoly,
+  coin: flipCoin,
+  spinner: spin,
+  'custom-spinner': spin,
+  random: generate,
+}
+const RANDOM_TYPES = Object.keys(ROLLERS)
+const DICE = ['dice', 'polyhedral-dice']
+const SPINNERS = ['spinner', 'custom-spinner']
+const only = (ts: Tile[], types: string[]) => ts.every((t) => types.includes(t.type))
+
+const randomise = (ts: Tile[], api: PadApi) => {
+  for (const t of ts) ROLLERS[t.type]?.(t, api)
+}
+
+/** Seçili rastgele parçaların sonuçlarını sıklık tablosuna döker */
+function tabulate(ts: Tile[], api: PadApi) {
+  const counts = new Map<string, number>()
+  for (const t of ts) {
+    const hist = (t.p.hist as string[] | undefined) ?? []
+    for (const v of hist) counts.set(v, (counts.get(v) ?? 0) + 1)
+  }
+  const keys = [...counts.keys()].sort((a, b) => {
+    const x = parseNum(a)
+    const y = parseNum(b)
+    return x != null && y != null ? x - y : a.localeCompare(b, 'tr')
+  })
+  const rows = [['Sonuç', 'Sıklık'], ...(keys.length ? keys.map((k) => [k, String(counts.get(k))]) : [['', '']])]
+  const boxes = ts.map((t) => api.box(t))
+  const right = Math.max(...boxes.map((b) => b.x + b.w))
+  const top = Math.min(...boxes.map((b) => b.y))
+  api.add([{ type: 'table', x: right + 120, y: top + rows.length * 18, rot: 0, p: { rows } }])
+}
+
+const each = (fn: (t: Tile, api: PadApi) => void) => (ts: Tile[], api: PadApi) => ts.forEach((t) => fn(t, api))
+
+export const probabilityActions: ActionSpec[] = [
+  // Rastgelelik: Polypad'deki "Randomise" düğmesi, etiketi parça türüne göre değişir
+  { id: 'randomise-coin', type: 'button', tileTypes: ['coin'], label: 'At', icon: 'random', text: true, click: randomise },
+  { id: 'randomise-dice', type: 'button', tileTypes: DICE, label: 'Zar at', icon: 'random', text: true, click: randomise },
+  { id: 'randomise-spin', type: 'button', tileTypes: SPINNERS, label: 'Çevir', icon: 'random', text: true, click: randomise },
+  {
+    id: 'randomise',
+    type: 'button',
+    tileTypes: RANDOM_TYPES,
+    label: 'Rastgele',
+    icon: 'random',
+    text: true,
+    show: (ts) => !only(ts, ['coin']) && !only(ts, DICE) && !only(ts, SPINNERS),
+    click: randomise,
+  },
+  { id: 'tabulate', type: 'button', tileTypes: RANDOM_TYPES, label: 'Tabloya dök', icon: 'grid', text: true, click: tabulate },
+
+  // Rastgele sayı üreteci
+  {
+    id: 'distribution',
+    type: 'select',
+    tileTypes: ['random'],
+    label: 'Dağılım:',
+    location: 'more',
+    options: DISTS.map((d) => ({ key: d.key, label: d.label })),
+    get: (t) => distOf(t).key,
+    set: (v: string, t) => {
+      const d = DISTS.find((x) => x.key === v) ?? DISTS[0]
+      const value = d.get(d.defaults[0], d.defaults[1])
+      return { p: { dist: d.key, p1: d.defaults[0], p2: d.defaults[1], min: undefined, max: undefined, value, n: (t.p.n ?? 0) + 1 } }
+    },
+  },
+  ...DISTS.flatMap((d) =>
+    d.params.map(
+      (q, i): ActionSpec => ({
+        id: `rng-${d.key}-${i}`,
+        type: 'input',
+        tileTypes: ['random'],
+        label: q.label,
+        value: 'number',
+        location: 'more',
+        range: q.range,
+        show: (ts) => ts.every((t) => distOf(t).key === d.key),
+        get: (t) => rngParam(t, i as 0 | 1),
+        set: (v: number, t) => {
+          const val = q.int ? Math.round(v) : v
+          const a = i === 0 ? val : rngParam(t, 0)
+          const b = i === 1 ? val : rngParam(t, 1)
+          return { p: { [i ? 'p2' : 'p1']: val, [i ? 'max' : 'min']: undefined, value: d.get(a, b), n: (t.p.n ?? 0) + 1 } }
+        },
+      }),
+    ),
+  ),
+
+  // Çarklar (Polypad'de dilimler doğrudan düzenlenir; burada ⋯ menüsünde)
+  { id: 'spinner-fewer', type: 'button', tileTypes: ['spinner'], label: 'Dilim sayısını azalt', icon: 'minus', location: 'more', click: each((t, api) => api.updateP(t.id, (p) => ({ n: Math.max(2, p.n - 1) }))) },
+  { id: 'spinner-more', type: 'button', tileTypes: ['spinner'], label: 'Dilim sayısını artır', icon: 'add', location: 'more', click: each((t, api) => api.updateP(t.id, (p) => ({ n: Math.min(24, p.n + 1) }))) },
+  { id: 'spinner-edit', type: 'button', tileTypes: ['custom-spinner'], label: 'Dilimleri düzenle', icon: 'edit', location: 'more', show: (ts) => ts.length === 1, click: (ts, api) => void editSectors(ts[0], api) },
+  {
+    id: 'spinner-add',
+    type: 'button',
+    tileTypes: ['custom-spinner'],
+    label: 'Dilim ekle',
+    icon: 'add',
+    location: 'more',
+    click: each((t, api) =>
+      api.updateP(t.id, (p) => {
+        const sec = p.sectors as Sector[]
+        return sec.length >= 24 ? {} : { sectors: [...sec, { label: String.fromCharCode(65 + (sec.length % 26)), w: 1 }] }
+      }),
+    ),
+  },
+  {
+    id: 'spinner-remove',
+    type: 'button',
+    tileTypes: ['custom-spinner'],
+    label: 'Dilim sil',
+    icon: 'minus',
+    location: 'more',
+    show: (ts) => ts.some((t) => ((t.p.sectors as Sector[]) ?? []).length > 1),
+    click: each((t, api) => api.updateP(t.id, (p) => ((p.sectors as Sector[]).length > 1 ? { sectors: (p.sectors as Sector[]).slice(0, -1) } : {}))),
+  },
+
+  // Grafikler
+  {
+    id: 'chart-type',
+    type: 'select',
+    tileTypes: ['chart'],
+    label: 'Grafik türü:',
+    icon: 'column-chart',
+    options: [
+      { key: 'column', label: 'Sütun grafiği' },
+      { key: 'row', label: 'Çubuk grafiği' },
+      { key: 'line', label: 'Çizgi grafiği' },
+      { key: 'area', label: 'Alan grafiği' },
+    ],
+    get: (t) => t.p.kind ?? 'column',
+    set: (v: string) => ({ p: { kind: v } }),
+  },
+  {
+    id: 'chart-layout',
+    type: 'select',
+    tileTypes: ['chart'],
+    label: 'Düzen:',
+    icon: 'area-chart',
+    options: [
+      { key: 'grouped', label: 'Gruplanmış' },
+      { key: 'stacked', label: 'Yığılmış' },
+      { key: 'percentage', label: 'Yüzde' },
+    ],
+    show: (ts) => ts.some((t) => ((t.p.series as Series[]) ?? []).length > 1),
+    get: (t) => t.p.layout ?? 'grouped',
+    set: (v: string) => ({ p: { layout: v === 'grouped' ? undefined : v } }),
+  },
+  { id: 'chart-data', type: 'button', tileTypes: ['chart'], label: 'Veriyi düzenle', icon: 'edit', location: 'more', show: (ts) => ts.length === 1, click: (ts, api) => void editSeries(ts[0], api) },
+  { id: 'chart-labels', type: 'button', tileTypes: ['chart'], label: 'Etiketleri düzenle', icon: 'text', location: 'more', show: (ts) => ts.length === 1, click: (ts, api) => void editLabels(ts[0], api) },
+  {
+    id: 'chart-series',
+    type: 'button',
+    tileTypes: ['chart'],
+    label: 'Seri ekle',
+    icon: 'add',
+    location: 'more',
+    click: each((t, api) =>
+      api.updateP(t.id, (p) => {
+        const sr = p.series as Series[]
+        if (sr.length >= 8) return {}
+        const len = Math.max(1, ...sr.map((x) => x.values.length))
+        return { series: [...sr, { name: String.fromCharCode(65 + sr.length), color: SERIES_COLORS[sr.length % SERIES_COLORS.length], values: Array.from({ length: len }, () => randInt(1, 8)) }] }
+      }),
+    ),
+  },
+  {
+    id: 'pie-type',
+    type: 'select',
+    tileTypes: ['pie-chart'],
+    label: 'Grafik türü:',
+    icon: 'pie-chart',
+    options: [
+      { key: 'pie', label: 'Daire grafiği' },
+      { key: 'donut', label: 'Halka grafiği' },
+    ],
+    get: (t) => t.p.kind ?? 'pie',
+    set: (v: string) => ({ p: { kind: v } }),
+  },
+  { id: 'pie-data', type: 'button', tileTypes: ['pie-chart'], label: 'Veriyi düzenle', icon: 'edit', location: 'more', show: (ts) => ts.length === 1, click: (ts, api) => void editSlices(ts[0], api) },
+  {
+    id: 'pie-add',
+    type: 'button',
+    tileTypes: ['pie-chart'],
+    label: 'Dilim ekle',
+    icon: 'add',
+    location: 'more',
+    click: each((t, api) =>
+      api.updateP(t.id, (p) => {
+        const d = p.data as Slice[]
+        return d.length >= 12 ? {} : { data: [...d, { label: String.fromCharCode(65 + d.length), v: randInt(1, 6) }] }
+      }),
+    ),
+  },
+  {
+    id: 'pie-remove',
+    type: 'button',
+    tileTypes: ['pie-chart'],
+    label: 'Dilim sil',
+    icon: 'minus',
+    location: 'more',
+    show: (ts) => ts.some((t) => ((t.p.data as Slice[]) ?? []).length > 1),
+    click: each((t, api) => api.updateP(t.id, (p) => ((p.data as Slice[]).length > 1 ? { data: (p.data as Slice[]).slice(0, -1) } : {}))),
+  },
+
+  // Kutu grafiği
+  { id: 'outliers', type: 'checkbox', tileTypes: ['box-whisker'], label: 'Aykırı değerler:', get: (t) => !!t.p.outliers, set: (v: boolean) => ({ p: { outliers: v } }) },
+  { id: 'box-data', type: 'button', tileTypes: ['box-whisker'], label: 'Veriyi düzenle', icon: 'edit', location: 'more', show: (ts) => ts.length === 1, click: (ts, api) => void editData(ts[0], api) },
+  { id: 'box-dots', type: 'checkbox', tileTypes: ['box-whisker'], label: 'Veri noktaları:', location: 'more', get: (t) => !!t.p.dots, set: (v: boolean) => ({ p: { dots: v } }) },
+
+  // Oyun kâğıtları
+  { id: 'turn-over', type: 'button', tileTypes: ['card'], label: 'Çevir', icon: 'turn', text: true, click: each(flipCard) },
+  {
+    id: 'stack',
+    type: 'button',
+    tileTypes: ['card'],
+    label: 'Üst üste koy',
+    icon: 'merge',
+    text: true,
+    show: (ts) => ts.length > 1 && ts.reduce((n, t) => n + cardCount(t), 0) <= 200,
+    click: (ts, api) => {
+      const order = ts.flatMap(pileOf)
+      const x = ts.reduce((a, t) => a + t.x, 0) / ts.length
+      const y = ts.reduce((a, t) => a + t.y, 0) / ts.length
+      api.remove(ts.map((t) => t.id))
+      api.add([{ type: 'card', x, y, rot: 0, p: { cards: 'deck', order, down: ts.every(isDown) } }])
+      api.sound('pop')
+    },
+  },
+  { id: 'draw', type: 'button', tileTypes: ['card'], label: 'Çek', icon: 'draw-card', text: true, show: (ts) => ts.length === 1 && cardCount(ts[0]) > 1, click: (ts, api) => drawCard(ts[0], api) },
+  {
+    id: 'shuffle',
+    type: 'button',
+    tileTypes: ['card'],
+    label: 'Karıştır',
+    icon: 'swap',
+    text: true,
+    show: (ts) => ts.some((t) => cardCount(t) > 1),
+    click: each((t, api) => {
+      if (cardCount(t) > 1) api.updateP(t.id, { order: shuffled(pileOf(t)) })
+      api.sound('roll')
+    }),
+  },
+  {
+    id: 'refill',
+    type: 'button',
+    tileTypes: ['card'],
+    label: 'Desteyi tamamla (52 kart)',
+    icon: 'cards',
+    location: 'more',
+    show: (ts) => ts.every(isPile),
+    click: each((t, api) => {
+      api.updateP(t.id, { order: shuffled(fullDeck()), drawn: 0 })
+      api.sound('roll')
+    }),
+  },
+  { id: 'card-suit', type: 'button', tileTypes: ['card'], label: 'Takımı değiştir', icon: 'swap', location: 'more', show: (ts) => ts.every((t) => !isPile(t) && t.p.cards !== 'JJ'), click: each((t, api) => cycleCard(t, api, 'suit', 1)) },
+  { id: 'card-rank-down', type: 'button', tileTypes: ['card'], label: 'Değeri azalt', icon: 'minus', location: 'more', show: (ts) => ts.every((t) => !isPile(t) && t.p.cards !== 'JJ'), click: each((t, api) => cycleCard(t, api, 'rank', -1)) },
+  { id: 'card-rank-up', type: 'button', tileTypes: ['card'], label: 'Değeri artır', icon: 'add', location: 'more', show: (ts) => ts.every((t) => !isPile(t) && t.p.cards !== 'JJ'), click: each((t, api) => cycleCard(t, api, 'rank', 1)) },
+]

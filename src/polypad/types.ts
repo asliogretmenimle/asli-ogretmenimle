@@ -38,12 +38,37 @@ export interface Handle {
   color?: string
 }
 
-export interface ActionDef {
+/**
+ * Eylem çubuğundaki bir öğe (Polypad modeli). Seçimdeki tüm parçaların türü tileTypes içindeyse
+ * ve show() doğruysa görünür. Düğmeler seçimin tamamı üzerinde çalışır (ör. birden çok onluk seçilince "Birleştir").
+ */
+export interface ActionSpec {
   id: string
+  type: 'button' | 'checkbox' | 'input' | 'select' | 'slider'
+  tileTypes: string[] | 'all'
   label: string
-  icon: ReactNode
-  run: (t: Tile, api: PadApi) => void
-  active?: boolean
+  /** icons.tsx'teki simge adı */
+  icon?: string
+  /** Düğmede simge yerine yazı görünsün (Polypad useTextLabel) */
+  text?: boolean
+  /** Yer: varsayılan çubuk ('bar' verilirse her zaman çubuğun sonunda), 'more' ⋯ menüsü, 'music' müzik bölümü */
+  location?: 'bar' | 'more' | 'music'
+  /** Yalnızca yazar modunda görünür ("Yazar" bölümünde) */
+  author?: boolean
+  order?: number
+  show?: (tiles: Tile[]) => boolean
+  /** Düğme: seçimin tamamı üzerinde çalışır */
+  click?: (tiles: Tile[], api: PadApi) => void
+  /** Onay kutusu / giriş / seçim / kaydırıcı: bir parçanın değeri (kaydırıcı için 0–1) */
+  get?: (t: Tile) => unknown
+  /** Her seçili parça için çağrılır; dönen yama uygulanır (p alanı birleştirilir) */
+  set?: (value: never, t: Tile, api: PadApi) => Partial<Tile> | void
+  options?: { key: string; label: string }[]
+  /** Giriş türü; 'number' ise –/+ düğmeleri çıkar */
+  value?: 'number' | 'text'
+  range?: [number, number]
+  /** –/+ adımı (varsayılan 1) */
+  step?: number
 }
 
 export interface RenderCtx {
@@ -91,8 +116,6 @@ export interface TileDef {
   handles?: (t: Tile) => Handle[]
   /** Tutamak sürüklenince yeni özellikleri döndürür (local: tutamağın yeni yerel konumu) */
   onHandle?: (t: Tile, id: string, local: Pt, api: PadApi, phase: 'start' | 'move' | 'end') => Partial<Tile> | void
-  /** Eylem çubuğundaki parçaya özel düğmeler */
-  actions?: (t: Tile, api: PadApi) => ActionDef[]
   /** Kenar çubuğu küçük resmi (verilmezse render kullanılır) */
   thumb?: (t: Tile) => ReactNode
   /** Çift dokunuşla metin düzenleme */

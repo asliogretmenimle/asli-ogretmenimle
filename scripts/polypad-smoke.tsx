@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { CATALOG } from '../src/polypad/catalog'
 import { getDef } from '../src/polypad/tiles'
 import { api, makeTile } from '../src/polypad/store'
+import { ALL_ACTIONS } from '../src/polypad/actions'
 
 const only = process.argv[2]
 let errors = 0
@@ -40,7 +41,13 @@ for (const cat of CATALOG)
           def.handles?.(t).forEach((h) => {
             if (!Number.isFinite(h.x) || !Number.isFinite(h.y)) throw new Error(`tutamak NaN: ${h.id}`)
           })
-          def.actions?.(t, api)
+          // Bu parçaya uyan eylem çubuğu öğeleri: görünürlük ve değer okunabilmeli
+          for (const a of ALL_ACTIONS) {
+            if (a.tileTypes !== 'all' && !a.tileTypes.includes(t.type)) continue
+            a.show?.([t])
+            a.get?.(t)
+          }
+          void api
           def.name(t)
         } catch (e) {
           errors++

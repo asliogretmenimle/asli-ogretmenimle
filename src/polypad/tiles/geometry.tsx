@@ -1,6 +1,6 @@
-import type { Box, Pt, Tile, TileDef } from '../types'
+import type { ActionSpec, Box, PadApi, Pt, Tile, TileDef } from '../types'
 import { boundsOf, centerPts, clamp, deg, dist, fmt, mod, pathOf, rad, rotate, round, shade, toWorld } from '../geom'
-import { C, Label, UNIT, action, edge, ptsBox, toggle } from './kit'
+import { C, Label, UNIT, edge, ptsBox } from './kit'
 
 // ---------------------------------------------------------------------------
 // Ortak yardımcılar
@@ -190,14 +190,34 @@ const eggTile = shapeTile('egg', 'Sihirli yumurta parçası', (t) => EGG[clamp(t
 // Periyodik olmayan karolar
 // ---------------------------------------------------------------------------
 
-const HAT: Pt[] = (() => {
-  const s = 15
-  const hex = (x: number, y: number) => ({ x: (x + 0.5 * y) * s, y: (SQ3 / 2) * y * s })
-  const raw: [number, number][] = [[0, 0], [-1, -1], [0, -2], [2, -2], [2, -1], [4, -2], [5, -1], [4, 0], [3, 0], [2, 2], [0, 3], [0, 2], [-1, 2]]
-  return centerPts(raw.map(([x, y]) => hex(x, y)))
-})()
+/** Şapka ailesi Tile(a, b), a + b = 1: a = 0 ok başı, varsayılan şapka, a = 1 kuyruklu yıldız (Polypad "Parametreler") */
+const HAT_A0 = 1 / (1 + SQ3)
+const hatCache = new Map<number, Pt[]>()
+function hatPts(a0: number): Pt[] {
+  const a = round(clamp(a0, 0, 1), 3)
+  const hit = hatCache.get(a)
+  if (hit) return hit
+  const b = 1 - a
+  const r = SQ3 / 2
+  const dx = [b * r, b * r, a / 2, 2 * a, a / 2, -b * r, 0, -a, -a / 2, -b * r, 0, -a]
+  const dy = [-b / 2, b / 2, -a * r, 0, a * r, b / 2, b, 0, a * r, -b / 2, -b, 0]
+  const K = 41
+  const pts: Pt[] = []
+  let x = 0
+  let y = 0
+  for (let i = 0; i < 13; i++) {
+    // 180° döndürülmüş (Polypad ile aynı yön)
+    const p = { x: -x * K, y: -y * K }
+    if (!pts.some((q) => Math.abs(q.x - p.x) < 0.5 && Math.abs(q.y - p.y) < 0.5)) pts.push(p)
+    x += dx[i] ?? 0
+    y += dy[i] ?? 0
+  }
+  const out = centerPts(pts)
+  hatCache.set(a, out)
+  return out
+}
 
-const hatTile = shapeTile('aperiodic-hat', 'Einstein şapkası', () => ({ pts: HAT, color: C.lBlue }), { rotStep: 30 })
+const hatTile = shapeTile('aperiodic-hat', 'Einstein şapkası', (t) => ({ pts: hatPts(t.p.a ?? HAT_A0), color: C.lBlue }), { rotStep: 30 })
 
 const PS = 55
 const KITE: Pt[] = [
@@ -646,6 +666,124 @@ function solid(name: string) {
   return out
 }
 
+// Açınımın katlanması: yüzler ortak kenarlarından (menteşe) bir ağaç oluşturur; her yüz ebeveyninin
+// kenarı etrafında, cismin o kenardaki dış açısı kadar (fold oranıyla) döndürülür.
+type Mat = { r: number[]; t: V3 }
+const ID: Mat = { r: [1, 0, 0, 0, 1, 0, 0, 0, 1], t: [0, 0, 0] }
+const apply = (m: Mat, p: V3): V3 => [
+  m.r[0] * p[0] + m.r[1] * p[1] + m.r[2] * p[2] + m.t[0],
+  m.r[3] * p[0] + m.r[4] * p[1] + m.r[5] * p[2] + m.t[1],
+  m.r[6] * p[0] + m.r[7] * p[1] + m.r[8] * p[2] + m.t[2],
+]
+function compose(A: Mat, B: Mat): Mat {
+  const r: number[] = []
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) r.push(A.r[i * 3] * B.r[j] + A.r[i * 3 + 1] * B.r[3 + j] + A.r[i * 3 + 2] * B.r[6 + j])
+  const bt = apply({ r: A.r, t: [0, 0, 0] }, B.t)
+  return { r, t: [bt[0] + A.t[0], bt[1] + A.t[1], bt[2] + A.t[2]] }
+}
+/** a noktasından geçen u doğrultulu eksen etrafında θ dönme */
+function rotAbout(a: V3, u: V3, th: number): Mat {
+  const c = Math.cos(th)
+  const sn = Math.sin(th)
+  const [x, y, z] = u
+  const C = 1 - c
+  const r = [c + x * x * C, x * y * C - z * sn, x * z * C + y * sn, y * x * C + z * sn, c + y * y * C, y * z * C - x * sn, z * x * C - y * sn, z * y * C + x * sn, c + z * z * C]
+  const ra = apply({ r, t: [0, 0, 0] }, a)
+  return { r, t: [a[0] - ra[0], a[1] - ra[1], a[2] - ra[2]] }
+}
+
+/** Cismin komşu yüz türleri (kenar sayıları) arasındaki katlama açısı = π − iç dihedral açı */
+function foldAngles(name: string) {
+  const { verts, faces } = solid(name)
+  const out = new Map<string, number>()
+  const normal = (f: number[]) => {
+    let n = norm3(cross(sub(verts[f[1]], verts[f[0]]), sub(verts[f[2]], verts[f[0]])))
+    const c: V3 = [0, 1, 2].map((k) => f.reduce((acc, i) => acc + verts[i][k], 0) / f.length) as V3
+    if (dot3(n, c) < 0) n = [-n[0], -n[1], -n[2]]
+    return n
+  }
+  for (let i = 0; i < faces.length; i++)
+    for (let j = i + 1; j < faces.length; j++) {
+      const shared = faces[i].filter((v) => faces[j].includes(v))
+      if (shared.length < 2) continue
+      const key = [faces[i].length, faces[j].length].sort().join(',')
+      if (!out.has(key)) out.set(key, Math.acos(clamp(dot3(normal(faces[i]), normal(faces[j])), -1, 1)))
+    }
+  return out
+}
+
+type NetNode = { parent: number; a: Pt; b: Pt; angle: number }
+const treeCache = new Map<string, NetNode[]>()
+function netTree(name: string): NetNode[] {
+  const key = SOLIDS[name] ? name : 'Cube'
+  const hit = treeCache.get(key)
+  if (hit) return hit
+  const net = solid(key).net
+  const angles = foldAngles(key)
+  const same = (p: Pt, q: Pt) => Math.abs(p.x - q.x) < 0.5 && Math.abs(p.y - q.y) < 0.5
+  const nodes: NetNode[] = net.map(() => ({ parent: -2, a: { x: 0, y: 0 }, b: { x: 0, y: 0 }, angle: 0 }))
+  nodes[0].parent = -1
+  const queue = [0]
+  while (queue.length) {
+    const i = queue.shift()!
+    const P = net[i]
+    for (let j = 0; j < net.length; j++) {
+      if (nodes[j].parent !== -2) continue
+      const Q = net[j]
+      let edge: [Pt, Pt] | null = null
+      for (let k = 0; k < P.length && !edge; k++) {
+        const a = P[k]
+        const b = P[(k + 1) % P.length]
+        for (let m = 0; m < Q.length; m++) {
+          const c = Q[m]
+          const d = Q[(m + 1) % Q.length]
+          if ((same(a, c) && same(b, d)) || (same(a, d) && same(b, c))) {
+            edge = [a, b]
+            break
+          }
+        }
+      }
+      if (!edge) continue
+      const k2 = [P.length, Q.length].sort().join(',')
+      nodes[j] = { parent: i, a: edge[0], b: edge[1], angle: angles.get(k2) ?? Math.PI / 2 }
+      queue.push(j)
+    }
+  }
+  treeCache.set(key, nodes)
+  return nodes
+}
+
+/** fold 0 = düz açınım, 1 = kapalı cisim; üstten dik izdüşüm */
+function foldedNet(name: string, fold: number) {
+  const net = solid(name).net
+  const nodes = netTree(name)
+  const mats: Mat[] = new Array(net.length)
+  const order = [...net.keys()].sort((a, b) => depth(a) - depth(b))
+  function depth(i: number): number {
+    return nodes[i].parent < 0 ? 0 : 1 + depth(nodes[i].parent)
+  }
+  for (const i of order) {
+    const n = nodes[i]
+    if (n.parent < 0) {
+      mats[i] = ID
+      continue
+    }
+    const u = norm3([n.b.x - n.a.x, n.b.y - n.a.y, 0])
+    // Yüz ebeveyninin hangi yanındaysa yukarı (+z) kalksın
+    const c = net[i].reduce((acc, p) => ({ x: acc.x + p.x / net[i].length, y: acc.y + p.y / net[i].length }), { x: 0, y: 0 })
+    const side = Math.sign(u[0] * (c.y - n.a.y) - u[1] * (c.x - n.a.x)) || 1
+    mats[i] = compose(mats[n.parent], rotAbout([n.a.x, n.a.y, 0], u, side * n.angle * fold))
+  }
+  const L = norm3([-0.35, -0.45, 0.82])
+  return net
+    .map((poly, i) => {
+      const p3 = poly.map((p) => apply(mats[i], [p.x, p.y, 0]))
+      const nm = norm3(cross(sub(p3[1], p3[0]), sub(p3[2], p3[0])))
+      return { pts: p3.map((q) => ({ x: q[0], y: q[1] })), z: p3.reduce((acc, q) => acc + q[2], 0) / p3.length, light: Math.abs(dot3(nm, L)), i }
+    })
+    .sort((a, b) => a.z - b.z)
+}
+
 const LIGHT = norm3([-0.45, 0.6, 0.75])
 function projectSolid(name: string, rx: number, ry: number) {
   const { verts, faces } = solid(name)
@@ -679,14 +817,16 @@ const polyhedronTile: TileDef = {
   bounds: (t) => (t.p.unfold ? solid(t.p.net).netBox : { x: -SOLID_R - 2, y: -SOLID_R - 2, w: SOLID_R * 2 + 4, h: SOLID_R * 2 + 4 }),
   render: (t) => {
     const color = t.color ?? C.blue
-    if (t.p.unfold)
+    if (t.p.unfold) {
+      const fold = clamp(t.p.hinge ?? 0, 0, 1)
       return (
         <g>
-          {solid(t.p.net).net.map((poly, i) => (
-            <path key={i} d={pathOf(poly)} fill={shade(color, i % 2 ? 0.12 : 0)} stroke={edge(color)} strokeWidth={1.5} strokeLinejoin="round" />
+          {foldedNet(t.p.net, fold).map((f) => (
+            <path key={f.i} d={pathOf(f.pts)} fill={fold ? shade(color, (f.light - 0.8) * 0.8) : shade(color, f.i % 2 ? 0.12 : 0)} stroke={edge(color)} strokeWidth={1.5} strokeLinejoin="round" />
           ))}
         </g>
       )
+    }
     return (
       <g>
         <circle r={SOLID_R} fill="transparent" />
@@ -710,12 +850,6 @@ const polyhedronTile: TileDef = {
   onTap: (t, api, info) => {
     if (!t.p.unfold && !info.act) api.updateP(t.id, (p) => ({ ry: (p.ry ?? 30) + 30 }), true)
   },
-  actions: (t) => [
-    action('spin-l', 'Sola döndür', 'arrowL', (tile, api) => api.updateP(tile.id, (p) => ({ ry: (p.ry ?? 30) - 30 }), true)),
-    action('spin-r', 'Sağa döndür', 'arrowR', (tile, api) => api.updateP(tile.id, (p) => ({ ry: (p.ry ?? 30) + 30 }), true)),
-    action('tilt', 'Öne eğ', 'rotate', (tile, api) => api.updateP(tile.id, (p) => ({ rx: (((p.rx ?? -20) + 30 + 90) % 180) - 90 }), true)),
-    toggle(t, 'unfold', 'Açınımı göster', 'net'),
-  ],
   colorable: true,
   edgeSnap: false,
 }
@@ -761,7 +895,7 @@ const linkageTile: TileDef = {
     const L = linkLen(t)
     const W = toWorld(t, { x: -L / 2, y: 0 })
     const a = t.rot + deg(Math.atan2(l.y, l.x + L / 2)) * (t.flip ? -1 : 1)
-    const r = round(a, 1)
+    const r = t.p.snapAngle ? Math.round(a / t.p.snapAngle) * t.p.snapAngle : round(a, 1)
     const c = rotate({ x: L / 2, y: 0 }, r)
     return { rot: r, x: W.x + c.x, y: W.y + c.y }
   },
@@ -773,20 +907,22 @@ const linkageTile: TileDef = {
 // ---------------------------------------------------------------------------
 
 const MM = UNIT / 10
-function rulerTicks(len: number, x0: number, y0: number, dir = 1) {
+const INCH = 2.54 * UNIT
+
+/** Cetvel kenarı çentikleri: dir=1 aşağı (üst kenar), dir=-1 yukarı (alt kenar) */
+function scaleTicks(lenPx: number, step: number, heights: (i: number) => number, x0: number, y0: number, dir = 1) {
   let d = ''
-  for (let i = 0; i <= len * 10; i++) {
-    const h = i % 10 === 0 ? 14 : i % 5 === 0 ? 10 : 6
-    d += `M${round(x0 + i * MM)} ${y0}v${h * dir}`
-  }
+  for (let i = 0; i * step <= lenPx + 0.01; i++) d += `M${round(x0 + i * step)} ${y0}v${heights(i) * dir}`
   return d
 }
+const cmH = (i: number) => (i % 10 === 0 ? 14 : i % 5 === 0 ? 10 : 6)
+const inH = (i: number) => (i % 8 === 0 ? 14 : i % 4 === 0 ? 10 : i % 2 === 0 ? 7 : 5)
 
 const rulerLen = (t: Tile) => clamp(Math.round(t.p.len ?? 15), 3, 40)
 const rulerTile: TileDef = {
   type: 'ruler',
   name: () => 'Cetvel',
-  create: () => ({ p: { len: 15 } }),
+  create: () => ({ p: { len: 15, units: 'cm' } }),
   bounds: (t) => {
     const L = rulerLen(t) * UNIT
     return { x: -L / 2 - 14, y: -26, w: L + 28, h: 52 }
@@ -794,22 +930,47 @@ const rulerTile: TileDef = {
   render: (t) => {
     const n = rulerLen(t)
     const L = n * UNIT
+    const units: string = t.p.units ?? 'cm'
+    const flip = !!t.p.flipped
+    // Birincil kenar üstte (çevrilince altta); "ikisi" seçiliyse inç karşı kenarda
+    const yA = flip ? 26 : -26
+    const dA = flip ? -1 : 1
+    const yB = -yA
+    const dB = -dA
+    const ink = '#4a3200'
+    const primaryIn = units === 'in'
+    const showCm = units !== 'in'
+    const showIn = units === 'in' || units === 'both'
+    const labels = units !== 'hidden'
+    const inches = Math.floor(L / INCH + 1e-6)
+    const inY = primaryIn ? yA : yB
+    const inD = primaryIn ? dA : dB
     return (
       <>
         <rect x={-L / 2 - 14} y={-26} width={L + 28} height={52} rx={4} fill="rgba(254,198,128,.78)" stroke="#b16200" strokeWidth={1.2} />
-        <path d={rulerTicks(n, -L / 2, -26)} stroke="#4a3200" strokeWidth={1} />
-        {Array.from({ length: n + 1 }, (_, i) => (
-          <Label key={i} x={-L / 2 + i * UNIT} y={0} size={10} color="#4a3200">
-            {i}
+        {showCm && <path d={scaleTicks(L, MM, cmH, -L / 2, yA, dA)} stroke={ink} strokeWidth={1} />}
+        {showIn && <path d={scaleTicks(L, INCH / 8, inH, -L / 2, inY, inD)} stroke={ink} strokeWidth={1} />}
+        {labels && showCm &&
+          Array.from({ length: n + 1 }, (_, i) => (
+            <Label key={`c${i}`} x={-L / 2 + i * UNIT} y={yA + dA * (units === 'both' ? 20 : 26)} size={10} color={ink}>
+              {i}
+            </Label>
+          ))}
+        {labels && showIn &&
+          Array.from({ length: inches + 1 }, (_, i) => (
+            <Label key={`i${i}`} x={-L / 2 + i * INCH} y={inY + inD * (units === 'both' ? 20 : 26)} size={10} color={ink}>
+              {i}
+            </Label>
+          ))}
+        {labels && (
+          <Label x={L / 2 + 2} y={units === 'both' ? 0 : flip ? -14 : 14} size={9} color={ink} anchor="end">
+            {units === 'in' ? 'inç' : units === 'both' ? 'cm / inç' : 'cm'}
           </Label>
-        ))}
-        <Label x={L / 2 + 2} y={14} size={9} color="#4a3200" anchor="end">
-          cm
-        </Label>
+        )}
       </>
     )
   },
-  handles: (t) => [{ id: 'len', x: (rulerLen(t) * UNIT) / 2 + 14, y: 0 }],
+  handles: (t) => (t.p.isFixed ? [] : [{ id: 'len', x: (rulerLen(t) * UNIT) / 2 + 14, y: 0 }]),
   onHandle: (t, _id, l) => {
     const n = rulerLen(t)
     const L = n * UNIT
@@ -827,43 +988,48 @@ const protractorTile: TileDef = {
   type: 'protractor',
   name: () => 'İletki',
   create: () => ({ p: { a: 60 } }),
-  bounds: () => ({ x: -PR - 26, y: -PR - 28, w: 2 * PR + 52, h: PR + 46 }),
+  bounds: (t) => (t.p.flipped ? { x: -PR - 26, y: -18, w: 2 * PR + 52, h: PR + 46 } : { x: -PR - 26, y: -PR - 28, w: 2 * PR + 52, h: PR + 46 })
+  ,
   render: (t) => {
     const a = clamp(t.p.a ?? 60, 0, 180)
+    // Çevrilince yay aşağı bakar (y ekseni aynalanır, yazılar okunur kalır)
+    const f = t.p.flipped ? -1 : 1
+    const Y = (y: number) => y * f
+    const sw = t.p.flipped ? 0 : 1
     let ticks = ''
     for (let d = 0; d <= 180; d++) {
       const l = d % 10 === 0 ? 14 : d % 5 === 0 ? 10 : 6
       const c = Math.cos(rad(d))
-      const s = -Math.sin(rad(d))
-      ticks += `M${round(c * PR)} ${round(s * PR)}L${round(c * (PR - l))} ${round(s * (PR - l))}`
+      const s2 = -Math.sin(rad(d))
+      ticks += `M${round(c * PR)} ${round(Y(s2 * PR))}L${round(c * (PR - l))} ${round(Y(s2 * (PR - l)))}`
     }
-    const tip = { x: Math.cos(rad(a)) * (PR + 22), y: -Math.sin(rad(a)) * (PR + 22) }
+    const tip = { x: Math.cos(rad(a)) * (PR + 22), y: Y(-Math.sin(rad(a)) * (PR + 22)) }
     return (
       <>
-        <path d={`M${-PR} 14V0A${PR} ${PR} 0 0 1 ${PR} 0V14Z`} fill="rgba(135,193,249,.42)" stroke="#0b5ba9" strokeWidth={1.2} />
-        <path d={`M${-PR + 46} 0A${PR - 46} ${PR - 46} 0 0 1 ${PR - 46} 0`} fill="none" stroke="#0b5ba9" strokeWidth={0.8} />
+        <path d={`M${-PR} ${Y(14)}V0A${PR} ${PR} 0 0 ${sw} ${PR} 0V${Y(14)}Z`} fill="rgba(135,193,249,.42)" stroke="#0b5ba9" strokeWidth={1.2} />
+        <path d={`M${-PR + 46} 0A${PR - 46} ${PR - 46} 0 0 ${sw} ${PR - 46} 0`} fill="none" stroke="#0b5ba9" strokeWidth={0.8} />
         <path d={ticks} stroke="#0b5ba9" strokeWidth={1} />
         {Array.from({ length: 19 }, (_, i) => {
           const d = i * 10
           const c = Math.cos(rad(d))
-          const s = -Math.sin(rad(d))
+          const s2 = -Math.sin(rad(d))
           return (
             <g key={d}>
-              <Label x={c * (PR - 24)} y={s * (PR - 24)} size={9} color="#0b5ba9">
+              <Label x={c * (PR - 24)} y={Y(s2 * (PR - 24))} size={9} color="#0b5ba9">
                 {d}
               </Label>
-              <Label x={c * (PR - 37)} y={s * (PR - 37)} size={7.5} color="#4c2986">
+              <Label x={c * (PR - 37)} y={Y(s2 * (PR - 37))} size={7.5} color="#4c2986">
                 {180 - d}
               </Label>
             </g>
           )
         })}
-        <path d={`M${-PR} 0H${PR}M0 0V-10`} stroke="#0b5ba9" strokeWidth={1} />
+        <path d={`M${-PR} 0H${PR}M0 0V${Y(-10)}`} stroke="#0b5ba9" strokeWidth={1} />
         <circle r={3} fill="#0b5ba9" />
         <path d={`M0 0L${tip.x} ${tip.y}`} stroke="#cd0e66" strokeWidth={2} />
-        <path d={`M28 0A28 28 0 0 0 ${round(Math.cos(rad(a)) * 28)} ${round(-Math.sin(rad(a)) * 28)}`} fill="none" stroke="#cd0e66" strokeWidth={1.5} />
-        <rect x={-22} y={18} width={44} height={20} rx={10} fill="#cd0e66" />
-        <Label y={28} size={12} color="#fff">
+        <path d={`M28 0A28 28 0 0 ${sw} ${round(Math.cos(rad(a)) * 28)} ${round(Y(-Math.sin(rad(a)) * 28))}`} fill="none" stroke="#cd0e66" strokeWidth={1.5} />
+        <rect x={-22} y={t.p.flipped ? -38 : 18} width={44} height={20} rx={10} fill="#cd0e66" />
+        <Label y={Y(28)} size={12} color="#fff">
           {Math.round(a)}°
         </Label>
       </>
@@ -871,10 +1037,12 @@ const protractorTile: TileDef = {
   },
   handles: (t) => {
     const a = clamp(t.p.a ?? 60, 0, 180)
-    return [{ id: 'arm', x: Math.cos(rad(a)) * (PR + 22), y: -Math.sin(rad(a)) * (PR + 22) }]
+    const f = t.p.flipped ? -1 : 1
+    return [{ id: 'arm', x: Math.cos(rad(a)) * (PR + 22), y: -f * Math.sin(rad(a)) * (PR + 22) }]
   },
   onHandle: (t, _id, l) => {
-    let a = deg(Math.atan2(-l.y, l.x))
+    const f = t.p.flipped ? -1 : 1
+    let a = deg(Math.atan2(-f * l.y, l.x))
     if (a < -90) a = 180
     return { p: { ...t.p, a: clamp(Math.round(a), 0, 180) } }
   },
@@ -1024,9 +1192,20 @@ const compassTile: TileDef = {
     }
     return { ...patch, p: { ...t.p, trace: { a0: s.a0, a1: rot } } }
   },
-  actions: (t) => [toggle(t, 'showR', 'Yarıçapı göster', 'ruler')],
   rotatable: true,
   edgeSnap: false,
+}
+
+const ROUNDING: Record<string, number> = { '': 0, tenths: 1, hundredths: 2 }
+
+/** Gösterilecek açı: başlangıç ışını ve saat yönünün tersine süpürme (derece) */
+function angleArc(t: Tile) {
+  const m = mod(t.p.a2 - t.p.a1, 360)
+  const mode: string = t.p.angleMode ?? ''
+  const small = m <= 180
+  if (mode === 'interior') return small ? { start: t.p.a1, sweep: m } : { start: t.p.a2, sweep: 360 - m }
+  if (mode === 'reflex') return small ? { start: t.p.a2, sweep: 360 - m } : { start: t.p.a1, sweep: m }
+  return { start: t.p.a1, sweep: m }
 }
 
 const angleTile: TileDef = {
@@ -1041,42 +1220,51 @@ const angleTile: TileDef = {
   render: (t) => {
     const color = t.color ?? C.blue
     const { a1, a2, l1, l2 } = t.p
-    const m = mod(a2 - a1, 360)
+    const { start, sweep } = angleArc(t)
     const e1 = { x: Math.cos(rad(a1)) * l1, y: -Math.sin(rad(a1)) * l1 }
     const e2 = { x: Math.cos(rad(a2)) * l2, y: -Math.sin(rad(a2)) * l2 }
-    const R = 30
-    const p1 = { x: Math.cos(rad(a1)) * R, y: -Math.sin(rad(a1)) * R }
-    const p2 = { x: Math.cos(rad(a2)) * R, y: -Math.sin(rad(a2)) * R }
-    const mid = rad(a1 + m / 2)
-    const right = Math.round(m) === 90
+    const R = Math.min(30, l1 * 0.4, l2 * 0.4)
+    const p1 = { x: Math.cos(rad(start)) * R, y: -Math.sin(rad(start)) * R }
+    const p2 = { x: Math.cos(rad(start + sweep)) * R, y: -Math.sin(rad(start + sweep)) * R }
+    const mid = rad(start + sweep / 2)
+    const digits = ROUNDING[t.p.rounding ?? ''] ?? 0
+    const right = Math.abs(sweep - 90) < 0.5 / 10 ** digits
+    const mode: string = t.p.labelMode ?? ''
     return (
       <>
-        {right ? (
-          <path
-            d={`M${p1.x * 0.6} ${p1.y * 0.6}L${p1.x * 0.6 + p2.x * 0.6} ${p1.y * 0.6 + p2.y * 0.6}L${p2.x * 0.6} ${p2.y * 0.6}`}
-            fill={color}
-            fillOpacity={0.25}
-            stroke={color}
-            strokeWidth={1.5}
-          />
-        ) : (
-          <path d={`M0 0L${p1.x} ${p1.y}A${R} ${R} 0 ${m > 180 ? 1 : 0} 0 ${p2.x} ${p2.y}Z`} fill={color} fillOpacity={0.25} stroke={color} strokeWidth={1.2} />
-        )}
+        {mode !== 'none' &&
+          (right ? (
+            <path
+              d={`M${p1.x * 0.6} ${p1.y * 0.6}L${p1.x * 0.6 + p2.x * 0.6} ${p1.y * 0.6 + p2.y * 0.6}L${p2.x * 0.6} ${p2.y * 0.6}`}
+              fill={color}
+              fillOpacity={0.25}
+              stroke={color}
+              strokeWidth={1.5}
+            />
+          ) : (
+            <path d={`M0 0L${p1.x} ${p1.y}A${R} ${R} 0 ${sweep > 180 ? 1 : 0} 0 ${p2.x} ${p2.y}Z`} fill={color} fillOpacity={0.25} stroke={color} strokeWidth={1.2} />
+          ))}
         <path d={`M${e1.x} ${e1.y}L0 0L${e2.x} ${e2.y}`} fill="none" stroke="transparent" strokeWidth={18} />
         <path d={`M${e1.x} ${e1.y}L0 0L${e2.x} ${e2.y}`} fill="none" stroke={color} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
         <circle r={4} fill={color} />
-        <Label x={Math.cos(mid) * 52} y={-Math.sin(mid) * 52} size={13} color={color}>
-          {fmt(m, 0)}°
-        </Label>
+        {mode === '' && (
+          <Label x={Math.cos(mid) * (R + 22)} y={-Math.sin(mid) * (R + 22)} size={13} color={color}>
+            {fmt(sweep, digits)}°
+          </Label>
+        )}
       </>
     )
   },
-  handles: (t) => [
-    { id: '1', x: Math.cos(rad(t.p.a1)) * t.p.l1, y: -Math.sin(rad(t.p.a1)) * t.p.l1 },
-    { id: '2', x: Math.cos(rad(t.p.a2)) * t.p.l2, y: -Math.sin(rad(t.p.a2)) * t.p.l2 },
-  ],
+  handles: (t) =>
+    t.p.lockRays
+      ? []
+      : [
+          { id: '1', x: Math.cos(rad(t.p.a1)) * t.p.l1, y: -Math.sin(rad(t.p.a1)) * t.p.l1 },
+          { id: '2', x: Math.cos(rad(t.p.a2)) * t.p.l2, y: -Math.sin(rad(t.p.a2)) * t.p.l2 },
+        ],
   onHandle: (t, id, l) => {
-    const a = Math.round(deg(Math.atan2(-l.y, l.x)))
+    const digits = ROUNDING[t.p.rounding ?? ''] ?? 0
+    const a = round(deg(Math.atan2(-l.y, l.x)), digits)
     const len = Math.max(50, Math.round(Math.hypot(l.x, l.y)))
     return { p: { ...t.p, [`a${id}`]: mod(a, 360), [`l${id}`]: len } }
   },
@@ -1216,10 +1404,6 @@ const fractalTile: TileDef = {
       )
     return <path d={f.d} fill={color} fillRule="evenodd" stroke={i === 1 ? edge(color) : 'none'} strokeWidth={1} />
   },
-  actions: () => [
-    action('lvl-down', 'Adımı azalt', 'minus', (tile, api) => api.updateP(tile.id, { level: Math.max(0, fracLevel(tile) - 1) }, true)),
-    action('lvl-up', 'Adımı artır', 'plus', (tile, api) => api.updateP(tile.id, { level: Math.min(FRACTALS[fracIndex(tile)].max, fracLevel(tile) + 1) }, true)),
-  ],
   colorable: true,
   edgeSnap: false,
 }
@@ -1248,7 +1432,9 @@ const arrowTile: TileDef = {
   handles: (t) => [{ id: 'tip', x: arrowLen(t) / 2, y: 0 }],
   onHandle: (t, _id, l) => {
     const L = arrowLen(t)
-    const n = clamp(Math.round(l.x + L / 2), 60, 800)
+    let n = clamp(Math.round(l.x + L / 2), 60, 800)
+    // Yazar "Adım boyu" verdiyse uzunluk o adımın katlarına yapışır
+    if (t.p.round) n = clamp(Math.round(n / t.p.round) * t.p.round, 60, 800)
     const c = toWorld(t, { x: (n - L) / 2, y: 0 })
     return { x: c.x, y: c.y, p: { ...t.p, len: n } }
   },
@@ -1274,4 +1460,318 @@ export const geometryTiles: TileDef[] = [
   fractalTile,
   kolamTile,
   arrowTile,
+]
+
+// ---------------------------------------------------------------------------
+// Eylem çubuğu (Polypad eylemleri)
+// ---------------------------------------------------------------------------
+
+/** Çokyüzlü açınımını hedef katlama oranına canlandırır (1'e ulaşınca 3B görünüme döner) */
+function animateFold(ids: string[], api: PadApi, target: number) {
+  const starts = ids.map((id) => {
+    const t = api.get(id)
+    return t && !t.p.unfold ? 1 : clamp(t?.p.hinge ?? 0, 0, 1)
+  })
+  const finish = () => {
+    ids.forEach((id) => api.updateP(id, target >= 1 ? { unfold: false, hinge: 0 } : { unfold: true, hinge: target }))
+    api.commit()
+  }
+  if (typeof requestAnimationFrame === 'undefined') return finish()
+  const t0 = performance.now()
+  const dur = 700
+  const step = (now: number) => {
+    const k = Math.min(1, (now - t0) / dur)
+    const e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2
+    ids.forEach((id, i) => api.updateP(id, { unfold: true, hinge: starts[i] + (target - starts[i]) * e }))
+    if (k < 1) requestAnimationFrame(step)
+    else finish()
+  }
+  requestAnimationFrame(step)
+}
+
+/** Seçili çokgenlerin sayısına ve türüne göre hangi cismin açınımı olduğu (Polypad "Açınımı katla") */
+function netSolid(tiles: Tile[]): string | null {
+  const sides = (t: Tile) =>
+    t.type === 'reg-polygon' ? t.p.n : t.type === 'polygon' ? ({ 'equ-triangle': 3, square: 4, 'reg-pentagon': 5 } as Record<string, number>)[t.p.shape] : undefined
+  const count = { 3: 0, 4: 0, 5: 0 } as Record<number, number>
+  for (const t of tiles) {
+    const n = sides(t)
+    if (!n || !(n in count)) return null
+    count[n]++
+  }
+  const [t3, t4, t5] = [count[3], count[4], count[5]]
+  const is = (a: number, b: number, c: number) => t3 === a && t4 === b && t5 === c
+  if (is(4, 0, 0)) return 'Tetrahedron'
+  if (is(0, 6, 0)) return 'Cube'
+  if (is(8, 0, 0)) return 'Octahedron'
+  if (is(0, 0, 12)) return 'Dodecahedron'
+  if (is(20, 0, 0)) return 'Icosahedron'
+  if (is(2, 3, 0)) return 'Prism'
+  if (is(4, 1, 0)) return 'Pyramid'
+  return null
+}
+
+const FOLDABLE = ['polygon', 'tangram', 'polyomino', 'custom-polygon', 'rectangle', 'reg-polygon', 'fractal', 'penrose', 'aperiodic-hat']
+
+export const geometryActions: ActionSpec[] = [
+  // 3B cisimler
+  {
+    id: 'unfold',
+    type: 'button',
+    tileTypes: ['polyhedron'],
+    label: 'Aç',
+    text: true,
+    show: (ts) => ts.some((t) => !t.p.unfold || (t.p.hinge ?? 0) > 0.001),
+    click: (ts, api) => animateFold(ts.map((t) => t.id), api, 0),
+  },
+  {
+    id: 'fold',
+    type: 'button',
+    tileTypes: ['polyhedron'],
+    label: 'Katla',
+    text: true,
+    show: (ts) => ts.every((t) => t.p.unfold),
+    click: (ts, api) => animateFold(ts.map((t) => t.id), api, 1),
+  },
+  {
+    id: 'hinges',
+    type: 'slider',
+    tileTypes: ['polyhedron'],
+    label: 'Menteşeler',
+    get: (t) => (t.p.unfold ? clamp(t.p.hinge ?? 0, 0, 1) : 1),
+    set: (v: number) => ({ p: v >= 0.995 ? { unfold: false, hinge: 0 } : { unfold: true, hinge: round(v, 3) } }),
+  },
+  {
+    id: 'spin-l',
+    type: 'button',
+    tileTypes: ['polyhedron'],
+    label: 'Sola döndür',
+    icon: 'rotate',
+    location: 'more',
+    show: (ts) => ts.every((t) => !t.p.unfold),
+    click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { ry: (t.p.ry ?? 30) - 30 })),
+  },
+  {
+    id: 'spin-r',
+    type: 'button',
+    tileTypes: ['polyhedron'],
+    label: 'Sağa döndür',
+    icon: 'rotate',
+    location: 'more',
+    show: (ts) => ts.every((t) => !t.p.unfold),
+    click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { ry: (t.p.ry ?? 30) + 30 })),
+  },
+  {
+    id: 'tilt',
+    type: 'button',
+    tileTypes: ['polyhedron'],
+    label: 'Öne eğ',
+    icon: 'rotate',
+    location: 'more',
+    show: (ts) => ts.every((t) => !t.p.unfold),
+    click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { rx: ((((t.p.rx ?? -20) + 30 + 90) % 180) + 180) % 180 - 90 })),
+  },
+  {
+    // Seçili çokgenlerden cisim oluşturur ve katlar
+    id: 'fold-net',
+    type: 'button',
+    tileTypes: FOLDABLE,
+    label: 'Açınımı katla',
+    icon: 'cube',
+    text: true,
+    show: (ts) => ts.length > 2,
+    click: (ts, api) => {
+      const name = netSolid(ts)
+      if (!name) {
+        api.sound('error')
+        return
+      }
+      const x = ts.reduce((acc, t) => acc + t.x, 0) / ts.length
+      const y = ts.reduce((acc, t) => acc + t.y, 0) / ts.length
+      api.remove(ts.map((t) => t.id))
+      const [id] = api.add([{ type: 'polyhedron', x, y, rot: 0, color: ts[0].color ?? SOLIDS[name].color, p: { net: name, rx: -20, ry: 30, unfold: true, hinge: 0 } }])
+      animateFold([id], api, 1)
+    },
+  },
+
+  // Cetvel ve iletki
+  {
+    id: 'flip-scale',
+    type: 'button',
+    tileTypes: ['ruler', 'protractor'],
+    label: 'Çevir',
+    icon: 'flip',
+    text: true,
+    click: (ts, api) => ts.forEach((t) => api.updateP(t.id, { flipped: !t.p.flipped })),
+  },
+  {
+    id: 'ruler-labels',
+    type: 'select',
+    tileTypes: ['ruler'],
+    label: 'Etiketler:',
+    location: 'more',
+    options: [
+      { key: 'cm', label: 'Santimetre' },
+      { key: 'in', label: 'İnç' },
+      { key: 'both', label: 'İkisi de' },
+      { key: 'hidden', label: 'Yok' },
+    ],
+    get: (t) => t.p.units ?? 'cm',
+    set: (v: string) => ({ p: { units: v } }),
+  },
+  {
+    id: 'fixed-length',
+    type: 'checkbox',
+    tileTypes: ['ruler'],
+    label: 'Sabit uzunluk',
+    location: 'more',
+    get: (t) => !!t.p.isFixed,
+    set: (v: boolean) => ({ p: { isFixed: v } }),
+  },
+
+  // Açı
+  {
+    id: 'angle-label-mode',
+    type: 'select',
+    tileTypes: ['angle'],
+    label: 'Etiket:',
+    location: 'more',
+    order: 1,
+    options: [
+      { key: '', label: 'Yay ve derece' },
+      { key: 'arc', label: 'Yay' },
+      { key: 'none', label: 'Yok' },
+    ],
+    get: (t) => t.p.labelMode ?? '',
+    set: (v: string) => ({ p: { labelMode: v || undefined } }),
+  },
+  {
+    id: 'angle-type',
+    type: 'select',
+    tileTypes: ['angle'],
+    label: 'Açı:',
+    location: 'more',
+    order: 2,
+    options: [
+      { key: '', label: 'Otomatik' },
+      { key: 'interior', label: 'İç açı' },
+      { key: 'reflex', label: 'Dış (yansıyan) açı' },
+    ],
+    get: (t) => t.p.angleMode ?? '',
+    set: (v: string) => ({ p: { angleMode: v || undefined } }),
+  },
+  {
+    id: 'angle-rounding',
+    type: 'select',
+    tileTypes: ['angle'],
+    label: 'Yuvarlama:',
+    location: 'more',
+    author: true,
+    order: 3,
+    options: [
+      { key: '', label: 'Tam sayı' },
+      { key: 'tenths', label: 'Onda birler' },
+      { key: 'hundredths', label: 'Yüzde birler' },
+    ],
+    get: (t) => t.p.rounding ?? '',
+    set: (v: string) => ({ p: { rounding: v || undefined } }),
+  },
+  {
+    id: 'lock-rays',
+    type: 'checkbox',
+    tileTypes: ['angle'],
+    label: 'Işınları kilitle',
+    location: 'more',
+    author: true,
+    order: 4,
+    get: (t) => !!t.p.lockRays,
+    set: (v: boolean) => ({ p: { lockRays: v || undefined } }),
+  },
+  {
+    id: 'lock-vertex',
+    type: 'checkbox',
+    tileTypes: ['angle'],
+    label: 'Köşeyi kilitle',
+    location: 'more',
+    author: true,
+    order: 5,
+    get: (t) => !!t.p.lockVertex,
+    set: (v: boolean) => ({ p: { lockVertex: v || undefined } }),
+  },
+
+  // Ok ve bağlantı çubuğu
+  {
+    id: 'lengthStep',
+    type: 'input',
+    tileTypes: ['arrow'],
+    label: 'Adım boyu:',
+    location: 'more',
+    author: true,
+    value: 'number',
+    range: [0, 20],
+    get: (t) => (t.p.round ? round(t.p.round / UNIT, 2) : 0),
+    set: (v: number) => ({ p: { round: v ? Math.max(v * UNIT, 5) : undefined } }),
+  },
+  {
+    id: 'linkage-length',
+    type: 'input',
+    tileTypes: ['linkage'],
+    label: 'Uzunluk:',
+    icon: 'resize',
+    location: 'more',
+    author: true,
+    value: 'number',
+    range: [2, 100],
+    get: (t) => Number(t.p.length) || 5,
+    set: (v: number) => ({ p: { length: Math.max(2, round(v, 2)) } }),
+  },
+  {
+    id: 'snap-angle',
+    type: 'select',
+    tileTypes: ['linkage'],
+    label: 'Açı adımı:',
+    location: 'more',
+    author: true,
+    options: [
+      { key: 'none', label: 'Yok' },
+      { key: '15', label: '15°' },
+      { key: '30', label: '30°' },
+      { key: '45', label: '45°' },
+      { key: '90', label: '90°' },
+    ],
+    get: (t) => (t.p.snapAngle ? String(t.p.snapAngle) : 'none'),
+    set: (v: string) => ({ p: { snapAngle: v === 'none' ? undefined : Number(v) } }),
+  },
+
+  // Einstein şapkası
+  {
+    id: 'parameters',
+    type: 'slider',
+    tileTypes: ['aperiodic-hat'],
+    label: 'Parametreler',
+    get: (t) => t.p.a ?? HAT_A0,
+    set: (v: number) => ({ p: { a: round(v, 3) } }),
+  },
+
+  // Bizde olup Polypad'de olmayanlar: ⋯ menüsünde
+  {
+    id: 'fractal-level',
+    type: 'input',
+    tileTypes: ['fractal'],
+    label: 'Yineleme:',
+    location: 'more',
+    value: 'number',
+    range: [0, 13],
+    get: (t) => fracLevel(t),
+    set: (v: number, t) => ({ p: { level: clamp(Math.round(v), 0, FRACTALS[fracIndex(t)].max) } }),
+  },
+  {
+    id: 'compass-radius',
+    type: 'checkbox',
+    tileTypes: ['compass'],
+    label: 'Yarıçapı göster:',
+    location: 'more',
+    get: (t) => !!t.p.showR,
+    set: (v: boolean) => ({ p: { showR: v } }),
+  },
 ]
