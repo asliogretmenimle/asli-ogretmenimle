@@ -1,4 +1,4 @@
-import { Fragment, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
+import { Fragment, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { BookOpen, ChevronDown, Hand, HelpCircle, Search, Sparkles } from 'lucide-react'
 import { useTracker } from '../../lib/trackerContext'
@@ -76,21 +76,47 @@ function dropAt(x: number, y: number) {
 
 type Ghost = { x: number; y: number; dx: number; dy: number; w: number; h: number; phase: 'drag' | 'drop' | 'back' }
 
+/** Parmak ekranın üst ya da alt kenarına yaklaşınca sayfa kayar (tablette hedef ekranın dışında kalmasın) */
+const EDGE = 72
+function edgeSpeed(y: number) {
+  const h = window.innerHeight
+  if (y < EDGE) return -Math.ceil((EDGE - y) / 5)
+  if (y > h - EDGE) return Math.ceil((y - (h - EDGE)) / 5)
+  return 0
+}
+
 /**
  * Polypad’deki gibi: kart tutulunca yerinden kalkar (gölgeli, biraz büyümüş kopya parmağı izler),
  * asıl yerinde soluk bir iz kalır. Doğru hedefe bırakılınca kopya yerine oturur; yanlışsa uçarak geri döner.
+ * ghost verilirse parmağı kartın kendisi değil bu öğe izler (ör. bir blok yığınından kalkan tek blok);
+ * o zaman bütün kart büyük bir tutma alanı olur.
  */
-export function Drag({ dnd, item, label, className = '', children, disabled }: { dnd: Dnd; item: string; label: string; className?: string; children: ReactNode; disabled?: boolean }) {
+export function Drag({ dnd, item, label, className = '', children, disabled, ghost: ghostView }: { dnd: Dnd; item: string; label: string; className?: string; children: ReactNode; disabled?: boolean; ghost?: ReactNode }) {
   const ref = useRef<HTMLButtonElement>(null)
   const start = useRef<{ x: number; y: number; id: number; moved: boolean } | null>(null)
   const draggedAt = useRef(0)
+  const last = useRef({ x: 0, y: 0 })
+  const raf = useRef(0)
   const [ghost, setGhost] = useState<Ghost | null>(null)
   const [shake, setShake] = useState(false)
   const held = dnd.held === item
+  const custom = ghostView !== undefined
+
+  useEffect(() => () => cancelAnimationFrame(raf.current), [])
+  const scrollLoop = () => {
+    const v = edgeSpeed(last.current.y)
+    if (v) {
+      window.scrollBy(0, v)
+      dnd.setOver(dropAt(last.current.x, last.current.y))
+    }
+    raf.current = requestAnimationFrame(scrollLoop)
+  }
+  const stopScroll = () => cancelAnimationFrame(raf.current)
 
   const end = (ev: ReactPointerEvent) => {
     const s = start.current
     start.current = null
+    stopScroll()
     if (!s?.moved) return
     draggedAt.current = Date.now()
     const ok = dnd.drop(item, dropAt(ev.clientX, ev.clientY))
@@ -100,7 +126,7 @@ export function Drag({ dnd, item, label, className = '', children, disabled }: {
       return
     }
     const r = ref.current?.getBoundingClientRect()
-    setGhost((g) => (g && r ? { ...g, phase: 'back', x: r.left + g.dx, y: r.top + g.dy } : null))
+    setGhost((g) => (g && r ? { ...g, phase: 'back', x: r.left + (custom ? r.width / 2 : g.dx), y: r.top + (custom ? r.height / 2 : g.dy) } : null))
     window.setTimeout(() => {
       setGhost(null)
       setShake(true)
@@ -108,6 +134,7 @@ export function Drag({ dnd, item, label, className = '', children, disabled }: {
     }, 280)
   }
 
+  const lift = ghost?.phase === 'drag'
   return (
     <>
       <button
@@ -116,6 +143,7 @@ export function Drag({ dnd, item, label, className = '', children, disabled }: {
         disabled={disabled}
         aria-label={label}
         aria-pressed={held}
+        onContextMenu={(ev) => ev.preventDefault()}
         onPointerDown={(ev) => {
           if (disabled || ev.button > 0) return
           start.current = { x: ev.clientX, y: ev.clientY, id: ev.pointerId, moved: false }
@@ -124,12 +152,14 @@ export function Drag({ dnd, item, label, className = '', children, disabled }: {
         onPointerMove={(ev) => {
           const s = start.current
           if (!s || s.id !== ev.pointerId) return
+          last.current = { x: ev.clientX, y: ev.clientY }
           if (!s.moved) {
             if (Math.hypot(ev.clientX - s.x, ev.clientY - s.y) < 6) return
             s.moved = true
             const r = ev.currentTarget.getBoundingClientRect()
             setGhost({ x: ev.clientX, y: ev.clientY, dx: s.x - r.left, dy: s.y - r.top, w: r.width, h: r.height, phase: 'drag' })
             dnd.setDragging(item)
+            raf.current = requestAnimationFrame(scrollLoop)
           } else setGhost((g) => g && { ...g, x: ev.clientX, y: ev.clientY })
           const o = dropAt(ev.clientX, ev.clientY)
           if (o !== dnd.over) dnd.setOver(o)
@@ -137,6 +167,7 @@ export function Drag({ dnd, item, label, className = '', children, disabled }: {
         onPointerUp={end}
         onPointerCancel={() => {
           start.current = null
+          stopScroll()
           setGhost(null)
           dnd.setDragging(null)
           dnd.setOver(null)
@@ -145,7 +176,7 @@ export function Drag({ dnd, item, label, className = '', children, disabled }: {
           ev.stopPropagation()
           if (!disabled && Date.now() - draggedAt.current > 350) dnd.tap(item)
         }}
-        className={`touch-none select-none [&_*]:touch-none ${ghost ? 'opacity-30 outline-2 outline-offset-2 outline-dashed outline-slate-400' : 'cursor-grab hover:-translate-y-0.5 hover:shadow-lg'} ${held ? 'ring-4 ring-sky-500' : ''} ${shake ? 'animate-shake' : ''} ${className}`}
+        className={`touch-none select-none [-webkit-touch-callout:none] [-webkit-tap-highlight-color:transparent] [&_*]:touch-none ${ghost && !custom ? 'opacity-30 outline-2 outline-offset-2 outline-dashed outline-slate-400' : ghost ? 'outline-2 outline-offset-2 outline-dashed outline-slate-400' : disabled ? '' : 'cursor-grab hover:-translate-y-0.5 hover:shadow-lg'} ${held ? 'ring-4 ring-sky-500' : ''} ${shake ? 'animate-shake' : ''} ${className}`}
       >
         {children}
       </button>
@@ -153,19 +184,20 @@ export function Drag({ dnd, item, label, className = '', children, disabled }: {
         createPortal(
           <div
             aria-hidden
-            className={`pointer-events-none fixed z-[1000] cursor-grabbing ${className}`}
+            className={`pointer-events-none fixed z-[1000] cursor-grabbing ${custom ? '' : className}`}
             style={{
-              left: ghost.x - ghost.dx,
-              top: ghost.y - ghost.dy,
-              width: ghost.w,
-              height: ghost.h,
-              transform: ghost.phase === 'drag' ? 'scale(1.08) rotate(-2deg)' : ghost.phase === 'drop' ? 'scale(0.7)' : 'none',
+              left: custom ? ghost.x : ghost.x - ghost.dx,
+              top: custom ? ghost.y : ghost.y - ghost.dy,
+              width: custom ? undefined : ghost.w,
+              height: custom ? undefined : ghost.h,
+              transform: `${custom ? 'translate(-50%, -50%) ' : ''}${lift ? 'scale(1.08) rotate(-2deg)' : ghost.phase === 'drop' ? 'scale(0.7)' : ''}`,
               opacity: ghost.phase === 'drop' ? 0 : 1,
-              boxShadow: ghost.phase === 'drag' ? '0 18px 32px -10px rgb(15 23 42 / 0.45)' : 'none',
-              transition: ghost.phase === 'drag' ? 'transform 120ms, box-shadow 120ms' : 'left 260ms ease-out, top 260ms ease-out, transform 200ms, opacity 200ms',
+              boxShadow: lift && !custom ? '0 18px 32px -10px rgb(15 23 42 / 0.45)' : 'none',
+              filter: lift && custom ? 'drop-shadow(0 12px 14px rgb(15 23 42 / 0.4))' : undefined,
+              transition: lift ? 'transform 120ms, box-shadow 120ms' : 'left 260ms ease-out, top 260ms ease-out, transform 200ms, opacity 200ms',
             }}
           >
-            {children}
+            {custom ? ghostView : children}
           </div>,
           document.body,
         )}
@@ -195,8 +227,10 @@ export function Drop({ dnd, id, className = '', style, children }: { dnd: Dnd; i
 /* ───────────── nasıl kullanılır? ───────────── */
 
 export type Tool = 'unit' | 'bundle' | 'crown' | 'digit' | 'blocks' | 'lens' | 'marks' | 'cmp' | 'answer' | 'basket'
+/** Başka bir etkinliğin kendi aracı: “Nasıl kullanılır?” kartında hazır araçların yanında listelenir */
+export interface ToolInfo { icon: ReactNode; name: string; text: string }
 
-const TOOLS: Record<Tool, { icon: ReactNode; name: string; text: string }> = {
+const TOOLS: Record<Tool, ToolInfo> = {
   unit: { icon: <span className="size-4 rounded-[3px] bg-yellow-400 ring-2 ring-yellow-600" />, name: 'Birlik küpü', text: 'Değeri 1 birlik. Altlıkta hangi basamağa ait olduğunu düşünüp o sütuna bırak.' },
   bundle: { icon: <span className="h-4 w-6 rounded-[3px] bg-red-100 ring-2 ring-red-400" />, name: '10’lu demet', text: 'Bir sütunda 10 blok birikince kırmızı çerçeveyle çıkar. Bir büyük birime dönüşmesi için doğru sütuna sürükle.' },
   crown: { icon: <span className="text-lg leading-none">👑</span>, name: 'Taç', text: 'Daha büyük olduğunu düşündüğün sayının üstüne bırak.' },
@@ -222,7 +256,7 @@ function DragDemo() {
 }
 
 /** Hiç kullanmamış biri için: sürükle-bırak nasıl yapılır, bu görevin amacı ne, hangi araç ne işe yarar */
-export function HowTo({ goal, tools, open, onToggle }: { goal: string; tools: Tool[]; open: boolean; onToggle: () => void }) {
+export function HowTo({ goal, tools, open, onToggle }: { goal: string; tools: (Tool | ToolInfo)[]; open: boolean; onToggle: () => void }) {
   return (
     <div className="mb-3 rounded-2xl bg-white/95 text-ink ring-1 ring-sky-200">
       <button type="button" onClick={onToggle} aria-expanded={open} className="flex min-h-12 w-full items-center gap-2 px-3 text-left">
@@ -244,12 +278,15 @@ export function HowTo({ goal, tools, open, onToggle }: { goal: string; tools: To
             <li><b className="text-sky-700">Sürükleyemiyor musun?</b> Önce karta dokun, sonra gideceği yere dokun.</li>
           </ol>
           <ul className="space-y-1.5">
-            {tools.map((t) => (
-              <li key={t} className="flex items-start gap-2 text-sm font-bold">
-                <span className="mt-0.5 grid min-w-7 place-items-center">{TOOLS[t].icon}</span>
-                <span><b>{TOOLS[t].name}:</b> {TOOLS[t].text}</span>
-              </li>
-            ))}
+            {tools.map((t) => {
+              const x = typeof t === 'string' ? TOOLS[t] : t
+              return (
+                <li key={x.name} className="flex items-start gap-2 text-sm font-bold">
+                  <span className="mt-0.5 grid min-w-7 place-items-center">{x.icon}</span>
+                  <span><b>{x.name}:</b> {x.text}</span>
+                </li>
+              )
+            })}
           </ul>
         </div>
       )}

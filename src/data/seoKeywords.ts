@@ -443,4 +443,5 @@ export const interactionKeyword: Record<string, string> = {
   'us-oruntu-tablosu': 'Sıfırıncı ve Negatif Kuvvet',
   'elde-ve-bozma': 'Eldeli Toplama ve Onluk Bozma Etkinliği',
   'sayilari-karsilastir': 'Doğal Sayıları Karşılaştırma',
+  'farkli-cozumleme': 'Sayıyı Farklı Biçimlerde Çözümleme',
 }
