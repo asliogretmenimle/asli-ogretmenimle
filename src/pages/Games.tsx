@@ -57,6 +57,7 @@ function GameItem({ m, grade }: { m: GameMeta; grade?: Grade | null }) {
       title={m.name}
       desc={(grade && m.skills[grade]) || m.description}
       meta={grade ? gradeInfo[grade].label : gradeRange(m.grades)}
+      tint={`${m.color}12`}
     />
   )
 }

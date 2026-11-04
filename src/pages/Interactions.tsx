@@ -13,7 +13,7 @@ import { SendReport } from '../components/SendReport'
 import { SessionTracker } from '../lib/report'
 import { TrackerProvider } from '../lib/trackerContext'
 import { celebrate, sfx } from '../lib/feedback'
-import { CardGrid, EmptyState, FilterBar, ItemCard, PageHeader, gradeRange, useCatalogFilters } from '../components/Catalog'
+import { CardGrid, EmptyState, FilterBar, ItemCard, PageHeader, categoryTint, gradeRange, useCatalogFilters } from '../components/Catalog'
 import NotFound from './NotFound'
 
 const GRADE_KEY = 'ao-grade'
@@ -64,6 +64,7 @@ export function InteractionsIndex() {
               title={m.name}
               desc={(f.grade && m.skills?.[f.grade]) || m.description}
               meta={`${gradeRange(m.grades)} · ${categoryInfo[m.category].label}`}
+              tint={categoryTint[m.category]}
             />
           ))}
         </CardGrid>

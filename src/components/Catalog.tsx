@@ -109,15 +109,24 @@ export function FilterBar({
 }
 
 /** Tek tip kart: üstte görsel alanı, altında ad, tek satırlık açıklama ve sınıf aralığı */
-export function ItemCard({ to, emoji, title, desc, meta, soon }: { to: string; emoji: string; title: string; desc: string; meta: string; soon?: boolean }) {
+/** Kart görsel alanının çok açık zemin renkleri: konu alanına göre (Etkileşimler ve Manipülatifler) */
+export const categoryTint: Record<string, string> = {
+  sayilar: '#eef3fd',
+  kesirler: '#eaf6f2',
+  geometri: '#fcf0f3',
+  'cebir-veri': '#f3f0fc',
+  muhakeme: '#fdf3e9',
+}
+
+export function ItemCard({ to, emoji, title, desc, meta, soon, tint }: { to: string; emoji: string; title: string; desc: string; meta: string; soon?: boolean; tint?: string }) {
   const body = (
     <>
-      <span className="grid aspect-[5/2] place-items-center bg-[#f2f4f8]" aria-hidden>
-        <span className="text-5xl transition duration-300 group-hover:scale-110">{emoji}</span>
+      <span className="grid aspect-[5/2] place-items-center bg-[#f2f4f8]" style={tint ? { background: tint } : undefined} aria-hidden>
+        <span className="text-4xl transition duration-300 group-hover:scale-110 sm:text-5xl">{emoji}</span>
       </span>
-      <span className="flex flex-1 flex-col p-4">
-        <span className="leading-snug font-bold text-ink">{title}</span>
-        <span className="mt-1 line-clamp-2 text-sm font-medium text-ink-soft">{desc}</span>
+      <span className="flex flex-1 flex-col p-3 sm:p-4">
+        <span className="text-[15px] leading-snug font-bold text-ink sm:text-base">{title}</span>
+        <span className="mt-1 line-clamp-2 text-xs font-medium text-ink-soft sm:text-sm">{desc}</span>
         <span className="mt-auto flex items-center gap-2 pt-3 text-xs font-bold text-ink-soft">
           {meta}
           {soon && <span className="chip bg-amber-50 text-amber-700">Yakında</span>}
@@ -131,7 +140,7 @@ export function ItemCard({ to, emoji, title, desc, meta, soon }: { to: string; e
 }
 
 export function CardGrid({ children }: { children: ReactNode }) {
-  return <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{children}</div>
+  return <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">{children}</div>
 }
 
 export function SectionTitle({ title, desc, action }: { title: string; desc?: string; action?: ReactNode }) {

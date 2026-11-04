@@ -10,7 +10,7 @@ import { ShareButton } from '../components/ShareButton'
 import { usePageTitle } from '../components/Layout'
 import { BOARD_PATH } from '../lib/seo'
 import type { ManipulativeTool } from '../data/types'
-import { CardGrid, EmptyState, FilterBar, ItemCard, PageHeader, useCatalogFilters } from '../components/Catalog'
+import { CardGrid, EmptyState, FilterBar, ItemCard, PageHeader, categoryTint, useCatalogFilters } from '../components/Catalog'
 import NotFound from './NotFound'
 
 const CATEGORIES = (['sayilar', 'kesirler', 'geometri', 'cebir-veri'] as const).map((id) => ({ id, label: categoryInfo[id].label }))
@@ -45,7 +45,7 @@ export function ManipulativesIndex() {
       <p className="mb-3 text-sm font-semibold text-ink-soft">{list.length} manipülatif</p>
       {list.length ? (
         <CardGrid>
-          {list.map((t) => <ItemCard key={t.id} to={`/manipulatif/${t.id}`} emoji={t.emoji} title={t.name} desc={t.description} meta={`${t.grades}. sınıf`} />)}
+          {list.map((t) => <ItemCard key={t.id} to={`/manipulatif/${t.id}`} emoji={t.emoji} title={t.name} desc={t.description} meta={`${t.grades}. sınıf`} tint={categoryTint[t.category]} />)}
         </CardGrid>
       ) : (
         <EmptyState onClear={f.clear} />
