@@ -124,8 +124,8 @@ const numberTile: TileDef = {
     const lw = (label.length + (rem ? String(rem).length + 3 : 0)) * 8 * K + 12
     return (
       <>
-        <path d={pathOf(tileOutline(t))} fill={color} stroke={edge(color)} strokeWidth={1.5} strokeLinejoin="round" />
-        {grid && <path d={grid} stroke="rgba(255,255,255,.6)" strokeWidth={1} />}
+        <path d={pathOf(tileOutline(t))} fill={color} stroke="rgba(255,255,255,.85)" strokeWidth={1} strokeLinejoin="round" />
+        {grid && <path d={grid} stroke="rgba(255,255,255,.85)" strokeWidth={1} />}
         {tileLabelShown(t) && (
           <g transform={`translate(${-W / 2} ${H / 2 + 4})`} style={{ pointerEvents: 'none' }}>
             <rect width={lw} height={LABEL_H} rx={5} fill="#ffffff" stroke="#b9bccb" />
@@ -256,13 +256,14 @@ const numberCube: TileDef = {
   render: (t) => {
     const c = cubeShape(cubeDims(t))
     const color = t.color ?? cubeColor(cubeValue(t))
-    const st = edge(color)
+    // Polypad: yüzler arasında ve birim küpler arasında beyaz ince çizgi, koyu dış kenar yok
+    const line = 'rgba(255,255,255,.85)'
     return (
       <g strokeLinejoin="round">
-        <path d={pathOf(c.left)} fill={mix(color, '#000000', 0.7)} stroke={st} strokeWidth={1.2} style={{ transition: 'fill .3s' }} />
-        <path d={pathOf(c.right)} fill={color} stroke={st} strokeWidth={1.2} style={{ transition: 'fill .3s' }} />
-        <path d={pathOf(c.top)} fill={mix(color, '#ffffff', 0.7)} stroke={st} strokeWidth={1.2} style={{ transition: 'fill .3s' }} />
-        {c.grid && <path d={c.grid} stroke="rgba(0,0,0,.28)" strokeWidth={0.8} fill="none" />}
+        <path d={pathOf(c.left)} fill={mix(color, '#000000', 0.7)} stroke={line} strokeWidth={1} style={{ transition: 'fill .3s' }} />
+        <path d={pathOf(c.right)} fill={color} stroke={line} strokeWidth={1} style={{ transition: 'fill .3s' }} />
+        <path d={pathOf(c.top)} fill={mix(color, '#ffffff', 0.7)} stroke={line} strokeWidth={1} style={{ transition: 'fill .3s' }} />
+        {c.grid && <path d={c.grid} stroke={line} strokeWidth={1} fill="none" />}
       </g>
     )
   },
@@ -273,7 +274,8 @@ const numberCube: TileDef = {
 /** Bölme yönü (Polypad): vx>1 ve vy=1 → vx; vy=1 → vz; yoksa vy */
 const splitAxis = (d: V3): 0 | 1 | 2 => (d[0] > 1 && d[1] === 1 ? 0 : d[1] === 1 ? 2 : 1)
 
-function splitCube(t: Tile): Omit<Tile, 'id'>[] {
+/** gap=2: Polypad'deki son yerleşim (1 birim boşluk); gap=1: parçalar küpün içindeki yerlerinde */
+function splitCube(t: Tile, gap = 2): Omit<Tile, 'id'>[] {
   const d = cubeDims(t)
   const axis = splitAxis(d)
   const k = d[axis]
@@ -288,12 +290,12 @@ function splitCube(t: Tile): Omit<Tile, 'id'>[] {
   const out: Omit<Tile, 'id'>[] = []
   for (let a = 0; a < k; a++) {
     let org: Pt
-    if (axis === 2) org = { x: O.x, y: O.y + (d[2] - 1) * CU - 2 * CU * a }
+    if (axis === 2) org = { x: O.x, y: O.y + (d[2] - 1) * CU - gap * CU * a }
     else if (axis === 0) {
       // Arkadakiler önce oluşturulsun ki öndekiler üstte çizilsin
       const aa = k - 1 - a
-      org = { x: O.x + 2 * CS * aa, y: O.y - CU * aa }
-    } else org = { x: O.x + CS * (1 - d[1]) + 2 * CS * a, y: O.y + (CU * (1 - d[1])) / 2 + CU * a }
+      org = { x: O.x + gap * CS * aa, y: O.y - (gap / 2) * CU * aa }
+    } else org = { x: O.x + CS * (1 - d[1]) + gap * CS * a, y: O.y + (CU * (1 - d[1])) / 2 + (gap / 2) * CU * a }
     out.push({ type: 'number-cube', x: round(org.x + piece.o.x), y: round(org.y + piece.o.y), rot: 0, color, p: { vx: pd[0], vy: pd[1], vz: pd[2] } })
   }
   return out
@@ -1870,7 +1872,15 @@ export const numbersActions: ActionSpec[] = [
     icon: 'split',
     text: true,
     show: (ts) => ts.some((t) => cubeDims(t)[splitAxis(cubeDims(t))] > 1) && sum(ts.map((t) => cubeDims(t)[splitAxis(cubeDims(t))] - 1)) <= 1000,
-    click: (ts, api) => replace(api, ts, ts.flatMap(splitCube)),
+    click: (ts, api) => {
+      // Polypad gibi: parçalar küpün içinde doğar, sonra aralanarak ayrılır
+      const packed = ts.flatMap((t) => splitCube(t, 1))
+      const spread = ts.flatMap((t) => splitCube(t, 2))
+      api.remove(ts.map((t) => t.id))
+      const ids = api.add(packed, true)
+      api.animate(ids.map((id, i) => ({ id, x: spread[i].x, y: spread[i].y })))
+      api.sound('pop')
+    },
   },
   {
     id: 'send-to-back',

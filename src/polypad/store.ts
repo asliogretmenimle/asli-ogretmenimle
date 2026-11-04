@@ -369,6 +369,29 @@ export function duplicate(ids: string[]) {
   clipboard = prev
 }
 
+/** Parçaları şimdiki yerlerinden hedefe yumuşakça kaydırır; bitince geri alınabilir adım oluşturur */
+export function animateTiles(moves: { id: string; x: number; y: number }[], ms = 250) {
+  const from = new Map(state.tiles.filter((t) => moves.some((m) => m.id === t.id)).map((t) => [t.id, { x: t.x, y: t.y }]))
+  const to = new Map(moves.map((m) => [m.id, m]))
+  const t0 = performance.now()
+  const ease = (k: number) => 1 - (1 - k) ** 3
+  const step = () => {
+    const k = Math.min(1, (performance.now() - t0) / ms)
+    const e = ease(k)
+    updateTiles([...to.keys()], (t) => {
+      const a = from.get(t.id)
+      const b = to.get(t.id)
+      return a && b ? { x: a.x + (b.x - a.x) * e, y: a.y + (b.y - a.y) * e } : null
+    })
+    if (k < 1) requestAnimationFrame(step)
+    else commit()
+  }
+  if (typeof requestAnimationFrame === 'undefined' || ms <= 0) {
+    updateTiles([...to.keys()], (t) => ({ x: to.get(t.id)!.x, y: to.get(t.id)!.y }))
+    commit()
+  } else requestAnimationFrame(step)
+}
+
 export function clearCanvas() {
   setState({ tiles: [], sel: [], editing: null })
   commit()
@@ -453,6 +476,7 @@ export const api: PadApi = {
   prompt: askText,
   color: () => state.color,
   tileAt: (w, exclude = []) => tileAt(w, exclude),
+  animate: (moves, ms) => animateTiles(moves, ms),
   box: worldBox,
 }
 

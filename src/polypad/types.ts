@@ -160,6 +160,8 @@ export interface PadApi {
   tileAt: (world: Pt, exclude?: string[]) => Tile | undefined
   /** Parçanın dünya koordinatındaki sınır kutusu */
   box: (t: Tile) => Box
+  /** Parçaları hedef konumlara kaydırarak canlandırır (varsayılan 250 ms) */
+  animate: (moves: { id: string; x: number; y: number }[], ms?: number) => void
 }
 
 export interface Source {
