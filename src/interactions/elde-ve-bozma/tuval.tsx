@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
 import { BookOpen } from 'lucide-react'
 import { Card, Choices, Nudge, type useChecks } from '../donusum-studyosu/ortak'
+import { useDragDrop } from '../islem-zinciri/kit'
 
 /* ───────────── basamaklar ───────────── */
 
@@ -10,6 +11,8 @@ export const PLACE = [
   { name: 'Onluklar', unit: 'onluk', color: '#16a34a', soft: '#dcfce7' },
   { name: 'Yüzlükler', unit: 'yüzlük', color: '#ea580c', soft: '#ffedd5' },
 ]
+/** Cümle içinde küçük harfli sütun adı: “birlikler” */
+export const colName = (e: number) => PLACE[e].name.toLocaleLowerCase('tr-TR')
 export const COLS = PLACE.length
 
 export const dig = (v: number, e: number) => Math.floor(v / 10 ** e) % 10
@@ -49,11 +52,13 @@ export function canFinish(counts: number[], rem: number[]) {
 const U = 12
 const GRID = 'bg-[linear-gradient(#0000_86%,#fff9_86%),linear-gradient(90deg,#0000_86%,#fff9_86%)] bg-[length:10%_10%]'
 
+const EDGE = ['ring-yellow-700', 'ring-green-800', 'ring-orange-700']
+
 function Block({ e, k, sel }: { e: number; k: Kind; sel: boolean }) {
-  const mark = sel ? 'ring-[3px] ring-sky-500 -translate-y-1' : k !== 'n' ? 'ring-2 ring-amber-500 animate-pop' : 'ring-1'
-  if (e === 0) return <span className={`block rounded-[2px] bg-yellow-400 ring-yellow-700 transition ${mark}`} style={{ width: U, height: U }} />
-  if (e === 1) return <span className={`block rounded-[2px] bg-green-500 bg-[linear-gradient(#0000_86%,#fff9_86%)] bg-[length:100%_10%] ring-green-800 transition ${mark}`} style={{ width: U, height: U * 10 }} />
-  return <span className={`block rounded-[3px] bg-orange-400 ring-orange-700 transition ${GRID} ${mark}`} style={{ width: U * 10, height: U * 10 }} />
+  const mark = sel ? 'ring-[3px] ring-sky-500 -translate-y-1' : k !== 'n' ? 'ring-2 ring-amber-500 animate-pop' : `ring-1 ${EDGE[e]}`
+  if (e === 0) return <span className={`block rounded-[2px] bg-yellow-400 transition ${mark}`} style={{ width: U, height: U }} />
+  if (e === 1) return <span className={`block rounded-[2px] bg-green-500 bg-[linear-gradient(#0000_86%,#fff9_86%)] bg-[length:100%_10%] transition ${mark}`} style={{ width: U, height: U * 10 }} />
+  return <span className={`block rounded-[3px] bg-orange-400 transition ${GRID} ${mark}`} style={{ width: U * 10, height: U * 10 }} />
 }
 
 export interface MatRow {
@@ -65,18 +70,56 @@ export interface MatRow {
   faded?: boolean
   /** bu satırda vurgulanan sütun */
   active?: number | null
-  /** satırın üstündeki ayraç (ör. “+”, “−”, toplam çizgisi) */
+  /** satırın üstündeki ayraç (ör. toplam çizgisi) */
   sep?: ReactNode
+}
+
+/** Tutulan blok: satır −1 parça kutusundaki kaynak bloktur */
+export interface Grab { row: number; e: number; id: number }
+/** Bırakılan yer: tuval hücresi ya da parça kutusu (null: tuvalin dışı) */
+export type Spot = { row: number; e: number } | 'tray' | null
+
+const spotKey = (row: number, e: number) => `c:${row}:${e}`
+function parseSpot(s: string | null): Spot {
+  if (s === 'tray') return 'tray'
+  const m = s?.match(/^c:(\d+):(\d+)$/)
+  return m ? { row: Number(m[1]), e: Number(m[2]) } : null
+}
+
+function DragBlock({ grab, k, sel, label, badge, style, className = '', onDrop, onTap, onOver }: { grab: Grab; k: Kind; sel: boolean; label: string; badge?: number; style?: CSSProperties; className?: string; onDrop: (g: Grab, to: Spot) => void; onTap: (g: Grab) => void; onOver: (key: string | null) => void }) {
+  const dd = useDragDrop({ onDrop: (t) => onDrop(grab, parseSpot(t)), onTap: () => onTap(grab), onOver })
+  return (
+    <button type="button" {...dd.bind()} onClick={dd.onClick} aria-label={label} className={`cursor-grab touch-none select-none active:cursor-grabbing ${className}`} style={{ ...dd.style, ...style }}>
+      <Block e={grab.e} k={k} sel={sel} />
+      {dd.dragging && badge && badge > 1 && <span className="absolute -top-4 -right-4 rounded-full bg-sky-600 px-2 py-0.5 text-xs font-black text-white shadow">×{badge}</span>}
+    </button>
+  )
 }
 
 /**
  * Polypad tuvali gibi: üç sütun (Yüzlükler · Onluklar · Birlikler), her satır bir sayı.
- * Bloğa dokunma onBlock ile bildirilir; onAdd verilirse her hücrede “+” düğmesi çıkar (kurma).
+ * Bloklar sürüklenip hücrelere bırakılır (onDrop); kısa dokunuş onTap’e gider (seçme, geri alma).
+ * palette verilirse üstte sonsuz kaynaklı parça kutusu çıkar; kutuya geri sürüklenen blok silinir.
  */
-export function Mat({ rows, sel, onBlock, onAdd }: { rows: MatRow[]; sel?: Set<number>; onBlock?: (row: number, e: number, id: number) => void; onAdd?: (row: number, e: number) => void }) {
+export function Mat({ rows, sel, palette, group, onDrop, onTap }: { rows: MatRow[]; sel?: Set<number>; palette?: boolean; group?: (g: Grab) => number; onDrop: (g: Grab, to: Spot) => void; onTap: (g: Grab) => void }) {
+  const [over, setOver] = useState<string | null>(null)
   const es = [...PLACE.keys()].reverse()
+  const drag = { onDrop, onTap, onOver: setOver }
   return (
     <div className="flex flex-col gap-1.5">
+      {palette && (
+        <div data-drop="tray" className={`mb-1 rounded-2xl bg-white p-2 ring-1 transition ${over === 'tray' ? 'ring-4 ring-amber-400' : 'ring-line'}`}>
+          <p className="mb-1 text-[11px] font-black tracking-wide text-ink-soft uppercase">Parça kutusu · sürükle, bırak · fazlasını buraya geri at</p>
+          <div className="flex items-end justify-around gap-3">
+            {es.map((e) => (
+              <div key={e} className="flex flex-col items-center gap-1">
+                <DragBlock grab={{ row: -1, e, id: -1 - e }} k="n" sel={false} label={`Parça kutusu: ${PLACE[e].unit}`} className="relative" {...drag} />
+                <span className="text-[11px] font-black" style={{ color: PLACE[e].color }}>1 {PLACE[e].unit}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-[minmax(136px,1.35fr)_minmax(0,1fr)_minmax(0,1fr)] gap-1.5">
         {es.map((e) => (
           <p key={e} className="rounded-xl py-1.5 text-center text-xs font-black tracking-wide uppercase sm:text-sm" style={{ background: PLACE[e].color, color: '#fff' }}>{PLACE[e].name}</p>
@@ -93,35 +136,35 @@ export function Mat({ rows, sel, onBlock, onAdd }: { rows: MatRow[]; sel?: Set<n
             {es.map((e) => {
               const list = r.cells[e]
               const crowded = r.crowd && list.length >= 10
+              const key = spotKey(ri, e)
               return (
                 <div
                   key={e}
-                  className={`relative flex min-h-[148px] flex-col rounded-2xl p-1.5 transition ${crowded ? 'bg-red-50 ring-[3px] ring-red-500 animate-shake' : r.active === e ? 'ring-[3px] ring-sky-500' : 'ring-1 ring-black/10'}`}
+                  data-drop={key}
+                  className={`relative flex min-h-[148px] flex-col rounded-2xl p-1.5 transition ${over === key ? 'ring-4 ring-amber-400' : crowded ? 'bg-red-50 ring-[3px] ring-red-500 animate-shake' : r.active === e ? 'ring-[3px] ring-sky-500' : 'ring-1 ring-black/10'}`}
                   style={crowded ? undefined : { background: PLACE[e].soft }}
                 >
-                  {crowded && <span className="absolute -top-2.5 right-1 z-10 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-black text-white shadow">Kalabalık! {list.length}</span>}
                   <div className={`flex flex-1 flex-wrap content-start ${e === 0 ? 'gap-[5px]' : 'gap-1'} ${e === 2 ? 'relative' : ''}`} style={e === 2 ? { minHeight: U * 10 + Math.max(0, list.length - 1) * 5 } : undefined}>
-                    {list.map((b, i) => (
-                      <button
-                        key={b.id}
-                        type="button"
-                        disabled={!onBlock}
-                        onClick={() => onBlock?.(ri, e, b.id)}
-                        aria-label={`${r.label}: ${PLACE[e].unit} bloğu`}
-                        className={`${e === 0 ? '-m-1 p-1' : e === 1 ? '-mx-0.5 px-0.5' : 'absolute'} ${onBlock ? 'cursor-pointer active:scale-95' : 'cursor-default'}`}
-                        style={e === 2 ? { left: i * 5, top: i * 5 } : undefined}
-                      >
-                        <Block e={e} k={b.k} sel={!!sel?.has(b.id)} />
-                      </button>
-                    ))}
+                    {list.map((b, i) => {
+                      const g = { row: ri, e, id: b.id }
+                      return (
+                        <DragBlock
+                          key={b.id}
+                          grab={g}
+                          k={b.k}
+                          sel={!!sel?.has(b.id)}
+                          badge={group?.(g)}
+                          label={`${r.label}: ${PLACE[e].unit} bloğu`}
+                          className={e === 0 ? '-m-1 p-1' : e === 1 ? '-mx-0.5 px-0.5' : ''}
+                          style={e === 2 ? { position: 'absolute', left: i * 5, top: i * 5 } : undefined}
+                          {...drag}
+                        />
+                      )
+                    })}
                   </div>
-                  <div className="mt-1 flex items-center justify-between gap-1">
+                  <div className="mt-1 flex flex-wrap items-center justify-between gap-1">
                     <span className="text-[11px] font-black tabular-nums" style={{ color: crowded ? '#dc2626' : PLACE[e].color }}>{list.length} {PLACE[e].unit}</span>
-                    {onAdd && (
-                      <button type="button" onClick={() => onAdd(ri, e)} className="grid h-9 min-w-11 place-items-center rounded-lg bg-white px-1.5 text-xs font-black ring-1 ring-line active:scale-95" style={{ color: PLACE[e].color }} aria-label={`${r.label}: ${PLACE[e].unit} ekle`}>
-                        + 1
-                      </button>
-                    )}
+                    {crowded && <span className="rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-black text-white shadow">Kalabalık!</span>}
                   </div>
                 </div>
               )

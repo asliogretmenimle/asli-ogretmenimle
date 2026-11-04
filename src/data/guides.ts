@@ -784,6 +784,93 @@ export const guides: Guide[] = [
     games: ['mozaik-ustasi', 'lazer-lab'],
     interactions: ['aynadaki-sekil', 'katla-ac', 'donusum-studyosu'],
   },
+  {
+    slug: 'eldeli-toplama-onluk-bozma',
+    title: 'Eldeli Toplama ve Onluk Bozarak Çıkarma Nasıl Öğretilir?',
+    seoTitle: 'Eldeli Toplama ve Onluk Bozma: Taban Bloklarıyla',
+    description: 'Eldeli toplama ve onluk bozarak çıkarmayı ezberletmeden, taban bloklarıyla öğretmek: Polypad tuval yerleşimi, 137 + 145 ve 252 − 138 adımları, rehber sorular.',
+    grades: [3, 4, 5],
+    outcomes: ['MAT.3.2.2', 'MAT.5.1.2'],
+    intro: 'Eldeli toplamada bir basamakta 10 ya da daha fazla birim biriktiğinde 10 tanesi bir büyük birime dönüştürülüp sola taşınır (10 birlik → 1 onluk). Onluk bozarak çıkarmada ise yetmeyen basamak için soldaki 1 birim 10 küçük birime bozulur (1 onluk → 10 birlik). Taban bloklarıyla bu iki işlem ezber bir kural olmaktan çıkar: öğrenci kalabalıklaşan sütunu ve yetmeyen blokları gözüyle görür.',
+    sections: [
+      {
+        h: 'Neden ezber yerine taban blokları?',
+        p: [
+          '“Elde var 1” ve “komşudan 1 aldım” cümleleri, neyin taşındığı bilinmeden ezberlenince 137 + 145 = 2712 ya da 252 − 138 = 126 gibi hatalar ortaya çıkar. Taban bloklarında 1 onluk çubuğu tam 10 birlik küp uzunluğundadır; öğrenci 10 küpün bir çubuğa eşit olduğunu ölçerek görür. Böylece elde, taşınan gerçek bir bloğa; bozma da aynı değerdeki 10 küçük bloğa dönüşür.',
+          'Temel fikir şudur: Bir basamakta en fazla 9 tane bulunabilir. Gruplama ve bozma sayının değerini değiştirmez, yalnızca gösterimini değiştirir.',
+        ],
+      },
+      {
+        h: 'Polypad tuvalini hazırlamak',
+        p: ['Mathigon Polypad’i aç ve boş bir tuvalle başla. Bloklar soldaki Tiles (Parçalar) panelinin Numbers (Sayılar) bölümünde, çizgi, metin ve kalem ise üstteki araç çubuğunda bulunur. Menü adları sürüme ve dil ayarına göre küçük farklılıklar gösterebilir.'],
+        list: [
+          'Taban blokları (Base 10 Blocks): Numbers bölümünden birlik küpünü, onluk çubuğunu ve yüzlük karesini kullan. Binlik küp bu derste gerekmez.',
+          'Çizgi (Line, kısayol L): tuvale iki dikey çizgi çekerek üç sütun oluştur. Toplamada iki sayının altına yatay bir çizgi çekip toplam bölgesini, çıkarmada “alınanlar” bölgesini ayır.',
+          'Metin kutusu (Text Box, kısayol T): sütunların üstüne soldan sağa Yüzlükler, Onluklar, Birlikler yaz. Tuvalin köşesine işlemi (137 + 145) ve yanına alt alta yazılmış boş işlemi ekle.',
+          'Kalem (Drawing Tools, kısayol P): elde “1”ini ve bozmada üstü çizilen rakamları el yazısıyla eklemek için kullan.',
+          'Sütun sırası kâğıttaki gibi olmalı: yüzlükler solda, birlikler sağda. Böylece tuvaldeki her hareket yazılı işlemde bir basamağa denk gelir.',
+          'Çizgileri ve başlıkları yerleştirdikten sonra kilitle (lock); öğrenciler blokları taşırken tablo kaymasın. Ayarlardaki Merge tiles (parçaları birleştirme) seçeneği, birleştirme adımında işine yarayabilir.',
+        ],
+      },
+      {
+        h: 'Toplama senaryosu: 137 + 145',
+        p: ['Amaç, öğrencinin birlikler 10’u geçtiğinde neden komşu sütuna taşıma gerektiğini blokların kalabalıklaşmasından kendisinin fark etmesidir. Kuralı söylemeden önce kalabalığı yaşat.'],
+        list: [
+          '1. Kur: Üst satıra 137’yi (1 yüzlük, 3 onluk, 7 birlik), altına 145’i (1 yüzlük, 4 onluk, 5 birlik) bloklarla kur. Öğrenci her sayıyı kurduktan sonra okusun: “1 yüzlük, 3 onluk, 7 birlik: 137.”',
+          '2. Tahmin: Blokları birleştirmeden önce sonucu tahmin ettir: 140 + 150 ≈ 290. Bu tahmin, ileride 2712 gibi sonuçları yakalamanın anahtarıdır.',
+          '3. Birlikleri birleştir: Yalnızca birlikler sütunundaki küpleri toplam bölgesine sürükle. 7 + 5 = 12 küp aynı sütunda yığılır. Burada dur ve sor: “Bu sütuna kâğıtta kaç rakam yazabiliriz?”',
+          '4. Kalabalığı fark ettir: Öğrenci 12 küpü saysın, sonra 10 tanesini seçim kutusuyla çevreleyip yan yana dizsin ve bir onluk çubuğuyla boy ölçüştürsün: aynı uzunluk, aynı değer.',
+          '5. Onluğa dönüştür ve taşı: Seçili 10 küpü sil, yerine 1 onluk çubuğu koy (sürümünde seçili blokları birleştirme seçeneği varsa onu kullan). Yeni çubuğu onluklar sütununa sürükle ve kalemle yanına küçük bir “1” yaz: kâğıttaki elde budur.',
+          '6. Onlukları ve yüzlükleri birleştir: 3 + 4 + 1 (elde) = 8 onluk, 1 + 1 = 2 yüzlük. Sütunlar 9’u geçmediği için dönüşüm gerekmez.',
+          '7. Kâğıtla eşleştir: Öğrenci her blok hareketinin yazılı işlemdeki karşılığını göstersin: 2 birlik, elde 1, 8 onluk, 2 yüzlük → 282. Sonucu tahminle (≈ 290) karşılaştırın.',
+          '8. Pekiştir: 268 + 157 gibi iki kez gruplama gerektiren bir işlem ver: 15 birlik → 1 onluk, 12 onluk → 1 yüzlük.',
+        ],
+      },
+      {
+        h: 'Çıkarma senaryosu: 252 − 138',
+        p: ['Amaç, öğrencinin küçük sayıdan büyük sayı çıkmama krizini kendi yaşaması ve bir onluğu bozarak çözmesidir. Krizden önce çözümü söyleme.'],
+        list: [
+          '1. Kur: Yalnızca 252’yi kur (2 yüzlük, 5 onluk, 2 birlik). Çıkan sayı bloklarla kurulmaz; ondan bloklar “alınır”. Alınan blokları tuvalin alt kısmındaki alınanlar bölgesine taşı ki sonunda 138’i görebilesin.',
+          '2. Krizi yaşat: “138’in 8 birliğini al.” de. Öğrenci 2 küpü alır ve takılır. Hemen yardım etme; “Ne yapabiliriz?” diye sor ve bekle. Sık gelen cevap “8 − 2 = 6” olur; bunu tuvalde sına: elimizde 8 küp mü var, 2 küp mü?',
+          '3. Bozdur: Onluklar sütunundan bir çubuğu birlikler sütununa sürükle. Çubuğu sil ve yerine 10 birlik küp koy (sürümünde bloğu ayırma seçeneği varsa onu kullan). Kalemle kâğıttaki gibi 5’in üstünü çizip 4, birliklerin üstüne 12 yaz.',
+          '4. Değerin korunduğunu kanıtlat: Tuvalde artık 2 yüzlük, 4 onluk, 12 birlik var. Öğrenci bunun hâlâ 252 olduğunu sayarak göstersin. Bu adım atlanırsa bozma bir hile gibi algılanır.',
+          '5. Sütun sütun al: Birliklerden 8 al, 4 kalır. Onluklardan 3 al, 1 kalır. Yüzlüklerden 1 al, 1 kalır. Sonuç 114.',
+          '6. Kontrol et: Alınanları (1 yüzlük, 3 onluk, 8 birlik = 138) kalanla (114) yeniden birleştir; 252’ye dönüldüğünü göster. Bu, toplama ile çıkarmanın ters işlem olduğunu da görünür kılar.',
+          '7. Zorlaştır: 403 − 167 gibi ortasında sıfır olan bir sayı ver. Onluk olmadığı için önce 1 yüzlüğü 10 onluğa, sonra 1 onluğu 10 birliğe bozmak gerekir.',
+        ],
+      },
+      {
+        h: 'Tuval açıkken sorulacak rehber sorular',
+        p: ['Soruları cevabı söylemek için değil, öğrencinin tuvale yeniden bakması için sor. Cevap yanlışsa “Tuvalde gösterir misin?” demek çoğu zaman yeterlidir.'],
+        list: [
+          'Kurarken: 137’deki 1 neden 1 birlik değil de 1 yüzlük? Sonuç yaklaşık kaç olur, neden?',
+          'Toplarken: Birlikler sütununda kaç küp var? Bu sayıyı tek bir rakamla yazabilir miyiz?',
+          'Toplarken: 10 küp ile 1 onluk çubuğunun değeri aynı mı? Nasıl kanıtlarsın?',
+          'Toplarken: Oluşan onluğu nereye koymalıyız? Neden yüzlüklere değil de onluklara?',
+          'Toplarken: Kâğıttaki küçük “1” tuvalde hangi bloğu gösteriyor? Önce yüzlükleri toplasaydık ne olurdu?',
+          'Çıkarırken: 2 küpten 8 küp alabilir miyiz? “8 − 2” yazmak tuvalde ne anlama gelir?',
+          'Çıkarırken: Yetmeyen birlikleri nereden bulabiliriz? Bir onluğu bozduktan sonra sayımız değişti mi?',
+          'Çıkarırken: Kâğıtta 5’in üstünü çizip 4 yazmamızın tuvaldeki karşılığı ne? Onluklar sütunu boşsa ne yaparız?',
+          'Kapanış: Elde ile bozma birbirinin tersi mi? Elif 137 + 145 = 2712, Can 252 − 138 = 126 buldu; tuvalde göstererek ikisinin hatasını açıkla.',
+        ],
+      },
+      {
+        h: 'Sık görülen hatalar',
+        p: [
+          'Birliklerdeki 12’yi olduğu gibi yazmak (137 + 145 = 2712), her basamakta büyük rakamdan küçüğü çıkarmak (252 − 138 = 126) ve sıfırdan çıkarmayı 0 saymak (403 − 167’de onlar basamağına 0 yazmak) en yaygın üç hatadır. Üçü de sonucu tahminle ya da ters işlemle kontrol edince hemen yakalanır.',
+          'Sitedeki Elde ve Bozma Atölyesi aynı tuvali tablet ve akıllı tahtada sunar: öğrenci 10 küpü seçip bağlar, bir çubuğa dokunup bozar; kâğıttaki işlem her adımda tuvalle birlikte dolar ve son iki görevde bu hataların peşine düşülür.',
+        ],
+      },
+    ],
+    faq: [
+      { q: 'Eldeli toplama neden sağdan başlanarak yapılır?', a: 'Elde hep sola, bir büyük basamağa taşınır. Birliklerden başlanırsa gelen elde onluklara eklenir ve her sütun bir kez tamamlanır; soldan başlanırsa yazılan rakamların sonradan düzeltilmesi gerekir.' },
+      { q: 'Onluk bozma ne demektir?', a: 'Çıkarmada bir basamaktaki rakam yetmediğinde soldaki basamaktan 1 birimi 10 küçük birime çevirmektir: 1 onluk = 10 birlik. Sayının değeri değişmez; 252, 2 yüzlük + 4 onluk + 12 birlik olarak yeniden yazılır.' },
+      { q: '403 − 167 gibi ortasında sıfır olan sayılarda ne yapılır?', a: 'Onluk olmadığı için önce 1 yüzlük 10 onluğa bozulur, sonra bu onluklardan biri 10 birliğe bozulur. 403 = 3 yüzlük + 9 onluk + 13 birlik olur ve çıkarma sütun sütun yapılır: 403 − 167 = 236.' },
+    ],
+    tools: ['base10'],
+    games: ['kasa'],
+    interactions: ['elde-ve-bozma', 'basamak-laboratuvari'],
+  },
 ]
 
 /** Rehber metinlerinin son gözden geçirilme tarihi (yapılandırılmış veride dateModified) */

@@ -1,20 +1,22 @@
 import { useRef, useState, type ReactNode } from 'react'
-import { Hammer, Hand, Link2, MoveDown } from 'lucide-react'
 import type { InteractionProps } from '../types'
 import { Scene, StrategyPicker } from '../../games/kit2'
 import { starsFor } from '../../games/kit'
 import { sfx } from '../../lib/feedback'
 import { ek } from '../../lib/generators'
-import { Card, CheckButton, GhostButton, Header, NextButton, Nudge, Prompt, Split, Stage, useChecks } from '../donusum-studyosu/ortak'
-import { AskBox, COLS, Mat, PLACE, Written, canFinish, countsOf, dig, digits, expr, valueOf, type Ask, type Blk, type Cells, type MatRow } from './tuval'
+import { Card, CheckButton, Header, NextButton, Nudge, Prompt, Split, Stage, useChecks } from '../donusum-studyosu/ortak'
+import { AskBox, COLS, Mat, PLACE, Written, canFinish, colName, countsOf, dig, digits, expr, valueOf, type Ask, type Blk, type Cells, type Grab, type MatRow, type Spot } from './tuval'
 
 /**
  * 86. Elde ve Bozma Atölyesi (3–5. sınıf, doğal sayılarla toplama ve çıkarma)
  * Polypad’deki taban blokları tuvalinin dokunmatik karşılığı: Yüzlükler · Onluklar · Birlikler sütunları, her satırda bir sayı.
- *  add: sayıları kur (isteğe bağlı), sağdan sola sütunları toplam satırına indir; 10 ya da daha fazla blok
- *       biriken sütun “kalabalık” olur, öğrenci 10 bloğu seçip bir büyük birime bağlar (elde) ve komşuya taşır.
- *  sub: eksileni kur (isteğe bağlı), ✋ Al ile çıkanın bloklarını alt satıra al; yetmeyen sütun için 🔨 Boz ile
- *       soldaki bir bloğu 10 küçük birime boz. Gereksiz bozma (sonunda bir sütunda 9’dan fazla kalacaksa) engellenir.
+ * Her şey sürükle-bırakla yapılır; kısa dokunuş yalnızca seçme ve geri alma içindir.
+ *  add: sayıları parça kutusundan sürükleyerek kur (isteğe bağlı), sağdan sola blokları toplam satırına sürükle;
+ *       10 ya da daha fazla blok biriken sütun “kalabalık” olur, öğrenci 10 bloğu seçip komşu sütuna sürükler
+ *       ve 10 blok bir büyük birime birleşir (elde).
+ *  sub: eksileni kur (isteğe bağlı), çıkanın bloklarını alınanlar satırına sürükle; yetmeyen sütun için soldaki
+ *       bir bloğu hemen sağındaki sütuna sürükle, 10 küçük birime bozulsun. Gereksiz bozma (sonunda bir sütunda
+ *       9’dan fazla kalacaksa) engellenir.
  *  err: bir öğrencinin yazılı işlemindeki hatayı bul.
  * Kâğıttaki işlem her adımda tuvalle birlikte dolar: elde 1 ve bozulan rakamın üstü çizilip yenisi yazılır.
  */
@@ -34,7 +36,7 @@ const TASKS: Task[] = [
         { label: 'Birler basamağına 12 yazıp devam etmeliyiz', nudge: 'Birler basamağına 12 yazarsak 1 rakamı onlar basamağına kayar ve sonuç 2712 gibi bir sayıya döner. Oysa 137 + 145 yaklaşık 300 olmalı. 12 küpü daha az blokla nasıl gösterebiliriz?', mis: 'Basamakta 9’u geçen toplamı olduğu gibi yazdı' },
         { label: 'Fazla olan 2 küpü kaldırıp 10 küp bırakmalıyız', nudge: 'Küpleri atarsak toplam azalır; 12 küpün hepsini korumalıyız. 10 küpün yerine hangi tek blok konabilir?', mis: 'Fazla birlikleri yok saydı' },
       ],
-      why: 'Evet! 10 birlik tam 1 onluk eder. Değer değişmez, yalnızca daha az blokla gösterilir. Şimdi 10 küpe tek tek dokunup seç.',
+      why: 'Evet! 10 birlik tam 1 onluk eder. Değer değişmez, yalnızca daha az blokla gösterilir. Şimdi 10 küpe tek tek dokunup seç, sonra onları onluklar sütununa sürükle.',
     },
     mid: {
       q: 'Birlikler tamamlandı. Kâğıttaki işlemde birler basamağına ne yazarız?',
@@ -71,7 +73,7 @@ const TASKS: Task[] = [
   },
   {
     kind: 'sub', a: 252, b: 138, title: '252 − 138: birlikler yetmezse', build: true,
-    intro: 'Şimdi çıkarma: önce 252’yi tuvale kur. Sonra 138’i sağdan başlayarak sütun sütun ✋ Al aracıyla al; aldığın bloklar alttaki satıra iner.',
+    intro: 'Şimdi çıkarma: önce 252’yi tuvale kur. Sonra 138’i sağdan başlayarak sütun sütun al: blokları alttaki alınanlar satırına sürükle.',
     crisis: {
       q: 'Birlikler bitti ama 8 birlik almamız gerekiyordu; daha 6 tane eksik. Ne yapabiliriz?',
       options: [
@@ -79,7 +81,7 @@ const TASKS: Task[] = [
         { label: 'Ters çevirip 8 − 2 = 6 yazarız', nudge: '8 − 2, 8 birlikten 2 birlik almak demek. Bizde ise 2 birlik var ve 8 birlik almamız gerekiyor. Eksik birlikler nereden gelebilir?', mis: 'Basamakta küçükten büyüğü çıkaramayınca büyükten küçüğü çıkardı' },
         { label: 'Bu çıkarma yapılamaz; 2’den 8 çıkmaz', nudge: '252, 138’den büyük; toplamda yeterince blok var. Yalnızca birlikler sütunu yetmiyor. Komşu sütundaki 1 onluk kaç birlik eder?', mis: 'Bir basamakta yetmeyince çıkarmanın imkânsız olduğunu sandı' },
       ],
-      why: 'Evet! 1 onluk = 10 birlik. 🔨 Boz aracı seçildi: onluklar sütunundaki bir çubuğa dokun.',
+      why: 'Evet! 1 onluk = 10 birlik. Onluklar sütunundaki bir çubuğu birlikler sütununa sürükle: 10 küpe bozulacak.',
     },
     end: {
       q: 'Sonuç 114. Bir onluğu bozduktan sonra elimizdeki sayı hâlâ 252 miydi?',
@@ -99,7 +101,7 @@ const TASKS: Task[] = [
       options: [
         { label: 'Önce 1 yüzlüğü 10 onluğa, sonra o onluklardan birini 10 birliğe bozdum', ok: true },
         { label: 'Onluklarda 0 olduğu için 0 − 6 = 0 yazdım', nudge: 'Sıfırdan 6 onluk alınabilir mi? Tuvalde aldığın 6 onluk çubuğu nereden geldi?', mis: 'Sıfırdan çıkarmayı 0 kabul etti' },
-        { label: 'Yüzlüklerden doğrudan birlik aldım', nudge: 'Bir yüzlük bozulunca neye dönüştü: birliklere mi, onluklara mı? 🔨 ile ne olduğunu hatırla.' },
+        { label: 'Yüzlüklerden doğrudan birlik aldım', nudge: 'Bir yüzlüğü sürükleyip bozduğunda neye dönüştü: birliklere mi, onluklara mı? Hangi sütuna bırakmıştın?' },
       ],
       why: 'Bozdukça değer aynı kaldı: 403 = 3 yüzlük + 9 onluk + 13 birlik. Kâğıtta 4 → 3, 0 → 9 (önce 10 oldu, 1’ini birliklere verdi), 3 → 13.',
     },
@@ -170,12 +172,9 @@ export default function EldeVeBozma({ grade, onFinish }: InteractionProps) {
 type Fb = { ok: boolean; text: string; mis?: string } | null
 type Phase = 'build0' | 'build1' | 'cols' | 'end' | 'done'
 
-function ActionButton({ onClick, disabled, children }: { onClick: () => void; disabled?: boolean; children: ReactNode }) {
-  return <button type="button" onClick={onClick} disabled={disabled} className="btn-primary min-h-14 w-full text-lg">{children}</button>
-}
-
 const blank = (): Cells => PLACE.map(() => [])
 const clone = (rs: Cells[]) => rs.map((c) => c.map((x) => [...x]))
+const SHAPE = ['küpü', 'çubuğu', 'karesi']
 
 function OperationTask({ task, footer, onSolved }: { task: OpTask; footer: ReactNode; onSolved: (first: boolean) => void }) {
   const { kind, a, b } = task
@@ -190,11 +189,21 @@ function OperationTask({ task, footer, onSolved }: { task: OpTask; footer: React
   const [ask, setAsk] = useState<'crowd' | 'mid' | 'crisis' | null>(null)
   const [merged, setMerged] = useState<boolean[]>(() => PLACE.map(() => false))
   const [sel, setSel] = useState<Set<number>>(() => new Set())
-  const [tool, setTool] = useState<'al' | 'boz'>('al')
   const [carry, setCarry] = useState<(number | null)[]>([])
   const [result, setResult] = useState<(number | null)[]>(() => PLACE.map(() => null))
   const [fb, setFb] = useState<Fb>(null)
   const chk = useChecks()
+  /** Hızlı art arda bırakmalarda bir sonraki çizimi beklemeden güncel durum */
+  const live = useRef({ rows, e, sel })
+  live.current = { rows, e, sel }
+  const put = (rs: Cells[]) => {
+    live.current.rows = rs
+    setRows(rs)
+  }
+  const pick = (s: Set<number>) => {
+    live.current.sel = s
+    setSel(s)
+  }
 
   const need = digits(b)
   const res = add ? 2 : 0
@@ -207,14 +216,14 @@ function OperationTask({ task, footer, onSolved }: { task: OpTask; footer: React
 
   /* ── sütun akışı ── */
   const goTo = (col: number, rs: Cells[]) => {
-    setSel(new Set())
+    pick(new Set())
     if (col >= COLS) {
       setStage('end')
       return
     }
     if (!add && need[col] === 0) return resolve(col, rs)
+    live.current.e = col
     setE(col)
-    setTool('al')
   }
   const resolve = (col: number, rs: Cells[]) => {
     setResult((r) => r.map((x, i) => (i === col ? rs[res][col].length : x)))
@@ -222,18 +231,33 @@ function OperationTask({ task, footer, onSolved }: { task: OpTask; footer: React
     goTo(col + 1, rs)
   }
 
-  /* ── kurma ── */
+  /* ── kurma: parça kutusundan sürükle ── */
   const buildRow = stage === 'build1' ? 1 : 0
   const target = buildRow === 0 ? a : b
-  const addBlock = (ri: number, col: number) => {
-    if (ri !== buildRow) return tell(`Şu an ${target} sayısını kuruyoruz: “${add && buildRow === 1 ? `+ ${b}` : a}” satırına ekle.`)
-    if (rows[ri][col].length >= 15) return tell('Bu sütunda zaten çok blok var. Fazla bloklara dokunarak geri alabilirsin.')
-    const rs = clone(rows)
-    rs[ri][col].push(...blocks(1))
-    setRows(rs)
-    setFb(null)
+  const rowName = add && buildRow === 1 ? `+ ${b}` : String(a)
+  const dropBuild = (g: Grab, to: Spot) => {
+    const { rows } = live.current
+    if (g.row === -1) {
+      if (to === null || to === 'tray') return
+      if (to.row !== buildRow) return tell(`Şu an ${target} sayısını kuruyoruz: blokları “${rowName}” satırına bırak.`)
+      if (to.e !== g.e) return tell(`Bu bir ${PLACE[g.e].unit} ${SHAPE[g.e]}: ${colName(g.e)} sütununa bırak.`)
+      if (rows[to.row][to.e].length >= 15) return tell('Bu sütunda zaten çok blok var. Fazlasını parça kutusuna geri sürükle.')
+      const rs = clone(rows)
+      rs[to.row][to.e].push(...blocks(1))
+      put(rs)
+      return setFb(null)
+    }
+    if (g.row !== buildRow) return
+    if (to === null || to === 'tray') {
+      const rs = clone(rows)
+      rs[g.row][g.e] = rs[g.row][g.e].filter((x) => x.id !== g.id)
+      put(rs)
+      return setFb(null)
+    }
+    if (to.e !== g.e) tell(`Bu bir ${PLACE[g.e].unit} ${SHAPE[g.e]}: ${colName(g.e)} sütununda durmalı.`)
   }
   const checkBuild = () => {
+    const { rows } = live.current
     const c = countsOf(rows[buildRow])
     const d = digits(target)
     if (c.every((x, i) => x === d[i])) {
@@ -248,47 +272,78 @@ function OperationTask({ task, footer, onSolved }: { task: OpTask; footer: React
     say(`${ek(target, 'loc')} kaç ${PLACE[m].unit} var? ${PLACE[m].name} sütununda şu an ${c[m]} blok duruyor.`)
   }
 
-  /* ── toplama: birleştir ve bağla ── */
-  const mergeCol = () => {
-    const rs = clone(rows)
-    rs[2][e] = [...rs[2][e], ...rs[0][e], ...rs[1][e]]
-    rs[0][e] = []
-    rs[1][e] = []
-    setRows(rs)
-    setMerged((m) => m.map((x, i) => (i === e ? true : x)))
+  /* ── toplama: aşağı sürükle, 10’u komşuya sürükle ── */
+  const dropAdd = (g: Grab, to: { row: number; e: number }) => {
+    const { rows, e, sel } = live.current
+    if (g.row < 2) {
+      if (to.row === g.row) return
+      if (g.e !== e) return tell(`Sağdan başlıyoruz: önce ${colName(e)} sütununu topla.`)
+      if (to.row !== 2) return tell('Blokları çizginin altındaki Toplam satırına sürükle.')
+      if (to.e !== g.e) return say(`${PLACE[g.e].unit} blokları toplamda da ${colName(g.e)} sütununa gider: aynı basamaktakiler toplanır.`, 'Basamakları hizalamadan topladı')
+      const rs = clone(rows)
+      const n = rs[g.row][e].length
+      rs[2][e].push(...rs[g.row][e])
+      rs[g.row][e] = []
+      put(rs)
+      if (rs[0][e].length || rs[1][e].length) return good(`${n} ${PLACE[e].unit} indi. Diğer sayının ${PLACE[e].unit} bloklarını da indir.`)
+      setMerged((m) => m.map((x, i) => (i === e ? true : x)))
+      return afterMerge(rs)
+    }
+    if (to.row !== 2 || to.e === g.e) return
+    if (g.e !== e) return tell(`Sağdan başlıyoruz: şimdi ${colName(e)} sütunu.`)
+    if (to.e > e + 1) return tell(`Bloklar sütun atlayamaz: 10 ${PLACE[e].unit} 1 ${PLACE[e + 1].unit} eder; komşu sütuna sürükle.`)
+    if (to.e < e) return tell('Bloklar sola, bir büyük basamağa taşınır.')
+    if (rows[2][e].length < 10) return say(`${PLACE[e].name} sütununda ${rows[2][e].length} blok var; 1 ${PLACE[e + 1].unit} için tam 10 ${PLACE[e].unit} gerekir.`, 'Gruplamayı 10’dan az birimle yaptı')
+    if (sel.size !== 10 || !sel.has(g.id)) return tell(`1 ${PLACE[e + 1].unit} yapmak için tam 10 ${PLACE[e].unit} gerekir. Önce 10 bloğa dokunup seç (seçilen: ${sel.size}), sonra seçtiklerinden birini ${colName(e + 1)} sütununa sürükle.`)
+    bind(rows, e, sel)
+  }
+  const afterMerge = (rs: Cells[]) => {
+    const { e } = live.current
     const n = rs[2][e].length
     if (n >= 10) {
       if (task.crowd) {
         setFb(null)
         return setAsk('crowd')
       }
-      return tell(`${PLACE[e].name} sütununda ${n} blok birikti: kalabalık! 10 tanesini seç ve 1 ${PLACE[e + 1]?.unit ?? 'binlik'} olarak bağla.`)
+      return tell(`${PLACE[e].name} sütununda ${n} blok birikti: kalabalık! 10 tanesine dokunup seç ve ${colName(e + 1)} sütununa sürükle.`)
     }
     sfx.ok()
     good(`${n} ${PLACE[e].unit}: sütun kalabalık değil, kâğıda ${n} yazabiliriz.`)
     resolve(e, rs)
   }
-  const bind = () => {
+  const bind = (rows: Cells[], e: number, sel: Set<number>) => {
     const rs = clone(rows)
     rs[2][e] = rs[2][e].filter((x) => !sel.has(x.id))
     rs[2][e + 1].push(...blocks(1, 'elde'))
-    setRows(rs)
-    setSel(new Set())
+    put(rs)
+    pick(new Set())
     setCarry((c) => { const n = [...c]; n[e + 1] = 1; return n })
     sfx.ok()
     const left = rs[2][e].length
-    good(`10 ${PLACE[e].unit} = 1 ${PLACE[e + 1].unit}! Yeni ${PLACE[e + 1].unit} komşu sütuna taşındı: kâğıttaki “elde 1” bu. ${PLACE[e].name} sütununda ${left} kaldı.`)
+    good(`10 ${PLACE[e].unit} birleşti: 1 ${PLACE[e + 1].unit}! Komşu sütuna taşıdığın bu blok, kâğıttaki “elde 1”. ${PLACE[e].name} sütununda ${left} kaldı.`)
     if (left <= 9) resolve(e, rs)
   }
 
-  /* ── çıkarma: al ve boz ── */
-  const remOf = (rs: Cells[]) => need.map((x, c) => (c < e ? 0 : x - rs[1][c].length))
-  const take = (col: number, id: number) => {
-    if (col !== e) return tell(`Sağdan başlıyoruz: şimdi ${PLACE[e].name} sütunundan ${need[e]} ${PLACE[e].unit} alıyoruz.`)
+  /* ── çıkarma: alınanlara sürükle, sağa sürükleyip boz ── */
+  const remOf = (rs: Cells[], e: number) => need.map((x, c) => (c < e ? 0 : x - rs[1][c].length))
+  const dropSub = (g: Grab, to: { row: number; e: number }) => {
+    const { rows, e } = live.current
+    if (g.row !== 0) return
+    if (to.row === 1) {
+      if (g.e !== e) return tell(`Sağdan başlıyoruz: şimdi ${colName(e)} sütunundan ${need[e]} ${PLACE[e].unit} alıyoruz.`)
+      if (to.e !== g.e) return say(`${PLACE[g.e].unit} blokları alınanlar satırında da ${colName(g.e)} sütununa gider.`, 'Basamakları hizalamadan çıkardı')
+      return take(rows, e, g.id)
+    }
+    if (to.e === g.e) return
+    if (to.e === g.e - 1) return breakUp(rows, e, g.e, g.id)
+    if (to.e < g.e) return tell(`Bir ${PLACE[g.e].unit} önce ${colName(g.e - 1)} sütununa bozulur: onu hemen sağındaki sütuna sürükle.`)
+    tell('Bozmak için bir bloğu hemen sağındaki sütuna sürükle; almak için alınanlar satırına sürükle.')
+  }
+  const take = (rows: Cells[], col: number, id: number) => {
     const rs = clone(rows)
     const i = rs[0][col].findIndex((x) => x.id === id)
     rs[1][col].push(...rs[0][col].splice(i, 1))
-    setRows(rs)
+    put(rs)
     const rem = need[col] - rs[1][col].length
     if (rem === 0) {
       sfx.ok()
@@ -300,58 +355,52 @@ function OperationTask({ task, footer, onSolved }: { task: OpTask; footer: React
         setFb(null)
         return setAsk('crisis')
       }
-      return tell(`${PLACE[col].name} bitti ama daha ${rem} ${PLACE[col].unit} alman gerek. 🔨 Boz aracıyla soldaki sütundan bir blok boz.`)
+      return tell(`${PLACE[col].name} bitti ama daha ${rem} ${PLACE[col].unit} alman gerek. Soldaki sütundan bir bloğu ${colName(col)} sütununa sürükleyip boz.`)
     }
     setFb(null)
   }
-  const breakUp = (col: number, id: number) => {
-    if (col === 0) return tell('Birlik küpü en küçük parçadır, daha fazla bozulamaz. Onluklar ya da yüzlükler sütunundan bir bloğa dokun.')
+  const breakUp = (rows: Cells[], e: number, col: number, id: number) => {
     const c = countsOf(rows[0])
-    const rem = remOf(rows)
+    const rem = remOf(rows, e)
     const after = c.map((x, i) => (i === col ? x - 1 : i === col - 1 ? x + 10 : x))
     if (!canFinish(after, rem)) {
-      if (c[e] >= rem[e]) return say(`Bozmana gerek yok: ${PLACE[e].name} sütununda ${c[e]} blok var, ${rem[e]} tanesini doğrudan alabilirsin. ✋ Al aracına geç.`)
+      if (c[e] >= rem[e]) return say(`Bozmana gerek yok: ${PLACE[e].name} sütununda ${c[e]} blok var, ${rem[e]} tanesini doğrudan alınanlar satırına sürükleyebilirsin.`)
       return say(`Bu bozma fazla gelir: ${PLACE[col - 1].name} sütununda ${after[col - 1]} blok birikir ve işin sonunda bile 9’dan fazlası kalır. Almak istediğin sütunun hemen solundaki sütuna bak.`)
     }
     const rs = clone(rows)
     rs[0][col] = rs[0][col].filter((x) => x.id !== id)
     rs[0][col - 1].push(...blocks(10, 'boz'))
-    setRows(rs)
+    put(rs)
     sfx.ok()
     const enough = rs[0][e].length >= rem[e]
-    if (enough) setTool('al')
-    good(`1 ${PLACE[col].unit} → 10 ${PLACE[col - 1].unit}. Sayının değeri değişmedi, yalnızca görünüşü değişti.${enough ? ' Şimdi ✋ Al ile devam et.' : ''}`)
+    good(`1 ${PLACE[col].unit} → 10 ${PLACE[col - 1].unit}. Sayının değeri değişmedi, yalnızca görünüşü değişti.${enough ? ' Şimdi blokları alınanlar satırına sürükle.' : ''}`)
   }
 
-  /* ── dokunma ── */
-  const onBlock = (ri: number, col: number, id: number) => {
+  /* ── sürükle-bırak ve dokunuş ── */
+  const building = stage === 'build0' || stage === 'build1'
+  const onDrop = (g: Grab, to: Spot) => {
     if (ask) return
-    if (stage === 'build0' || stage === 'build1') {
-      if (ri !== buildRow) return
-      const rs = clone(rows)
-      rs[ri][col] = rs[ri][col].filter((x) => x.id !== id)
-      setRows(rs)
-      return
-    }
+    if (building) return dropBuild(g, to)
+    if (stage !== 'cols' || to === null || to === 'tray') return
+    return add ? dropAdd(g, to) : dropSub(g, to)
+  }
+  const onTap = (g: Grab) => {
+    const { rows, e, sel } = live.current
+    if (ask) return
+    if (building) return dropBuild(g, g.row === -1 ? { row: buildRow, e: g.e } : 'tray')
     if (stage !== 'cols') return
-    if (!add) {
-      if (ri !== 0) return
-      return tool === 'al' ? take(col, id) : breakUp(col, id)
+    if (add && g.row === 2 && g.e === e && rows[2][e].length >= 10) {
+      const s = new Set(sel)
+      if (s.has(g.id)) s.delete(g.id)
+      else if (s.size >= 10) return tell(`10 tane seçtin. Şimdi seçtiklerinden birini ${colName(e + 1)} sütununa sürükle.`)
+      else s.add(g.id)
+      setFb(null)
+      return pick(s)
     }
-    if (ri !== 2 || col !== e || rows[2][e].length < 10) {
-      if (col === e && !merged[e]) return tell(`Önce “${PLACE[e].name.toLowerCase()} toplam satırına indir” düğmesine bas.`)
-      if (col !== e) return tell(`Sağdan başlıyoruz: şimdi ${PLACE[e].name} sütunu.`)
-      return
-    }
-    const s = new Set(sel)
-    if (s.has(id)) s.delete(id)
-    else if (s.size >= 10) return tell('10 tane seçtin. Şimdi “bağla” düğmesine bas.')
-    else s.add(id)
-    setSel(s)
+    tell(add ? 'Blokları sürükleyerek taşı: önce iki sayının bloklarını Toplam satırına indir.' : 'Bloğu sürükle: alınanlar satırına bırakırsan alırsın, hemen sağındaki sütuna bırakırsan bozarsın.')
   }
 
   /* ── görünüm ── */
-  const building = stage === 'build0' || stage === 'build1'
   const active = stage === 'cols' ? e : null
   const matRows: MatRow[] = add
     ? [
@@ -373,26 +422,26 @@ function OperationTask({ task, footer, onSolved }: { task: OpTask; footer: React
     const which = ask
     window.setTimeout(() => {
       setAsk(null)
-      if (which === 'mid') goTo(1, rows)
-      if (which === 'crisis') setTool('boz')
+      if (which === 'mid') goTo(1, live.current.rows)
     }, 1400)
   }
 
   let step: string
   let prompt: ReactNode
+  const intro = !task.build && stage === 'cols' && e === 0 ? <>{task.intro} </> : null
   if (building) {
     step = `Kur: ${target}`
-    prompt = <>{task.intro && stage === 'build0' ? <>{task.intro} </> : null}<b>{target}</b> sayısını tuvale kur: her sütunun <b>+ 1</b> düğmesiyle blok ekle, fazla bloğa dokunarak geri al.</>
+    prompt = <>{stage === 'build0' ? <>{task.intro} </> : null}<b>{target}</b> sayısını kur: parça kutusundan blokları sürükleyip doğru sütuna bırak. Fazla bloğu kutuya geri sürükle.</>
   } else if (stage === 'cols' && add) {
     step = `${PLACE[e].name} sütunu`
     prompt = !merged[e]
-      ? <>{!task.build && e === 0 ? <>{task.intro} </> : null}İki sayının <b>{PLACE[e].unit}</b> bloklarını toplam satırına indir.</>
+      ? <>{intro}İki sayının <b>{PLACE[e].unit}</b> bloklarını sürükleyip çizginin altındaki <b>Toplam</b> satırına, {colName(e)} sütununa bırak.</>
       : crowded
-        ? <>{PLACE[e].name} sütununda <b>{rows[2][e].length} {PLACE[e].unit}</b> var. <b>10 tanesine</b> dokunup seç, sonra 1 {PLACE[e + 1].unit} olarak bağla.</>
+        ? <>{PLACE[e].name} sütununda <b>{rows[2][e].length} {PLACE[e].unit}</b> var. <b>10 tanesine</b> dokunup seç, sonra seçtiklerinden birini <b>{colName(e + 1)}</b> sütununa sürükle. <span className="text-ink-soft">Seçilen: {sel.size} / 10</span></>
         : <>Tuvale ve kâğıda bak.</>
   } else if (stage === 'cols') {
     step = `${PLACE[e].name} sütunu`
-    prompt = <>{!task.build && e === 0 ? <>{task.intro} </> : null}{b} sayısında <b>{need[e]} {PLACE[e].unit}</b> var: {PLACE[e].name.toLowerCase()} sütunundan {need[e]} blok al. <span className="text-ink-soft">Alınan: {rows[1][e].length} / {need[e]}</span></>
+    prompt = <>{intro}{b} sayısında <b>{need[e]} {PLACE[e].unit}</b> var: {colName(e)} sütunundan {need[e]} bloğu <b>alınanlar</b> satırına sürükle. Yetmezse soldaki bir bloğu hemen sağındaki sütuna sürükleyip boz. <span className="text-ink-soft">Alınan: {rows[1][e].length} / {need[e]}</span></>
   } else {
     step = 'Sonuç'
     prompt = <>Tuvaldeki sonuç: <b>{expr(rows[res])}</b>. {a} {add ? '+' : '−'} {b} = <b>{answer}</b></>
@@ -402,7 +451,7 @@ function OperationTask({ task, footer, onSolved }: { task: OpTask; footer: React
     <Split
       work={
         <Stage className="p-3">
-          <Mat rows={matRows} sel={sel} onBlock={onBlock} onAdd={building ? addBlock : undefined} />
+          <Mat rows={matRows} sel={sel} palette={building} group={(g) => (sel.has(g.id) ? sel.size : 1)} onDrop={onDrop} onTap={onTap} />
         </Stage>
       }
       panel={
@@ -414,18 +463,6 @@ function OperationTask({ task, footer, onSolved }: { task: OpTask; footer: React
           <Prompt step={step}>{prompt}</Prompt>
           {askObj && <AskBox key={ask} ask={askObj} chk={chk} onOk={onAskOk} />}
           {!askObj && building && <CheckButton onClick={checkBuild}>Sayıyı kontrol et</CheckButton>}
-          {!askObj && stage === 'cols' && add && !merged[e] && (
-            <ActionButton onClick={mergeCol}><MoveDown size={20} />{PLACE[e].name} toplam satırına indir</ActionButton>
-          )}
-          {!askObj && crowded && (
-            <ActionButton onClick={bind} disabled={sel.size !== 10}><Link2 size={20} />Seçilen: {sel.size} / 10 · bağla</ActionButton>
-          )}
-          {!askObj && stage === 'cols' && !add && (
-            <div className="grid grid-cols-2 gap-2">
-              <GhostButton active={tool === 'al'} onClick={() => { setTool('al'); setFb(null) }}><Hand size={18} />Al</GhostButton>
-              <GhostButton active={tool === 'boz'} onClick={() => { setTool('boz'); setFb(null) }}><Hammer size={18} />Boz</GhostButton>
-            </div>
-          )}
           {fb && (fb.ok ? <Nudge tone="ok" question={fb.text} /> : <Nudge key={chk.tries} question={fb.text} misconception={fb.mis} />)}
           {stage === 'end' && (
             <AskBox ask={task.end} chk={chk} onOk={() => { onSolved(chk.pass()); setStage('done') }} />

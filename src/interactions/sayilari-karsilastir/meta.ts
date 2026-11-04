@@ -4,7 +4,7 @@ export const meta: InteractionMeta = {
   id: 'sayilari-karsilastir',
   no: 85,
   name: 'Büyüteçle Sayı Karşılaştır',
-  description: 'Basamak bloklarıyla 4 ve 5 basamaklı sayıların büyüklük farkını gör; büyüteçle soldan sağa ilerleyip ilk farklı basamağın neden karar verdiğini keşfet.',
+  description: 'Blokları, rakam kartlarını ve büyüteci sürükleyerek 4 ve 5 basamaklı sayıların büyüklük farkını gör; soldan sağa ilerleyip ilk farklı basamağın neden karar verdiğini keşfet.',
   emoji: '🔍',
   color: '#2563eb',
   category: 'sayilar',
