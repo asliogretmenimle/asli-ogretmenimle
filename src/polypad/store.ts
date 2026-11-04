@@ -129,7 +129,8 @@ function load(): Partial<Saved> {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return {}
     const s = JSON.parse(raw) as Partial<Saved>
-    return { ...s, tiles: (s.tiles ?? []).filter((t) => getDef(t.type)), settings: { ...defaultSettings, ...s.settings } }
+    // Burada getDef çağrılmaz: parça kayıt defteri henüz yüklenmemiş olabilir (bilinmeyen türler çizilmez)
+    return { ...s, settings: { ...defaultSettings, ...s.settings } }
   } catch {
     return {}
   }
@@ -339,15 +340,21 @@ export function paste(offset = 24) {
     map.set(t.id, id)
     return { ...t, id, x: t.x + offset, y: t.y + offset, locked: false }
   })
-  // Kopyalanan çizgiler kopyalanan parçalara bağlansın
-  const fixed = copies.map((t) => (t.p.links ? { ...t, p: { ...t.p, links: relink(t.p.links, map) } } : t))
+  // Kopyalar birbirine bağlıysa (çizgi uçları, mantık kabloları) bağlantılar kopyalara taşınsın
+  const fixed = copies.map((t) => {
+    let json = JSON.stringify(t.p)
+    for (const [a, b] of map) if (json.includes(a)) json = json.split(a).join(b)
+    const p = JSON.parse(json)
+    return { ...t, p: p.links ? { ...p, links: relink(p.links, new Set(map.values())) } : p }
+  })
   setState((s) => ({ tiles: [...s.tiles, ...fixed], sel: fixed.map((t) => t.id) }))
   clipboard = clipboard.map((t) => ({ ...t, x: t.x + offset, y: t.y + offset }))
   commit()
 }
 
-function relink(links: Record<string, string | null>, map: Map<string, string>) {
-  return Object.fromEntries(Object.entries(links).map(([k, v]) => [k, v ? (map.get(v) ?? null) : null]))
+/** Çizgi uçları yalnızca kopyalanan parçalara bağlı kalır */
+function relink(links: Record<string, string | null>, ids: Set<string>) {
+  return Object.fromEntries(Object.entries(links).map(([k, v]) => [k, v && ids.has(v) ? v : null]))
 }
 
 export function duplicate(ids: string[]) {

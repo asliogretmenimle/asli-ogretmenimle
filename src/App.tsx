@@ -31,6 +31,8 @@ const GamePage = lazy(() => load.games().then((m) => ({ default: m.GamePage })))
 const OnlineLesson = lazy(load.onlineLesson)
 const GuidesIndex = lazy(() => load.guide().then((m) => ({ default: m.GuidesIndex })))
 const GuidePage = lazy(() => load.guide().then((m) => ({ default: m.GuidePage })))
+// Büyük bir modül: diğer sayfalar gibi boşta önceden indirilmez
+const Board = lazy(() => import('./polypad/Polypad'))
 
 /** Sayfa açıldıktan sonra, tarayıcı boştayken diğer sayfaların kodunu indir: menü geçişleri beklemeden açılır */
 function usePrefetchPages() {
@@ -63,6 +65,8 @@ export default function App() {
     <ErrorBoundary>
     <Suspense fallback={<Loading />}>
       <Routes>
+        {/* Tam ekran uygulama: site menüsü ve alt bilgisi olmadan */}
+        <Route path="tuval" element={<Board />} />
         <Route element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="sinif/:grade" element={<GradePage />} />

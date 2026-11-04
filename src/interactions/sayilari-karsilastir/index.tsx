@@ -6,11 +6,12 @@ import { starsFor } from '../../games/kit'
 import { useTracker } from '../../lib/trackerContext'
 import { sfx } from '../../lib/feedback'
 import { Header, NextButton, Nudge, Prompt, Split, Stage, useChecks } from '../donusum-studyosu/ortak'
-import { BlockMat, BlockRow, Drag, DragAsk, Drop, LensToken, PLACE, PlaceTable, RulesFound, TOKEN, Towers, Tray, ZoomLine, cellsOf, countsOf, digitAt, firstDiff, n, useDnd, type Mark } from './parts'
+import { BlockMat, BlockRow, Drag, DragAsk, Drop, HowTo, LensToken, PLACE, PlaceTable, RulesFound, TOKEN, Towers, Tray, ZoomLine, cellsOf, countsOf, digitAt, firstDiff, n, useDnd, type Mark, type Tool } from './parts'
 
 /**
  * 85. Büyüteçle Sayı Karşılaştır (4–5. sınıf)
- * Öğretme odaklı ve baştan sona sürükle-bırak: kural söylenmez, modelden çıkar.
+ * Öğretme odaklı ve baştan sona sürükle-bırak (Polypad gibi: kart kalkar, parmağı izler, hedefe oturur ya da
+ * geri uçar): kural söylenmez, modelden çıkar. Her görevin üstünde amaç ve “Nasıl kullanılır?” kartı vardır.
  *  1. 9.999 + 1: birlik küpü altlığa sürükle, 10’lu demetleri bir sola taşıyarak on binliğe ulaş
  *  2. 8.754 ile 12.006: tacı tahminine koy, rakam kartlarını tabloya sağdan hizalı yerleştir, blokları kulelere dök
  *  3. 45.210 ile 45.830: büyüteci soldan sağa sütun sütun taşı, = / ≠ kartlarıyla işaretle, ilk farklıda dur
@@ -26,19 +27,22 @@ const B = '#ea580c'
 type Done = (first: boolean, rules: string[]) => void
 type Say = { q: string; mis?: string; k: number } | null
 
-const TASKS = [
-  { emoji: '➕', title: 'En büyük 4 basamaklı sayıya 1 ekle' },
-  { emoji: '🏰', title: '8.754 mü, 12.006 mı?' },
-  { emoji: '🔍', title: 'Büyüteçle soldan sağa' },
-  { emoji: '🎯', title: '45.2□□ yarışı' },
-  { emoji: '⚖️', title: 'Karar veren basamağı bul' },
-  { emoji: '🧺', title: 'Kutuya hangi rakamlar gelir?' },
+/** goal ve tools “Nasıl kullanılır?” kartında: hiç kullanmamış biri ne yapacağını ve araçların ne işe yaradığını görür */
+const TASKS: { emoji: string; title: string; goal: string; tools: Tool[] }[] = [
+  { emoji: '➕', title: 'En büyük 4 basamaklı sayıya 1 ekle', goal: '9.999’a tek bir birlik ekleyince sayının neden 5 basamaklı olduğunu bloklarla görmek.', tools: ['unit', 'bundle', 'answer'] },
+  { emoji: '🏰', title: '8.754 mü, 12.006 mı?', goal: 'Rakamları büyük olan sayının değil, basamak sayısı fazla olan sayının büyük olduğunu kulelerle görmek.', tools: ['crown', 'digit', 'blocks', 'answer'] },
+  { emoji: '🔍', title: 'Büyüteçle soldan sağa', goal: 'Basamak sayıları eşitse büyüteçle soldan başlayıp ilk farklı rakamı bulmak.', tools: ['lens', 'marks', 'crown', 'answer'] },
+  { emoji: '🎯', title: '45.2□□ yarışı', goal: 'Sağdaki rakamları ne kadar büyütürsen büyüt, ilk farklı basamağı geçemediğini denemek.', tools: ['digit', 'answer'] },
+  { emoji: '⚖️', title: 'Karar veren basamağı bul', goal: 'Her sayı çiftinde kararı veren basamağı bulup doğru işareti koymak.', tools: ['lens', 'cmp'] },
+  { emoji: '🧺', title: 'Kutuya hangi rakamlar gelir?', goal: 'Kutuya 0–9 kartlarını tek tek koyup hangilerinin uyduğunu bulmak.', tools: ['digit', 'basket'] },
 ]
 
 export default function SayilariKarsilastir({ grade, onFinish }: InteractionProps) {
   const [idx, setIdx] = useState(0)
   const [rules, setRules] = useState<string[]>([])
   const [guess, setGuess] = useState<number | null>(null)
+  /** İlk görevde açık gelir; sonra başlıktaki “?” ile açılır */
+  const [help, setHelp] = useState(true)
   const firsts = useRef<boolean[]>([])
   const end = idx >= TASKS.length
   const t = TASKS[Math.min(idx, TASKS.length - 1)]
@@ -48,6 +52,7 @@ export default function SayilariKarsilastir({ grade, onFinish }: InteractionProp
     firsts.current[idx] = first
     setRules((old) => [...old, ...r.filter((x) => !old.includes(x))])
     setIdx(idx + 1)
+    setHelp(false)
   }
   const finish = () =>
     onFinish({
@@ -59,7 +64,17 @@ export default function SayilariKarsilastir({ grade, onFinish }: InteractionProp
   const props = { onDone: done, last }
   return (
     <Scene grade={grade}>
-      <Header emoji={end ? '📒' : t.emoji} kicker={end ? 'Tamamlandı' : 'Görev'} title={end ? 'Kural defterin' : t.title} idx={Math.min(idx, TASKS.length - 1)} total={TASKS.length} />
+      <Header
+        emoji={end ? '📒' : t.emoji}
+        kicker={end ? 'Tamamlandı' : 'Görev'}
+        title={end ? 'Kural defterin' : t.title}
+        idx={Math.min(idx, TASKS.length - 1)}
+        total={TASKS.length}
+        right={end ? null : (
+          <button type="button" onClick={() => setHelp((h) => !h)} aria-pressed={help} aria-label="Nasıl kullanılır?" className={`grid size-11 place-items-center rounded-full text-lg font-black ring-1 transition ${help ? 'bg-sky-600 text-white ring-sky-700' : 'bg-white text-sky-700 ring-sky-200 hover:bg-sky-50'}`}>?</button>
+        )}
+      />
+      {!end && <HowTo goal={t.goal} tools={t.tools} open={help} onToggle={() => setHelp((h) => !h)} />}
       {end ? (
         <EndView rules={rules} onFinish={finish} />
       ) : idx === 0 ? (
@@ -96,6 +111,8 @@ function useSay(checks: ReturnType<typeof useChecks>) {
       checks.fail()
       setWrong(opts.at ?? null)
       setSay((s) => ({ q, mis: opts.mis, k: (s?.k ?? 0) + 1 }))
+      /** sürükle-bırakta bırakmayı reddeder: kart yerine geri uçar */
+      return false as const
     },
     view: () => (say ? <Nudge key={say.k} question={say.q} misconception={say.mis} /> : null),
   }
@@ -114,7 +131,7 @@ function GrowTask({ onDone, last }: TaskProps) {
 
   const dnd = useDnd((item, target) => {
     const e = Number(target.replace('mat-', ''))
-    if (!target.startsWith('mat-')) return
+    if (!target.startsWith('mat-')) return false
     if (item === 'unit') {
       if (e !== 0) return s.nudge('Tek bir küp 1 birliktir. Hangi basamağa gider?', { at: e })
       s.clear()
@@ -136,7 +153,9 @@ function GrowTask({ onDone, last }: TaskProps) {
       c[over + 1] += 1
       setCounts(c)
       if (!c.some((x) => x >= 10)) setPhase('ask')
+      return
     }
+    return false
   })
 
   return (
@@ -222,7 +241,7 @@ function DigitsTask({ onDone, last }: TaskProps) {
       const i = Number(item.slice(2))
       const v = NUMS[k]
       const d = Number(String(v)[i])
-      if (placed[`${ri}-${e}`]) return
+      if (placed[`${ri}-${e}`]) return false
       if ((k === 'a' ? 0 : 1) !== ri) return s.nudge(`Bu kart ${n(v)} sayısının kartı. ${k === 'a' ? 'Mavi' : 'Turuncu'} satıra yerleştir.`, { at: e })
       if (digitAt(v, e) !== d) {
         const leftAligned = k === 'a' && e === 4 - i
@@ -246,7 +265,9 @@ function DigitsTask({ onDone, last }: TaskProps) {
       const p = { ...poured, [k]: true }
       setPoured(p)
       if (p.a && p.b) window.setTimeout(() => setPhase('ask'), 1200)
+      return
     }
+    return false
   })
 
   const row = (k: 'a' | 'b', ri: number) => ({
@@ -399,7 +420,9 @@ function ScanTask({ onDone, last, onGuess }: TaskProps & { onGuess: (g: number) 
       sfx.ok()
       setCrown(1)
       window.setTimeout(() => setPhase('predict'), 600)
+      return
     }
+    return false
   })
 
   const fdBlocks = (v: number) => Array.from({ length: 5 }, (_, e) => (e === fd ? digitAt(v, e) ?? 0 : 0))
@@ -493,7 +516,7 @@ function TailTask({ onDone, last, guess }: TaskProps & { guess: number | null })
   const marks: Partial<Record<number, Mark>> = { 4: 'same', 3: 'same', 2: 'diff' }
 
   const dnd = useDnd((item, target) => {
-    if (phase !== 'try' || !target.startsWith('cell-')) return
+    if (phase !== 'try' || !target.startsWith('cell-')) return false
     const [, ri, e] = target.split('-').map(Number)
     if (ri !== 0 || e > 1) return s.nudge('Bu yarışta yalnızca 45.2□□ sayısının onlar ve birler kutularını değiştirebilirsin.', { at: e })
     s.clear()
@@ -608,7 +631,9 @@ function SpotTask({ onDone, last }: TaskProps) {
       sfx.ok()
       setStep('next')
       if (i + 1 < PAIRS.length) window.setTimeout(() => { setI(i + 1); setStep('col') }, 1400)
+      return
     }
+    return false
   })
 
   return (
@@ -681,7 +706,7 @@ function MissingTask({ onDone, last }: TaskProps) {
       s.clear()
       return
     }
-    if (target !== 'yes' && target !== 'no') return
+    if (target !== 'yes' && target !== 'no') return false
     setPeek(d)
     if ((target === 'yes') !== fits(d)) {
       return s.nudge(

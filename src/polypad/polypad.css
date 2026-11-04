@@ -1,0 +1,1445 @@
+/* Matematik Tuvali (Polypad benzeri). Tüm sınıflar pp- önekiyle kapsüllenmiştir. */
+
+html.pp-lock,
+html.pp-lock body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  height: 100%;
+}
+
+.pp-root {
+  --pp-accent: #0f82f2;
+  --pp-accent-soft: #e3f0fe;
+  --pp-text: #242436;
+  --pp-text-soft: #6b6b80;
+  --pp-border: #e0e0ea;
+  --pp-ui: #ffffff;
+  --pp-hover: #f2f2f7;
+  --pp-shadow: 0 1px 3px rgb(36 36 54 / 0.12), 0 4px 14px rgb(36 36 54 / 0.1);
+  --pp-tile-stroke: rgba(36, 36, 54, 0.55);
+  --pp-canvas-bg: #ffffff;
+  --canvas-bg: #ffffff;
+  --pp-grid: rgba(36, 36, 54, 0.12);
+  --pp-grid-strong: rgba(36, 36, 54, 0.28);
+  --pp-grid-check: rgba(36, 36, 54, 0.06);
+  --pp-outside: #e9e9ef;
+  --pp-tool: 56px;
+  --pp-sbtn: 44px;
+  --pp-sidebar: 300px;
+  --pp-radius: 12px;
+
+  position: fixed;
+  inset: 0;
+  display: flex;
+  height: 100dvh;
+  overflow: hidden;
+  color: var(--pp-text);
+  background: var(--pp-ui);
+  font-family: 'Nunito Variable', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-weight: 600;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.pp-root.large {
+  --pp-tool: 66px;
+  --pp-sbtn: 54px;
+}
+
+.pp-root.hc {
+  --pp-tile-stroke: #000;
+  --pp-grid: rgba(0, 0, 0, 0.3);
+  --pp-grid-strong: rgba(0, 0, 0, 0.6);
+  --pp-border: #8a8a99;
+}
+
+.pp-root button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pp-root :focus-visible {
+  outline: 3px solid var(--pp-accent);
+  outline-offset: 1px;
+  border-radius: 8px;
+}
+
+body.pp-dragging,
+body.pp-dragging * {
+  cursor: grabbing !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* Ana alan ve tuval                                                    */
+/* ------------------------------------------------------------------ */
+
+.pp-main {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+.pp-canvas {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+  overflow: hidden;
+}
+
+.pp-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.pp-svg text {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.pp-page {
+  filter: drop-shadow(0 2px 6px rgb(0 0 0 / 0.15));
+}
+
+.pp-tile {
+  cursor: grab;
+}
+
+.pp-tile.locked {
+  cursor: default;
+}
+
+.pp-tile [data-act] {
+  cursor: pointer;
+}
+
+.pp-sel {
+  fill: none;
+  stroke: var(--pp-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+  pointer-events: none;
+}
+
+.pp-sel.group {
+  stroke-dasharray: 2 4;
+}
+
+.pp-rot-line {
+  stroke: var(--pp-accent);
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+
+.pp-handle {
+  cursor: grab;
+}
+
+.pp-handle.pp-rot {
+  cursor: alias;
+}
+
+.pp-marquee {
+  fill: rgb(15 130 242 / 0.08);
+  stroke: var(--pp-accent);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* İpuçları                                                            */
+/* ------------------------------------------------------------------ */
+
+.pp-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: #242436;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s 0.3s;
+  z-index: 50;
+}
+
+.pp-settings .pp-tooltip,
+.pp-actionbar .pp-tooltip {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+
+@media (hover: hover) {
+  .pp-tool:hover .pp-tooltip,
+  .pp-settings-btn:hover .pp-tooltip,
+  .pp-action:hover .pp-tooltip,
+  .pp-pill button:hover .pp-tooltip {
+    opacity: 1;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Araç çubuğu                                                         */
+/* ------------------------------------------------------------------ */
+
+.pp-toolbar-wrap {
+  position: absolute;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 20;
+  max-width: calc(100% - 16px);
+  pointer-events: none;
+}
+
+.pp-toolbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 4px;
+  border-radius: var(--pp-radius);
+  background: var(--pp-ui);
+  box-shadow: var(--pp-shadow);
+  pointer-events: auto;
+}
+
+.pp-tool-wrap {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+}
+
+.pp-tool {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--pp-tool);
+  height: var(--pp-tool);
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--pp-text);
+  transition: background 0.15s, color 0.15s;
+}
+
+.pp-tool svg {
+  width: calc(var(--pp-tool) * 0.55);
+  height: calc(var(--pp-tool) * 0.55);
+}
+
+@media (hover: hover) {
+  .pp-tool:hover {
+    background: var(--pp-hover);
+  }
+}
+
+.pp-tool-wrap.active > .pp-tool {
+  background: var(--pp-accent);
+  color: #fff;
+}
+
+.pp-brushes {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: var(--pp-tool);
+  padding: 0 6px;
+}
+
+.pp-brush {
+  position: relative;
+  width: 40px;
+  height: var(--pp-tool);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  clip-path: inset(-60px -4px 0 -4px);
+}
+
+.pp-brush svg {
+  position: absolute;
+  left: 50%;
+  top: 6px;
+  width: auto;
+  height: 80px;
+  transform: translateX(-50%);
+  transition: top 0.18s ease;
+}
+
+.pp-brush.active svg {
+  top: -22px;
+}
+
+@media (hover: hover) {
+  .pp-brush:hover svg {
+    top: -6px;
+  }
+  .pp-brush.active:hover svg {
+    top: -22px;
+  }
+}
+
+.pp-sub {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: var(--pp-tool);
+  padding: 0 6px;
+}
+
+.pp-sub button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--pp-border);
+  border-radius: 9px;
+  background: var(--pp-ui);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pp-sub button.active {
+  border-color: var(--pp-accent);
+  background: var(--pp-accent-soft);
+  color: var(--pp-accent);
+}
+
+.pp-color-circle {
+  display: block;
+  width: calc(var(--pp-tool) * 0.56);
+  height: calc(var(--pp-tool) * 0.56);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--c) 0 52%, #fff 53% 64%, transparent 65%),
+    conic-gradient(#eb4726, #fd8c00, #bfc212, #22ab24, #009ea6, #0f82f2, #6d3bbf, #cd0e66, #eb4726);
+}
+
+.pp-dot {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #eb4726;
+  box-shadow: inset 0 0 0 3px #fff, 0 0 0 2px #eb4726;
+}
+
+.recording .pp-dot {
+  width: 14px;
+  height: 14px;
+  box-shadow: none;
+  animation: pp-blink 1s infinite;
+}
+
+@keyframes pp-blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.pp-pill {
+  display: flex;
+  width: auto;
+  padding: 0 4px;
+  gap: 2px;
+}
+
+.pp-pill button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: #fdecea;
+}
+
+.pp-pill button.off {
+  opacity: 0.45;
+}
+
+.pp-timer {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+/* ------------------------------------------------------------------ */
+/* Açılır pencereler                                                   */
+/* ------------------------------------------------------------------ */
+
+.pp-popup {
+  position: absolute;
+  z-index: 40;
+  padding: 12px;
+  border-radius: var(--pp-radius);
+  background: var(--pp-ui);
+  box-shadow: 0 4px 24px rgb(36 36 54 / 0.2);
+  animation: pp-pop 0.16s ease-out;
+  cursor: default;
+}
+
+@keyframes pp-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+}
+
+.pp-popup-top {
+  bottom: calc(100% + 12px);
+  right: 0;
+}
+
+.pp-popup-bottom {
+  top: calc(100% + 10px);
+  right: 0;
+}
+
+.pp-actionbar .pp-popup-top {
+  right: auto;
+  left: 50%;
+  translate: -50% 0;
+}
+
+.pp-actionbar .pp-popup-bottom {
+  right: auto;
+  left: 50%;
+  translate: -50% 0;
+}
+
+.pp-popup h2 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.pp-popup-anchor {
+  position: relative;
+}
+
+.pp-color-popup {
+  width: 284px;
+}
+
+.pp-color-popup.small {
+  width: 252px;
+}
+
+.pp-color-options {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.pp-select {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--pp-hover);
+}
+
+.pp-select button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 34px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--pp-text-soft);
+}
+
+.pp-select button.active {
+  background: var(--pp-ui);
+  color: var(--pp-accent);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
+}
+
+.pp-stroke-choice button {
+  width: 32px;
+}
+
+.pp-palette {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 5px;
+}
+
+.pp-palette button {
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
+  transition: transform 0.12s;
+}
+
+.pp-palette button.active {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--pp-accent);
+}
+
+@media (hover: hover) {
+  .pp-palette button:hover {
+    transform: scale(1.15);
+  }
+}
+
+.pp-sliders {
+  display: grid;
+  gap: 10px;
+}
+
+.pp-slider-row {
+  display: grid;
+  grid-template-columns: 16px 1fr 56px;
+  align-items: center;
+  gap: 10px;
+}
+
+.pp-slider-row label {
+  font-weight: 800;
+}
+
+.pp-slider {
+  position: relative;
+  height: 16px;
+  border-radius: 8px;
+  touch-action: none;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.1);
+}
+
+.pp-slider-handle {
+  position: absolute;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.4);
+  transform: translate(-50%, -50%);
+}
+
+.pp-rec-popup {
+  width: 250px;
+  display: grid;
+  gap: 10px;
+}
+
+.pp-grid-popup {
+  width: 260px;
+}
+
+.pp-grid-select {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pp-grid-btn {
+  aspect-ratio: 1;
+  padding: 8px;
+  border: 2px solid var(--pp-border);
+  border-radius: 10px;
+  background: #fff;
+  color: #8a8a99;
+}
+
+.pp-grid-btn svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+}
+
+.pp-grid-btn:first-child {
+  background: linear-gradient(to top right, transparent calc(50% - 1px), #eb4726 calc(50% - 1px), #eb4726 calc(50% + 1px), transparent calc(50% + 1px)) content-box;
+}
+
+.pp-grid-btn.active {
+  border-color: var(--pp-accent);
+  color: var(--pp-accent);
+}
+
+.pp-export-popup {
+  width: 230px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Düğmeler ve formlar                                                 */
+/* ------------------------------------------------------------------ */
+
+.pp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--pp-border);
+  border-radius: 10px;
+  background: var(--pp-ui);
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.pp-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pp-btn-small {
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+.pp-btn-blue {
+  border-color: var(--pp-accent);
+  background: var(--pp-accent);
+  color: #fff !important;
+}
+
+.pp-btn-red {
+  border-color: #eb4726;
+  background: #eb4726;
+  color: #fff !important;
+}
+
+.pp-btn-group {
+  display: flex;
+  gap: 8px;
+}
+
+.pp-btn-group .pp-btn {
+  flex: 1;
+}
+
+.pp-grid-popup > .pp-btn {
+  width: 100%;
+}
+
+.pp-input {
+  min-width: 0;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--pp-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--pp-text);
+  font: inherit;
+  font-size: 15px;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.pp-input.pair {
+  width: 72px;
+}
+
+select.pp-input {
+  padding-right: 6px;
+}
+
+.pp-form-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 15px;
+}
+
+.pp-form-row > span:first-of-type {
+  flex: 1;
+}
+
+.pp-form-row > svg {
+  flex-shrink: 0;
+  color: var(--pp-text-soft);
+}
+
+.pp-form-row select.pp-input {
+  width: 128px;
+}
+
+.pp-toggle {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pp-control {
+  position: relative;
+  flex-shrink: 0;
+  width: 42px;
+  height: 24px;
+  border-radius: 12px;
+  background: #c9c9d4;
+  transition: background 0.15s;
+  cursor: pointer;
+}
+
+.pp-control::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+  transition: transform 0.15s;
+}
+
+.pp-toggle:checked + .pp-control {
+  background: var(--pp-accent);
+}
+
+.pp-toggle:checked + .pp-control::after {
+  transform: translateX(18px);
+}
+
+.pp-toggle:focus-visible + .pp-control {
+  outline: 3px solid var(--pp-accent);
+  outline-offset: 2px;
+}
+
+.pp-form-row.color input[type='color'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.pp-form-row.color {
+  position: relative;
+  cursor: pointer;
+}
+
+.pp-swatch-lg {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.15);
+}
+
+.pp-caption {
+  margin: 6px 0;
+  color: var(--pp-text-soft);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.pp-caption.warn {
+  color: #a5321b;
+}
+
+.pp-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--pp-accent) !important;
+  font-weight: 800;
+}
+
+/* ------------------------------------------------------------------ */
+/* Ayar çubuğu (sağ üst)                                               */
+/* ------------------------------------------------------------------ */
+
+.pp-settings {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 25;
+  display: flex;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.pp-settings-group {
+  display: flex;
+  padding: 3px;
+  border-radius: var(--pp-radius);
+  background: var(--pp-ui);
+  box-shadow: var(--pp-shadow);
+  pointer-events: auto;
+}
+
+.pp-settings-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--pp-sbtn);
+  height: var(--pp-sbtn);
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+}
+
+.pp-settings-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .pp-settings-btn:not(:disabled):hover {
+    background: var(--pp-hover);
+  }
+}
+
+.pp-settings-btn.active {
+  background: var(--pp-accent-soft);
+  color: var(--pp-accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Eylem çubuğu                                                        */
+/* ------------------------------------------------------------------ */
+
+.pp-actionbar {
+  position: absolute;
+  z-index: 22;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  max-width: min(560px, calc(100% - 16px));
+  padding: 4px;
+  border-radius: var(--pp-radius);
+  background: var(--pp-ui);
+  box-shadow: var(--pp-shadow);
+  animation: pp-pop 0.14s ease-out;
+}
+
+.pp-actionbar.pinned {
+  left: 50%;
+  bottom: calc(var(--pp-tool) + 30px);
+  transform: translateX(-50%);
+}
+
+.pp-action-wrap {
+  position: relative;
+}
+
+.pp-action {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+}
+
+@media (hover: hover) {
+  .pp-action:hover {
+    background: var(--pp-hover);
+  }
+}
+
+.pp-action.active {
+  background: var(--pp-accent-soft);
+  color: var(--pp-accent);
+}
+
+.pp-action-sep {
+  width: 1px;
+  height: 28px;
+  margin: 0 3px;
+  background: var(--pp-border);
+}
+
+.pp-swatch {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.15);
+}
+
+/* ------------------------------------------------------------------ */
+/* Kenar çubuğu                                                        */
+/* ------------------------------------------------------------------ */
+
+.pp-sidebar {
+  position: relative;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--pp-ui);
+  border-right: 1px solid var(--pp-border);
+  transition: width 0.22s ease;
+}
+
+.pp-sidebar.open {
+  width: var(--pp-sidebar);
+}
+
+.pp-sidebar > * {
+  width: var(--pp-sidebar);
+}
+
+.pp-tabs-header {
+  display: flex;
+  flex-shrink: 0;
+  padding: max(6px, env(safe-area-inset-top)) 4px 0 max(4px, env(safe-area-inset-left));
+  border-bottom: 1px solid var(--pp-border);
+}
+
+.pp-tabs-header button {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 52px;
+  padding: 4px 2px 6px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--pp-text-soft);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.pp-tabs-header button.active {
+  border-bottom-color: var(--pp-accent);
+  color: var(--pp-accent);
+}
+
+.pp-tabs-header .pp-collapse {
+  flex: 0 0 36px;
+  justify-content: center;
+}
+
+.pp-tabs-body {
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-left: env(safe-area-inset-left);
+}
+
+.pp-acc {
+  border-bottom: 1px solid var(--pp-border);
+}
+
+.pp-acc-row {
+  display: flex;
+  align-items: center;
+}
+
+.pp-acc-row > h2,
+.pp-acc-row > h3 {
+  flex: 1;
+}
+
+.pp-check {
+  width: 20px;
+  height: 20px;
+  margin: 0 12px 0 4px;
+  accent-color: var(--pp-accent);
+}
+
+.pp-acc h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  min-height: 52px;
+  padding: 0 14px;
+  color: var(--m);
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pp-acc h2 > span {
+  flex: 1;
+}
+
+.pp-acc h2 > svg:first-child {
+  padding: 5px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--m) 14%, transparent);
+}
+
+.pp-chev {
+  color: var(--pp-text-soft);
+  transition: transform 0.18s;
+}
+
+h2.active .pp-chev,
+h3.active .pp-chev {
+  transform: rotate(90deg);
+}
+
+.pp-subsection {
+  padding-bottom: 6px;
+}
+
+.pp-acc h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  min-height: 44px;
+  padding: 0 14px 0 20px;
+  color: var(--pp-text);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .pp-acc h2:hover,
+  .pp-acc h3:hover {
+    background: var(--pp-hover);
+  }
+}
+
+.pp-acc section {
+  padding: 4px 10px 12px;
+  animation: pp-fade 0.2s ease-out;
+}
+
+@keyframes pp-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.pp-subtitle {
+  margin: 10px 0 4px;
+  color: var(--pp-text-soft);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pp-source-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.pp-source {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px;
+  border-radius: 8px;
+  cursor: grab;
+  touch-action: pan-y;
+  transition: background 0.12s, transform 0.12s;
+}
+
+.pp-source svg {
+  display: block;
+  overflow: visible;
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .pp-source:hover {
+    background: var(--pp-hover);
+  }
+}
+
+.pp-source:active {
+  transform: scale(0.95);
+}
+
+.pp-source-cap {
+  max-width: 96px;
+  color: var(--pp-text-soft);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.pp-sidebar-footer {
+  padding: 16px 14px 24px;
+  color: var(--pp-text-soft);
+  font-size: 13px;
+  text-align: center;
+}
+
+.pp-sidebar-footer a {
+  color: var(--pp-accent);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.pp-sidebar-open {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  left: max(12px, env(safe-area-inset-left));
+  z-index: 26;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--pp-sbtn);
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--pp-radius);
+  background: var(--pp-ui);
+  box-shadow: var(--pp-shadow);
+  font-weight: 800;
+}
+
+.pp-scrim {
+  display: none;
+}
+
+.pp-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.pp-ghost > svg {
+  display: block;
+  transform: translate(-50%, -50%);
+  opacity: 0.85;
+  filter: drop-shadow(0 4px 10px rgb(0 0 0 / 0.25));
+  overflow: visible;
+}
+
+/* Ayarlar, örnekler, yardım */
+
+.pp-customise,
+.pp-examples,
+.pp-help {
+  padding: 10px 14px 24px;
+}
+
+.pp-section-block {
+  display: grid;
+  gap: 2px;
+}
+
+.pp-section-block > .pp-btn {
+  margin-top: 8px;
+}
+
+.pp-advanced h4 {
+  margin: 18px 0 4px;
+  color: var(--pp-text-soft);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pp-example {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--pp-border);
+  border-radius: 12px;
+  background: var(--pp-ui);
+  text-align: left;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+@media (hover: hover) {
+  .pp-example:hover {
+    border-color: var(--pp-accent);
+    box-shadow: var(--pp-shadow);
+  }
+}
+
+.pp-example-title {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.pp-example-desc {
+  color: var(--pp-text-soft);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.pp-example-grade {
+  justify-self: start;
+  margin-top: 2px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--pp-accent-soft);
+  color: var(--pp-accent);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.pp-help .top-nav select {
+  width: 100%;
+}
+
+.pp-help-block h3 {
+  margin: 14px 0 6px;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.pp-help-block p {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.pp-help-block code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--pp-hover);
+  font-size: 14px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Metin düzenleyici ve istem penceresi                                */
+/* ------------------------------------------------------------------ */
+
+.pp-text-editor {
+  position: absolute;
+  z-index: 24;
+  box-sizing: border-box;
+  border: 2px solid var(--pp-accent);
+  border-radius: 5px;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  font-family: inherit;
+  font-weight: 600;
+  transform-origin: center;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.pp-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(36 36 54 / 0.35);
+  animation: pp-fade 0.15s;
+}
+
+.pp-dialog {
+  display: grid;
+  gap: 12px;
+  width: min(380px, 100%);
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--pp-ui);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.3);
+  animation: pp-pop 0.18s ease-out;
+}
+
+.pp-dialog label {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.pp-dialog .pp-input {
+  height: 46px;
+  font-size: 18px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Duyarlı yerleşim                                                    */
+/* ------------------------------------------------------------------ */
+
+/* Tablet */
+@media (max-width: 1100px) {
+  .pp-root {
+    --pp-sidebar: 270px;
+    --pp-tool: 52px;
+  }
+}
+
+/* Dikey tablet: araç çubuğu ile kenar çubuğu sığsın */
+@media (max-width: 900px) {
+  .pp-root {
+    --pp-sidebar: 248px;
+    --pp-tool: 50px;
+  }
+  .pp-sub button {
+    padding: 0 9px;
+    font-size: 13px;
+  }
+  /* Alt araçlar çubuğun üstüne taşınır, böylece çubuk taşmaz */
+  .pp-brushes,
+  .pp-sub {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    border-radius: var(--pp-radius);
+    background: var(--pp-ui);
+    box-shadow: var(--pp-shadow);
+  }
+  .pp-brushes {
+    height: 64px;
+    overflow: hidden;
+    clip-path: none;
+  }
+  .pp-brush {
+    height: 56px;
+    clip-path: inset(0);
+  }
+  .pp-brush svg {
+    top: 14px;
+  }
+  .pp-brush.active svg {
+    top: -4px;
+  }
+  .pp-toolbar {
+    position: relative;
+  }
+  .pp-toolbar > .pp-brushes,
+  .pp-toolbar > .pp-sub {
+    left: 50%;
+  }
+}
+
+/* Telefon: kenar çubuğu tuvalin üstüne açılır */
+@media (max-width: 699px) {
+  .pp-root {
+    --pp-sidebar: min(320px, 86vw);
+    --pp-tool: 44px;
+    --pp-sbtn: 40px;
+  }
+  .pp-sidebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: var(--pp-sidebar);
+    transform: translateX(-102%);
+    transition: transform 0.22s ease;
+    box-shadow: 4px 0 24px rgb(0 0 0 / 0.18);
+  }
+  .pp-sidebar.open {
+    transform: none;
+  }
+  .pp-scrim {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 29;
+    background: rgb(36 36 54 / 0.25);
+  }
+  body.pp-dragging .pp-scrim {
+    display: none;
+  }
+  .pp-settings {
+    gap: 6px;
+    right: 8px;
+  }
+  .pp-sidebar-open span {
+    display: none;
+  }
+  .pp-sidebar-open {
+    padding: 0 10px;
+  }
+  .pp-toolbar {
+    gap: 0;
+    padding: 3px;
+  }
+  .pp-tool {
+    border-radius: 8px;
+  }
+  .pp-color-popup {
+    width: min(284px, calc(100vw - 24px));
+  }
+  .pp-popup-top {
+    right: auto;
+    left: 50%;
+    translate: -50% 0;
+  }
+  .pp-toolbar .pp-tool-wrap[data-key='color'] .pp-popup-top,
+  .pp-toolbar .pp-tool-wrap[data-key='record'] .pp-popup-top {
+    left: auto;
+    right: -4px;
+    translate: none;
+  }
+}
+
+/* Çok dar telefonlarda ayar grupları alt alta */
+@media (max-width: 420px) {
+  .pp-settings {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .pp-settings-group:last-child {
+    flex-direction: column;
+  }
+}
+
+/* Yatay telefon: dikey alan az */
+@media (max-height: 480px) {
+  .pp-root {
+    --pp-tool: 42px;
+    --pp-sbtn: 38px;
+  }
+  .pp-tabs-header button span {
+    display: none;
+  }
+  .pp-tabs-header button {
+    min-height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-root *,
+  .pp-root *::before,
+  .pp-root *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

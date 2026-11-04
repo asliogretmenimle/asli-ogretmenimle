@@ -1,4 +1,30 @@
 import type { Pt } from '../types'
+import { centerPts } from '../geom'
 
-/** 15 dışbükey beşgen döşeme türü (pentagon-1…15) ve özel durumlar (pentagon-16 prizmatik, 17 Kahire, 18 çiçek) */
-export const PENTAGONS: Record<string, { pts: Pt[]; color: string }> = {}
+/**
+ * 15 dışbükey beşgen döşeme türü (pentagon-1…15) ve özel durumlar (pentagon-16 prizmatik, 17 Kahire, 18 çiçek).
+ * Köşeler, her türün açı/kenar koşullarını sağlayan temsilci şekillerden sayısal olarak hesaplandı.
+ */
+const P = (pts: [number, number][], k = 1): Pt[] => centerPts(pts.map(([x, y]) => ({ x: x * k, y: y * k })))
+
+export const PENTAGONS: Record<string, { pts: Pt[]; color: string }> = {
+  'pentagon-1': { pts: P([[0, 0], [112, 0], [128.8, -50.4], [67.2, -89.6], [0, -89.6]]), color: '#fd8c00' },
+  'pentagon-2': { pts: P([[0, 0], [56, 0], [69.46, 76.36], [1.97, 123.62], [-30.8, 53.35]], 0.85), color: '#eb4726' },
+  'pentagon-3': { pts: P([[0, 0], [56, 0], [55.23, 33.59], [-1.47, 64.63], [-28, 48.5]], 1.25), color: '#cd0e66' },
+  'pentagon-4': { pts: P([[0, 0], [56, 0], [56, 56], [4.98, 74.57], [-13.6, 23.55]], 1.15), color: '#6d3bbf' },
+  'pentagon-5': { pts: P([[0, 0], [67.2, 0], [94.59, 22.98], [74.26, 58.2], [33.6, 58.2]]), color: '#0f82f2' },
+  'pentagon-6': { pts: P([[0, 0], [105.49, 0], [65.97, 97.81], [10.25, 103.34], [-15.75, 53.74]], 0.8), color: '#009ea6' },
+  'pentagon-7': { pts: P([[0, 0], [56, 0], [34.12, 51.55], [-9.99, 86.05], [-15.82, 30.35]], 1.15), color: '#22ab24' },
+  'pentagon-8': { pts: P([[0, 0], [56, 0], [88.36, 45.71], [56, 91.41], [10.2, 59.18]]), color: '#bfc212' },
+  'pentagon-9': { pts: P([[0, 0], [114.44, 0], [110.45, 55.86], [61.93, 83.82], [14.47, 54.1]], 0.85), color: '#b16200' },
+  'pentagon-10': { pts: P([[0, 0], [67.2, 0], [65.72, 35.66], [31.49, 68.5], [0, 67.2]], 1.15), color: '#a5321b' },
+  'pentagon-11': { pts: P([[0, 0], [115.84, 0], [137.49, 14.24], [71.98, 57.31], [0, 26.24]], 0.8), color: '#900a47' },
+  'pentagon-12': { pts: P([[0, 0], [82.59, 0], [108.89, 16.8], [42.83, 59.02], [0, 39.2]]), color: '#4c2986' },
+  'pentagon-13': { pts: P([[0, 0], [103.45, 0], [103.45, 27.72], [27.72, 48.01], [-10.15, 37.86]]), color: '#0b5ba9' },
+  'pentagon-14': { pts: P([[0, 0], [120.67, 0], [157.51, 25.48], [83.82, 76.43], [0, 44.79]], 0.75), color: '#006f74' },
+  'pentagon-15': { pts: P([[0, 0], [78.4, 0], [58.8, 33.95], [-14.35, 53.55], [-33.95, 19.6]], 1.1), color: '#187819' },
+  // Prizmatik (ev biçimli), Kahire ve çiçek beşgenleri
+  'pentagon-16': { pts: P([[0, 0], [64.4, 0], [64.4, 51.52], [32.2, 83.72], [0, 51.52]]), color: '#fd8c00' },
+  'pentagon-17': { pts: P([[0, 0], [47.02, 0], [79.22, -55.77], [23.45, -87.97], [-32.33, -55.77]]), color: '#0f82f2' },
+  'pentagon-18': { pts: P([[0, 0], [128.67, 0], [160.87, -55.77], [128.67, -111.54], [64.27, -111.54]], 0.6), color: '#22ab24' },
+}

@@ -1,9 +1,9 @@
-import { Fragment, useState, type CSSProperties, type ReactNode } from 'react'
-import { BookOpen, Hand, Search, Sparkles } from 'lucide-react'
+import { Fragment, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { BookOpen, ChevronDown, Hand, HelpCircle, Search, Sparkles } from 'lucide-react'
 import { useTracker } from '../../lib/trackerContext'
 import { sfx } from '../../lib/feedback'
 import { Card, Nudge, fmt, type useChecks } from '../donusum-studyosu/ortak'
-import { useDragDrop } from '../islem-zinciri/kit'
 
 /* ───────────── basamaklar ───────────── */
 
@@ -31,22 +31,29 @@ export function firstDiff(a: number, b: number, cols: number) {
 /** Her basamaktaki blok sayısı (counts[e]) */
 export const countsOf = (v: number) => Array.from({ length: 5 }, (_, e) => digitAt(v, e) ?? 0)
 
-/* ───────────── sürükle-bırak ───────────── */
+/* ───────────── sürükle-bırak (Polypad gibi) ───────────── */
 
 /**
  * Bir görevin sürükle-bırak durumu. Sürükleyip bırakmak ya da önce öğeye, sonra hedefe dokunmak
  * aynı handle(öğe, hedef) çağrısına varır (akıllı tahtada ve klavyede de çalışsın diye).
+ * handle false dönerse bırakma reddedilir: kart uçarak yerine döner ve sallanır.
  */
-export function useDnd(handle: (item: string, target: string) => void) {
+export function useDnd(handle: (item: string, target: string) => boolean | void) {
   const [held, setHeld] = useState<string | null>(null)
   const [over, setOver] = useState<string | null>(null)
+  const [dragging, setDragging] = useState<string | null>(null)
   return {
     held,
     over,
+    dragging,
     setOver,
+    setDragging,
+    /** true: bırakma kabul edildi */
     drop(item: string, target: string | null) {
       setHeld(null)
-      if (target) handle(item, target)
+      setOver(null)
+      setDragging(null)
+      return target ? handle(item, target) !== false : false
     },
     tap: (item: string) => setHeld((h) => (h === item ? null : item)),
     hit(target: string) {
@@ -58,34 +65,193 @@ export function useDnd(handle: (item: string, target: string) => void) {
 }
 export type Dnd = ReturnType<typeof useDnd>
 
+/** İmlecin altındaki ilk bırakma hedefi (sürüklenen kopya pointer-events: none olduğundan görülmez) */
+function dropAt(x: number, y: number) {
+  for (const el of document.elementsFromPoint(x, y)) {
+    const v = (el as HTMLElement).dataset?.drop
+    if (v) return v
+  }
+  return null
+}
+
+type Ghost = { x: number; y: number; dx: number; dy: number; w: number; h: number; phase: 'drag' | 'drop' | 'back' }
+
+/**
+ * Polypad’deki gibi: kart tutulunca yerinden kalkar (gölgeli, biraz büyümüş kopya parmağı izler),
+ * asıl yerinde soluk bir iz kalır. Doğru hedefe bırakılınca kopya yerine oturur; yanlışsa uçarak geri döner.
+ */
 export function Drag({ dnd, item, label, className = '', children, disabled }: { dnd: Dnd; item: string; label: string; className?: string; children: ReactNode; disabled?: boolean }) {
-  const d = useDragDrop({ onDrop: (t) => dnd.drop(item, t), onTap: () => dnd.tap(item), onOver: dnd.setOver, disabled })
+  const ref = useRef<HTMLButtonElement>(null)
+  const start = useRef<{ x: number; y: number; id: number; moved: boolean } | null>(null)
+  const draggedAt = useRef(0)
+  const [ghost, setGhost] = useState<Ghost | null>(null)
+  const [shake, setShake] = useState(0)
   const held = dnd.held === item
+
+  const end = (ev: ReactPointerEvent) => {
+    const s = start.current
+    start.current = null
+    if (!s?.moved) return
+    draggedAt.current = Date.now()
+    const ok = dnd.drop(item, dropAt(ev.clientX, ev.clientY))
+    if (ok) {
+      setGhost((g) => g && { ...g, phase: 'drop' })
+      window.setTimeout(() => setGhost(null), 200)
+      return
+    }
+    const r = ref.current?.getBoundingClientRect()
+    setGhost((g) => (g && r ? { ...g, phase: 'back', x: r.left + g.dx, y: r.top + g.dy } : null))
+    window.setTimeout(() => {
+      setGhost(null)
+      setShake((k) => k + 1)
+    }, 280)
+  }
+
   return (
-    <button
-      type="button"
-      {...d.bind()}
-      onClick={(ev) => {
-        ev.stopPropagation()
-        d.onClick()
-      }}
-      style={d.style}
-      disabled={disabled}
-      aria-label={label}
-      aria-pressed={held}
-      className={`select-none ${d.dragging ? 'cursor-grabbing opacity-90 shadow-2xl' : 'cursor-grab'} ${held ? 'ring-4 ring-sky-500' : ''} ${className}`}
-    >
-      {children}
-    </button>
+    <>
+      <button
+        ref={ref}
+        type="button"
+        disabled={disabled}
+        aria-label={label}
+        aria-pressed={held}
+        onPointerDown={(ev) => {
+          if (disabled || ev.button > 0) return
+          start.current = { x: ev.clientX, y: ev.clientY, id: ev.pointerId, moved: false }
+          ev.currentTarget.setPointerCapture(ev.pointerId)
+        }}
+        onPointerMove={(ev) => {
+          const s = start.current
+          if (!s || s.id !== ev.pointerId) return
+          if (!s.moved) {
+            if (Math.hypot(ev.clientX - s.x, ev.clientY - s.y) < 6) return
+            s.moved = true
+            const r = ev.currentTarget.getBoundingClientRect()
+            setGhost({ x: ev.clientX, y: ev.clientY, dx: s.x - r.left, dy: s.y - r.top, w: r.width, h: r.height, phase: 'drag' })
+            dnd.setDragging(item)
+          } else setGhost((g) => g && { ...g, x: ev.clientX, y: ev.clientY })
+          const o = dropAt(ev.clientX, ev.clientY)
+          if (o !== dnd.over) dnd.setOver(o)
+        }}
+        onPointerUp={end}
+        onPointerCancel={() => {
+          start.current = null
+          setGhost(null)
+          dnd.setDragging(null)
+          dnd.setOver(null)
+        }}
+        onClick={(ev) => {
+          ev.stopPropagation()
+          if (!disabled && Date.now() - draggedAt.current > 350) dnd.tap(item)
+        }}
+        className={`touch-none select-none ${ghost ? 'opacity-30 outline-2 outline-offset-2 outline-dashed outline-slate-400' : 'cursor-grab hover:-translate-y-0.5 hover:shadow-lg'} ${held ? 'ring-4 ring-sky-500' : ''} ${className}`}
+      >
+        <span key={shake} className={`contents ${shake ? '[&>*]:animate-shake' : ''}`}>{children}</span>
+      </button>
+      {ghost &&
+        createPortal(
+          <div
+            aria-hidden
+            className={`pointer-events-none fixed z-[1000] cursor-grabbing ${className}`}
+            style={{
+              left: ghost.x - ghost.dx,
+              top: ghost.y - ghost.dy,
+              width: ghost.w,
+              height: ghost.h,
+              transform: ghost.phase === 'drag' ? 'scale(1.08) rotate(-2deg)' : ghost.phase === 'drop' ? 'scale(0.7)' : 'none',
+              opacity: ghost.phase === 'drop' ? 0 : 1,
+              boxShadow: ghost.phase === 'drag' ? '0 18px 32px -10px rgb(15 23 42 / 0.45)' : 'none',
+              transition: ghost.phase === 'drag' ? 'transform 120ms, box-shadow 120ms' : 'left 260ms ease-out, top 260ms ease-out, transform 200ms, opacity 200ms',
+            }}
+          >
+            {children}
+          </div>,
+          document.body,
+        )}
+      {held &&
+        createPortal(
+          <div className="fixed inset-x-3 bottom-3 z-[999] mx-auto flex max-w-md items-center gap-2 rounded-2xl bg-sky-600 px-4 py-3 text-sm font-extrabold text-white shadow-xl animate-fade-up" role="status">
+            <Hand size={18} className="shrink-0" />
+            <span><b>{label}</b> elinde. Şimdi bırakmak istediğin yere dokun. Vazgeçmek için karta yeniden dokun.</span>
+          </div>,
+          document.body,
+        )}
+    </>
   )
 }
 
-/** Bırakma hedefi: üzerine gelinince ya da elde öğe varken vurgulanır */
+/** Bırakma hedefi: sürükleme başlayınca kesikli çizgiyle belirir, kart üstüne gelince koyu maviye döner */
 export function Drop({ dnd, id, className = '', style, children }: { dnd: Dnd; id: string; className?: string; style?: CSSProperties; children?: ReactNode }) {
-  const hot = dnd.over === id ? 'ring-4 ring-sky-400 brightness-95' : dnd.held ? 'ring-2 ring-sky-300' : ''
+  const active = !!(dnd.dragging || dnd.held)
+  const hot = dnd.over === id ? 'ring-4 ring-sky-500 bg-sky-100/70 scale-[1.03]' : active ? 'outline-2 outline-offset-2 outline-dashed outline-sky-400' : ''
   return (
     <div data-drop={id} onClick={() => dnd.hit(id)} className={`transition ${className} ${hot}`} style={style}>
       {children}
+    </div>
+  )
+}
+
+/* ───────────── nasıl kullanılır? ───────────── */
+
+export type Tool = 'unit' | 'bundle' | 'crown' | 'digit' | 'blocks' | 'lens' | 'marks' | 'cmp' | 'answer' | 'basket'
+
+const TOOLS: Record<Tool, { icon: ReactNode; name: string; text: string }> = {
+  unit: { icon: <span className="size-4 rounded-[3px] bg-yellow-400 ring-2 ring-yellow-600" />, name: 'Birlik küpü', text: 'Değeri 1 birlik. Altlıkta hangi basamağa ait olduğunu düşünüp o sütuna bırak.' },
+  bundle: { icon: <span className="h-4 w-6 rounded-[3px] bg-red-100 ring-2 ring-red-400" />, name: '10’lu demet', text: 'Bir sütunda 10 blok birikince kırmızı çerçeveyle çıkar. Bir büyük birime dönüşmesi için doğru sütuna sürükle.' },
+  crown: { icon: <span className="text-lg leading-none">👑</span>, name: 'Taç', text: 'Daha büyük olduğunu düşündüğün sayının üstüne bırak.' },
+  digit: { icon: <span className="grid size-5 place-items-center rounded-md bg-white text-xs font-black ring-1 ring-line">7</span>, name: 'Rakam kartı', text: 'Basamak tablosunda boş bir kutuya bırak. Her rakam kendi basamağına gider.' },
+  blocks: { icon: <span className="h-4 w-6 rounded-[3px] bg-pink-300 ring-2 ring-pink-500" />, name: 'Blok yığını', text: 'Bir sayının bütün blokları. Aynı renkli kulenin üstüne bırak, kule dolsun.' },
+  lens: { icon: <Search size={16} strokeWidth={3} className="text-sky-600" />, name: 'Büyüteç', text: 'Bir basamak sütununun üstüne bırak; o basamaktaki iki rakamı birlikte büyütür.' },
+  marks: { icon: <span className="text-base leading-none font-black">= ≠</span>, name: 'Aynı / farklı kartları', text: 'İki rakamın arasındaki “?” yuvasına bırak: aynıysa =, farklıysa ≠.' },
+  cmp: { icon: <span className="text-base leading-none font-black">&lt; &gt;</span>, name: 'Küçüktür / büyüktür', text: 'İki sayının arasındaki “?” yuvasına bırak. Ağız büyük sayıya açılır.' },
+  answer: { icon: <span className="text-base leading-none">⠿</span>, name: 'Cevap kartları', text: 'Sorunun altındaki kartlardan birini tutup “Cevap kartını buraya sürükle” kutusuna bırak.' },
+  basket: { icon: <span className="text-base leading-none">🧺</span>, name: 'Olur / Olmaz sepetleri', text: 'Denediğin rakam kartını uyuyorsa “Olur”, uymuyorsa “Olmaz” sepetine bırak.' },
+}
+
+/** El, kartı tutup kesikli kutuya taşır (sonsuz döngü) */
+function DragDemo() {
+  return (
+    <div className="relative h-20 w-44 shrink-0 overflow-hidden rounded-2xl bg-slate-50 ring-1 ring-line" aria-hidden>
+      <style>{'@keyframes ppCard{0%,15%{transform:translate(0,0) scale(1)}25%{transform:translate(0,-4px) scale(1.08) rotate(-3deg)}65%{transform:translate(92px,-4px) scale(1.08) rotate(-3deg)}75%,100%{transform:translate(92px,0) scale(1)}}@keyframes ppHand{0%{transform:translate(18px,26px)}15%,25%{transform:translate(4px,12px)}65%{transform:translate(96px,12px)}75%{transform:translate(96px,12px);opacity:1}90%,100%{transform:translate(120px,34px);opacity:0}}@keyframes ppBox{0%,55%{border-color:#94a3b8;background:transparent}62%,78%{border-color:#0284c7;background:#e0f2fe}88%,100%{border-color:#10b981;background:#ecfdf5}}'}</style>
+      <span className="absolute top-5 right-4 size-11 rounded-xl border-2 border-dashed" style={{ animation: 'ppBox 3.2s ease-in-out infinite' }} />
+      <span className="absolute top-5 left-4 grid size-11 place-items-center rounded-xl bg-white text-xl font-black text-ink shadow-[0_3px_0_#cbd5e1] ring-2 ring-line" style={{ animation: 'ppCard 3.2s ease-in-out infinite' }}>7</span>
+      <span className="absolute top-0 left-0 text-2xl" style={{ animation: 'ppHand 3.2s ease-in-out infinite' }}>👆</span>
+    </div>
+  )
+}
+
+/** Hiç kullanmamış biri için: sürükle-bırak nasıl yapılır, bu görevin amacı ne, hangi araç ne işe yarar */
+export function HowTo({ goal, tools, open, onToggle }: { goal: string; tools: Tool[]; open: boolean; onToggle: () => void }) {
+  return (
+    <div className="mb-3 rounded-2xl bg-white/95 text-ink ring-1 ring-sky-200">
+      <button type="button" onClick={onToggle} aria-expanded={open} className="flex min-h-12 w-full items-center gap-2 px-3 text-left">
+        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-sky-100 text-sky-700"><HelpCircle size={18} /></span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[11px] font-black tracking-wide text-sky-700 uppercase">Bu görevde amaç</span>
+          <span className="block text-sm leading-snug font-extrabold">{goal}</span>
+        </span>
+        <span className="shrink-0 text-xs font-black text-sky-700">{open ? 'Gizle' : 'Nasıl kullanılır?'}</span>
+        <ChevronDown size={18} className={`shrink-0 text-sky-700 transition ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="grid gap-3 border-t border-sky-100 p-3 animate-fade-up md:grid-cols-[auto_1fr_1fr]">
+          <DragDemo />
+          <ol className="space-y-1.5 text-sm font-bold">
+            <li><b className="text-sky-700">1. Tut:</b> Kartı ya da bloğu parmağınla (farede sol tuşla) basılı tut; kart yerinden kalkar.</li>
+            <li><b className="text-sky-700">2. Taşı:</b> Basılı tutarak sürükle. Bırakabileceğin yerler <span className="rounded px-1 outline-2 outline-dashed outline-sky-400">kesikli çizgiyle</span> belirir, üstüne gelince koyu maviye döner.</li>
+            <li><b className="text-sky-700">3. Bırak:</b> Parmağını kaldır. Doğruysa kart yerine oturur; değilse geri döner ve sarı kutuda bir ipucu sorusu çıkar.</li>
+            <li><b className="text-sky-700">Sürükleyemiyor musun?</b> Önce karta dokun, sonra gideceği yere dokun.</li>
+          </ol>
+          <ul className="space-y-1.5">
+            {tools.map((t) => (
+              <li key={t} className="flex items-start gap-2 text-sm font-bold">
+                <span className="mt-0.5 grid min-w-7 place-items-center">{TOOLS[t].icon}</span>
+                <span><b>{TOOLS[t].name}:</b> {TOOLS[t].text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   )
 }
@@ -346,7 +512,7 @@ export function DragAsk({ ask, checks, onOk, okText = 'Evet! Model de bunu göst
   const [placed, setPlaced] = useState<number | null>(null)
   const [miss, setMiss] = useState<{ i: number; k: number } | null>(null)
   const dnd = useDnd((item, target) => {
-    if (target !== 'ans' || placed !== null) return
+    if (target !== 'ans' || placed !== null) return false
     const i = Number(item.slice(4))
     if (ask.options[i].ok) {
       track.attempt(true)
@@ -358,6 +524,7 @@ export function DragAsk({ ask, checks, onOk, okText = 'Evet! Model de bunu göst
     }
     checks.fail()
     setMiss((m) => ({ i, k: (m?.k ?? 0) + 1 }))
+    return false
   })
   const o = miss ? ask.options[miss.i] : null
   return (
