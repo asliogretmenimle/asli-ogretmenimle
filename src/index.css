@@ -2,22 +2,25 @@
 
 @theme {
   --font-sans: 'Nunito Variable', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --color-ink: #1f2340;
-  --color-ink-soft: #5b6080;
-  --color-line: #e7e8f2;
-  --color-paper: #fbf7f6;
+  /* Göz yormayan ağırlıklar: sitedeki font-black / font-extrabold kullanımlarının tümü bir kademe hafifler */
+  --font-weight-black: 800;
+  --font-weight-extrabold: 700;
+  --color-ink: #1e2433;
+  --color-ink-soft: #5d6475;
+  --color-line: #e6e8ee;
+  --color-paper: #f7f8fa;
   --color-brand: #d6457a;
   --color-brand-dark: #a92f5c;
-  --color-brand-soft: #fde8ef;
-  --color-brand-ink: #7a1f43;
-  --color-cream: #fff4ec;
+  --color-brand-soft: #fdeef3;
+  --color-brand-ink: #8a2550;
+  --color-cream: #fff7ef;
   --color-ok: #16a34a;
   --color-ok-soft: #dcfce7;
   --color-bad: #e11d48;
   --color-bad-soft: #ffe4e6;
-  --radius-card: 1.25rem;
-  --shadow-card: 0 1px 2px rgb(31 35 64 / 0.04), 0 4px 16px rgb(31 35 64 / 0.06);
-  --shadow-lift: 0 2px 4px rgb(31 35 64 / 0.06), 0 12px 28px rgb(31 35 64 / 0.12);
+  --radius-card: 1rem;
+  --shadow-card: 0 1px 2px rgb(30 36 51 / 0.04);
+  --shadow-lift: 0 1px 2px rgb(30 36 51 / 0.05), 0 8px 24px rgb(30 36 51 / 0.08);
   --animate-pop: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   --animate-shake: shake 0.4s ease-in-out;
   --animate-fade-up: fade-up 0.35s ease-out both;
@@ -66,16 +69,20 @@
   @apply rounded-[var(--radius-card)] bg-white shadow-[var(--shadow-card)] ring-1 ring-line;
 }
 @utility btn {
-  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-5 text-base font-extrabold transition select-none active:scale-[0.97] disabled:opacity-40 disabled:active:scale-100;
+  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 text-base font-bold transition select-none active:scale-[0.98] disabled:opacity-40 disabled:active:scale-100;
 }
 @utility btn-primary {
-  @apply btn bg-brand text-white shadow-[0_4px_0_var(--color-brand-dark)] hover:brightness-105 active:translate-y-[2px] active:shadow-[0_2px_0_var(--color-brand-dark)];
+  @apply btn bg-brand text-white hover:bg-brand-dark;
 }
 @utility btn-ghost {
   @apply btn bg-white text-ink ring-1 ring-line hover:bg-paper;
 }
 @utility chip {
   @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold;
+}
+/* Liste sayfalarında tek tip süzgeç düğmesi (sınıf, kategori) */
+@utility pill {
+  @apply inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full bg-white px-3.5 text-sm font-bold whitespace-nowrap text-ink-soft ring-1 ring-line transition hover:text-ink aria-pressed:bg-ink aria-pressed:text-white aria-pressed:ring-ink;
 }
 
 /* Kesir gösterimi */

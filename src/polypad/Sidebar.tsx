@@ -133,6 +133,11 @@ const SourceItem = memo(function SourceItem({ src, scale }: { src: Source; scale
   )
 })
 
+function fitScale(s: Source, max: number) {
+  const b = tileBox(makeTile(s.t, s.p ?? {}))
+  return Math.min(1.2, max / Math.max(b.w, b.h, 1))
+}
+
 function Group({ g }: { g: SourceGroup }) {
   const scale = useMemo(() => {
     const max = g.max ?? 72
@@ -148,7 +153,7 @@ function Group({ g }: { g: SourceGroup }) {
       {g.subtitle && <div className="pp-subtitle">{g.subtitle}</div>}
       <div className="pp-source-wrap">
         {g.sources.map((s, i) => (
-          <SourceItem key={i} src={s} scale={scale} />
+          <SourceItem key={i} src={s} scale={g.fit ? fitScale(s, g.max ?? 72) : scale} />
         ))}
       </div>
       {g.caption && <p className="pp-caption">{g.caption}</p>}

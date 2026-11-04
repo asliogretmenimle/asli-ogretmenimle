@@ -2,32 +2,45 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ChevronLeft, RotateCcw } from 'lucide-react'
 import { tools } from '../manipulatives/registry'
-import { toolMeta as toolList, toolMetaById } from '../manipulatives/meta'
+import { toolGrades, toolMeta as toolList, toolMetaById } from '../manipulatives/meta'
+import { categoryInfo } from '../interactions/types'
 import { activityGrade, useAllActivities } from '../data/activityStore'
 import { ActivityCard } from '../components/Cards'
 import { ShareButton } from '../components/ShareButton'
 import { usePageTitle } from '../components/Layout'
 import type { ManipulativeTool } from '../data/types'
+import { CardGrid, EmptyState, FilterBar, ItemCard, PageHeader, useCatalogFilters } from '../components/Catalog'
 import NotFound from './NotFound'
+
+const CATEGORIES = (['sayilar', 'kesirler', 'geometri', 'cebir-veri'] as const).map((id) => ({ id, label: categoryInfo[id].label }))
 
 export function ManipulativesIndex() {
   usePageTitle('Sanal Manipülatifler')
+  const f = useCatalogFilters()
+  const list = toolList.filter(
+    (t) => (!f.grade || toolGrades(t).includes(f.grade)) && (!f.category || t.category === f.category) && f.matches(`${t.name} ${t.description}`),
+  )
   return (
-    <div className="mx-auto max-w-6xl px-4 pt-8">
-      <h1 className="text-3xl font-black sm:text-4xl">Sanal Manipülatifler</h1>
-      <p className="mt-2 max-w-2xl font-semibold text-ink-soft">Somut materyallerin dijital hâlleri. Serbestçe keşfet; öğretmenin de derste tahtada kullanabilir.</p>
-      <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {toolList.map((t) => (
-          <Link key={t.id} to={`/manipulatif/${t.id}`} className="card group flex items-start gap-4 p-5 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]">
-            <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-paper text-3xl transition group-hover:scale-110" aria-hidden>{t.emoji}</span>
-            <span>
-              <span className="block text-lg font-black">{t.name}</span>
-              <span className="mt-0.5 block text-sm font-semibold text-ink-soft">{t.description}</span>
-              <span className="chip mt-2 bg-brand-soft text-brand">{t.grades}. sınıf</span>
-            </span>
-          </Link>
-        ))}
-      </div>
+    <div className="mx-auto max-w-6xl px-4 pt-8 sm:pt-10">
+      <PageHeader title="Sanal Manipülatifler" desc={`${toolList.length} dijital materyal. Akıllı tahtada ya da tablette serbestçe kullanılır; kurulum ve üyelik gerekmez.`} />
+      <FilterBar
+        q={f.q}
+        onQ={f.setQ}
+        placeholder="Materyal ara: kesir, blok, saat…"
+        grade={f.grade}
+        onGrade={f.setGrade}
+        categories={CATEGORIES}
+        category={f.category}
+        onCategory={f.setCategory}
+      />
+      <p className="mb-3 text-sm font-semibold text-ink-soft">{list.length} manipülatif</p>
+      {list.length ? (
+        <CardGrid>
+          {list.map((t) => <ItemCard key={t.id} to={`/manipulatif/${t.id}`} emoji={t.emoji} title={t.name} desc={t.description} meta={`${t.grades}. sınıf`} />)}
+        </CardGrid>
+      ) : (
+        <EmptyState onClear={f.clear} />
+      )}
     </div>
   )
 }
@@ -59,12 +72,9 @@ function FreeTool({ id }: { id: ManipulativeTool }) {
           <ShareButton title={def.name} />
         </div>
       </nav>
-      <header className="mb-6 flex items-center gap-3">
-        <span className="text-4xl" aria-hidden>{def.emoji}</span>
-        <div>
-          <h1 className="text-2xl font-black sm:text-3xl">{def.name}</h1>
-          <p className="text-sm font-semibold text-ink-soft">{def.description}</p>
-        </div>
+      <header className="mb-5">
+        <h1 className="text-2xl font-extrabold sm:text-3xl">{def.name}</h1>
+        <p className="mt-1 text-[15px] font-semibold text-ink-soft">{def.description} · {def.grades}. sınıf</p>
       </header>
       <div className="card p-4 sm:p-6">
         <Comp value={value} onChange={setValue} config={def.defaultConfig} />

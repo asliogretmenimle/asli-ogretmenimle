@@ -3,21 +3,11 @@ import type { PadApi, Pt, RenderCtx, Tile, TileDef } from '../types'
 import { UNIT, deg, mod, regularPolygon, pathOf, toLocal, toWorld } from '../geom'
 import { midiFreq } from '../sound'
 import { C, FONT, Label, action, edge, rectBox, toggle } from './kit'
+import { api as storeApi } from '../store'
 
-// Bileşenler içinden (zamanlayıcılar) parça güncellemek için. store bu modülü içe aktardığından
-// döngüsel içe aktarma sırasında hata olmasın diye api'yi tembel yüklüyoruz.
-let storeApi: PadApi | null = null
-function withApi(fn: (a: PadApi) => void) {
-  if (storeApi) fn(storeApi)
-  else
-    void import('../store').then((m) => {
-      storeApi = m.api
-      fn(m.api)
-    })
-}
-const remember = (a: PadApi) => {
-  storeApi = a
-}
+// Bileşenler içinden (zamanlayıcılar) parça güncellemek için. Döngüsel içe aktarma güvenli:
+// store yalnızca çalışma anında kullanılır, modül yüklenirken değil.
+const withApi = (fn: (a: PadApi) => void) => fn(storeApi)
 
 // ---------------------------------------------------------------------------
 // Müzik
@@ -67,7 +57,6 @@ const piano: TileDef = {
     </>
   ),
   onTap: (t, api, info) => {
-    remember(api)
     if (info.act !== 'key') return
     const m = Number(info.v)
     api.note(midiFreq(m), 0.7)
@@ -149,7 +138,6 @@ const song: TileDef = {
   edgeSnap: false,
   render: (t, ctx) => <SongView t={t} thumb={!!ctx.thumb} />,
   onTap: (t, api, info) => {
-    remember(api)
     if (info.act !== 'cell') return
     const i = Number(info.v)
     const cells: number[] = t.p.cells
@@ -296,7 +284,6 @@ function LogicPorts({ t, ctx, outs }: { t: Tile; ctx: RenderCtx; outs: number[] 
 const wiring: Pick<TileDef, 'handles' | 'onHandle'> = {
   handles: (t) => ports(t).outs.map((p, i) => ({ id: `out${i}`, x: p.x, y: p.y, show: 'always', color: GREEN })),
   onHandle: (t, id, l, api, phase) => {
-    remember(api)
     const o = Number(id.slice(3)) || 0
     if (phase !== 'end') return { p: { ...t.p, _drag: { x: l.x, y: l.y, o } } }
     const { _drag, ...rest } = t.p
@@ -322,7 +309,6 @@ const wiring: Pick<TileDef, 'handles' | 'onHandle'> = {
 
 /** Giriş ucuna dokununca bağlantıyı koparır */
 const disconnect: TileDef['onTap'] = (t, api, info) => {
-  remember(api)
   if (info.act !== 'port') return
   const cur = [...((t.p.inputs ?? []) as (string | null)[])]
   const i = Number(info.v)
@@ -349,7 +335,6 @@ const logicButton: TileDef = {
     </>
   ),
   onTap: (t, api, info) => {
-    remember(api)
     if (info.act !== 'press') return
     api.updateP(t.id, { on: true })
     api.sound('click')
@@ -373,7 +358,6 @@ const logicSwitch: TileDef = {
     </>
   ),
   onTap: (t, api, info) => {
-    remember(api)
     if (info.act !== 'toggle') return
     api.sound('click')
     api.updateP(t.id, { on: !t.p.on }, true)

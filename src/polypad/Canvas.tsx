@@ -27,16 +27,25 @@ import {
 // Parça görünümü
 // ---------------------------------------------------------------------------
 
-const TileView = memo(function TileView({ t, selected, tiles, hc }: { t: Tile; selected: boolean; tiles?: Tile[]; hc: boolean }) {
+const TileView = memo(function TileView({ t, selected, tiles, hc, z }: { t: Tile; selected: boolean; tiles?: Tile[]; hc: boolean; z?: number }) {
   const def = getDef(t.type)
   if (!def) return null
   const tf = `translate(${round(t.x)} ${round(t.y)})${t.rot ? ` rotate(${round(t.rot)})` : ''}${t.flip ? ' scale(-1 1)' : ''}`
   return (
     <g data-tid={t.id} transform={tf} className={t.locked ? 'pp-tile locked' : 'pp-tile'}>
       {def.render(t, { selected, tiles, hc })}
+      {/* Her zaman tutulabilen tutamaklar parçanın kendi katmanında: üstteki parçalar onları örter */}
+      {z !== undefined &&
+        !t.locked &&
+        def.handles!(t)
+          .filter((h) => h.show === 'always')
+          .map((h) => <circle key={h.id} data-tid={t.id} data-handle={h.id} className="pp-handle" cx={h.x} cy={h.y} r={14 / z} fill="transparent" />)}
     </g>
   )
 })
+
+/** Parçanın her zaman görünen tutamağı var mı */
+const hasAlways = (t: Tile) => !!getDef(t.type)?.handles?.(t).some((h) => h.show === 'always')
 
 // ---------------------------------------------------------------------------
 // Kalem ayarları
@@ -553,6 +562,8 @@ export function Canvas() {
 
   function onPointerUp(e: React.PointerEvent) {
     if (!pointers.current.has(e.pointerId)) return
+    // Tarayıcı son hareket olaylarını birleştirmiş olabilir: bırakma konumunu da işle
+    if (e.type === 'pointerup' && gesture.current && gesture.current.k !== 'pinch' && gesture.current.k !== 'draw') onPointerMove(e)
     pointers.current.delete(e.pointerId)
     window.clearTimeout(longPress.current)
     const g = gesture.current
@@ -765,7 +776,7 @@ export function Canvas() {
         {canvasSize === 'infinite' ? <GridPattern grid={grid} view={view} /> : null}
         <g transform={`translate(${view.x} ${view.y}) scale(${view.z})`} filter={settings.handdrawn ? 'url(#pp-rough)' : undefined} className="pp-world">
           {tiles.map((t) => (
-            <TileView key={t.id} t={t} selected={selSet.has(t.id)} tiles={getDef(t.type)?.watch ? watchTiles : undefined} hc={hc} />
+            <TileView key={t.id} t={t} selected={selSet.has(t.id)} tiles={getDef(t.type)?.watch ? watchTiles : undefined} hc={hc} z={tool === 'move' && hasAlways(t) ? view.z : undefined} />
           ))}
           <path ref={live} fill="none" strokeLinejoin="round" style={{ pointerEvents: 'none' }} data-export="skip" />
           {draft && (
@@ -852,15 +863,12 @@ function Overlay({ tiles, sel, view, tool, editing, rotateOn }: { tiles: Tile[];
   const selected = tiles.filter((t) => set.has(t.id))
   const items: React.ReactNode[] = []
 
-  // Her zaman görünen tutamaklar (saat ibresi gibi)
-  for (const t of tiles) {
-    const def = getDef(t.type)
-    if (!def?.handles) continue
-    const isSel = set.has(t.id) && selected.length === 1
-    for (const h of def.handles(t)) {
-      if (h.show !== 'always' && !isSel) continue
-      if (tool !== 'move') continue
-      if (t.locked) continue
+  // Tek seçili parçanın tutamakları
+  const only = selected.length === 1 ? selected[0] : null
+  const odef = only && getDef(only.type)
+  if (only && odef?.handles && tool === 'move' && !only.locked) {
+    const t = only
+    for (const h of odef.handles(t)) {
       const p = sc(toWorld(t, h))
       items.push(
         <g key={`${t.id}:${h.id}`} data-tid={t.id} data-handle={h.id} className="pp-handle" transform={`translate(${p.x} ${p.y})`}>

@@ -125,7 +125,7 @@ const rectangle: TileDef = {
     return [{ x: -w, y: -h }, { x: w, y: -h }, { x: w, y: h }, { x: -w, y: h }]
   },
   bounds: (t) => ({ x: (-t.p.w * UNIT) / 2, y: (-t.p.h * UNIT) / 2, w: t.p.w * UNIT, h: t.p.h * UNIT }),
-  render: (t) => {
+  render: (t, ctx) => {
     const w = t.p.w * UNIT
     const h = t.p.h * UNIT
     const color = t.color ?? C.blue
@@ -139,7 +139,7 @@ const rectangle: TileDef = {
             strokeWidth={1}
           />
         )}
-        {t.p.sides && (
+        {t.p.sides && !ctx.thumb && (
           <>
             <Label y={-h / 2 - 11} size={12}>{fmt(t.p.w)}</Label>
             <Label x={w / 2 + 6} anchor="start" size={12}>{fmt(t.p.h)}</Label>

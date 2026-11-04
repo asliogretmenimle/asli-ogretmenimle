@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, LayoutGrid, Lightbulb, MessageCircleQuestion, Play, RotateCcw, Sparkles } from 'lucide-react'
-import { gradeInfo, grades, isGrade } from '../data/curriculum'
+import { ChevronLeft, LayoutGrid, Lightbulb, MessageCircleQuestion, Play, RotateCcw } from 'lucide-react'
+import { gradeInfo, isGrade } from '../data/curriculum'
 import type { Grade } from '../data/types'
 import { gameMeta, gameMetaById, gamesForGrade, type GameId, type GameMeta } from '../games/meta'
 import { games } from '../games/registry'
@@ -13,6 +13,7 @@ import { celebrate, sfx } from '../lib/feedback'
 import { SessionTracker } from '../lib/report'
 import { TrackerProvider } from '../lib/trackerContext'
 import { SendReport } from '../components/SendReport'
+import { CardGrid, EmptyState, FilterBar, ItemCard, PageHeader, gradeRange, useCatalogFilters } from '../components/Catalog'
 import NotFound from './NotFound'
 
 const GRADE_KEY = 'ao-grade'
@@ -43,69 +44,51 @@ function saveBest(id: GameId, g: Grade, r: GameResult) {
   }
 }
 
-export function GameCard({ m, grade }: { m: GameMeta; grade?: Grade }) {
-  const to = `/oyun/${m.id}${grade ? `?sinif=${grade}` : ''}`
+const GAME_KINDS = [
+  { id: 'kesfet', label: 'Keşfet ve inşa et' },
+  { id: 'strateji', label: 'Strateji oyunları' },
+]
+
+function GameItem({ m, grade }: { m: GameMeta; grade?: Grade | null }) {
   return (
-    <Link to={to} className="card group relative flex items-start gap-4 overflow-hidden p-4 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]">
-      <span className="absolute inset-y-0 left-0 w-1.5" style={{ background: m.color }} aria-hidden />
-      <span className="grid size-14 shrink-0 place-items-center rounded-2xl text-3xl transition group-hover:scale-110 group-hover:-rotate-6" style={{ background: `${m.color}18` }} aria-hidden>{m.emoji}</span>
-      <span className="min-w-0">
-        <span className="block text-lg leading-tight font-black">{m.name}</span>
-        <span className="mt-1 block text-sm font-semibold text-ink-soft">{grade && m.skills[grade] ? m.skills[grade] : m.description}</span>
-        <span className="mt-2 flex flex-wrap gap-1">
-          {grade ? (
-            <span className="chip" style={{ background: gradeInfo[grade].soft, color: gradeInfo[grade].ink }}>{gradeInfo[grade].label}</span>
-          ) : (
-            <span className="chip bg-paper text-ink-soft">{m.grades.length === 1 ? m.grades[0] : `${m.grades[0]}–${m.grades[m.grades.length - 1]}`}. sınıf</span>
-          )}
-        </span>
-      </span>
-    </Link>
+    <ItemCard
+      to={`/oyun/${m.id}${grade ? `?sinif=${grade}` : ''}`}
+      emoji={m.emoji}
+      title={m.name}
+      desc={(grade && m.skills[grade]) || m.description}
+      meta={grade ? gradeInfo[grade].label : gradeRange(m.grades)}
+    />
   )
 }
 
 export function GamesIndex() {
   usePageTitle('Oyunlar')
-  const [params, setParams] = useSearchParams()
-  const fromUrl = Number(params.get('sinif'))
-  const [stored] = useState(storedGrade)
-  const grade: Grade | null = isGrade(fromUrl) ? fromUrl : params.has('sinif') ? null : isGrade(stored) ? stored : null
-  const list = grade ? gamesForGrade(grade) : gameMeta
-
-  const choose = (g: Grade | null) => {
-    const p = new URLSearchParams(params)
-    p.set('sinif', g ? String(g) : 'hepsi')
-    setParams(p, { replace: true })
-  }
+  const f = useCatalogFilters()
+  const list = gameMeta.filter(
+    (m) =>
+      (!f.grade || m.grades.includes(f.grade)) &&
+      (!f.category || (f.category === 'kesfet') === Boolean(m.nextGen)) &&
+      f.matches(`${m.name} ${m.description} ${Object.values(m.skills).join(' ')}`),
+  )
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pt-8">
-      <h1 className="text-3xl font-black sm:text-4xl">Matematik Oyunları <span aria-hidden>🎮</span></h1>
-      <p className="mt-2 max-w-2xl font-semibold text-ink-soft">Köprü kur, kurabiye diz, şehir tasarla, gizemleri çöz… Her oyun seçtiğin sınıfa göre değişir; amaç hız değil, düşünmek ve farklı yollar keşfetmek.</p>
-      <div className="mt-6 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-        <button type="button" onClick={() => choose(null)} className={`chip shrink-0 px-3 py-1.5 text-sm ${!grade ? 'bg-ink text-white' : 'bg-white text-ink ring-1 ring-line'}`}>Tüm oyunlar</button>
-        {grades.map((g) => (
-          <button key={g} type="button" onClick={() => choose(g)} aria-pressed={grade === g} className="chip shrink-0 border px-3 py-1.5 text-sm transition" style={{ background: grade === g ? gradeInfo[g].color : '#fff', color: grade === g ? '#fff' : gradeInfo[g].ink, borderColor: `${gradeInfo[g].color}55` }}>
-            {gradeInfo[g].emoji} {gradeInfo[g].label}
-          </button>
-        ))}
-      </div>
-      {list.some((m) => m.nextGen) && (
-        <section className="mt-6">
-          <h2 className="mb-1 flex items-center gap-2 text-xl font-black"><Sparkles size={20} className="text-amber-500" />Keşfet ve inşa et</h2>
-          <p className="mb-3 text-sm font-semibold text-ink-soft">Tek doğru cevaba tıklamak yok: kur, dene, farklı yollar bul, nedenini açıkla.</p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {list.filter((m) => m.nextGen).map((m) => <GameCard key={m.id} m={m} grade={grade ?? undefined} />)}
-          </div>
-        </section>
-      )}
-      {list.some((m) => !m.nextGen) && (
-        <section className="mt-10">
-          <h2 className="mb-3 text-xl font-black">Strateji oyunları</h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {list.filter((m) => !m.nextGen).map((m) => <GameCard key={m.id} m={m} grade={grade ?? undefined} />)}
-          </div>
-        </section>
+    <div className="mx-auto max-w-6xl px-4 pt-8 sm:pt-10">
+      <PageHeader title="Matematik Oyunları" desc={`${gameMeta.length} oyun. Her oyun seçilen sınıfa göre zorlaşır; derste tahtada ya da öğrencinin kendi cihazında oynanır.`} />
+      <FilterBar
+        q={f.q}
+        onQ={f.setQ}
+        placeholder="Oyun ara: kesir, çarpma, açı…"
+        grade={f.grade}
+        onGrade={f.setGrade}
+        categories={GAME_KINDS}
+        category={f.category}
+        onCategory={f.setCategory}
+      />
+      <p className="mb-3 text-sm font-semibold text-ink-soft">{list.length} oyun</p>
+      {list.length ? (
+        <CardGrid>{list.map((m) => <GameItem key={m.id} m={m} grade={f.grade} />)}</CardGrid>
+      ) : (
+        <EmptyState onClear={f.clear} />
       )}
     </div>
   )
@@ -268,8 +251,8 @@ function GameView({ m }: { m: GameMeta }) {
             {others.length > 0 && (
               <div className="mt-10 w-full text-left">
                 <p className="mb-3 text-center text-sm font-extrabold text-ink-soft">Bunları da dene</p>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {others.map((o) => <GameCard key={o.id} m={o} grade={grade} />)}
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {others.map((o) => <GameItem key={o.id} m={o} grade={grade} />)}
                 </div>
               </div>
             )}

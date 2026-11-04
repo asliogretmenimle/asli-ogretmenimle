@@ -156,6 +156,8 @@ export interface SourceGroup {
   sources: Source[]
   /** Küçük resim kutusu en büyük kenarı (px) */
   max?: number
+  /** Her kaynak kendi başına kutuya sığdırılsın (yoksa grup içinde oranlar korunur) */
+  fit?: boolean
 }
 
 export interface Section {

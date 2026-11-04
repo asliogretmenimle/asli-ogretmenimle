@@ -19,6 +19,7 @@ export const SITE_NAME = 'Aslı Öğretmenimle'
 export const SITE_ALT_NAMES = ['Aslı Öğretmen', 'Aslı Öğretmenle', 'Aslı Öğretmenim', 'Aslı Hoca']
 export const OG_IMAGE = `${SITE_URL}/og-image.png`
 export const ONLINE_LESSON_PATH = '/online-ozel-ders'
+export const BOARD_PATH = '/tuval'
 
 export interface PageSeo {
   title: string
@@ -540,6 +541,23 @@ export function onlineLessonSeo(): PageSeo {
   }
 }
 
+export function boardSeo(): PageSeo {
+  const path = BOARD_PATH
+  const description = clip('Ücretsiz online matematik tuvali: örüntü blokları, tangram, onluk taban blokları, kesir şeritleri, cebir karoları, terazi, zar, saat, geometri araçları ve 80’den fazla sanal manipülatif tek ekranda. Tablette ve akıllı tahtada çalışır.')
+  return {
+    title: withBrand('Matematik Tuvali – Sanal Manipülatif Tahtası'),
+    description,
+    path,
+    jsonLd: graph(
+      learningResource({ path, name: 'Matematik Tuvali', description, type: 'Sanal manipülatif', grades: [...grades] }),
+      breadcrumb([
+        { name: 'Manipülatifler', path: '/manipulatifler' },
+        { name: 'Matematik Tuvali', path },
+      ]),
+    ),
+  }
+}
+
 export const privateSeo = (title: string, path: string): PageSeo => ({
   title: withBrand(title),
   description: homeSeo().description,
@@ -568,6 +586,7 @@ export function seoForPath(pathname: string, findActivity: (id: string) => Activ
     if (a === 'yaklasim') return approachSeo()
     if (a === GUIDES_PATH.slice(1)) return guidesIndexSeo()
     if (a === ONLINE_LESSON_PATH.slice(1)) return onlineLessonSeo()
+    if (a === BOARD_PATH.slice(1)) return boardSeo()
     if (a === 'rapor') return privateSeo('Öğrenci raporu', p)
     return null
   }

@@ -29,7 +29,7 @@ import { guides, guidesForOutcome, type Guide } from '../src/data/guides.ts'
 import { gameKeyword, interactionKeyword, outcomeKeyword, themeKeyword, toolKeyword } from '../src/data/seoKeywords.ts'
 import { generatorKind, runGenerator } from '../src/lib/generators.ts'
 import {
-  GUIDES_PATH, ONLINE_LESSON_PATH, SITE_NAME, abs, activityHeading, activitySeo, approachSeo, gameHeading, gameKw, gameSeo,
+  BOARD_PATH, GUIDES_PATH, ONLINE_LESSON_PATH, SITE_NAME, abs, boardSeo, activityHeading, activitySeo, approachSeo, gameHeading, gameKw, gameSeo,
   gamesIndexSeo, gradeSeo, guideSeo, guidesIndexSeo, homeSeo, interactionHeading, interactionKw, interactionSeo,
   interactionsIndexSeo, notFoundSeo, onlineLessonSeo, outcomeKw, plain, privateSeo, readyInteractions, stageLabel,
   themeHeading, themeKw, themeSeo, toolHeading, toolKw, toolSeo, toolsIndexSeo, typeLabel, type PageSeo,
@@ -528,6 +528,26 @@ add(
   ${h2('Hangi sınıflar için?')}${list(lessonLevels.map((l) => `<strong>${esc(l.t)}:</strong> ${esc(l.d)}`), 'mt-2 space-y-1 font-semibold')}
   ${p(grades.map((g) => link(`/sinif/${g}`, `${gradeInfo[g].label} matematik`)).join(' · '))}
   ${h2('Sık sorulan sorular')}${lessonFaq.map((f) => `<h3 class="mt-4 font-black">${esc(f.q)}</h3>${p(esc(f.a), 'mt-1 font-semibold text-ink-soft')}`).join('')}`,
+)
+
+add(
+  'manipulatif',
+  boardSeo(),
+  `${crumbs([{ name: 'Manipülatifler', path: '/manipulatifler' }, { name: 'Matematik Tuvali' }])}
+  <h1 class="text-3xl font-black sm:text-4xl">Matematik Tuvali</h1>
+  ${p('Sınırsız bir tuvalde 80’den fazla sanal manipülatif: parçaları kenar çubuğundan sürükleyin, döndürün, renklendirin; kalemle çizin, geometrik çizimler yapın, metin ve denklem ekleyin.', 'mt-3 text-lg font-bold')}`,
+  `${h2('Tuvalde neler var?')}${list(
+    [
+      '<strong>Geometri:</strong> örüntü blokları, çokgenler, poliominolar, tangram, Penrose ve Einstein karoları, beşgen döşemeleri, 3B cisimler, cetvel, iletki, gönye ve pergel.',
+      '<strong>Sayılar:</strong> onluk taban blokları, sayı çubukları, onluk çerçeve, sayı kartları, sayı doğrusu, asal çarpan daireleri, yüzlük tablo, abaküs ve patlayan noktalar.',
+      '<strong>Kesirler ve cebir:</strong> kesir şeritleri ve daireleri, cebir karoları, terazi, fonksiyon makinesi, koordinat düzlemi ve değişken kaydırıcıları.',
+      '<strong>Olasılık ve veri:</strong> zar, para, çark, rastgele sayı, grafikler, kutu grafiği ve oyun kâğıtları.',
+      '<strong>Uygulamalar:</strong> klavye ve müzik, mantık devreleri, satranç, paralar, saatler ve domino taşları.',
+    ],
+    'mt-2 space-y-1 font-semibold',
+  )}
+  ${p(`${link('/manipulatifler', 'Diğer sanal manipülatifler')} · ${link(BOARD_PATH, 'Matematik Tuvalini aç')}`)}`,
+  'matematik tuvali',
 )
 
 // İndekslenmeyen uygulama sayfası

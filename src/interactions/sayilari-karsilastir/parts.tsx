@@ -85,7 +85,7 @@ export function Drag({ dnd, item, label, className = '', children, disabled }: {
   const start = useRef<{ x: number; y: number; id: number; moved: boolean } | null>(null)
   const draggedAt = useRef(0)
   const [ghost, setGhost] = useState<Ghost | null>(null)
-  const [shake, setShake] = useState(0)
+  const [shake, setShake] = useState(false)
   const held = dnd.held === item
 
   const end = (ev: ReactPointerEvent) => {
@@ -103,7 +103,8 @@ export function Drag({ dnd, item, label, className = '', children, disabled }: {
     setGhost((g) => (g && r ? { ...g, phase: 'back', x: r.left + g.dx, y: r.top + g.dy } : null))
     window.setTimeout(() => {
       setGhost(null)
-      setShake((k) => k + 1)
+      setShake(true)
+      window.setTimeout(() => setShake(false), 450)
     }, 280)
   }
 
@@ -144,9 +145,9 @@ export function Drag({ dnd, item, label, className = '', children, disabled }: {
           ev.stopPropagation()
           if (!disabled && Date.now() - draggedAt.current > 350) dnd.tap(item)
         }}
-        className={`touch-none select-none ${ghost ? 'opacity-30 outline-2 outline-offset-2 outline-dashed outline-slate-400' : 'cursor-grab hover:-translate-y-0.5 hover:shadow-lg'} ${held ? 'ring-4 ring-sky-500' : ''} ${className}`}
+        className={`touch-none select-none [&_*]:touch-none ${ghost ? 'opacity-30 outline-2 outline-offset-2 outline-dashed outline-slate-400' : 'cursor-grab hover:-translate-y-0.5 hover:shadow-lg'} ${held ? 'ring-4 ring-sky-500' : ''} ${shake ? 'animate-shake' : ''} ${className}`}
       >
-        <span key={shake} className={`contents ${shake ? '[&>*]:animate-shake' : ''}`}>{children}</span>
+        {children}
       </button>
       {ghost &&
         createPortal(

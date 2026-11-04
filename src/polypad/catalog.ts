@@ -30,7 +30,7 @@ export const CATALOG: Category[] = [
             s('polygon', 'Düzgün altıgen', { shape: 'reg-hexagon' }),
             s('polygon', 'Düzgün yedigen', { shape: 'reg-heptagon' }),
             s('polygon', 'Düzgün sekizgen', { shape: 'reg-octagon' }),
-          ]),
+          ], { max: 56, fit: true }),
           g([
             s('polygon', 'Yamuk', { shape: 'trapezium' }),
             s('polygon', 'Eşkenar dörtgen', { shape: 'rhombus' }),
@@ -41,7 +41,7 @@ export const CATALOG: Category[] = [
             s('polygon', 'Ok ucu', { shape: 'chevron' }),
             s('polygon', 'Deltoid', { shape: 'kite' }),
             s('polygon', 'Ok', { shape: 'dart' }),
-          ]),
+          ], { max: 56, fit: true }),
           g(
             [
               s('rectangle', 'Dikdörtgen', {}, 'Dikdörtgen'),
@@ -107,7 +107,7 @@ export const CATALOG: Category[] = [
         key: 'pentagons',
         title: 'Beşgen Döşemeleri',
         groups: [
-          g(range(1, 15).map((i) => s('polygon', `Beşgen döşemesi ${i}`, { shape: `pentagon-${i}` })), { max: 64 }),
+          g(range(1, 15).map((i) => s('polygon', `Beşgen döşemesi ${i}`, { shape: `pentagon-${i}` })), { max: 56, fit: true }),
           g(
             [
               s('polygon', 'Prizmatik', { shape: 'pentagon-16' }, 'Prizmatik'),

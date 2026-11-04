@@ -1,7 +1,7 @@
 import { Suspense, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { ChevronLeft, LayoutGrid, Lightbulb, MessageCircleQuestion, Play, RotateCcw } from 'lucide-react'
-import { gradeInfo, grades, isGrade } from '../data/curriculum'
+import { gradeInfo, isGrade } from '../data/curriculum'
 import type { Grade } from '../data/types'
 import { interactionById, interactionMeta } from '../interactions/meta'
 import { interactions } from '../interactions/registry'
@@ -13,6 +13,7 @@ import { SendReport } from '../components/SendReport'
 import { SessionTracker } from '../lib/report'
 import { TrackerProvider } from '../lib/trackerContext'
 import { celebrate, sfx } from '../lib/feedback'
+import { CardGrid, EmptyState, FilterBar, ItemCard, PageHeader, gradeRange, useCatalogFilters } from '../components/Catalog'
 import NotFound from './NotFound'
 
 const GRADE_KEY = 'ao-grade'
@@ -24,71 +25,51 @@ const storedGrade = () => {
   }
 }
 
-const range = (g: Grade[]) => (g.length === 1 ? `${g[0]}` : `${g[0]}–${g[g.length - 1]}`)
-
-export function InteractionCard({ m, grade }: { m: InteractionMeta; grade?: Grade }) {
-  const to = `/etkilesim/${m.id}${grade ? `?sinif=${grade}` : ''}`
-  const body = (
-    <>
-      <span className="grid size-12 shrink-0 place-items-center rounded-2xl text-2xl transition group-hover:scale-110" style={{ background: `${m.color}18` }} aria-hidden>{m.emoji}</span>
-      <span className="min-w-0">
-        <span className="block leading-tight font-black">{m.name}</span>
-        <span className="mt-1 block text-sm font-semibold text-ink-soft">{grade && m.skills?.[grade] ? m.skills[grade] : m.description}</span>
-        <span className="mt-2 flex flex-wrap gap-1">
-          <span className="chip bg-paper text-ink-soft">{range(m.grades)}. sınıf</span>
-          {!m.ready && <span className="chip bg-amber-50 text-amber-700">Yakında</span>}
-        </span>
-      </span>
-    </>
-  )
-  if (!m.ready) return <div className="card flex items-start gap-3 p-4 opacity-60">{body}</div>
-  return (
-    <Link to={to} className="card group flex items-start gap-3 p-4 transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]">
-      {body}
-    </Link>
-  )
-}
+const CATEGORIES = (Object.keys(categoryInfo) as InteractionCategory[]).map((id) => ({ id, label: categoryInfo[id].label }))
 
 export function InteractionsIndex() {
   usePageTitle('Keşif Atölyesi')
-  const [params, setParams] = useSearchParams()
-  const fromUrl = Number(params.get('sinif'))
-  const [stored] = useState(storedGrade)
-  const grade: Grade | null = isGrade(fromUrl) ? fromUrl : params.has('sinif') ? null : isGrade(stored) ? stored : null
-  const list = grade ? interactionMeta.filter((m) => m.grades.includes(grade)) : interactionMeta
-  const choose = (g: Grade | null) => {
-    const p = new URLSearchParams(params)
-    p.set('sinif', g ? String(g) : 'hepsi')
-    setParams(p, { replace: true })
-  }
-  const cats = Object.keys(categoryInfo) as InteractionCategory[]
+  const f = useCatalogFilters()
+  const ready = interactionMeta.filter((m) => m.ready)
+  const list = ready
+    .filter(
+      (m) =>
+        (!f.grade || m.grades.includes(f.grade)) &&
+        (!f.category || m.category === f.category) &&
+        f.matches(`${m.name} ${m.description} ${Object.values(m.skills ?? {}).join(' ')} ${categoryInfo[m.category].label}`),
+    )
+    .sort((a, b) => a.no - b.no)
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pt-8">
-      <h1 className="text-3xl font-black sm:text-4xl">Keşif Atölyesi <span aria-hidden>🔬</span></h1>
-      <p className="mt-2 max-w-2xl font-semibold text-ink-soft">Kısa, tekrar kullanılabilir ve tek bir matematiksel fikri keşfetmeye odaklanan etkinlikler. Her birinin kendi linki var; öğretmen doğrudan öğrencilere gönderebilir.</p>
-      <div className="mt-6 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-        <button type="button" onClick={() => choose(null)} className={`chip shrink-0 px-3 py-1.5 text-sm ${!grade ? 'bg-ink text-white' : 'bg-white text-ink ring-1 ring-line'}`}>Tüm sınıflar</button>
-        {grades.map((g) => (
-          <button key={g} type="button" onClick={() => choose(g)} aria-pressed={grade === g} className="chip shrink-0 border px-3 py-1.5 text-sm transition" style={{ background: grade === g ? gradeInfo[g].color : '#fff', color: grade === g ? '#fff' : gradeInfo[g].ink, borderColor: `${gradeInfo[g].color}55` }}>
-            {gradeInfo[g].emoji} {gradeInfo[g].label}
-          </button>
-        ))}
-      </div>
-      <div className="mt-6 space-y-10">
-        {cats.map((c) => {
-          const items = list.filter((m) => m.category === c).sort((a, b) => Number(b.ready) - Number(a.ready) || a.no - b.no)
-          if (!items.length) return null
-          return (
-            <section key={c}>
-              <h2 className="mb-3 flex items-center gap-2 text-xl font-black"><span className="size-3 rounded-full" style={{ background: categoryInfo[c].color }} />{categoryInfo[c].label}</h2>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {items.map((m) => <InteractionCard key={m.id} m={m} grade={grade ?? undefined} />)}
-              </div>
-            </section>
-          )
-        })}
-      </div>
+    <div className="mx-auto max-w-6xl px-4 pt-8 sm:pt-10">
+      <PageHeader title="Etkileşimler" desc={`${ready.length} kısa keşif etkinliği. Her biri tek bir matematiksel fikre odaklanır; linkini doğrudan öğrencilere gönderebilirsiniz.`} />
+      <FilterBar
+        q={f.q}
+        onQ={f.setQ}
+        placeholder="Etkileşim ara: alan, oran, olasılık…"
+        grade={f.grade}
+        onGrade={f.setGrade}
+        categories={CATEGORIES}
+        category={f.category}
+        onCategory={f.setCategory}
+      />
+      <p className="mb-3 text-sm font-semibold text-ink-soft">{list.length} etkileşim</p>
+      {list.length ? (
+        <CardGrid>
+          {list.map((m) => (
+            <ItemCard
+              key={m.id}
+              to={`/etkilesim/${m.id}${f.grade ? `?sinif=${f.grade}` : ''}`}
+              emoji={m.emoji}
+              title={m.name}
+              desc={(f.grade && m.skills?.[f.grade]) || m.description}
+              meta={`${gradeRange(m.grades)} · ${categoryInfo[m.category].label}`}
+            />
+          ))}
+        </CardGrid>
+      ) : (
+        <EmptyState onClear={f.clear} />
+      )}
     </div>
   )
 }
@@ -135,11 +116,11 @@ function InteractionView({ m }: { m: InteractionMeta }) {
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-30 border-b border-line/70 bg-paper/90 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-3 sm:h-16 sm:px-4">
-          <Link to={`/etkilesimler?sinif=${grade}`} className="grid size-11 shrink-0 place-items-center rounded-xl text-ink-soft ring-1 ring-line hover:bg-white" aria-label="Keşif Atölyesine dön">
+          <Link to={`/etkilesimler?sinif=${grade}`} className="grid size-11 shrink-0 place-items-center rounded-xl text-ink-soft ring-1 ring-line hover:bg-white" aria-label="Etkileşimlere dön">
             <ChevronLeft size={22} />
           </Link>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[11px] font-extrabold sm:text-xs" style={{ color: categoryInfo[m.category].color }}>Keşif Atölyesi · {categoryInfo[m.category].label}</p>
+            <p className="truncate text-[11px] font-extrabold sm:text-xs" style={{ color: categoryInfo[m.category].color }}>Etkileşimler · {categoryInfo[m.category].label}</p>
             <h1 className="truncate text-base leading-tight font-black sm:text-lg"><span aria-hidden>{m.emoji}</span> {m.name}</h1>
           </div>
           <ShareButton title={m.name} className="max-sm:[&>span]:hidden" />
@@ -208,7 +189,7 @@ function InteractionView({ m }: { m: InteractionMeta }) {
             <div className="mt-5 flex w-full justify-center"><SendReport tracker={tracker} reflectQ={m.reflect} compact /></div>
             <div className="mt-6 flex w-full max-w-md flex-col gap-3 sm:flex-row">
               <button type="button" onClick={start} className="btn-primary flex-1"><RotateCcw size={18} />Yeniden keşfet</button>
-              <Link to={`/etkilesimler?sinif=${grade}`} className="btn-ghost flex-1"><LayoutGrid size={18} />Tüm keşifler</Link>
+              <Link to={`/etkilesimler?sinif=${grade}`} className="btn-ghost flex-1"><LayoutGrid size={18} />Tüm etkileşimler</Link>
             </div>
           </div>
         )}
