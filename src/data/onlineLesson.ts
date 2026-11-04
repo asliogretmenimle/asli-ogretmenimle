@@ -8,21 +8,21 @@
  * docs.google.com/forms/... biçimindeki tam adres verilirse form sayfanın altına da gömülür;
  * forms.gle kısa linki verilirse yalnızca düğmeler formu yeni sekmede açar.
  */
-export const LESSON_FORM_URL = 'https://forms.gle/BURAYA-GOOGLE-FORM-LINKI'
+export const LESSON_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSd4L6v2T0r8e4bV_a4p8QFMGDEUTjyao8DykD1N9My4HOHISg/viewform'
 
 export const lessonAreas = ['Antakya', 'Samandağ', 'Hatay'] as const
 
 export const lessonIntro =
-  'Aslı Öğretmen, Hatay’da Antakya ve Samandağ’daki öğrencilere internet üzerinden birebir online matematik dersi veriyor. Dersler 1. sınıftan 8. sınıfa kadar, Türkiye Yüzyılı Maarif Modeli matematik öğretim programına uygun ve öğrencinin kendi hızına göre ilerler.'
+  'Aslı Öğretmen, Hatay’da Antakya ve Samandağ’daki öğrencilere internet üzerinden birebir ya da 3–4 kişilik küçük gruplar hâlinde online matematik dersi veriyor. Dersler 1. sınıftan 8. sınıfa kadar, Türkiye Yüzyılı Maarif Modeli matematik öğretim programına uygun ve öğrencinin kendi hızına göre ilerler.'
 
 export const lessonHero = {
-  kicker: 'Birebir · Online · 1–8. sınıf',
+  kicker: 'Birebir ve küçük grup · Online · 1–8. sınıf',
   title: 'Çocuğunuz matematiği ezberlemesin, gerçekten anlasın.',
-  lead: 'Aslı Öğretmen ile birebir online matematik dersinde çocuğunuz evinden katılır, kendi hızında ilerler ve “anlamadım” demekten çekinmez. Konular modellerle, oyunlarla ve somut araçlarla önce anlaşılır, sonra pekiştirilir.',
+  lead: 'Aslı Öğretmen ile birebir ya da 3–4 kişilik küçük grup online matematik derslerinde çocuğunuz evinden katılır, kendi hızında ilerler ve “anlamadım” demekten çekinmez. Konular modellerle, oyunlarla ve somut araçlarla önce anlaşılır, sonra pekiştirilir.',
   promise: 'Ön kayıt 1 dakika sürer, ücretsizdir ve hiçbir yükümlülük getirmez. Formu doldurun, Aslı Öğretmen sizinle iletişime geçsin.',
 }
 
-export const lessonTrust = ['Yalnızca birebir', '1–8. sınıf + LGS', 'Maarif Modeli’ne uygun', 'Evden katılım', 'Veliye düzenli bilgi']
+export const lessonTrust = ['Birebir ya da 3–4 kişilik grup', '1–8. sınıf + LGS', 'Maarif Modeli’ne uygun', 'Evden katılım', 'Veliye düzenli bilgi']
 
 /** “Bu cümleler tanıdık mı?” bölümü: velinin kendini tanıdığı anlar */
 export const lessonPains = [
@@ -44,9 +44,9 @@ export const lessonPersonas = [
   {
     id: 'yeni',
     label: 'Online özel dersi ilk kez duyuyorum',
-    title: 'Kısaca: öğretmen sadece sizin çocuğunuz için ders yapar, sadece ekran üzerinden.',
-    body: 'Online birebir ders, bildiğiniz özel dersin evinizden yapılan hâlidir. Çocuğunuz bilgisayar, tablet ya da telefonla görüntülü olarak bağlanır; Aslı Öğretmen ekranda modeller, şekiller ve sanal araçlarla konuyu onunla birlikte çalışır. Sınıfta 30 kişiden biri değil, derste tek öğrencidir.',
-    points: ['Yol, servis, bekleme yok', 'Ders boyunca bütün ilgi çocuğunuzda', 'Kurulum gerekmez, bağlantı linki yeterli'],
+    title: 'Kısaca: öğretmen yalnızca çocuğunuzla ya da 3–4 kişilik küçük bir grupla ders yapar, ekran üzerinden.',
+    body: 'Online ders, bildiğiniz özel dersin evinizden yapılan hâlidir. Çocuğunuz bilgisayar, tablet ya da telefonla görüntülü olarak bağlanır; Aslı Öğretmen ekranda modeller, şekiller ve sanal araçlarla konuyu onunla birlikte çalışır. Sınıfta 30 kişiden biri değil; derste ya tek öğrencidir ya da 3–4 kişilik küçük bir grubun parçasıdır.',
+    points: ['Yol, servis, bekleme yok', 'Birebir ya da en fazla 4 kişilik grup', 'Kurulum gerekmez, bağlantı linki yeterli'],
     cta: 'Bilgi almak için ön kayıt bırakın',
     more: { href: '#nasil', label: 'Adım adım nasıl işliyor?' },
   },
@@ -63,7 +63,7 @@ export const lessonPersonas = [
     id: 'supheli',
     label: 'Duydum ama online dersin işe yarayacağından emin değilim',
     title: 'Şüpheniz çok haklı. Bu yüzden önce görüşüyoruz.',
-    body: 'Online dersin verimi; birebir olup olmamasına, öğretmenin yöntemine ve çocuğun aktif tutulmasına bağlıdır. Aslı Öğretmen’in derslerinde çocuk izleyici değil, ekranda kendisi yapan, söyleyen, açıklayan kişidir. Kayıt bırakmanız sizi hiçbir şeye bağlamaz: önce ihtiyacı konuşur, sonra karar verirsiniz.',
+    body: 'Online dersin verimi; grubun küçüklüğüne, öğretmenin yöntemine ve çocuğun aktif tutulmasına bağlıdır. Aslı Öğretmen’in derslerinde çocuk izleyici değil, ekranda kendisi yapan, söyleyen, açıklayan kişidir. Kayıt bırakmanız sizi hiçbir şeye bağlamaz: önce ihtiyacı konuşur, sonra karar verirsiniz.',
     points: ['Pasif dinleme yok, çocuk sürekli aktif', 'Veli her aşamadan haberdar', 'Ön kayıt bağlayıcı değil'],
     cta: 'Önce konuşalım, sonra karar vereyim',
     more: { href: '#karsilastir', label: 'Kurs ve etütle karşılaştırın' },
@@ -72,7 +72,7 @@ export const lessonPersonas = [
     id: 'ilk-kez-supheli',
     label: 'Hiç denemedim, açıkçası pek güvenmiyorum',
     title: 'Bize inanmanızı beklemiyoruz. Önce kendiniz bakın.',
-    body: 'Aslı Öğretmen’in derslerde kullandığı yaklaşımın aynısı bu sitede ücretsiz: 800’den fazla etkinlik, matematik oyunları ve sanal manipülatifler. Çocuğunuzla birkaç tanesini birlikte deneyin; hoşunuza giderse birebir dersin bunun çok daha kişiye özel hâli olduğunu bilin.',
+    body: 'Aslı Öğretmen’in derslerde kullandığı yaklaşımın aynısı bu sitede ücretsiz: 800’den fazla etkinlik, matematik oyunları ve sanal manipülatifler. Çocuğunuzla birkaç tanesini birlikte deneyin; hoşunuza giderse derslerin bunun öğretmen eşliğinde, çocuğunuza göre uyarlanmış hâli olduğunu bilin.',
     points: ['Üyeliksiz, ücretsiz deneyin', 'Yöntemi önceden görün', 'Kayıt bırakmak sadece bir görüşme talebidir'],
     cta: 'Yöntemi beğendim, bilgi almak istiyorum',
     more: { href: '#deneyin', label: 'Ücretsiz araçları deneyin' },
@@ -81,17 +81,37 @@ export const lessonPersonas = [
     id: 'kararsiz',
     label: 'Güveniyorum ama karar veremiyorum',
     title: 'Matematikteki eksikler beklerken kapanmaz, büyür.',
-    body: 'Matematik üst üste kurulan bir derstir: bugün oturmayan kesirler yarın ondalıkları, oran-orantıyı ve denklemleri zorlaştırır. Birebir ders saatleri bir öğretmenin gününe sığdığı kadardır. Ön kayıt bırakmak size yer ayırmak ve konuşmak için bir adımdır; vazgeçmek her zaman serbesttir.',
+    body: 'Matematik üst üste kurulan bir derstir: bugün oturmayan kesirler yarın ondalıkları, oran-orantıyı ve denklemleri zorlaştırır. Ders saatleri ve grup kontenjanları bir öğretmenin gününe sığdığı kadardır. Ön kayıt bırakmak size yer ayırmak ve konuşmak için bir adımdır; vazgeçmek her zaman serbesttir.',
     points: ['1 dakikalık form', 'Ücretsiz ve yükümlülüksüz', 'Uygun saatler dolmadan yer ayırtın'],
     cta: 'Şimdi ön kayıt bırakıyorum',
     more: { href: '#sss', label: 'Kalan sorularınız için SSS' },
   },
 ] as const
 
+/** Ders seçenekleri: birebir ve küçük grup */
+export const lessonFormats = [
+  {
+    e: '👩‍🏫',
+    t: 'Birebir ders',
+    tag: '1 öğrenci',
+    d: 'Ders tamamen çocuğunuza göre kurulur: onun eksikleri, onun hızı, onun soruları.',
+    points: ['Ders boyunca bütün ilgi tek öğrencide', 'Eksik konulara doğrudan odaklanma', 'Saat ve tempo öğrenciye göre'],
+    who: 'Belirgin eksikleri olan, kendine özel plan isteyen ya da LGS’ye yoğun hazırlanan öğrenciler için.',
+  },
+  {
+    e: '👧👦',
+    t: 'Küçük grup dersi',
+    tag: '3–4 öğrenci',
+    d: 'Benzer düzeydeki 3–4 öğrenciyle, herkesin söz aldığı küçük ve canlı bir ders ortamı.',
+    points: ['Kalabalık değil: herkes konuşur, herkes çözer', 'Arkadaşlarıyla birlikte düşünme ve tartışma', 'Akranından öğrenme, motivasyon'],
+    who: 'Konuları düzenli takip etmek, pekiştirmek ve arkadaşlarıyla birlikte öğrenmekten keyif alan öğrenciler için.',
+  },
+]
+
 /** Başlama süreci */
 export const lessonSteps = [
   { t: 'Formu doldurun', d: 'Öğrencinin sınıfı, zorlandığı konular ve uygun saatleriniz. Yaklaşık 1 dakika.' },
-  { t: 'Aslı Öğretmen sizi arasın', d: 'İhtiyacı birlikte konuşur, ders sıklığı ve ücret hakkında net bilgi alırsınız.' },
+  { t: 'Aslı Öğretmen sizi arasın', d: 'İhtiyacı birlikte konuşur; birebir mi grup mu, ders sıklığı ve ücret hakkında net bilgi alırsınız.' },
   { t: 'Eksikleri birlikte bulalım', d: 'İlk derslerde öğrencinin nerede takıldığı tespit edilir ve ona özel bir yol çizilir.' },
   { t: 'Düzenli ders, görünür ilerleme', d: 'Belirlenen saatlerde dersler yapılır; veli gelişmeden düzenli olarak haberdar edilir.' },
 ]
@@ -106,24 +126,24 @@ export const lessonFlow = [
 ]
 
 export const lessonHighlights = [
-  { e: '👩‍🏫', t: 'Birebir ders', d: 'Her ders yalnızca bir öğrenciyle yapılır; anlatım, soru ve tekrar tamamen çocuğunuzun ihtiyacına göre şekillenir.' },
+  { e: '👩‍🏫', t: 'Birebir ya da küçük grup', d: 'Dersler tek öğrenciyle ya da en fazla 3–4 kişilik gruplarla yapılır; anlatım, soru ve tekrar öğrencinin ihtiyacına göre şekillenir.' },
   { e: '💻', t: 'İnternet üzerinden', d: 'Öğrenci evinden bilgisayar, tablet ya da telefonla katılır. Yol, servis ve zaman kaybı olmaz.' },
   { e: '🧩', t: 'Anlayarak öğrenme', d: 'Ezber yerine model, oyun ve sanal manipülatiflerle önce “neden”i keşfeder, sonra işleme geçeriz.' },
   { e: '📍', t: 'Hatay’dan öğrencilere', d: 'Antakya ve Samandağ başta olmak üzere Hatay’daki ilkokul ve ortaokul öğrencileri için.' },
 ]
 
-/** Karşılaştırma tablosu: birebir online ders, kalabalık kurs/etüt, tek başına çalışma */
+/** Karşılaştırma tablosu: birebir ya da küçük grup online ders, kalabalık kurs/etüt, tek başına çalışma */
 export const lessonCompare = {
-  cols: ['Birebir online ders', 'Kalabalık kurs / etüt', 'Tek başına çalışma'],
+  cols: ['Birebir / 3–4 kişilik grup', 'Kalabalık kurs / etüt', 'Tek başına çalışma'],
   rows: [
-    { t: 'Öğretmenin ilgisi', v: ['Ders boyunca yalnızca öğrencide', 'Sınıfa bölünür', 'Yok'] },
+    { t: 'Öğretmenin ilgisi', v: ['Tek öğrenciye ya da 3–4 kişiye', 'Sınıfa bölünür', 'Yok'] },
     { t: 'İlerleme hızı', v: ['Öğrencinin hızında', 'Sınıfın ortalamasında', 'Takılınca durur'] },
-    { t: 'Soru sorma rahatlığı', v: ['Çekinme yok', 'Çoğu çocuk çekinir', 'Soracak kimse yok'] },
+    { t: 'Soru sorma rahatlığı', v: ['Küçük ortamda çekinme yok', 'Çoğu çocuk çekinir', 'Soracak kimse yok'] },
     { t: 'Eksik konu tespiti', v: ['Kişiye özel', 'Genel', 'Fark edilmez'] },
     { t: 'Yol ve zaman', v: ['Evden, kayıpsız', 'Gidiş-dönüş gerekir', 'Evden'] },
     { t: 'Veliye geri bildirim', v: ['Düzenli', 'Sınırlı', 'Yok'] },
   ],
-  /** Her satırda hangi sütunun “iyi” sayıldığı: 0 birebir ders */
+  /** Her satırda hangi sütunun “iyi” sayıldığı: 0 Aslı Öğretmen’in dersleri */
   good: [[0], [0], [0], [0], [0, 2], [0]],
 }
 
@@ -135,11 +155,11 @@ export const lessonLevels = [
 export const lessonFaq = [
   {
     q: 'Online özel ders nasıl yapılıyor?',
-    a: 'Dersler internet üzerinden, görüntülü ve birebir yapılır. Öğrenci evinden bilgisayar, tablet ya da telefonla katılır; konu, ekranda modeller ve sanal manipülatiflerle birlikte çalışılır.',
+    a: 'Dersler internet üzerinden, görüntülü olarak birebir ya da 3–4 kişilik küçük gruplar hâlinde yapılır. Öğrenci evinden bilgisayar, tablet ya da telefonla katılır; konu, ekranda modeller ve sanal manipülatiflerle birlikte çalışılır.',
   },
   {
     q: 'Online ders yüz yüze ders kadar verimli olur mu?',
-    a: 'Birebir yapıldığı ve öğrenci ders boyunca aktif tutulduğu sürece evet. Öğretmen, öğrencinin ekrandaki her adımını görür, hatayı anında yakalar. Yol ve hazırlık süresi olmadığı için dersin tamamı öğrenmeye ayrılır.',
+    a: 'Birebir ya da küçük grupla yapıldığı ve öğrenci ders boyunca aktif tutulduğu sürece evet. Öğretmen, öğrencinin ekrandaki her adımını görür, hatayı anında yakalar. Yol ve hazırlık süresi olmadığı için dersin tamamı öğrenmeye ayrılır.',
   },
   {
     q: 'Çocuğum ekran başında dikkatini toplayabilir mi?',
@@ -150,8 +170,12 @@ export const lessonFaq = [
     a: '1. sınıftan 8. sınıfa kadar tüm ilkokul ve ortaokul öğrencilerine, Türkiye Yüzyılı Maarif Modeli matematik öğretim programına uygun ders verilir. Ortaokulda LGS hazırlığı da yapılır.',
   },
   {
+    q: 'Birebir mi, grup dersi mi seçmeliyim?',
+    a: 'Belirgin eksikleri olan ya da kendine özel bir plan gereken öğrenciler için birebir ders daha uygundur. Konuları düzenli takip edip pekiştirmek isteyen, arkadaşlarıyla birlikte daha istekli çalışan öğrenciler için 3–4 kişilik grup dersi iyi bir seçenektir. Karar veremediyseniz ön kayıttan sonraki görüşmede birlikte belirleriz.',
+  },
+  {
     q: 'Ders ücreti ne kadar?',
-    a: 'Ücret; sınıf düzeyi ve haftalık ders sayısına göre belirlenir. Ön kayıt formunu doldurduğunuzda Aslı Öğretmen sizinle iletişime geçer ve net bilgi verir. Ön kayıt ücretsizdir, sizi hiçbir şeye bağlamaz.',
+    a: 'Ücret; ders türüne (birebir ya da grup), sınıf düzeyine ve haftalık ders sayısına göre belirlenir. Ön kayıt formunu doldurduğunuzda Aslı Öğretmen sizinle iletişime geçer ve net bilgi verir. Ön kayıt ücretsizdir, sizi hiçbir şeye bağlamaz.',
   },
   {
     q: 'Ne gerekiyor? Özel bir program kurmak zorunda mıyız?',
@@ -163,7 +187,7 @@ export const lessonFaq = [
   },
   {
     q: 'Antakya ve Samandağ’da yüz yüze ders yerine neden online ders?',
-    a: 'Online derste yol ve zaman kaybı olmaz, ders evin rahat ortamında yapılır. Birebir olduğu için öğretmen, öğrencinin nerede zorlandığını anında görür ve dersi ona göre yönlendirir.',
+    a: 'Online derste yol ve zaman kaybı olmaz, ders evin rahat ortamında yapılır. Birebir ya da küçük grup olduğu için öğretmen, her öğrencinin nerede zorlandığını anında görür ve dersi ona göre yönlendirir.',
   },
   {
     q: 'Ön kayıt bıraktıktan sonra vazgeçebilir miyim?',

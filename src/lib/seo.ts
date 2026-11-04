@@ -515,7 +515,7 @@ export function onlineLessonSeo(): PageSeo {
   const path = ONLINE_LESSON_PATH
   return {
     title: 'Online Matematik Özel Ders – Hatay, Antakya, Samandağ | Aslı Öğretmen',
-    description: 'Aslı Öğretmen ile internet üzerinden birebir online matematik özel dersi. Hatay’da Antakya ve Samandağ’daki 1–8. sınıf öğrencileri için, Maarif Modeli’ne uygun.',
+    description: 'Aslı Öğretmen ile internet üzerinden birebir ya da 3–4 kişilik grup online matematik özel dersi. Hatay’da Antakya ve Samandağ’daki 1–8. sınıf öğrencileri için, Maarif Modeli’ne uygun.',
     path,
     jsonLd: graph(
       ...siteGraph,
@@ -523,7 +523,7 @@ export function onlineLessonSeo(): PageSeo {
         '@type': 'Service',
         '@id': `${abs(path)}#service`,
         url: abs(path),
-        name: 'Online Birebir Matematik Özel Ders',
+        name: 'Online Birebir ve Grup Matematik Özel Ders',
         serviceType: 'Online matematik özel ders',
         description: lessonIntro,
         provider: { '@id': TEACHER_ID },

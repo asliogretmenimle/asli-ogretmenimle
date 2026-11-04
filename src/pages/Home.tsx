@@ -230,7 +230,7 @@ function Landing() {
         <Link to={ONLINE_LESSON_PATH} className="group flex flex-col rounded-3xl bg-brand-soft p-6 ring-1 ring-brand/10 transition hover:shadow-[var(--shadow-lift)] sm:p-8">
           <img src="/asli-220.webp" alt="" width={56} height={56} className="size-14 rounded-full ring-4 ring-white" />
           <h2 className="mt-4 text-xl font-extrabold text-ink">Birebir online özel ders</h2>
-          <p className="mt-1 text-sm font-semibold text-ink-soft">Aslı Öğretmen’le 1–8. sınıf matematik, LGS hazırlık ve konu tekrarı.</p>
+          <p className="mt-1 text-sm font-semibold text-ink-soft">Aslı Öğretmen’le birebir ya da 3–4 kişilik grup: 1–8. sınıf matematik, LGS hazırlık ve konu tekrarı.</p>
           <span className="mt-auto inline-flex items-center gap-1 pt-5 text-sm font-bold text-brand-ink">Ayrıntılar <ArrowRight size={15} className="transition group-hover:translate-x-1" /></span>
         </Link>
       </section>

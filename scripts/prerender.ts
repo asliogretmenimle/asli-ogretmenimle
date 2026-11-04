@@ -24,7 +24,7 @@ import { toolMeta, type ToolMeta } from '../src/manipulatives/meta.ts'
 import { inTopic, topicsByGrade } from '../src/data/topics.ts'
 import type { InteractionMeta } from '../src/interactions/types.ts'
 import { categoryInfo } from '../src/interactions/types.ts'
-import { lessonAreas, lessonFaq, lessonFlow, lessonHero, lessonHighlights, lessonIntro, lessonLevels, lessonPains, lessonPersonas, lessonSteps } from '../src/data/onlineLesson.ts'
+import { lessonAreas, lessonFaq, lessonFlow, lessonFormats, lessonHero, lessonHighlights, lessonIntro, lessonLevels, lessonPains, lessonPersonas, lessonSteps } from '../src/data/onlineLesson.ts'
 import { guides, guidesForOutcome, type Guide } from '../src/data/guides.ts'
 import { gameKeyword, interactionKeyword, outcomeKeyword, themeKeyword, toolKeyword } from '../src/data/seoKeywords.ts'
 import { generatorKind, runGenerator } from '../src/lib/generators.ts'
@@ -522,15 +522,16 @@ add(
   onlineLessonSeo(),
   `${crumbs([{ name: 'Online Özel Ders' }])}
   <p class="text-sm font-extrabold text-brand-ink">${lessonAreas.map(esc).join(' · ')}</p>
-  <h1 class="text-3xl font-black sm:text-4xl">Aslı Öğretmen ile online birebir matematik özel dersi</h1>
+  <h1 class="text-3xl font-black sm:text-4xl">Aslı Öğretmen ile online birebir ve grup matematik özel dersi</h1>
   ${p(esc(lessonHero.title), 'mt-3 text-lg font-bold')}
   ${p(esc(lessonIntro), 'mt-3 text-lg font-semibold')}
   ${p(esc(lessonHero.lead))}
   ${h2('Bu cümleler size tanıdık geliyor mu?')}${list(lessonPains.map(esc), 'mt-2 space-y-1 font-semibold')}
   ${lessonPersonas.map((x) => `<h3 class="mt-4 font-black">${esc(x.label)}</h3>${p(`<strong>${esc(x.title)}</strong> ${esc(x.body)}`, 'mt-1 font-semibold text-ink-soft')}`).join('')}
+  ${h2('İki ders seçeneği, aynı yöntem')}${lessonFormats.map((f) => `<h3 class="mt-4 font-black">${esc(f.t)} (${esc(f.tag)})</h3>${p(`${esc(f.d)} ${esc(f.who)}`, 'mt-1 font-semibold text-ink-soft')}`).join('')}
   ${h2('4 adımda başlıyoruz')}${list(lessonSteps.map((s) => `<strong>${esc(s.t)}:</strong> ${esc(s.d)}`), 'mt-2 list-decimal space-y-1 pl-5 font-semibold')}
   ${h2('Bir ders nasıl geçer?')}${list(lessonFlow.map((f) => `<strong>${esc(f.t)}:</strong> ${esc(f.d)}`), 'mt-2 list-decimal space-y-1 pl-5 font-semibold')}
-  ${h2('Birebir online ders nasıl işler?')}${list(lessonHighlights.map((h) => `<strong>${esc(h.t)}:</strong> ${esc(h.d)}`), 'mt-2 space-y-1 font-semibold')}
+  ${h2('Online ders nasıl işler?')}${list(lessonHighlights.map((h) => `<strong>${esc(h.t)}:</strong> ${esc(h.d)}`), 'mt-2 space-y-1 font-semibold')}
   ${h2('Hangi sınıflar için?')}${list(lessonLevels.map((l) => `<strong>${esc(l.t)}:</strong> ${esc(l.d)}`), 'mt-2 space-y-1 font-semibold')}
   ${p(grades.map((g) => link(`/sinif/${g}`, `${gradeInfo[g].label} matematik`)).join(' · '))}
   ${h2('Sık sorulan sorular')}${lessonFaq.map((f) => `<h3 class="mt-4 font-black">${esc(f.q)}</h3>${p(esc(f.a), 'mt-1 font-semibold text-ink-soft')}`).join('')}`,

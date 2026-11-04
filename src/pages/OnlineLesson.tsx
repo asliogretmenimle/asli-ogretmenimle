@@ -4,7 +4,7 @@ import { ArrowRight, Blocks, Check, ChevronDown, Clock, FlaskConical, Gamepad2, 
 import { usePageTitle } from '../components/Layout'
 import { gradeInfo, grades } from '../data/curriculum'
 import {
-  LESSON_FORM_URL, lessonAreas, lessonCompare, lessonFaq, lessonFlow, lessonHero, lessonLevels, lessonPains, lessonPersonas, lessonSteps, lessonTrust,
+  LESSON_FORM_URL, lessonAreas, lessonCompare, lessonFaq, lessonFlow, lessonFormats, lessonHero, lessonLevels, lessonPains, lessonPersonas, lessonSteps, lessonTrust,
 } from '../data/onlineLesson'
 
 const TOOLS = [
@@ -91,7 +91,7 @@ export default function OnlineLesson() {
           ))}
         </ul>
         <p className="mt-4 rounded-2xl bg-ok-soft p-4 font-bold text-ink">
-          İyi haber: bunların hepsi, doğru yöntem ve birebir ilgiyle düzelir. Birebir derste çocuk kalabalığın içinde kaybolmaz; nerede takıldığı bulunur ve tam oradan başlanır.
+          İyi haber: bunların hepsi, doğru yöntem ve yakın ilgiyle düzelir. Birebir ya da 3–4 kişilik derste çocuk kalabalığın içinde kaybolmaz; nerede takıldığı bulunur ve tam oradan başlanır.
         </p>
       </Section>
 
@@ -141,6 +141,32 @@ export default function OnlineLesson() {
         </div>
       </Section>
 
+      {/* Ders seçenekleri */}
+      <Section id="secenekler" title="İki ders seçeneği, aynı yöntem" desc="Çocuğunuza hangisi uyuyorsa onu seçin. Karar veremezseniz görüşmede birlikte belirleriz.">
+        <div className="grid gap-3 md:grid-cols-2">
+          {lessonFormats.map((f) => (
+            <div key={f.t} className="card flex flex-col p-5 sm:p-6">
+              <div className="flex items-center gap-3">
+                <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-soft text-2xl" aria-hidden>{f.e}</span>
+                <h3 className="text-xl font-black">{f.t}</h3>
+                <span className="chip ml-auto bg-ink px-3 py-1 text-sm text-white">{f.tag}</span>
+              </div>
+              <p className="mt-3 font-semibold text-ink-soft">{f.d}</p>
+              <ul className="mt-4 space-y-2">
+                {f.points.map((t) => (
+                  <li key={t} className="flex items-center gap-2 font-bold">
+                    <Check size={18} className="shrink-0 text-ok" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 rounded-xl bg-paper p-3 text-sm font-semibold text-ink"><strong>Kimler için:</strong> {f.who}</p>
+              <FormButton className="mt-5 self-start">{f.t} için ön kayıt</FormButton>
+            </div>
+          ))}
+        </div>
+      </Section>
+
       {/* Başlama süreci */}
       <Section id="nasil" title="4 adımda başlıyoruz" desc="Hiçbir şeyi bilmeniz ya da hazırlamanız gerekmiyor. İlk adım sadece bir form.">
         <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -173,7 +199,7 @@ export default function OnlineLesson() {
       </Section>
 
       {/* Karşılaştırma */}
-      <Section id="karsilastir" title="Neden birebir online ders?" desc="Kurs, etüt ya da tek başına çalışmayla yan yana koyduğunuzda fark kendini gösteriyor.">
+      <Section id="karsilastir" title="Neden birebir ya da küçük grup?" desc="Kurs, etüt ya da tek başına çalışmayla yan yana koyduğunuzda fark kendini gösteriyor.">
         <div className="card overflow-x-auto p-0">
           <table className="w-full min-w-[560px] text-left text-sm">
             <thead>
@@ -239,7 +265,7 @@ export default function OnlineLesson() {
           ))}
         </div>
         <p className="mt-4 font-semibold text-ink-soft">
-          Beğendiyseniz şunu bilin: birebir derste bu araçlar, çocuğunuzun eksiklerine göre seçilir ve öğretmen eşliğinde kullanılır.
+          Beğendiyseniz şunu bilin: derslerde bu araçlar, çocuğunuzun eksiklerine göre seçilir ve öğretmen eşliğinde kullanılır.
         </p>
       </Section>
 
@@ -262,7 +288,7 @@ export default function OnlineLesson() {
       <section id="kayit" className="mt-14 scroll-mt-20 overflow-hidden rounded-3xl bg-ink p-6 text-white sm:mt-16 sm:p-10" aria-labelledby="kayit-baslik">
         <p className="flex items-center gap-1.5 text-sm font-extrabold text-amber-300">
           <Clock size={16} />
-          Birebir ders saatleri sınırlıdır
+          Ders saatleri ve grup kontenjanları sınırlıdır
         </p>
         <h2 id="kayit-baslik" className="mt-2 max-w-2xl text-2xl font-black tracking-tight sm:text-4xl">Bir dönem daha “belki düzelir” diye beklemeyin.</h2>
         <p className="mt-3 max-w-2xl font-semibold text-white/80">
