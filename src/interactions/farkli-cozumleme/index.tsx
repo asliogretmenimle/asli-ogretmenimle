@@ -60,7 +60,7 @@ export default function FarkliCozumleme({ grade, onFinish }: InteractionProps) {
 
   const props = { onDone: done, last }
   return (
-    <Scene grade={grade}>
+    <Scene grade={grade} className="select-none [-webkit-touch-callout:none]">
       <Header
         emoji={end ? '📒' : t.emoji}
         kicker={end ? 'Tamamlandı' : 'Görev'}
@@ -92,7 +92,21 @@ export default function FarkliCozumleme({ grade, onFinish }: InteractionProps) {
 interface TaskProps { onDone: Done; last: boolean }
 
 /** Görev içi düşündüren soru. nudge deneme sayacına yazar; tell yalnızca yol gösterir (keşifte serbest deneme cezalanmaz). */
+/** Panel tuvalin yanında mı (lg ve üstü)? Değilse ipucu, parmağın olduğu tuvalin içinde gösterilir. */
+function useWide() {
+  const q = '(min-width: 1024px)'
+  const [wide, setWide] = useState(() => window.matchMedia(q).matches)
+  useEffect(() => {
+    const m = window.matchMedia(q)
+    const on = () => setWide(m.matches)
+    m.addEventListener('change', on)
+    return () => m.removeEventListener('change', on)
+  }, [])
+  return wide
+}
+
 function useSay(checks: ReturnType<typeof useChecks>) {
+  const wide = useWide()
   const [say, setSay] = useState<Say>(null)
   const [wrong, setWrong] = useState<number | null>(null)
   const show = (q: string, opts: { mis?: string; at?: number }) => {
@@ -112,7 +126,8 @@ function useSay(checks: ReturnType<typeof useChecks>) {
       return show(q, opts)
     },
     tell: (q: string, opts: { mis?: string; at?: number } = {}) => show(q, opts),
-    view: () => (say ? <Nudge key={say.k} question={say.q} misconception={say.mis} /> : null),
+    /** Geniş ekranda panelde, dar ekranda tuvalde: tek bir yerde gösterilir (yanılgı raporuna bir kez yazılsın) */
+    view: (spot: 'work' | 'panel') => (say && (spot === 'panel') === wide ? <Nudge key={say.k} question={say.q} misconception={say.mis} /> : null),
   }
 }
 
@@ -144,6 +159,11 @@ function Reveal({ children }: { children: ReactNode }) {
   return <div ref={ref} className="flex flex-col gap-3 scroll-mt-20">{children}</div>
 }
 
+/** Kart tepsisi dar ekranda ekranın altına yapışır: hedefe kaydırırken kartlar elinin altında kalır */
+function Sticky({ children }: { children: ReactNode }) {
+  return <div className="sticky bottom-2 z-20 rounded-2xl shadow-[0_-8px_24px_-12px_rgb(15_23_42/0.35)] lg:static lg:shadow-none">{children}</div>
+}
+
 /* ───────────── 1. Kur ve boz ───────────── */
 
 function BreakTask({ onDone, last }: TaskProps) {
@@ -173,7 +193,7 @@ function BreakTask({ onDone, last }: TaskProps) {
     setCounts(c)
     if (keyOf(c) === keyOf(START)) {
       sfx.ok()
-      window.setTimeout(() => setPhase('h'), 700)
+      setPhase('h')
     }
   }
 
@@ -199,6 +219,7 @@ function BreakTask({ onDone, last }: TaskProps) {
           {building && <PartsBox dnd={dnd} />}
           <Equation key={keyOf(counts)} counts={counts} flash={!building} />
           <Mat counts={counts} dnd={dnd} wrong={s.wrong} locked={!building && want === null} movable={building ? [0, 1, 2] : [1, 2]} bundles={!building} />
+          {s.view('work')}
         </Stage>
       }
       panel={
@@ -206,7 +227,7 @@ function BreakTask({ onDone, last }: TaskProps) {
           {building && <Prompt step={`Kur: ${TARGET}`}>Önce <b>254</b> sayısını kur. Parça kutusundan blokları tutup kendi sütununa sürükle: kaç yüzlük, kaç onluk, kaç birlik gerekir? Fazla koyduğun bloğu kutuya geri sürükle.</Prompt>}
           {phase === 'h' && <Reveal><Prompt step="Boz">Tuvalde 254 var: 2 yüzlük, 5 onluk, 4 birlik. Şimdi <b>yüzlükler</b> yığınına dokun ve bir yüzlüğü hemen sağındaki <b>onluklar</b> sütununa sürükle. Ne olacağını tahmin et!</Prompt></Reveal>}
           {phase === 'o' && <Reveal><Prompt step="Bir daha boz">Şimdi <b>onluklar</b> yığınına dokun ve bir onluğu <b>birlikler</b> sütununa sürükle.</Prompt></Reveal>}
-          {s.view()}
+          {s.view('panel')}
           {phase === 'ask1' && (
             <Reveal>
               <Prompt step="Ne oldu?">Yüzlük kayboldu mu? Onluklar sütununa bak: 5 onluk vardı, şimdi {counts[1]} onluk var.</Prompt>
@@ -308,6 +329,7 @@ function TargetsTask({ onDone, last }: TaskProps) {
         <Stage className="space-y-3 p-3 sm:p-4">
           <Equation key={keyOf(counts)} counts={counts} flash />
           <Mat counts={counts} dnd={dnd} wrong={s.wrong} locked={phase !== 'play'} />
+          {s.view('work')}
           <div className="flex justify-end">
             <button type="button" onClick={() => { s.clear(); setCounts(START) }} disabled={phase !== 'play'} className="inline-flex min-h-14 items-center gap-2 rounded-2xl bg-white px-4 text-base font-black text-ink shadow-[0_3px_0_#cbd5e1] ring-2 ring-line hover:bg-slate-50 disabled:opacity-40">
               <RotateCcw size={18} /> Baştan: 2 yüzlük + 5 onluk + 4 birlik
@@ -335,7 +357,7 @@ function TargetsTask({ onDone, last }: TaskProps) {
               })}
             </ul>
           </Card>
-          {s.view()}
+          {s.view('panel')}
           <Card>
             <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-black tracking-wide text-amber-700 uppercase"><BookOpen size={14} />Çözümleme defterim · {found.length} farklı</p>
             <ol className="max-h-56 space-y-1 overflow-y-auto pr-1">
@@ -461,17 +483,20 @@ function MissingTask({ onDone, last }: TaskProps) {
               )
             })}
           </ul>
+          {s.view('work')}
           {!complete && (
+            <Sticky>
             <Tray title="Sayı kartları">
               {CARDS.map((v, i) => (used.includes(i) ? null : <Drag key={i} dnd={dnd} item={`card-${i}`} label={`${v} kartı`} className={TOKEN}>{v}</Drag>))}
             </Tray>
+            </Sticky>
           )}
         </Stage>
       }
       panel={
         <>
           <Prompt step={`${Object.keys(filled).length} / ${GAPS.length}`}>Her satır 254’ün bir çözümlemesi ama bir parçası eksik. Doğru sayı kartını tutup <b>?</b> kutusuna sürükle. Önce bilinen parçaların kaç ettiğini hesapla.</Prompt>
-          {s.view()}
+          {s.view('panel')}
           {complete && (
             <Reveal>
               <RulesFound rules={rules} />
@@ -541,7 +566,9 @@ function SortTask({ onDone, last }: TaskProps) {
             {basket('yes', '✓ 254 eder', 'border-emerald-400 bg-emerald-50 text-emerald-800')}
             {basket('no', '✗ 254 etmez', 'border-slate-300 bg-slate-50 text-slate-600')}
           </div>
+          {s.view('work')}
           {!complete && (
+            <Sticky>
             <Tray title="Çözümleme kartları">
               {SORT.map((c, i) => (where[i] ? null : (
                 <Drag key={i} dnd={dnd} item={`sc-${i}`} label={words(c)} className="min-h-14 rounded-2xl bg-white px-3 py-2 text-left text-base font-black text-ink shadow-[0_3px_0_#cbd5e1] ring-2 ring-line">
@@ -549,13 +576,14 @@ function SortTask({ onDone, last }: TaskProps) {
                 </Drag>
               )))}
             </Tray>
+            </Sticky>
           )}
         </Stage>
       }
       panel={
         <>
           <Prompt step={`${Object.keys(where).length} / ${SORT.length}`}>Her kartın değerini hesapla. Toplamı 254 ise kartı <b>“254 eder”</b>, değilse <b>“254 etmez”</b> sepetine sürükle.</Prompt>
-          {s.view()}
+          {s.view('panel')}
           {complete && (
             <Reveal>
               <RulesFound rules={rules} />

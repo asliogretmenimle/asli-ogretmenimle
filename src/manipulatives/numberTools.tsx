@@ -35,11 +35,13 @@ export const base10: ToolDef<B> = {
   initial: () => ({ th: 0, h: 0, t: 0, o: 0 }),
   check: (v, t) => total(v) === n(t, 'value'),
   Component: ({ value, onChange, config, target, locked }) => {
+    // decimal: yüzlük kare = 1 bütün, onluk çubuk = 0,1, birlik küp = 0,01
+    const dec = !!config.decimal && config.maxPlace !== 'thousands'
     const places: { k: keyof B; label: string; color: string; unit: number }[] = [
       ...(config.maxPlace === 'thousands' ? [{ k: 'th' as const, label: 'Binlik', color: '#6366f1', unit: 1000 }] : []),
-      { k: 'h', label: 'Yüzlük', color: '#ea580c', unit: 100 },
-      { k: 't', label: 'Onluk', color: '#16a34a', unit: 10 },
-      { k: 'o', label: 'Birlik', color: '#ca8a04', unit: 1 },
+      { k: 'h', label: dec ? 'Birler' : 'Yüzlük', color: '#ea580c', unit: 100 },
+      { k: 't', label: dec ? 'Onda birler' : 'Onluk', color: '#16a34a', unit: 10 },
+      { k: 'o', label: dec ? 'Yüzde birler' : 'Birlik', color: '#ca8a04', unit: 1 },
     ]
     const upd = (k: keyof B, d: number) => !locked && onChange({ ...value, [k]: Math.max(0, Math.min(k === 'o' || k === 't' ? 20 : 9, value[k] + d)) })
     const breakDown = (k: keyof B) => {
@@ -74,7 +76,7 @@ export const base10: ToolDef<B> = {
         <ToolButton onClick={group} disabled={locked || (value.o < 10 && value.t < 10 && !(value.h >= 10 && config.maxPlace === 'thousands'))}>10’lu grupla</ToolButton>
         {!target && (
           <Readout>
-            {places.filter((p) => value[p.k] > 0).map((p) => fmt(value[p.k] * p.unit)).join(' + ') || '0'} = {fmt(total(value))}
+            {places.filter((p) => value[p.k] > 0).map((p) => dec ? fmtPlain(value[p.k] * p.unit / 100, 2) : fmt(value[p.k] * p.unit)).join(' + ') || '0'} = {dec ? fmtPlain(total(value) / 100, 2) : fmt(total(value))}
           </Readout>
         )}
       </div>

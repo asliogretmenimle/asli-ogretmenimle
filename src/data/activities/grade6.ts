@@ -1160,6 +1160,7 @@ export const grade6: Activity[] = [
     },
     reflect: 'Bir onluk çubuk neden 0,1’i gösteriyor? 10 tane onluk çubuk yan yana gelince ne oluşur?',
     tool: 'base10',
+    config: { decimal: true },
     tasks: [
       { prompt: '1,35’i oluştur.', target: { value: 135 }, hints: ['1 bütün için hangi bloğu kullanmalısın?', '0,35 kaç onda bir ve kaç yüzde birden oluşur?'], explain: '1,35 = 1 + [[3/10]] + [[5/100]]: 1 yüzlük kare, 3 onluk çubuk, 5 birlik küp.' },
       { prompt: '0,7’yi oluştur.', target: { value: 70 }, hints: ['0,7 kaç onda birdir?'], explain: '0,7 = [[7/10]]: 7 onluk çubuk. Aynı miktarı 70 birlik küple de gösterebilirdin: [[7/10]] = [[70/100]].' },

@@ -202,6 +202,8 @@ export interface ManipulativeConfig {
   frames?: 1 | 2
   /** base10: gösterilecek blok türleri */
   maxPlace?: 'hundreds' | 'thousands'
+  /** base10: ondalık mod — yüzlük = 1 bütün, onluk = 0,1, birlik = 0,01 (etiketler: Birler / Onda birler / Yüzde birler) */
+  decimal?: boolean
   /** money: kullanılabilecek paralar (TL) */
   coins?: number[]
   /** clock: sadece tam/yarım saat */
