@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { RotateCcw } from 'lucide-react'
 import type { InteractionProps } from '../types'
 import { Scene } from '../../games/kit2'
@@ -6,7 +6,7 @@ import { starsFor } from '../../games/kit'
 import { sfx } from '../../lib/feedback'
 import { Card, Header, NextButton, Prompt, Split, Stage, pick, useChecks } from '../donusum-studyosu/ortak'
 import { Drag, DragAsk, Drop, HowTo, RulesFound, useDnd, type Tool, type ToolInfo } from '../sayilari-karsilastir/parts'
-import { BOX, EndView, GroupView, Ledger, Reveal, SKIN, SORT_TOOL, SortBins, StaticGroups, Sticky, TOOLS, useGroup, useSay, type Box, type SayApi, type Skin, type SortItem } from '../sepetlere-grupla/sepet'
+import { BOX, EndView, GroupView, Ledger, Reveal, SKIN, SORT_TOOL, SortBins, StaticGroups, Sticky, TOOLS, useGroup, useSay, type Box, type Skin, type SortItem } from '../sepetlere-grupla/sepet'
 import { SHARE_TOOLS, ShareView, amountText, useShare, useShareDnd } from './paylas'
 
 /**
@@ -118,7 +118,7 @@ function Division({ N, q, r }: { N: number; q: number; r: number }) {
   )
 }
 
-function Story({ children }: { children: React.ReactNode }) {
+function Story({ children }: { children: ReactNode }) {
   return <Prompt step="Hikâye">{children}</Prompt>
 }
 
@@ -599,4 +599,3 @@ function PoseTask({ onDone, last, setup, ledger }: TaskProps) {
   )
 }
 
-export type { SayApi }
