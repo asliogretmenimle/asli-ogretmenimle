@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { BookOpen, ChevronLeft, ChevronRight } from 'lucide-react'
 import { usePageTitle } from '../components/Layout'
-import { guideBySlug, guides, type Guide } from '../data/guides'
+import { guideBands, guideBySlug, guides, type Guide } from '../data/guides'
 import { activityGrade, loadGrade } from '../data/activityStore'
 import { gradeInfo, isGrade } from '../data/curriculum'
 import type { Activity } from '../data/types'
@@ -23,19 +23,27 @@ export function GuidesIndex() {
       <p className="mt-3 max-w-3xl text-lg font-semibold text-ink-soft">
         En çok merak edilen matematik sorularına kısa ve örnekli cevaplar. Her rehberin sonunda konuyu deneyerek pekiştirebileceğin etkinlikler, oyunlar ve sanal manipülatifler var.
       </p>
-      <ul className="mt-8 grid gap-3 sm:grid-cols-2">
-        {guides.map((g) => (
-          <li key={g.slug}>
-            <Link to={`${GUIDES_PATH}/${g.slug}`} className="card flex h-full items-start gap-3 p-4 transition hover:-translate-y-0.5">
-              <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-brand-soft text-brand-ink"><BookOpen size={20} /></span>
-              <span>
-                <span className="block font-black text-ink">{g.title}</span>
-                <span className="mt-1 block text-sm font-semibold text-ink-soft">{range(g.grades)}. sınıf</span>
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {guideBands.map((band) => {
+        const list = band.guides()
+        return list.length ? (
+          <section key={band.title} className="mt-10">
+            <h2 className="text-xl font-black">{band.title}</h2>
+            <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+              {list.map((g) => (
+                <li key={g.slug}>
+                  <Link to={`${GUIDES_PATH}/${g.slug}`} className="card flex h-full items-start gap-3 p-4 transition hover:-translate-y-0.5">
+                    <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-brand-soft text-brand-ink"><BookOpen size={20} /></span>
+                    <span>
+                      <span className="block font-black text-ink">{g.title}</span>
+                      <span className="mt-1 block text-sm font-semibold text-ink-soft">{range(g.grades)}. sınıf</span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null
+      })}
     </div>
   )
 }

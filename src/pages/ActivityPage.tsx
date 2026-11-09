@@ -7,6 +7,7 @@ import type { Activity, ActivityType } from '../data/types'
 import type { EngineProps } from '../engine/common'
 import { ShareButton } from '../components/ShareButton'
 import { SoundToggle, usePageTitle } from '../components/Layout'
+import { outcomeKw } from '../lib/seo'
 import { StageBadge, TypeBadge } from '../components/meta'
 import { VisualView } from '../components/Visual'
 import { MathText } from '../components/MathText'
@@ -83,10 +84,12 @@ function ActivityView({ a, list }: { a: Activity; list: Activity[] }) {
           <Link to={backTo} className="grid size-10 shrink-0 place-items-center rounded-xl text-ink-soft ring-1 ring-line hover:bg-white" aria-label="Geri dön">
             <ChevronLeft size={22} />
           </Link>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[11px] font-extrabold sm:text-xs" style={{ color: info.ink }}>{info.label}{theme ? ` · ${theme.title}` : ''}</p>
-            <h1 className="truncate text-base leading-tight font-black sm:text-lg">{a.title}</h1>
-          </div>
+          {/* H1 = sınıf + aranan konu adı + etkinlik adı: sayfanın <title>'ıyla aynı anahtar kelimeyi taşır */}
+          <h1 className="min-w-0 flex-1">
+            <span className="block truncate text-[11px] font-extrabold sm:text-xs" style={{ color: info.ink }}>{info.label} {outcomeKw(a.outcomes[0]) || theme?.title || 'Matematik'}</span>
+            <span className="sr-only"> · </span>
+            <span className="block truncate text-base leading-tight font-black sm:text-lg">{a.title}</span>
+          </h1>
           <ShareButton title={a.title} className="max-sm:[&>span]:hidden" />
           <SoundToggle />
         </div>

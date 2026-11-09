@@ -9,6 +9,7 @@ import type { GameResult } from '../games/kit'
 import { ShareButton } from '../components/ShareButton'
 import { MathText } from '../components/MathText'
 import { SoundToggle, usePageTitle } from '../components/Layout'
+import { gameKw } from '../lib/seo'
 import { celebrate, sfx } from '../lib/feedback'
 import { SessionTracker } from '../lib/report'
 import { TrackerProvider } from '../lib/trackerContext'
@@ -152,10 +153,11 @@ function GameView({ m }: { m: GameMeta }) {
           <Link to={`/oyunlar?sinif=${grade}`} className="grid size-10 shrink-0 place-items-center rounded-xl text-ink-soft ring-1 ring-line hover:bg-white" aria-label="Oyunlara dön">
             <ChevronLeft size={22} />
           </Link>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[11px] font-bold text-ink-soft sm:text-xs">Oyunlar · {info.label}</p>
-            <h1 className="truncate text-base leading-tight font-black sm:text-lg"><span aria-hidden>{m.emoji}</span> {m.name}</h1>
-          </div>
+          <h1 className="min-w-0 flex-1">
+            <span className="block truncate text-[11px] font-bold text-ink-soft sm:text-xs">{gameKw(m)} · {info.label}</span>
+            <span className="sr-only">: </span>
+            <span className="block truncate text-base leading-tight font-black sm:text-lg"><span aria-hidden>{m.emoji}</span> {m.name}</span>
+          </h1>
           <ShareButton title={m.name} className="max-sm:[&>span]:hidden" />
           <SoundToggle />
         </div>

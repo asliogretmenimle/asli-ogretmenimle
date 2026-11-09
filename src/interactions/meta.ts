@@ -64,7 +64,17 @@ import { meta as m84 } from './us-oruntu-tablosu/meta'
 import { meta as m85 } from './sayilari-karsilastir/meta'
 import { meta as m86 } from './elde-ve-bozma/meta'
 import { meta as m87 } from './farkli-cozumleme/meta'
+import { meta as m88 } from './toplama-cikarma-hikayeleri/meta'
+import { meta as m89 } from './zihinden-toplama-cikarma/meta'
+import { meta as m90 } from './carpmaya-giris/meta'
+import { meta as m91 } from './bolmeye-giris/meta'
+import { meta as m92 } from './blok-birlestirme/meta'
+import { meta as m93 } from './carpma-dikdortgeni/meta'
+import { meta as m94 } from './sepetlere-grupla/meta'
+import { meta as m95 } from './pasta-paylasimi/meta'
+import { meta as m96 } from './kalani-yorumla/meta'
+import { meta as m97 } from './parcala-birlestir-dizisi/meta'
 
-export const interactionMeta: InteractionMeta[] = [m22, m23, m24, m25, m26, m27, m29, m30, m31, m32, m33, m34, m35, m36, m37, m38, m39, m40, m41, m42, m43, m44, m45, m46, m47, m48, m49, m50, m51, m52, m53, m54, m55, m56, m57, m58, m59, m60, m61, m62, m63, m64, m65, m66, m67, m68, m69, m70, m71, m72, m73, m74, m75, m76, m77, m78, m79, m80, m81, m82, m83, m84, m85, m86, m87]
+export const interactionMeta: InteractionMeta[] = [m22, m23, m24, m25, m26, m27, m29, m30, m31, m32, m33, m34, m35, m36, m37, m38, m39, m40, m41, m42, m43, m44, m45, m46, m47, m48, m49, m50, m51, m52, m53, m54, m55, m56, m57, m58, m59, m60, m61, m62, m63, m64, m65, m66, m67, m68, m69, m70, m71, m72, m73, m74, m75, m76, m77, m78, m79, m80, m81, m82, m83, m84, m85, m86, m87, m88, m89, m90, m91, m92, m93, m94, m95, m96, m97]
 
 export const interactionById = Object.fromEntries(interactionMeta.map((m) => [m.id, m])) as Record<string, InteractionMeta>

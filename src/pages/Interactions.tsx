@@ -9,6 +9,7 @@ import { categoryInfo, type InteractionCategory, type InteractionMeta } from '..
 import { ShareButton } from '../components/ShareButton'
 import { MathText } from '../components/MathText'
 import { SoundToggle, usePageTitle } from '../components/Layout'
+import { interactionKw } from '../lib/seo'
 import { SendReport } from '../components/SendReport'
 import { SessionTracker } from '../lib/report'
 import { TrackerProvider } from '../lib/trackerContext'
@@ -120,10 +121,11 @@ function InteractionView({ m }: { m: InteractionMeta }) {
           <Link to={`/etkilesimler?sinif=${grade}`} className="grid size-11 shrink-0 place-items-center rounded-xl text-ink-soft ring-1 ring-line hover:bg-white" aria-label="Etkileşimlere dön">
             <ChevronLeft size={22} />
           </Link>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[11px] font-bold text-ink-soft sm:text-xs">Etkileşimler · {categoryInfo[m.category].label}</p>
-            <h1 className="truncate text-base leading-tight font-black sm:text-lg"><span aria-hidden>{m.emoji}</span> {m.name}</h1>
-          </div>
+          <h1 className="min-w-0 flex-1">
+            <span className="block truncate text-[11px] font-bold text-ink-soft sm:text-xs">{interactionKw(m)} · {categoryInfo[m.category].label}</span>
+            <span className="sr-only">: </span>
+            <span className="block truncate text-base leading-tight font-black sm:text-lg"><span aria-hidden>{m.emoji}</span> {m.name}</span>
+          </h1>
           <ShareButton title={m.name} className="max-sm:[&>span]:hidden" />
           <SoundToggle />
         </div>

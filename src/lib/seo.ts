@@ -13,6 +13,7 @@ import type { ManipulativeTool } from '../data/types'
 import { lessonFaq, lessonIntro } from '../data/onlineLesson'
 import { gameKeyword, interactionKeyword, outcomeKeyword, themeKeyword, toolKeyword } from '../data/seoKeywords'
 import { guideBySlug, guides, guidesUpdated, type Guide } from '../data/guides'
+import { gradeContent } from '../data/gradeContent'
 
 export const SITE_URL = 'https://www.asliogretmenimle.com'
 export const SITE_NAME = 'Aslı Öğretmenimle'
@@ -124,6 +125,8 @@ const siteGraph = [
     image: OG_IMAGE,
     description: 'Aslı Öğretmen’in 1–8. sınıf matematik oyunları, etkinlikleri ve sanal manipülatifleri; Hatay, Antakya ve Samandağ’da online birebir matematik özel dersi.',
     areaServed,
+    address: { '@type': 'PostalAddress', addressLocality: 'Antakya', addressRegion: 'Hatay', addressCountry: 'TR' },
+    knowsLanguage: 'tr',
     founder: { '@id': TEACHER_ID },
   },
   teacher,
@@ -228,15 +231,34 @@ export function homeSeo(): PageSeo {
   }
 }
 
+/** Sınıfın konu adları (ünite sırasıyla) */
+export const gradeTopicNames = (g: Grade) => [...new Set(topicsByGrade[g]?.map((t) => t.title) ?? themesByGrade(g).map(themeKw))]
+
+/** Sınıf sayfasının sık sorulan soruları: konu listesi sorusu veriden, diğerleri data/gradeContent.ts'ten */
+export function gradeFaq(g: Grade) {
+  const label = gradeInfo[g].label
+  const names = gradeTopicNames(g)
+  return [
+    {
+      q: `${label} matematik konuları nelerdir?`,
+      a: `${label} matematik konuları (Maarif Modeli öğretim programına göre): ${names.join(', ')}. Sitede her konu için ücretsiz etkinlik, oyun ve sanal manipülatif bulunur.`,
+    },
+    ...gradeContent[g].faq,
+  ]
+}
+
 export function gradeSeo(g: Grade): PageSeo {
   const info = gradeInfo[g]
   const themes = themesByGrade(g)
   const path = `/sinif/${g}`
+  const faq = gradeFaq(g)
   return {
-    title: withBrand(`${info.label} Matematik Etkinlikleri ve Oyunları${g === 8 ? ' (LGS)' : ''}`),
-    description: clip(`${info.label} matematik konuları için ücretsiz interaktif etkinlik ve oyunlar: ${(topicsByGrade[g]?.map((t) => t.title) ?? themes.map(themeKw)).join(', ')}. Maarif Modeli’ne uygun.`),
+    // "6. sınıf matematik" ve "6. sınıf matematik konuları" aramalarının ikisini de karşılar
+    title: g === 8 ? `8. Sınıf Matematik Konuları ve Etkinlikleri (LGS)` : withBrand(`${info.label} Matematik Konuları, Etkinlikleri ve Oyunları`),
+    description: clip(`${info.label} matematik konuları: ${gradeTopicNames(g).join(', ')}. Ücretsiz etkinlik, oyun ve konu anlatımları.`),
     path,
     jsonLd: graph(
+      { '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
       {
         '@type': 'CollectionPage',
         '@id': `${abs(path)}#page`,

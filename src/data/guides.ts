@@ -1,5 +1,8 @@
 import type { Grade, ManipulativeTool } from './types'
 import type { GameId } from '../games/meta'
+import { guidesIlkokul } from './guidesIlkokul'
+import { guidesOrtaokul1 } from './guidesOrtaokul1'
+import { guidesOrtaokul2 } from './guidesOrtaokul2'
 
 /**
  * Konu rehberleri (/rehber/:slug): Google'da soru olarak aranan konuların kısa, örnekli anlatımı.
@@ -32,7 +35,7 @@ export interface Guide {
   interactions?: string[]
 }
 
-export const guides: Guide[] = [
+const baseGuides: Guide[] = [
   {
     slug: 'rasyonel-sayilar',
     title: 'Rasyonel Sayı Nedir? −2, 0, √2 ve π Rasyonel mi?',
@@ -873,8 +876,20 @@ export const guides: Guide[] = [
   },
 ]
 
+const minGrade = (g: Guide) => Math.min(...g.grades)
+
+/** Bütün rehberler, en küçük sınıfa göre sıralı (önceki/sonraki bağlantıları konu sırasını izlesin) */
+export const guides: Guide[] = [...baseGuides, ...guidesIlkokul, ...guidesOrtaokul1, ...guidesOrtaokul2].sort((a, b) => minGrade(a) - minGrade(b))
+
+/** Rehber dizininde (/rehber) gruplar */
+export const guideBands = [
+  { title: 'İlkokul (1–4. sınıf) konu anlatımları', guides: () => guides.filter((g) => minGrade(g) <= 4) },
+  { title: '5. ve 6. sınıf konu anlatımları', guides: () => guides.filter((g) => minGrade(g) === 5 || minGrade(g) === 6) },
+  { title: '7. ve 8. sınıf (LGS) konu anlatımları', guides: () => guides.filter((g) => minGrade(g) >= 7) },
+]
+
 /** Rehber metinlerinin son gözden geçirilme tarihi (yapılandırılmış veride dateModified) */
-export const guidesUpdated = '2026-11-04'
+export const guidesUpdated = '2026-11-09'
 
 export const guideBySlug = Object.fromEntries(guides.map((g) => [g.slug, g])) as Record<string, Guide>
 

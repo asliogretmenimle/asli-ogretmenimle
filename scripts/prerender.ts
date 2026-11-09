@@ -13,7 +13,8 @@
  * Ayrıca sitemap.xml, 404.html ve docs/seo-envanter.csv (her adresin başlık/açıklama/H1/kelime sayısı) üretir.
  * (vercel.json: cleanUrls → /oyun/balon ⇒ oyun/balon.html)
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { gradeInfo, grades, outcomeByCode, themes as allThemes, themesByGrade } from '../src/data/curriculum.ts'
@@ -25,12 +26,13 @@ import { inTopic, topicsByGrade } from '../src/data/topics.ts'
 import type { InteractionMeta } from '../src/interactions/types.ts'
 import { categoryInfo } from '../src/interactions/types.ts'
 import { lessonAreas, lessonFaq, lessonFlow, lessonFormats, lessonHero, lessonHighlights, lessonIntro, lessonLevels, lessonPains, lessonPersonas, lessonSteps } from '../src/data/onlineLesson.ts'
-import { guides, guidesForOutcome, type Guide } from '../src/data/guides.ts'
+import { guideBands, guides, guidesForOutcome, type Guide } from '../src/data/guides.ts'
 import { gameKeyword, interactionKeyword, outcomeKeyword, themeKeyword, toolKeyword } from '../src/data/seoKeywords.ts'
 import { generatorKind, runGenerator } from '../src/lib/generators.ts'
+import { gradeContent } from '../src/data/gradeContent.ts'
 import {
   BOARD_PATH, GUIDES_PATH, ONLINE_LESSON_PATH, SITE_NAME, abs, boardSeo, activityHeading, activitySeo, approachSeo, gameHeading, gameKw, gameSeo,
-  gamesIndexSeo, gradeSeo, guideSeo, guidesIndexSeo, homeSeo, interactionHeading, interactionKw, interactionSeo,
+  gamesIndexSeo, gradeFaq, gradeSeo, guideSeo, guidesIndexSeo, homeSeo, interactionHeading, interactionKw, interactionSeo,
   interactionsIndexSeo, notFoundSeo, onlineLessonSeo, outcomeKw, plain, privateSeo, readyInteractions, stageLabel,
   themeHeading, themeKw, themeSeo, toolHeading, toolKw, toolSeo, toolsIndexSeo, typeLabel, type PageSeo,
 } from '../src/lib/seo.ts'
@@ -164,7 +166,7 @@ function itemsOf(a: Activity): { kind: string; items: unknown[]; generated: bool
   return { kind: a.type, items: items ?? [], generated: false }
 }
 
-function samples(a: Activity): string {
+function samples(a: Activity, g: Grade, kw: string): string {
   if (a.type === 'categorize') {
     const rows = a.categories
       .map((c) => {
@@ -172,7 +174,7 @@ function samples(a: Activity): string {
         return its.length ? `<strong>${txt(c.label)}:</strong> ${esc(its.slice(0, 6).join(', '))}` : ''
       })
       .filter(Boolean)
-    return rows.length ? `${h2('Etkinlikteki gruplar ve örnekler')}${list(rows, 'mt-2 space-y-1 font-semibold')}` : ''
+    return rows.length ? `${h2(`${gradeInfo[g].label} ${kw || 'matematik'}: etkinlikteki gruplar ve örnekler`)}${list(rows, 'mt-2 space-y-1 font-semibold')}` : ''
   }
   const { kind, items, generated } = itemsOf(a)
   const anyCorrect = a.type === 'quiz' && a.anyCorrect
@@ -208,7 +210,9 @@ function samples(a: Activity): string {
     }
   }
   if (!out.length) return ''
-  const title = a.type === 'manipulative' ? 'Etkinlikteki görevler' : a.type === 'match' ? 'Etkinlikteki eşleştirmelerden örnekler' : 'Etkinlikteki sorulardan örnekler'
+  // "X soruları" / "X soruları ve cevapları" aramaları için konu adı başlıkta
+  const topic = `${gradeInfo[g].label} ${kw || 'matematik'}`
+  const title = a.type === 'manipulative' ? `${topic}: etkinlikteki görevler` : a.type === 'match' ? `${topic}: eşleştirme örnekleri` : `${topic} soruları ve cevapları`
   return `${h2(title)}${generated ? p('Sorular her açılışta yeniden üretilir; aşağıdakiler örnektir.', 'mt-1 text-sm font-semibold text-ink-soft') : ''}<ol class="mt-2 list-decimal space-y-3 pl-5">${out.map((o) => `<li>${o}</li>`).join('')}</ol>`
 }
 
@@ -230,7 +234,8 @@ add(
   ${h2('Sanal Manipülatifler')}${list(toolMeta.map(toolLink))}`,
   `${h2('Matematik konu anlatımları')}${p('En çok merak edilen sorulara kısa, örnekli cevaplar; her rehberde konuyu deneyerek pekiştirebileceğin etkinlikler var.')}${list(guides.map(guideLink))}
   ${h2('Sınıflara göre matematik konuları')}${grades.map((g) => `<h3 class="mt-4 font-black">${link(`/sinif/${g}`, `${gradeInfo[g].label} matematik`, 'hover:text-brand')}</h3>${list(themesByGrade(g).map(themeLink), 'mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm')}`).join('')}
-  ${h2('Ücretsiz online matematik araçları')}${list(toolMeta.map((t) => link(`/manipulatif/${t.id}`, toolKw(t))), 'mt-2 flex flex-wrap gap-x-4 gap-y-1')}`,
+  ${h2('Ücretsiz online matematik araçları')}${list(toolMeta.map((t) => link(`/manipulatif/${t.id}`, toolKw(t))), 'mt-2 flex flex-wrap gap-x-4 gap-y-1')}
+  ${h2('Hatay’da online matematik özel ders')}${p(`Aslı Öğretmen; Hatay’da Antakya, Samandağ ve çevresindeki 1–8. sınıf öğrencilerine ${link(ONLINE_LESSON_PATH, 'online birebir ve grup matematik özel dersi')} veriyor. Dersler bu sitedeki oyun, etkinlik ve sanal manipülatiflerle, Maarif Modeli öğretim programına uygun olarak işleniyor; ilkokulda temel kavramlar, ortaokulda konu eksikleri ve 8. sınıfta LGS matematik hazırlığı için.`)}`,
 )
 
 // ---------------------------------------------------------------------------
@@ -245,7 +250,7 @@ for (const g of grades) {
     'sinif',
     gradeSeo(g),
     `${crumbs([{ name: info.label }])}
-    <h1 class="text-3xl font-black sm:text-4xl">${esc(info.label)} Matematik Etkinlikleri ve Oyunları</h1>
+    <h1 class="text-3xl font-black sm:text-4xl">${esc(info.label)} Matematik Konuları, Etkinlikleri ve Oyunları</h1>
     ${p(`${esc(info.label)} matematik konuları için ${activitiesByGrade[g].length} ücretsiz etkinlik: ${(topicsByGrade[g]?.map((t) => t.title) ?? themes.map(themeKw)).map(esc).join(', ')}. Her konu, somut materyalle keşfetmekten problem çözmeye uzanan bir öğrenme yoluyla ilerler.`)}
     ${topicsByGrade[g]
       ? topicsByGrade[g]!
@@ -261,9 +266,12 @@ for (const g of grades) {
           .map((t) => `${h2(themeHeading(t))}${p(`${themeLink(t)} · ${t.topics.map(esc).join(', ')}`)}${list(themeActivities(t).map(activityLink))}`)
           .join('')}
     ${h2(`${info.label} Matematik Oyunları`)}${list(gamesForGrade(g).map((m) => `${link(`/oyun/${m.id}`, m.name)} <span class="text-ink-soft">– ${txt(m.skills[g] ?? m.description)}</span>`))}`,
-    `${h2(`${info.label} matematik konuları`)}${p(`${esc(info.label)} matematik dersinde işlenen konular ve her konu için interaktif etkinlik, oyun ve sanal manipülatifler:`)}
+    `${h2(`${info.label} matematik: bu yıl neler öğreniliyor?`)}${gradeContent[g].intro.map((x) => p(esc(x))).join('')}
+    ${h2(`${info.label} matematik konuları`)}${p(`${esc(info.label)} matematik dersinde işlenen konular ve her konu için interaktif etkinlik, oyun ve sanal manipülatifler:`)}
     ${list(themes.map((t) => `${themeLink(t)} <span class="text-ink-soft">– ${esc(t.outcomes.map((o) => outcomeKw(o.code)).join(', '))}</span>`), 'mt-2 space-y-1.5 font-semibold')}
-    ${section(`${info.label} konu anlatımları`, guides.filter((x) => x.grades.includes(g)).map(guideLink))}
+    ${section(`${info.label} konu anlatımları`, guides.filter((x) => x.grades.includes(g)).map((x) => `${guideLink(x)} <span class="text-ink-soft">– ${esc(x.description)}</span>`), 'mt-2 space-y-1.5 font-semibold')}
+    ${h2(`${info.label} matematiği evde ve derste nasıl çalışılır?`)}${list(gradeContent[g].tips.map(esc), 'mt-2 list-disc space-y-1 pl-5 font-semibold')}
+    ${h2(`${info.label} matematik: sık sorulan sorular`)}${gradeFaq(g).map((f) => `<h3 class="mt-4 font-black">${esc(f.q)}</h3>${p(esc(f.a), 'mt-1 font-semibold text-ink-soft')}`).join('')}
     ${section(`${info.label} matematik oyunları`, gamesForGrade(g).map((m) => `${link(`/oyun/${m.id}`, gameHeading(m))} <span class="text-ink-soft">– ${txt(m.skills[g] ?? m.description)}</span>`), 'mt-2 space-y-1.5 font-semibold')}
     ${section(`${info.label} için keşif etkinlikleri`, interactionsFor(codes).map(interactionLink))}`,
     `${info.label} matematik`,
@@ -324,7 +332,7 @@ for (const { a, g } of allActivities) {
     ${h2(`Etkinlik hakkında: ${heading}`)}
     ${p(`Bu ${esc(lower(typeLabel[a.type]))} etkinliği ${esc(info.label.toLocaleLowerCase('tr'))} matematik dersindeki <strong>${esc(lower(kw || 'matematik'))}</strong> konusunu ${a.stage ? `“${esc(stageLabel[a.stage])}” adımında ` : ''}çalıştırır. ${txt(a.instructions)} Ücretsizdir, üyelik gerektirmez; telefonda, tablette ve akıllı tahtada oynanır.`)}
     ${a.launch?.text ? `${h2('Başlarken')}${p(txt(a.launch.text))}` : ''}
-    ${samples(a)}
+    ${samples(a, g, kw)}
     ${h2('Öğrenme çıktıları')}${list(a.outcomes.map((c) => `<span class="font-mono text-xs font-bold">${esc(c)}</span> ${esc(outcomeKw(c))}: ${esc(outcomeByCode.get(c)?.title ?? '')}`), 'mt-2 space-y-1 font-semibold')}
     ${a.reflect ? `${h2('Düşün ve Paylaş')}${p(txt(a.reflect))}` : ''}
     ${section('Konu anlatımı', a.outcomes.flatMap(guidesForOutcome).filter((x, i, all) => all.indexOf(x) === i).map(guideLink))}
@@ -474,7 +482,7 @@ add(
   `${crumbs([{ name: 'Konu Anlatımları' }])}
   <h1 class="text-3xl font-black sm:text-4xl">Matematik Konu Anlatımları</h1>
   ${p('En çok merak edilen matematik sorularına kısa ve örnekli cevaplar. Her rehberin sonunda konuyu deneyerek pekiştirebileceğin etkinlikler, oyunlar ve sanal manipülatifler var.')}
-  ${list(guides.map((g) => `${guideLink(g)} <span class="text-ink-soft">(${range(g.grades)}. sınıf)</span>`), 'mt-4 space-y-2')}`,
+  ${guideBands.map((b) => section(b.title, b.guides().map((g) => `${guideLink(g)} <span class="text-ink-soft">(${range(g.grades)}. sınıf) – ${esc(g.description)}</span>`), 'mt-2 space-y-2 font-semibold')).join('')}`,
   '',
   'matematik konu anlatımı',
 )
@@ -598,15 +606,61 @@ for (const { seo, body } of pages) {
 // Bilinmeyen yollar: gerçek 404 durum kodu, uygulama "bulunamadı" sayfasını çizer
 writeFileSync(join(dist, '404.html'), render(notFoundSeo('/404'), ''))
 
+// ---------------------------------------------------------------------------
+// Sitemap: bölümlere ayrılmış sitemap dizini + gerçek lastmod
+//
+// lastmod yalnızca sayfanın içeriği (head + gövde) değiştiğinde güncellenir. Her derlemede bütün
+// sayfalara bugünün tarihini yazmak Google'ın lastmod'a güvenmeyi bırakmasına yol açar.
+// Özetler scripts/sitemap-lastmod.json'da tutulur; bu dosya depoya işlenmelidir.
+// ---------------------------------------------------------------------------
+
 const today = new Date().toISOString().slice(0, 10)
 const prio = (path: string) => (path === '/' ? '1.0' : path === ONLINE_LESSON_PATH || /^\/sinif\/\d$/.test(path) ? '0.9' : /^\/(sinif|oyunlar|etkilesimler|manipulatifler|rehber)/.test(path) ? '0.8' : '0.6')
 const urls = indexed.map((x) => x.seo.path)
+
+const lastmodFile = join(root, 'scripts', 'sitemap-lastmod.json')
+const prevLastmod: Record<string, { h: string; d: string }> = existsSync(lastmodFile) ? JSON.parse(readFileSync(lastmodFile, 'utf8')) : {}
+const lastmod: Record<string, { h: string; d: string }> = {}
+for (const x of indexed) {
+  const h = createHash('sha1').update(headHtml(x.seo)).update(x.body).digest('hex').slice(0, 16)
+  const prev = prevLastmod[x.seo.path]
+  lastmod[x.seo.path] = { h, d: prev?.h === h ? prev.d : today }
+}
+writeFileSync(lastmodFile, `${JSON.stringify(Object.fromEntries(Object.entries(lastmod).sort(([a], [b]) => a.localeCompare(b))), null, 1)}\n`)
+
+/** Search Console'da her bölümün dizine eklenme durumu ayrı izlenebilsin */
+const sitemapGroups: { file: string; test: (path: string) => boolean }[] = [
+  { file: 'sitemap-etkinlik.xml', test: (u) => u.startsWith('/etkinlik/') },
+  { file: 'sitemap-oyun.xml', test: (u) => u.startsWith('/oyun/') },
+  { file: 'sitemap-etkilesim.xml', test: (u) => u.startsWith('/etkilesim/') },
+  { file: 'sitemap-manipulatif.xml', test: (u) => u.startsWith('/manipulatif/') || u === BOARD_PATH },
+  { file: 'sitemap-rehber.xml', test: (u) => u.startsWith(`${GUIDES_PATH}/`) },
+  { file: 'sitemap-sayfalar.xml', test: () => true },
+]
+const grouped = new Map<string, string[]>(sitemapGroups.map((s) => [s.file, []]))
+for (const u of urls) grouped.get(sitemapGroups.find((s) => s.test(u))!.file)!.push(u)
+
+const sitemapIndex: string[] = []
+for (const [file, list] of grouped) {
+  if (!list.length) continue
+  writeFileSync(
+    join(dist, file),
+    `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${list.map((u) => `  <url><loc>${esc(abs(u))}</loc><lastmod>${lastmod[u].d}</lastmod><priority>${prio(u)}</priority></url>`).join('\n')}
+</urlset>
+`,
+  )
+  const newest = list.map((u) => lastmod[u].d).sort().at(-1)
+  sitemapIndex.push(`  <sitemap><loc>${abs(`/${file}`)}</loc><lastmod>${newest}</lastmod></sitemap>`)
+}
+// Search Console'a gönderilmiş adres aynı kalır: /sitemap.xml artık bölüm sitemap'lerinin dizini
 writeFileSync(
   join(dist, 'sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((u) => `  <url><loc>${esc(abs(u))}</loc><lastmod>${today}</lastmod><priority>${prio(u)}</priority></url>`).join('\n')}
-</urlset>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${sitemapIndex.join('\n')}
+</sitemapindex>
 `,
 )
 

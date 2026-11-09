@@ -1,0 +1,4418 @@
+{
+ "/": {
+  "h": "45f56db36e277dc4",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/acik-uclu-lab": {
+  "h": "2d73a5053a235666",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/acinim-bulmacasi": {
+  "h": "65e97524c8f16860",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/aciyi-olustur": {
+  "h": "3e5842bf6a625285",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/adil-mi": {
+  "h": "e3842d5bbb52367c",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/alani-kesfet": {
+  "h": "bae53561a3b00156",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/aynadaki-sekil": {
+  "h": "b474efcf8ac203ac",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/basamak-laboratuvari": {
+  "h": "9d26fcbfada004be",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/birden-fazla-cozum": {
+  "h": "0943ce7b81802b93",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/blok-birlestirme": {
+  "h": "77b3b9f5cd3b1892",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/bolmeye-giris": {
+  "h": "8e1b2cc12f7213f0",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/butunu-degistir": {
+  "h": "f9576d5f81270c86",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/carpan-kutulari": {
+  "h": "da0c8f8e9ead3329",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/carpim-dikdortgenleri": {
+  "h": "b6b435f3c0a82282",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/carpma-dikdortgeni": {
+  "h": "4202b14b563006d8",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/carpmaya-giris": {
+  "h": "9d366a05a189a464",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/cebir-karolari": {
+  "h": "384897d2aca8b114",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/cevre-tuzagi": {
+  "h": "823b8ddc255f51d8",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/dikdortgen-alanlari": {
+  "h": "a22e44251659c533",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/dogrusal-iliski": {
+  "h": "a9dd47f00172600c",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/donusum-studyosu": {
+  "h": "1d66679f1628c9fe",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/ebob-simulasyonu": {
+  "h": "6f94c9eead94f989",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/ebob-tiyatrosu": {
+  "h": "84660ee2b2627230",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/ekok-simulasyonu": {
+  "h": "c1741ea60f3ead21",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/ekok-tiyatrosu": {
+  "h": "05a9ad13eca4c356",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/eksik-bilgi": {
+  "h": "a37552a071f96fcb",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/eksik-parca": {
+  "h": "144905d80b616b50",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/elde-ve-bozma": {
+  "h": "616ff4cae513c2a9",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/esitligi-koru": {
+  "h": "e086bd38554cdd4f",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/farkli-cozumleme": {
+  "h": "2e9c94861a61853b",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/grafik-ciz-anlat": {
+  "h": "d3ab79494efe45ff",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/grafik-hikayeleri": {
+  "h": "16aea28d73ecb75f",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/hacim-insaati": {
+  "h": "5af03e3f6ed39eeb",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/hangisi-farkli-2": {
+  "h": "d5d235cffa3de0a8",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/hangisi-mantikli": {
+  "h": "37674a3aa360646c",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/her-zaman-mi": {
+  "h": "4201855f013bc4fb",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/hizli-noktalar": {
+  "h": "aabdfa472ae24122",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/indirim-arastirmacisi": {
+  "h": "6a835c1429cd179f",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/islem-ailesi": {
+  "h": "bdd07efba3b57eb4",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/islem-dogru-mu": {
+  "h": "350a9d7794c0ede4",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/islem-zinciri": {
+  "h": "6fe9669e6a83d979",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/kalani-yorumla": {
+  "h": "fa6c5aba3f976a3d",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/karsi-ornek": {
+  "h": "53863bdea8474f77",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/katla-ac": {
+  "h": "c0bf6f7e27e181e6",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/kesir-duvari": {
+  "h": "b5ba0169b2903dcd",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/kesir-tahmincisi": {
+  "h": "f609cfc0cbb72a66",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/kesir-yanilgilari": {
+  "h": "c2e2e54561cc1b50",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/kesirleri-karsilastir": {
+  "h": "d4a62ef7ff804b44",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/matematiksel-tartisma": {
+  "h": "c90ea74a8fecf8f8",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/olasilik-simulatoru": {
+  "h": "fe968dba8954eb33",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/ondalik-yakinlastirici": {
+  "h": "49d685620e5f1888",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/oran-karistirici": {
+  "h": "365417496364bb0c",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/oruntu-tasarimcisi": {
+  "h": "36d3e28f83e74b08",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/oruntuden-kurala": {
+  "h": "1e02171beab93c35",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/parcala-birlestir-dizisi": {
+  "h": "66c280c5681c656a",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/pasta-paylasimi": {
+  "h": "47f688d4ff237511",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/pisagor-kesif": {
+  "h": "ecd7681b52c66333",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/sayi-piramitleri": {
+  "h": "1b80dc0c467a9d18",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/sayilari-karsilastir": {
+  "h": "eb28c07ab179ceae",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/sayiyi-parcala": {
+  "h": "d0fb59012b644858",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/sekil-insa-et": {
+  "h": "d768bfae5f8c8468",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/sepetlere-grupla": {
+  "h": "99b546525e958b69",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/sonsuz-cozum": {
+  "h": "6c7a54d2ba3fbba0",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/soruyu-sen-yaz": {
+  "h": "1f5b6213e35e0fd3",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/stratejini-ogret": {
+  "h": "4cd57716e629b392",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/tahmin-test-acikla": {
+  "h": "65802bb9fa54056a",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/tangram-studyosu": {
+  "h": "2aec1d9eff7915b8",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/tarif-olcekleyici": {
+  "h": "2189543b1840cbf7",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/toplama-cikarma-hikayeleri": {
+  "h": "62efa71707ca2937",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/ucgen-olusturucu": {
+  "h": "0058a2540ac7e3c3",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/us-oruntu-tablosu": {
+  "h": "4291a0762c9eceee",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/veri-toplama": {
+  "h": "eaddf929823befdd",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/yaniltici-grafikler": {
+  "h": "759d8b7885e6b194",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/yuzde-boyama": {
+  "h": "f8f4563c96c22a2e",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/yuzluk-gizem": {
+  "h": "2da725bb163a66d9",
+  "d": "2026-11-09"
+ },
+ "/etkilesim/zihinden-toplama-cikarma": {
+  "h": "77f1a23bf17619c5",
+  "d": "2026-11-09"
+ },
+ "/etkilesimler": {
+  "h": "112bcdd0be5b13f8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-alisveris": {
+  "h": "df78e70a6f2cb28a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-arastirma-sorusu": {
+  "h": "24512cebbbacd797",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-artma-azalma": {
+  "h": "f9ad2ffb3c6808aa",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-bardak-alti": {
+  "h": "7c2455a9f2b939b9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-ben-kimim": {
+  "h": "6181fa95ce57a743",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-bicim-tarif": {
+  "h": "90c841df3a8fe3fb",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-boy-sirala": {
+  "h": "39ce5f9a3fa96494",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-buyuyen-oruntu": {
+  "h": "0dabf7fde6d669f3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-cetele-eslestir": {
+  "h": "f327c60389b0ce80",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-cok-az": {
+  "h": "437e04a793146746",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-cuzdan": {
+  "h": "8b6b6e21a762b33f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-dogru-olcum": {
+  "h": "7b16fba629f93555",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-dogru-yanlis-esitlik": {
+  "h": "973cef06361346ab",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-eksik-sayi": {
+  "h": "f7a7233a97691438",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-es-mi": {
+  "h": "2694ced15a13f3d6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-es-nesneler": {
+  "h": "98de692f7be016b6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-es-sekil-tahtasi": {
+  "h": "a6a76e18eaf8e883",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-esitle-cerceve": {
+  "h": "aaa60ec05015b530",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-esittir": {
+  "h": "53bc48a7a9e5251a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-geometri-tahtasi": {
+  "h": "a4a87480b4141d0a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-geriye-say": {
+  "h": "65c23bdb1683eb84",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-grafik-olustur": {
+  "h": "b15d4b920495f376",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-hangisi-farkli-dortlu": {
+  "h": "b9fbf049a1d2d399",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-hangisi-farkli-islem": {
+  "h": "cf396570954db224",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-hangisi-farkli-nesne": {
+  "h": "32c65965c5b7d815",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-hangisi-farkli-olcu": {
+  "h": "8c8b8b63c69a7f68",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-hangisi-farkli-para": {
+  "h": "674ad8ac3a14460f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-hangisi-farkli-sayi": {
+  "h": "2ff8983d638f379d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-hangisi-farkli-sekil": {
+  "h": "d08856f48bfe2e4f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-hangisi-farkli-veri": {
+  "h": "ad9cb5e859488122",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-hedefe-ulas": {
+  "h": "176bfd3b69899eb6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-hikaye-canlandir": {
+  "h": "6e5c42f6c8d43149",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-ikizler": {
+  "h": "3b700c55c83d9133",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-ileri-geri-don": {
+  "h": "1a272d34be3ce14e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-islem-ailesi": {
+  "h": "8a132e583e538fff",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-islem-eslestir": {
+  "h": "47ad685d95083835",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-kac-kup-tartar": {
+  "h": "3791bb8094a75a0f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-karsilastir": {
+  "h": "c40610f4c884a853",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-kose-sayisi": {
+  "h": "87fcd20d7eb09aff",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-kurbaga-adimlari": {
+  "h": "eb4d4a4fc96940c5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-nesne-grafigi": {
+  "h": "fffd0dcecc7efa63",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-ok-yonergeleri": {
+  "h": "038243e2a5d5163b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-ona-tamamla": {
+  "h": "45c36503e8dc4300",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-onluk-cerceve": {
+  "h": "c7e905bd9f5bd594",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-oruntu-kurali": {
+  "h": "f1b39a4e08d4732c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-para-sirala": {
+  "h": "5be1cb100d6834af",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-paralarimiz": {
+  "h": "849984e5a1dcddb4",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-parca-cerceve": {
+  "h": "58333c54a90424b1",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-parcalar": {
+  "h": "72c7e57f53d20739",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-ritmik-ileri": {
+  "h": "c94ff1b71f7d3e13",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-sayi-dogrusu": {
+  "h": "759cef46259f146f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-sayi-okunus": {
+  "h": "822a5a28d10af1e5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-sayi-oruntusu": {
+  "h": "1aeeb1669a6a5661",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-sayi-ve-cokluk": {
+  "h": "9b52f41304d54219",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-sayilar-hayatta": {
+  "h": "cebc28473f041997",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-sekil-oruntusu": {
+  "h": "3c2b15a6a5591e1a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-sekilleri-grupla": {
+  "h": "ba5048b261487fc7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-serit-ailesi": {
+  "h": "ba4d9e1c40d2d269",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-sipsak-bak": {
+  "h": "276bea14fcf40d2a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-sipsak-parcalar": {
+  "h": "fd15afca3ab2756c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-sira-problem": {
+  "h": "8883a7f4e6e08870",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-sira-sayilari": {
+  "h": "25ebf7205c8920fb",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-sira-sayisi-eslestir": {
+  "h": "40e716c8627822b4",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-tahmin-et": {
+  "h": "15b331870f0fa552",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-tahmin-islem": {
+  "h": "5815f4e9ebb89a01",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-tahmin-referans": {
+  "h": "92683bdbb51119ee",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-tahmin-sayma": {
+  "h": "e5cdae87e8679330",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-terazi": {
+  "h": "a8cdc57a9bbf5de1",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-toplama-20": {
+  "h": "07cbac42be48f89e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-toplama-resimli": {
+  "h": "f2a864157516860a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-uygun-arac": {
+  "h": "2c191bac9e9a67b6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-uzun-kisa": {
+  "h": "c506ca1180f41bc8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-yapi-cozumle": {
+  "h": "bb62cef47e01fd86",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-yapi-tahtasi": {
+  "h": "a86cd7459b7de217",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-yapilardaki-sekiller": {
+  "h": "d630c4cae29efec0",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-yon-ve-konum": {
+  "h": "474597b51a8f0a2f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-yuvarlak-koseli": {
+  "h": "caeb49f3ab82031d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g1-zihinden-zipla": {
+  "h": "ff992c143142679a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-alisveris": {
+  "h": "e69c02cd9ee9e5de",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-arastirma-sorusu": {
+  "h": "3d3091edf064f3bf",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-ayni-sekil": {
+  "h": "050ac7cab6c9e68e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-beser-sayarken": {
+  "h": "b5a080077fd033c3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-birim-sec": {
+  "h": "f313daa86d2262e8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-blok-olustur": {
+  "h": "ceebe2efaf73ae0f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-bloklarla-sayi": {
+  "h": "c5262d1125fc6adc",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-carpim-tablosu": {
+  "h": "8a2162910dc63785",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-carpma-eslestir": {
+  "h": "4c1d3c0ffe0b0e39",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-carpma-muhakeme": {
+  "h": "db81fc1374dc68a5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-carpma-stratejisi": {
+  "h": "538d19df4ffe72ce",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-cetele-siklik": {
+  "h": "cfb3ab8215738e22",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-cetvelle-olc": {
+  "h": "af563b175ba42e60",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-cisim-farkli": {
+  "h": "821c1df27e63a956",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-cisim-ozellikleri": {
+  "h": "30617a5e42bc42c3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-cisimleri-tani": {
+  "h": "63eb993797f820e3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-cisimlerle-yapilar": {
+  "h": "6839e01f51d85310",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-cokluk-olustur": {
+  "h": "fd84d0fb817fd572",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-donunce-degisir-mi": {
+  "h": "52379b62d4e78a87",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-esit-gruplar-kur": {
+  "h": "13a3121feb372ff3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-esitlik": {
+  "h": "afb5dbe6c2fcf65a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-esitlik-dogru-mu": {
+  "h": "071878069bea503d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-esitlik-farkli": {
+  "h": "ac950adb1bfd4de5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-esnek-basamak": {
+  "h": "6996c41d34508b4a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-geometri-tahtasi": {
+  "h": "498a6b1b14b9640e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-grafik-olustur": {
+  "h": "adc85d6c3748a229",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-hangi-islem": {
+  "h": "b669c002357d0051",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-hedefe-ulas": {
+  "h": "aa73be834ab60b9a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-hizli-bakis-onluk": {
+  "h": "e93f91b91ef862b6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-iki-islemli-problemler": {
+  "h": "72869378f2cfbf41",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-ikizler": {
+  "h": "0957a0c2e9d3e138",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-islem-ailesi": {
+  "h": "84581b6c3530f395",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-karis-olcumu": {
+  "h": "588abe7ad7a7410c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-kontrol-et": {
+  "h": "78201a7e63d3030a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-kumbara": {
+  "h": "8dccb9058a625cdf",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-kurus-lira": {
+  "h": "d7703f00cadac1f5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-modeldeki-sekiller": {
+  "h": "2771ea7c67c7cdc1",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-neden-standart": {
+  "h": "39d3469dd401dfa1",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-nesne-cisim": {
+  "h": "1d6fd4d404c99f73",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-ok-kodlari": {
+  "h": "48e4af71e24c4214",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-okunus-yazilis": {
+  "h": "7b7d8a14120df489",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-olcme-araclari": {
+  "h": "c41f4cb1cd6570e9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-olcu-tahmini": {
+  "h": "753cb09b9ea99f7e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-olcut-degisirse": {
+  "h": "86914943e678fbb2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-on-a-tamamla": {
+  "h": "be402d9ad8d64c34",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-once-sonra-arasinda": {
+  "h": "6749aa3f2e6d290b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-onluk-birlik": {
+  "h": "fa4220ed63955be2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-oruntu-farkli": {
+  "h": "21c4026d295a8ac8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-oruntu-kurali": {
+  "h": "7e26cc3f00c2a5f9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-para-sirala": {
+  "h": "407e2ffcdbeddc62",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-parca-butun-eslestir": {
+  "h": "5db4d9674370e991",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-paylastir": {
+  "h": "28904f738f7171d2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-problem-serit": {
+  "h": "04812ee64f3f3a8c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-problemler": {
+  "h": "945267a4b3b9ba0f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-referansla-tahmin": {
+  "h": "9a4a41540361ba83",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-ritmik-sayma": {
+  "h": "716fc297a7efdaa7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-saat-turleri": {
+  "h": "5f024a7ef9bc7b92",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-saati-kur": {
+  "h": "29da8b5ea58e0c6f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-sakli-parca": {
+  "h": "e8427f01d10f2f75",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-sayi-dogrusu": {
+  "h": "0ca28d3c1bd34c84",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-sayi-farkli": {
+  "h": "c8058e0d3072ae73",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-sayi-oruntuleri": {
+  "h": "8ab266856cdda76c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-sayilari-sirala": {
+  "h": "e9d9d3003dae9e07",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-sekil-grafigi": {
+  "h": "fea0a0f787a38fa6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-sekil-iliskileri": {
+  "h": "80091c585bf9426c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-sekil-oruntuleri": {
+  "h": "6d3fd8ac34e912a2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-sicrayarak-say": {
+  "h": "cdbee65a87895f36",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-simetri-dogrusu": {
+  "h": "7f82bb3bf95457a0",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-simetri-farkli": {
+  "h": "0e519786e5773938",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-simetri-tamamla": {
+  "h": "b0e1752f6aca3a01",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-simetrik-mi": {
+  "h": "91e72e7e4704051d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-siralama-muhakeme": {
+  "h": "81ff6f3f9ceb68e4",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-sivi-sirala": {
+  "h": "914c5b70a7bde55e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-sivi-tahmin": {
+  "h": "b567aebfb0d64ec7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-sivi-tahmin-olcum": {
+  "h": "46bef558caa17fff",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-sonucu-tahmin-et": {
+  "h": "a60ee4d626fcbca2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-tahmin-et": {
+  "h": "66ae0f1bca59277d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-tahmin-sayim": {
+  "h": "45934f98ac8f41f1",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-tahmin-stratejisi": {
+  "h": "9870c1f945caf5de",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-tahtada-buyut": {
+  "h": "28ea3d21eb9aa8aa",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-takvim-sirala": {
+  "h": "bfc30b614a3d0721",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-tekrarli-toplama": {
+  "h": "7be0f9d38abb2d4d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-terazi": {
+  "h": "9583e985f93d08ab",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-toplamayi-dusun": {
+  "h": "58740424c04c3eda",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-veri-farkli": {
+  "h": "4c61f583feaa0df2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-veri-grupla": {
+  "h": "7994dc8c0533476a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-yapi-tarifi": {
+  "h": "945a430b7b4b707a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-yapi-tasarla": {
+  "h": "c94a24213b743253",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-yarim-ceyrek": {
+  "h": "b7a0583dd9d8489e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-yarim-ceyrek-boya": {
+  "h": "5e2cc8ca27816f89",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-yarim-farkli": {
+  "h": "33075d063ea7490a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-yol-tarifi": {
+  "h": "dde3cde3265d7576",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-yuzluk-tablo": {
+  "h": "aac9204431e9a629",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-zaman-birimleri": {
+  "h": "145c2937f82216d2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-zaman-problemleri": {
+  "h": "caa8fc466926d734",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-zihinden-bolme": {
+  "h": "bfc32c00c334613c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g2-zihinden-islem": {
+  "h": "9dac16203c064ab9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-adil-paylasim": {
+  "h": "7d12d1407b66e7b2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-arastirma-adimlari": {
+  "h": "0cc1c8773ef05c9d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-basamak-degeri": {
+  "h": "e4c4aa90608bcdb7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-birim-kesir": {
+  "h": "1f592c39d8647580",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-bloklarla-sayi": {
+  "h": "27683eb6ab39eae2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-bloklarla-topla": {
+  "h": "7238152cb556f895",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-bolme-paylas": {
+  "h": "e9ad4742d0e11621",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-butun-yarim-ceyrek": {
+  "h": "138691e29391067a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-carpma-bolme-tahmin": {
+  "h": "26de39a92076cd44",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-carpma-islemi": {
+  "h": "2c1d74b3cb539131",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-carpma-modelle": {
+  "h": "1005dcf86e6819da",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-carpma-parcala": {
+  "h": "1bddd78d6b522603",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-cetele-siklik": {
+  "h": "5e47f254f6ed4e57",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-cetvel-olc": {
+  "h": "15a5225577c78322",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-cevre-ciz": {
+  "h": "219ebce3e8188894",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-cevre-hesapla": {
+  "h": "9b2bb0f9ab080617",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-cevre-tahmin": {
+  "h": "93b58181f6d64c4f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-cisim-eslestir": {
+  "h": "fbf69062387e1f8e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-cisim-hangisi-farkli": {
+  "h": "2f62d8699ceb1720",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-cisim-ozellikleri": {
+  "h": "73ce55f6bc2097af",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-cisim-tablosu": {
+  "h": "94bf6593a7570d07",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-cizim-adimlari": {
+  "h": "2f95102a8201fc7f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-cizim-araclari": {
+  "h": "2ba3ab3807ba6804",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-cuzdan": {
+  "h": "785f42818e842d14",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-dizi-carpma": {
+  "h": "fbd512db34f5fc0e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-es-parcalar": {
+  "h": "3d669a49b56e929a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-esitlik-dogru-mu": {
+  "h": "6d86641c6a1924da",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-esitlik-grupla": {
+  "h": "a1823595977a1a8a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-esnek-basamak": {
+  "h": "39aec505ab415ce7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-geometri-tahtasi": {
+  "h": "99fbe69abaf9c3c2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-hangi-islem": {
+  "h": "e22aead1d5962acc",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-hata-bul": {
+  "h": "fc6ac81bcb5a42c2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-islem-hangisi-farkli": {
+  "h": "615f598c7f242dfc",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-islem-makinesi": {
+  "h": "85ae79abff8a0154",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-kenar-kosegen": {
+  "h": "6b5c78248d17554f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-kenar-sayisi": {
+  "h": "c00a040ed4136667",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-kesir-dil": {
+  "h": "fe62298ce9b61412",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-kesir-hangisi-farkli": {
+  "h": "16548384c4321db7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-kesir-seridi": {
+  "h": "e2c0b3965ec19a86",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-kisa-yoldan": {
+  "h": "cfe914ef4bec53ea",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-kod-simetrisi": {
+  "h": "f78909aed7eb0c3c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-kodla-ciz": {
+  "h": "7231d1ae12c09095",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-kodla-simetri": {
+  "h": "22bcd2fdd1de3fd5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-kutle-birimi": {
+  "h": "22f0deec10ff7e37",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-litre-grupla": {
+  "h": "428d8dc723422bd9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-litre-model": {
+  "h": "561756c1d34c2a8d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-litre-tahmin": {
+  "h": "7379471e08ed35eb",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-ne-kadar-surer": {
+  "h": "96a84b7927072045",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-nokta-grafigi": {
+  "h": "62d1939c2ddb809e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-olcme-araci": {
+  "h": "f745a5cb8344be62",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-onluk-taban-bloklari": {
+  "h": "3a4121372507ae18",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-oruntu-kurali": {
+  "h": "e7e012860c748cf5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-oruntu-varsayim": {
+  "h": "56afa7a9e9a7daff",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-para-donustur": {
+  "h": "a88819b99496dac7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-para-esitligi": {
+  "h": "fddf365ff48caf9b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-para-problem": {
+  "h": "6ed3d67139bfdf18",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-pay-payda": {
+  "h": "49ad1deb25f31981",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-paylasalim": {
+  "h": "1308e7180e961362",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-problem-coz": {
+  "h": "83803cc58b87bd2e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-problem-islem": {
+  "h": "0eb48bcc4f881d24",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-problem-serit": {
+  "h": "fc785e3c0224097f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-probleme-uygun": {
+  "h": "5bf5d70576606f4a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-problemler": {
+  "h": "ade29410fc4dcf12",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-ritmik-genelle": {
+  "h": "8db7ad4db02132b6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-ritmik-sayi-dogrusu": {
+  "h": "157e20155a16d492",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-ritmik-sayma": {
+  "h": "6679ba492b8c935e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-saat-kac": {
+  "h": "f48aff2f558434c2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-saati-kur": {
+  "h": "ed4a2e5469337395",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-saati-yaz": {
+  "h": "e8a7b3f4fa106b78",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-sayi-bilmece": {
+  "h": "68a5cfde1b266b05",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-sayi-cozumle": {
+  "h": "35c79be49672e24e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-sayi-dogrusunda-yer": {
+  "h": "5102c25522a7406c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-sayi-temsilleri": {
+  "h": "8599d0d7f9c273a9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-sayilar-hangisi-farkli": {
+  "h": "afda490f2cc061ad",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-sayilari-sirala": {
+  "h": "3a56d4943e4916d8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-sayilarin-okunusu": {
+  "h": "72a58cad261fdaa4",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-sekil-adlari": {
+  "h": "f42ebf04a8e10f7d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-sekil-ciz": {
+  "h": "4ec5a57d5a964209",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-sekil-oruntusu": {
+  "h": "74353dbd086f4925",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-serit-problem-kur": {
+  "h": "0ce0ddec3821689c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-simetri-akil": {
+  "h": "abbf7fbfdb84273b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-simetri-dogrusu-mu": {
+  "h": "deba0908d98ca3f1",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-simetri-dogrusu-sayisi": {
+  "h": "c1ff2fd7723cc66d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-simetri-hangisi-farkli": {
+  "h": "d2b6885befb9e6b6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-simetri-tamamla": {
+  "h": "a554c9b090966e0f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-simetri-terimleri": {
+  "h": "ec49c3ab15b4bcd8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-simetrik-mi": {
+  "h": "ffd68364b398db02",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-sure-grupla": {
+  "h": "79a3f09ca76b4936",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-sure-saat": {
+  "h": "178a7eb661195fe7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-tablodan-grafige": {
+  "h": "7f7f76ebe08c4b7c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-tahmin-et": {
+  "h": "77baf1c0f202e1b9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-tahmin-karsilastir": {
+  "h": "f68d810b16d5acd7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-tahmin-stratejisi": {
+  "h": "65b9dcbc616491b7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-tahmin-toplama-cikarma": {
+  "h": "0a7a645fdc4d8f3a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-takvim-problem": {
+  "h": "e224994024337629",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-tek-cift": {
+  "h": "1bcde7fe79834cd7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-tek-cift-genelle": {
+  "h": "8b723f5497e9e03c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-tek-cift-problem": {
+  "h": "c3b65acfec38ebed",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-tek-cift-toplam": {
+  "h": "5d188e886dacd827",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-telafi": {
+  "h": "8956551edea3969d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-terazi": {
+  "h": "1bfda2ecc7e053e4",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-ters-islem": {
+  "h": "73a4a40271dc8830",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-toplam-tahmin": {
+  "h": "2d6ae9ae4785ddce",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-toplama": {
+  "h": "1b84e1d564ba7a21",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-turetilmis-carpim": {
+  "h": "271406b4367b8704",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-uzunluk-kutle-donustur": {
+  "h": "883359ecb691f559",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-uzunluk-kutle-model": {
+  "h": "754078885336c26e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-veri-hangisi-farkli": {
+  "h": "4f6b22ce5efec096",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-veri-karar": {
+  "h": "d5691684a9e8db9e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-veri-turu": {
+  "h": "328393565e18af86",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-yarim-ceyrek-hayat": {
+  "h": "e4ca2203560bf6a8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-yarim-ceyrek-seridi": {
+  "h": "e3234d83eb6df177",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-yonerge-bloklar": {
+  "h": "7706b2d2e8333a76",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-yonerge-takip": {
+  "h": "0af651d030626c91",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-yuvarla": {
+  "h": "874774a95716da62",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-yuzluge-tamamla": {
+  "h": "0090044d01dfda24",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-yuzluk-kesfi": {
+  "h": "904f939374613c19",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-zaman-birimleri": {
+  "h": "5e7c2b8216c4eeee",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-zaman-seridi": {
+  "h": "ae1012775b056389",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g3-zihinden-islem": {
+  "h": "befc3412612790c9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-5-25-50-ile-carpma": {
+  "h": "8cdb50e8df69ff8f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-aci-birimleri": {
+  "h": "4ef09564b7c45285",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-aci-donme": {
+  "h": "8e93d9ae63fcf9e2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-aci-farkli": {
+  "h": "4c01529821a98141",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-aci-olustur": {
+  "h": "7cf591b1b3f408bb",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-aci-turu": {
+  "h": "6e920920fdc081cd",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-acilari-grupla": {
+  "h": "97b85fcbd09cde6e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-acinim-eslestir": {
+  "h": "a2a3ed361e117310",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-acinim-katla": {
+  "h": "41b8a4113570fbc9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-alan-geometri-tahtasi": {
+  "h": "ee6eb61581bf4b12",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-alan-say": {
+  "h": "9b663d9167300834",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-alan-tahmini": {
+  "h": "046563ec3de03a1d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-arastirma-adimlari": {
+  "h": "ae2a5f47b6257771",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-arastirma-sorusu": {
+  "h": "af795274c13ec591",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-ayna-simetrisi": {
+  "h": "fdaf732bf4b832e7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-basamak-farkli": {
+  "h": "c1d8ef42a363807e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-basamak-tablosu": {
+  "h": "f28fffe8b5681b82",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-binlik-bloklar": {
+  "h": "97dbfda95bbdfc53",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-birim-kesir-karsilastir": {
+  "h": "5cf00be02d8a508a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-birim-kesir-serit": {
+  "h": "cf40711c3475a4b9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-birim-kesir-sirala": {
+  "h": "b0d5f29417cd4867",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-birim-kesir-yinele": {
+  "h": "1290d6b5e566ddbd",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-bloklarla-toplama": {
+  "h": "db86c2fab814671d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-bolme-iki-anlam": {
+  "h": "49bc943262ef2fa9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-bolukler": {
+  "h": "48e08fe2cba39976",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-carpma-blok": {
+  "h": "6bb15c64aaa7a03d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-carpma-bolme-iliskisi": {
+  "h": "88a556036f0de58e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-carpma-tahmini": {
+  "h": "8b1436cb12cc162d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-cetvel-mm": {
+  "h": "ddd1cb5eb69d9afc",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-cevre-araclari": {
+  "h": "e851bd1fb07e6866",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-cevre-geometri-tahtasi": {
+  "h": "72575619d09a10e3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-cevre-hesapla": {
+  "h": "bb0b4f13de653558",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-coklugun-kesri": {
+  "h": "a3ad604d82b2b106",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-coklugun-kesri-problem": {
+  "h": "aee55d79174e03b8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-coklugun-kesri-sayac": {
+  "h": "c038b2f49e9ac219",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-cozumleme": {
+  "h": "70ca61b34a67ef16",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-denk-kesir-eslestir": {
+  "h": "cc4bf78e46dfe637",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-denk-kesir-model": {
+  "h": "4409c13ccbec5b66",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-denk-kesir-serit": {
+  "h": "bef84f06e4bf31b1",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-denk-mi": {
+  "h": "3d00b265957e0ff5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-dilimle-ac": {
+  "h": "94849c9db5ae9d1b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-dizi-carpma": {
+  "h": "f9d59e8648fca7a0",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-donme-miktari": {
+  "h": "f2ca18b70717e7da",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-dort-islem-problemleri": {
+  "h": "0019633fb56acd74",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-eksik-terim": {
+  "h": "9fc326f70fc212de",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-esit-mi": {
+  "h": "7161981e89527dd1",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-esitlik-farkli": {
+  "h": "6f30ea049194c5d5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-esitlik-tamamla": {
+  "h": "c0e35b0efdd0528f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-geometri-tahtasi": {
+  "h": "217bddf7e0519c26",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-hangi-birim": {
+  "h": "ddc52e7a1cf9c40b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-hangi-islem": {
+  "h": "f384791cd901992e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-hedef-sayi": {
+  "h": "192ad96cd1ffc4a7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-imkansiz-olabilir-kesin": {
+  "h": "fe665dd4d563673f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-islem-adimlari": {
+  "h": "088b06de792d6485",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-kalan-ne-anlama-gelir": {
+  "h": "981bdbb65652be73",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-karsilastir": {
+  "h": "f47482cdbfbf634c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-kenar-kose": {
+  "h": "db0c7e7cdb59e6b5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-kesir-cesitleri": {
+  "h": "c647732385f352fa",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-kesir-farkli": {
+  "h": "fa7f258e964751a0",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-kesir-problem-islem": {
+  "h": "181296a1ba2e8809",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-kesir-problem-serit": {
+  "h": "e9940a16cbe61f61",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-kesir-problemleri": {
+  "h": "132280328e8d1024",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-kesir-seridi-bilesik": {
+  "h": "b1ed999246b1cf95",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-kesir-topla-cikar": {
+  "h": "903b603b27ec6e39",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-kesir-toplama-serit": {
+  "h": "9540dc8bc7c21b0e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-kisa-yol-problem": {
+  "h": "543fc2f6e70e1e5a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-kisa-yoldan": {
+  "h": "c5dbbf30af7893ca",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-kod-izle": {
+  "h": "b3cba8a9e3587339",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-kod-tamamla": {
+  "h": "21d7e10e1a469de1",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-kodlama-sirala": {
+  "h": "cd5032c667e130e4",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-kup-acinimi": {
+  "h": "6ee942a6fc375558",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-nokta-grafigi": {
+  "h": "b807f3b02dc198e8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-olasilik-farkli": {
+  "h": "2b3cea12296541de",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-olaylari-grupla": {
+  "h": "d6a6ef23e764f923",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-olcu-eslestir": {
+  "h": "7cb59e348ff68f93",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-olcu-problem": {
+  "h": "16618f278dd4379e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-onluk-katlar": {
+  "h": "0d7a5526e5341cb5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-oruntu-genelle": {
+  "h": "0f1895472c5b5825",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-oruntu-kurali": {
+  "h": "c3ab01223162e3a8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-paydasi-esit-karsilastir": {
+  "h": "0577d36e09c71dde",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-paydasi-esit-problem": {
+  "h": "6f0d984e4cf4c753",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-paydasi-esit-sirala": {
+  "h": "9b15f11fdc18187f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-problem-coz": {
+  "h": "6d37fedbe4b14e13",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-problem-kur": {
+  "h": "62284848bbcf8e51",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-problem-model-eslestir": {
+  "h": "a2f446db28a75148",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-problem-serit": {
+  "h": "d491f48cc8ecbccd",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-referans-kesir": {
+  "h": "364ceb0ffe7bcd84",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-ritmik-dogru": {
+  "h": "ffa0dc5f0eb38af9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-ritmik-problem": {
+  "h": "f5e0e78502f4a1de",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-saat-acilari": {
+  "h": "ca883e7b9afb3e58",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-sayilari-sirala": {
+  "h": "bef1b83c406366b8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-sayilari-yaz": {
+  "h": "56ffd24d943b2929",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-sayilarin-okunusu": {
+  "h": "9f2170ada58775aa",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-sekil-farkli": {
+  "h": "20ea02838bb9a336",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-sekil-oruntuleri": {
+  "h": "9620e925c4edcb06",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-simetri-dogrusu-var-mi": {
+  "h": "f16ba91e74526db5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-simetri-farkli": {
+  "h": "e8d291e3f18da305",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-simetri-hata": {
+  "h": "cc74963108ec91a3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-simetri-uzaklik": {
+  "h": "bbd89b11b1f39383",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-simetriyi-tamamla": {
+  "h": "9ba190a55781e6ec",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-standart-olcme": {
+  "h": "0596e8635643819d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-tahmin-1000": {
+  "h": "fadc952eb27a8db4",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-tahmin-yuvarla": {
+  "h": "5f15489d84fee6b5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-tam-sayili-kesir-model": {
+  "h": "6fbb18164e70218e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-tamamini-bul": {
+  "h": "3386d42b52cb0349",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-telafi": {
+  "h": "0cd9be359143c9d6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-terazi": {
+  "h": "10a58dc553974f7e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-toplama-hata": {
+  "h": "8bc12c8c65645e81",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-torba-deneyi": {
+  "h": "922684f3971d9836",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-ucgen-cesitleri": {
+  "h": "749607965ce4f0b9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-veriye-dayali-karar": {
+  "h": "660534ad6f016215",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-yakin-yuzluk": {
+  "h": "df82e696657dc0d7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-yonerge-akis": {
+  "h": "1ee84a2a4dd2664b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-yonerge-sec": {
+  "h": "f52092de1e3921d9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-yonerge-sirala": {
+  "h": "50338f9778292624",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-yuvarla-sayi-dogrusu": {
+  "h": "12cd681d9f0cfbf5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-zihinden-problem": {
+  "h": "494fe0ad9753f66a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g4-zihinden-sayi-dogrusu": {
+  "h": "12ef659702dd1a17",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-aci-olcme": {
+  "h": "c07877d11b123b77",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-aci-olustur": {
+  "h": "a9127ab4d029748f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-acilar-her-zaman-bazen-asla": {
+  "h": "a56eb35b96c4ad3b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-akis-semasi-oku": {
+  "h": "ef19f0813bd2b878",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-akis-semasi-sekilleri": {
+  "h": "4d159af956afa760",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-alan-bagintisi": {
+  "h": "ce2c6ca8d6d95c15",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-alan-cevre-cizimle": {
+  "h": "c6aee5997f541dfb",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-alan-cevre-iliskisi": {
+  "h": "12117d3fabb051e2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-alan-cevre-karar": {
+  "h": "a6e966dbc988ffae",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-alan-cevre-problemleri": {
+  "h": "99d2d5e574bb35d3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-alan-cevre-sirala": {
+  "h": "5138dc8e3a3f92ec",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-alan-cevre-tablosu": {
+  "h": "5394e5904c82caa3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-alan-cevre-tahtada": {
+  "h": "888adca3f493c600",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-alan-korunumu": {
+  "h": "81987de2217a5755",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-alan-mi-cevre-mi": {
+  "h": "46955ac5bd84d359",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-algoritma-tablosu": {
+  "h": "d7fe513d8e068f8e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-algoritmayi-sirala": {
+  "h": "295a4feb3ac8e61c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-arastirma-sorusu-mu": {
+  "h": "9861409fa2836026",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-az-mi-cok-mu-olasi": {
+  "h": "ba5ca4e13b268305",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-bilesik-ve-tam-sayili-kesir": {
+  "h": "d3e59787fa9c33a4",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-birim-acilarla-olc": {
+  "h": "f3d490ad523e8fe3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-birim-karelerle-alan": {
+  "h": "c46dea38b7894e10",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-boluk-tablosu": {
+  "h": "5de830b39a362b83",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-buyuk-sayilar-hangisi-farkli": {
+  "h": "32cf14fab38b6fed",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-buyuk-sayilari-sirala": {
+  "h": "164e35502886e05a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-buyuk-sayilarin-okunusu": {
+  "h": "5d128bd0213db814",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-cark-deneyi": {
+  "h": "b859b326bd222e5d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-carkta-olasilik": {
+  "h": "f42765c039a08b92",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-cember-kosullari": {
+  "h": "f9982e02d7d6e9fb",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-cemberle-ucgen-kenarlari": {
+  "h": "1a17ede191a07f6f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-cevre-tartisma": {
+  "h": "25b1f6437beba1f1",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-cevreden-kenarlara": {
+  "h": "555809c952928f35",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-cevresi-16-olanlar": {
+  "h": "14426f5b1a1e2631",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-cizim-araclari": {
+  "h": "f1859f7dd1c8d969",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-cizim-deneyimleri": {
+  "h": "125c8983bb5b3d4a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-cizim-her-zaman-bazen-asla": {
+  "h": "d1fd0415756aaf7e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-cizimler-hangisi-farkli": {
+  "h": "b4ed0b0b9140c6ca",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-cokgen-her-zaman-bazen-asla": {
+  "h": "b36d412e177bd617",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-cokgen-mi": {
+  "h": "11b8745786656f14",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-cokgen-tartisma": {
+  "h": "a06aaa4c4f08902f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-dikdortgenler-hangisi-farkli": {
+  "h": "c37f1673596539c2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-dogal-sayi-problemleri": {
+  "h": "8e1665de786fb116",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-dogrularla-cokgen": {
+  "h": "7a91508a3d259a7e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-esitligi-tamamla": {
+  "h": "e2b675bf7f39f3db",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-esitligin-korunumu": {
+  "h": "d97c8bb02a75813a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-geometri-gosterimleri": {
+  "h": "68e6b8991d42ec67",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-geometri-tahtasinda-alan": {
+  "h": "85395401ef675899",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-geometri-tahtasinda-cokgen": {
+  "h": "192b2bf0f10f432c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-geometri-tahtasinda-dikdortgen": {
+  "h": "36882aee56c8e91e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-gercek-yasamda-kesirler": {
+  "h": "dc57bdfbed42dc55",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-grafik-ve-tablo-oku": {
+  "h": "c8bbb1e36672b6ac",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-grafik-yorumlarini-tartis": {
+  "h": "8a5031366fcea31b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-hangi-torba": {
+  "h": "0404b9d0ed7e5523",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-hangisi-daha-olasi": {
+  "h": "b9cfae07d9c6b928",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-insa-adimlari": {
+  "h": "42ba8dd48f2d09ba",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-islem-adimlarini-sirala": {
+  "h": "db954b816fcacf90",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-islem-hangisi-farkli": {
+  "h": "1bc37d63f80dd8f3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-islem-onceligi": {
+  "h": "377508a94725c7fc",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-islem-onceligi-problemleri": {
+  "h": "80d8235f24b869f3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-islem-ozellikleri": {
+  "h": "4c2589b43f825b49",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-istatistiksel-arastirma-adimlari": {
+  "h": "a37bf453fa757425",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-kabul-mu-curut-mu": {
+  "h": "d112d590a09d2ead",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-kalani-yorumla": {
+  "h": "478abe45578a06f1",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-karsilastirma-stratejisi": {
+  "h": "9037481efdde16a3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-kesir-karsilastirma-problemleri": {
+  "h": "f41cfe0ce584ef61",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-kesir-ondalik-yuzde": {
+  "h": "a2f8c956986d92ed",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-kesir-seritleri": {
+  "h": "0ca2b6d8a532af9c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-kesirler-hangisi-farkli": {
+  "h": "050ff9e716d5ec44",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-kesirleri-karsilastir": {
+  "h": "61a3ae64daaf6910",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-kesirleri-sirala": {
+  "h": "2239e8a38dd448bf",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-kesisen-cemberler": {
+  "h": "21ee2ca53be497fc",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-komsu-aci-olustur": {
+  "h": "46e2ddd03f15880b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-modelle-ozellikler": {
+  "h": "49e5b37c700400d4",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-olasilik-degeri-olabilir-mi": {
+  "h": "c78c172a428444e5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-olasilik-gosterimleri": {
+  "h": "c723edb2feac312e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-olasilik-hangisi-farkli": {
+  "h": "b0d0f98cfa665949",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-olasilik-spektrumu": {
+  "h": "99219cfd5b634f9a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-oruntu-kural-eslestir": {
+  "h": "32d3b5e0df135fdd",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-oruntu-kurali": {
+  "h": "b746ab778fa56087",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-oruntu-varsayimlari": {
+  "h": "160b6c5d2c94fc00",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-paralel-dik-kesisen": {
+  "h": "19daa2e7c79ae646",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-problem-stratejileri": {
+  "h": "eab01bebaad07d59",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-referans-kesirler": {
+  "h": "07aec12849657306",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-resimden-ifade": {
+  "h": "a2cbd0f91a8fb792",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-saat-acilari": {
+  "h": "22bffde756818366",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-sayi-cumlesi-dogru-mu": {
+  "h": "ba1c870623d7314d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-sayi-dogrusunda-kesir": {
+  "h": "a8e3d4345db9a443",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-sayi-dogrusunda-kesirler": {
+  "h": "8fb877e8ff24541b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-sekil-oruntusu": {
+  "h": "d725cf64f2f56aaf",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-sekiller-hangisi-farkli": {
+  "h": "e9b37768a3cb2b94",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-serit-modeli": {
+  "h": "6ccae1bfcb808115",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-sifirli-bolukler": {
+  "h": "bb28abf31322cb30",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-spektrumda-isaretle": {
+  "h": "aa122ced2a60dc4c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-sutun-grafigi-olustur": {
+  "h": "018e8cd937ed669f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-temel-geometrik-cizimler": {
+  "h": "fb76b1410107aad8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-torba-deneyi": {
+  "h": "a10819d64cb2434d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-tumler-butunler-hesapla": {
+  "h": "90c184049de71b84",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-ucgen-aci-olustur": {
+  "h": "e6352911d3ab94d8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-ucgenin-ic-acilari": {
+  "h": "3cb5771a1b7c3f19",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-ucgenleri-acilarina-gore-sinifla": {
+  "h": "f01a0906f0d7e4f9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-veri-gorsellestirme": {
+  "h": "a7b0e48696994fd5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-veri-hangisi-farkli": {
+  "h": "0d467b88fac26c1a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-yaniltici-grafik": {
+  "h": "68f7f748226b87ac",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g5-yuzluk-kart": {
+  "h": "c4eb2d010c147c06",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-aci-ciftlerini-grupla": {
+  "h": "af2a33e659316e13",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-aci-olustur": {
+  "h": "f52045ac966e1870",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-aci-problemleri": {
+  "h": "d404c2ed8f0bb816",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-aci-problemleri-yasam": {
+  "h": "4c799fda04b14094",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-adil-paylasim": {
+  "h": "b79bfddb00b4f159",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-alan-bagintilari": {
+  "h": "3495222587bc31cf",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-alan-birimi-yanilgilari": {
+  "h": "1c6714ba503437cf",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-alan-birimleri-donustur": {
+  "h": "394ed13a4dcb7a6c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-alan-dikdortgenleri": {
+  "h": "0641da79158d4b4f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-alan-parcala": {
+  "h": "81ba62047b90fda6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-alan-problemleri": {
+  "h": "2a9b012c52555e64",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-alan-problemleri-hesapla": {
+  "h": "09bcc82bbacbc9c8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-algoritma-ciktisi": {
+  "h": "d1012f61cd52b7ff",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-algoritma-sirala": {
+  "h": "6785170f1c652223",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-algoritma-yorumla": {
+  "h": "ace8b4e44f5824fc",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-anket-grafigi": {
+  "h": "7ca3a34a793218bb",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-asal-carpan-agaci": {
+  "h": "1389ca5b80ce5e99",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-asal-dikdortgen": {
+  "h": "3838ca7233c5b14d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-asal-mi": {
+  "h": "3047f00f57ade7a3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-asal-ozellikleri": {
+  "h": "b72a8731e65d1990",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-bolunebilme-grupla": {
+  "h": "e90a5113da1bba11",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-bolunebilme-neden": {
+  "h": "d35f1db21dac4dc8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-bolunebilme-yuzluk": {
+  "h": "a9ecadd730752a52",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-carpan-listesi": {
+  "h": "ebe1930c35bfce9f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-carpan-mi-kat-mi": {
+  "h": "3afff22250432bbd",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-carpan-ve-kat": {
+  "h": "6c8c389b3f8d1665",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-cebir-hangisi-farkli": {
+  "h": "06105d0b84e81f9e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-cebir-karolari": {
+  "h": "460746db0be8129a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-cebirsel-ifade-kavramlari": {
+  "h": "064a1253b57dee56",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-cember-problemleri": {
+  "h": "8bf341747ca2e08a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-cember-uzunlugu-alistirma": {
+  "h": "543845a9105633e9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-cetele-goreli-siklik": {
+  "h": "20b6068916665750",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-cevre-cap-orani": {
+  "h": "8ae0b381da0a5d08",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-deney-verisini-yorumla": {
+  "h": "633f14a197a2c295",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-denk-ifadeler": {
+  "h": "d09e2dcce5e5a450",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-devirli-oruntu": {
+  "h": "56e69875e066a0c8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-dortgen-hangisi-farkli": {
+  "h": "e67c28b6170c625b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-dortgen-onermeleri": {
+  "h": "1cf115fabcc7ee4a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-eksik-rakam": {
+  "h": "172f173c1aa23fa6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-geometri-tahtasinda-alan": {
+  "h": "4d5995932ebd76eb",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-ifade-tablo": {
+  "h": "2b92b50ab0fd8f8e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-istatistik-hangisi-farkli": {
+  "h": "2be9854b91213df5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-istatistiksel-yorumlari-tartis": {
+  "h": "2186a0f4b8f0e1cb",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-kes-tasi": {
+  "h": "d7dc623a74a55064",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-kesen-aci-olustur": {
+  "h": "117d6bee9c7f9b34",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-kesir-bolme-iliskisi": {
+  "h": "dd388322d4124653",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-kesir-modeli": {
+  "h": "651acc7a538d6a9a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-kesir-ondalik-islemler": {
+  "h": "7f221d4a6ce216e9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-kesir-ondalik-yuzde-problemleri": {
+  "h": "4c0fd294510e61b0",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-kibrit-oruntusu": {
+  "h": "56d5d6c177aaeb6a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-kok-yaprak": {
+  "h": "3c653e93fbefe217",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-kosegen-geometri-tahtasi": {
+  "h": "33a0f416ec2da7cc",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-kosegen-ozellikleri": {
+  "h": "9fb39663b090788b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-kosegen-uzunluklari": {
+  "h": "77d09cb17661039d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-kosegenleri-birlestir": {
+  "h": "7001867fa0988631",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-merkez-aci-kesir": {
+  "h": "62ae79bbbd683313",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-merkez-aci-olustur": {
+  "h": "e496e4da086e4dc1",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-merkez-aci-problemleri": {
+  "h": "c3c55c758da423bd",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-merkez-aci-ve-yay": {
+  "h": "276c02cfeb80154d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-merkezi-egilim-sec": {
+  "h": "42e4ae9b76302c2a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-metre-serit": {
+  "h": "657f7c7ce12b4975",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-metrekare-model": {
+  "h": "dee563ebdcb31ef6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-olasilik-hangisi-farkli": {
+  "h": "c14c480ac7b41bba",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-olcme-hangisi-farkli": {
+  "h": "083688eedaa09b8d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-once-tahmin-et": {
+  "h": "63cfccbe81e3b7b7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-ondalik-bloklar": {
+  "h": "83ee79345331483c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-ondalik-hangisi-farkli": {
+  "h": "c857898d86ce8c7b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-ondalik-karsilastir": {
+  "h": "e7a05e2943d3ce80",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-ondalik-kesir-toplami": {
+  "h": "e332629b9c04d777",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-ondalik-sayi-dogrusu": {
+  "h": "2c1f7e453062825e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-onluk-kareli-kagit": {
+  "h": "02dc2a3ce69a3f57",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-ortak-bolen-model": {
+  "h": "baaf86ab49c30782",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-ortak-bolen-ortak-kat-grupla": {
+  "h": "42b66758dd6fd928",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-ortak-bolen-ortak-kat-problemleri": {
+  "h": "fbcbf8e71179099a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-ortak-kat-sayi-dogrusu": {
+  "h": "820247a93be8a5ff",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-ortalama-esitle": {
+  "h": "5c19bc261cf59570",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-oruntu-karolar": {
+  "h": "50ee9b37f17736ea",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-oruntu-kurali": {
+  "h": "91440a4bde30906e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-oruntu-ve-cokgenler": {
+  "h": "ca0369abf87993eb",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-paralel-aci-olculeri": {
+  "h": "14185ca95fe006d4",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-paralel-dogrular-iki-kesen": {
+  "h": "e469143a12ac696d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-paralel-dogrular-problem": {
+  "h": "59117322de3f35d6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-paralelkenar-ucgen-alani": {
+  "h": "3746707a4a4ae8be",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-pi-sayisi": {
+  "h": "633a1605f8e69f78",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-pi-yanilgilari": {
+  "h": "49f7472bb45b830e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-sayilar-hangisi-farkli": {
+  "h": "615732356102c14a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-sonlu-devirli": {
+  "h": "48ddf7a36eb694b7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-sozel-cebirsel": {
+  "h": "690dd5987086016c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-tekerlek-modeli": {
+  "h": "250a87f62e830218",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-tekerlek-yuvarla": {
+  "h": "6b1552645d2964bd",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-torba-deneyi": {
+  "h": "f1cb52b738ee2cc8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-ucgen-dortgen-aci-hesapla": {
+  "h": "01763d8020dcbf76",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-ucgen-dortgen-ic-dis-acilar": {
+  "h": "87d2a3a58fb01461",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-uygun-uzunluk-birimi": {
+  "h": "e0cfd66f593d0f44",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-uzunluk-alan-benzetimi": {
+  "h": "3c71262348633b70",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-uzunluk-birim-iliskileri": {
+  "h": "bddd0845fae233aa",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-uzunluk-donusum": {
+  "h": "7264e03d3fd6b447",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-veri-turu": {
+  "h": "71c562547574f0ad",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-yaniltici-grafik": {
+  "h": "b5547e7e04c0edc9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-yorum-kabul-curut": {
+  "h": "2c8b0bb19f2da02b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-yuzde-modeli": {
+  "h": "ab864823d00e4c09",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g6-zar-deneyi": {
+  "h": "d7ee6a2c8f98070a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-acinimlar": {
+  "h": "6b6240d453c4c264",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-adil-mi": {
+  "h": "93d00739e59ddcf9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-akis-semasi": {
+  "h": "46aee7863c1f624a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-alan-bagintilari-eslestir": {
+  "h": "5228ed0973d8f19f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-alan-mi-hacim-mi": {
+  "h": "84db4755f9ef0093",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-alan-problemleri": {
+  "h": "51ee587960dbcb58",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-alan-problemleri-model": {
+  "h": "c6bb3b0e142086de",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-alanlari-sirala": {
+  "h": "939c1a6ece13d2c9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-algoritma-izle": {
+  "h": "668f4461a3014854",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-algoritma-sirala": {
+  "h": "cd86049f786f2c02",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-arada-sayi-var-mi": {
+  "h": "1e42e243f58dc863",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-ayni-hacim-farkli-prizma": {
+  "h": "2cbb017c16d5ae37",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-ayrik-olay-yorumla": {
+  "h": "b085eef97599c78b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-ayrik-olaylar": {
+  "h": "ebe791b5201ca474",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-ayrik-ortak-cikti": {
+  "h": "e8faf337918ac854",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-baglam-islem-eslestir": {
+  "h": "f86ac6f6090bcb26",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-birim-kuplerle-hacim": {
+  "h": "e51028a864bfb3ed",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-birim-oran": {
+  "h": "5b73ce8e59b62331",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-birimli-birimsiz-oran": {
+  "h": "b9b1f45f1eb89930",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-bolerek-ondalik": {
+  "h": "abc5907f0a1ad099",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-cebir-karolari": {
+  "h": "840f166c5576d5fb",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-cift-sayi-dogrusu": {
+  "h": "ac54dfa4087e3f7a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-daire-alani": {
+  "h": "c26f2b1d4932fc5f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-daire-alani-kavram": {
+  "h": "accc66731d072d19",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-daire-alani-tahmin": {
+  "h": "62709a7b2c2d4d8a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-daire-dilimi-alani": {
+  "h": "bef05d774583ede0",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-denklem-coz": {
+  "h": "58bfd21c09a0b702",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-denklem-problemleri": {
+  "h": "a7c06e4dd2fbd931",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-dilim-problem": {
+  "h": "cfc0b3c78d2a89dd",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-dogru-oranti": {
+  "h": "95733575eb223ba9",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-dogru-oranti-problemleri": {
+  "h": "34e073ec2a18a04e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-eleman-ozellikleri": {
+  "h": "65ae152fe11da5bd",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-esit-olasilik": {
+  "h": "739a7f7f6833f39e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-esit-olasilikli-mi": {
+  "h": "30bf9526d0977bd0",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-esitsizlik-sayi-dogrusu": {
+  "h": "857acf56f8ff3881",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-eskenar-dortgen-yamuk": {
+  "h": "93737ab39f4a7122",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-fark-mi-kat-mi": {
+  "h": "c73da1d0e29f0b98",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-gecerli-mi-hatali-mi": {
+  "h": "b56f170f0d65dce6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-gorunum-problem": {
+  "h": "148915e3efab48e0",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-grafik-olustur": {
+  "h": "f39f89f526c99d63",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-hacim-karsilastir": {
+  "h": "49ba7a3b77a010be",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-hacim-sirala": {
+  "h": "2ee3aa4b6433e277",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-hacim-sirala-kutular": {
+  "h": "8e6c5d87d899a842",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-her-zaman-bazen-asla": {
+  "h": "c73995261fc5e41e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-ifade-model": {
+  "h": "057fa31c3193c1df",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-insa-adimlari": {
+  "h": "47aa40a3df50e8ec",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-ispat-adimlari": {
+  "h": "0290b2148e85c443",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-ispat-muhakeme": {
+  "h": "4787617e773a360b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-katman-katman": {
+  "h": "161e9dd2a5e900fa",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-kenarortay-insa-muhakeme": {
+  "h": "a32c18149c0ff059",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-kenarortay-insasi": {
+  "h": "9aee008c01610107",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-kenarortay-katla": {
+  "h": "4dd7d8abc0fc9387",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-kup-yapilari-gorunum": {
+  "h": "d9e6200151132e83",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-merkez-acisi-eslestir": {
+  "h": "3f84ccf96299e77e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-merkez-secimi": {
+  "h": "296a577c3e44ad6e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-metrekupun-icinde": {
+  "h": "f4c5a84649325f68",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-mutlak-deger": {
+  "h": "464fccf1495e551a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-nokta-dizilimi": {
+  "h": "e235777026014055",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-nokta-grafigi": {
+  "h": "da77b36f5380e1bc",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-ondalik-gosterim-eslestir": {
+  "h": "06ce513ced52d4da",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-ondalik-hayatta": {
+  "h": "779013530e0d529b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-oran-tablosu": {
+  "h": "67e8730ff5926b1b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-orantili-grafik": {
+  "h": "a93401284bbd0e72",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-orantili-mi": {
+  "h": "a72ef8bbb48ed7a7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-orantiyi-yorumla": {
+  "h": "01e90d8d72f741ad",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-orta-dikme-aciortay": {
+  "h": "da95ce167ff566d2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-orta-dikme-problem": {
+  "h": "0707c1ebbe735b76",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-prizma-problemleri": {
+  "h": "b36d76f062b167ac",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-prizma-problemleri-2": {
+  "h": "eeef1c53a001acb5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-rasyonel-karsilastir": {
+  "h": "7c2fc275f81f8bd0",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-rasyonel-problemler": {
+  "h": "7fcba6b399116f83",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-rasyonel-sayilarla-islem": {
+  "h": "849205dbe0ec17fb",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-rasyonel-sirala": {
+  "h": "44e1708c8add44e4",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-referansla-karsilastir": {
+  "h": "2fdad38ab143b0da",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-sayi-dogrusunda-rasyonel": {
+  "h": "38324254b60342a4",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-sayi-kodu-eslestir": {
+  "h": "b1abb2239e8a3684",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-sayi-kumeleri": {
+  "h": "16bddb8199fdf52f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-sayma-pullari": {
+  "h": "66133574b2564ab6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-serit-denklem": {
+  "h": "e883d0d607d7e939",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-simetrik-mi": {
+  "h": "8c87a56328731d78",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-sivi-olcme": {
+  "h": "c62a155c48d46243",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-sonlu-mu-devirli-mi": {
+  "h": "5eefa5c3a6f3057e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-t1-hangisi-farkli": {
+  "h": "990d0d2123bb13cd",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-t2-hangisi-farkli": {
+  "h": "10e65f2deea41e3e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-t3-hangisi-farkli": {
+  "h": "72d6700baf454def",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-t4-hangisi-farkli": {
+  "h": "f641371132dbf435",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-t5-hangisi-farkli": {
+  "h": "36efa6c45d3f0f8f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-t6-hangisi-farkli": {
+  "h": "a062b659c37ce6e5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-t7-hangisi-farkli": {
+  "h": "a6c410f86176d21c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-t8-hangisi-farkli": {
+  "h": "b73a03c8f0406de3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-t9-hangisi-farkli": {
+  "h": "af53a32d687767ed",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-tam-sayi-oruntu": {
+  "h": "ea2d76b94e098967",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-tam-sayilar-hayatta": {
+  "h": "825929114e9f40eb",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-terazi-denklem": {
+  "h": "117267a3bbaa0a98",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-terimleri-tani": {
+  "h": "9643ab94b37c9165",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-toplamsal-mi-carpimsal-mi": {
+  "h": "c85801c92a7dbb05",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-torba-deneyi": {
+  "h": "0939317828ed6fc7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-tumleyen-olay": {
+  "h": "834d30e72d63f304",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-tumleyen-problem": {
+  "h": "da78e5e2085a9092",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-ucgende-yardimci-elemanlar": {
+  "h": "0d0ffcf5f866f0a0",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-veri-turu": {
+  "h": "25d592002f0836d6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-yaniltici-grafik": {
+  "h": "20bf8d5d859f8650",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-yansima-ozellikleri": {
+  "h": "6537c251d34c2bd7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-yansimayi-tamamla": {
+  "h": "3cb5a8adb7b3c6b7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-yardimci-eleman-eslestir": {
+  "h": "8ce83f5513267075",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-yorumlari-tartis": {
+  "h": "e2be998602bf3764",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-yuzey-alani": {
+  "h": "977f98f67098108e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-yuzey-alani-problem": {
+  "h": "4139f66ca992c212",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g7-zar-deneyi": {
+  "h": "d56b29a9059fd02b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-aci-kenar-akil-yurut": {
+  "h": "f6d891ad6f0a15e8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-aci-kenar-iliskisi": {
+  "h": "4bce0836b1838544",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-aci-kenar-sirala": {
+  "h": "2ff906004d90d366",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-acinimdaki-sekiller": {
+  "h": "9846190992f3821f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-acinimlar": {
+  "h": "c9d62665c5fd8990",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-akis-fonksiyon-eslestir": {
+  "h": "f194786568f34500",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-algoritma-adimlari": {
+  "h": "a45b6f2825dee457",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-algoritmayi-calistir": {
+  "h": "c187fea81c8218d6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-aralik-gosterimleri": {
+  "h": "12cf2e4105614d89",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-araliklari-oku": {
+  "h": "fe2542f72c79f9d0",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-aralikta-mi": {
+  "h": "0652974cf3481267",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-arastirma-sureci": {
+  "h": "90d1138aa0e8a530",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-benzer-mi": {
+  "h": "435d69bf8044576c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-benzer-ucgenler-hesapla": {
+  "h": "cedaa05b694a1057",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-benzerlik-icin-yeterli": {
+  "h": "e38c74c663c24687",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-bolgeler": {
+  "h": "3987ab92ad865ff5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-buyume-oruntusu": {
+  "h": "38fad662b50f2a9b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-buyut-kucult": {
+  "h": "d877b6a2f277aea5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-cikarim-gecerli-mi": {
+  "h": "9788d29c58e17759",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-cisim-hangisi-farkli": {
+  "h": "3b1c5944e9868759",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-cisimlerin-elemanlari": {
+  "h": "0026835484e07e42",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-cubuklarla-ucgen": {
+  "h": "b1697c7f5994f117",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-deney-sayisi-artinca": {
+  "h": "9ac326249730c606",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-deneysel-olasilik-hesapla": {
+  "h": "520d1ab4db78e557",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-dik-dar-genis": {
+  "h": "b1136b4c2828bdb2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-dikdortgen-donusum": {
+  "h": "8de171e4428551a1",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-dogru-hangisi-farkli": {
+  "h": "5e0a91f55a8aa3f2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-dogrularin-durumu": {
+  "h": "edd99765dcdce238",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-dogrusal-temsiller": {
+  "h": "097150a6f521f88b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-donusum-eslestir": {
+  "h": "6ee20e803ee72a56",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-donusum-hangisi-farkli": {
+  "h": "a3ec1d4ec0a6937d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-donusum-koordinat-duzlemi": {
+  "h": "f08914980b2a6e3d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-donusum-problemleri": {
+  "h": "aafae39da2dec192",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-donusum-problemleri-hesapla": {
+  "h": "395c8cb997e464a8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-donusumu-belirle": {
+  "h": "849fa53a1aad19b5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-es-ucgen-geometri-tahtasi": {
+  "h": "98c7495e6655077d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-es-ucgen-karsilik": {
+  "h": "f9586db73556b401",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-es-ucgen-yeterli-mi": {
+  "h": "ea3b7a000c1fc8b4",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-es-ucgenler": {
+  "h": "f8272c5251f643ef",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-gercek-sayilari-sirala": {
+  "h": "5fdbefcbc68dd5da",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-gercek-sayilari-yerlestir": {
+  "h": "e18471f0998cb431",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-grafik-ve-ozet-secimi": {
+  "h": "d24d75bba7b607c3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-kare-ve-karekok": {
+  "h": "8a0769106d55cec5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-karekok-geometri-tahtasi": {
+  "h": "f7f4f777a777b7a5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-karekok-muhakeme": {
+  "h": "45b8573b24050a2b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-karekok-sayi-dogrusunda": {
+  "h": "a7f1d546b993f929",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-karekok-yaklasik-deger": {
+  "h": "4fbfe0876ead01de",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-kesisim-noktasi": {
+  "h": "f3672c6a0f49dbe4",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-koordinat-kavramlari": {
+  "h": "0c4ad5f14707f084",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-koordinat-kurali-kesfet": {
+  "h": "7ea72e918822ed3d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-koordinat-oku": {
+  "h": "0fe687f51c2742df",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-noktayi-yerlestir": {
+  "h": "ae5a4e7ae872a744",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-olasilik-hangisi-farkli": {
+  "h": "c19c74aca0f5d6f5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-olasilik-karar": {
+  "h": "9f8e6872342acf76",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-olasilik-yaklasimlari": {
+  "h": "83671fcf7aaeb502",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-ondalik-davranisi": {
+  "h": "82461068550a83b8",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-ondalik-gosterim-eslestir": {
+  "h": "39b804fde88a45a2",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-ondalik-gosterim-ve-yargi": {
+  "h": "98b5093d4c609dd1",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-ortalama-mutlak-sapma": {
+  "h": "7542eb90a8fbb3db",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-oteleme-kurali": {
+  "h": "be31fede90d6b27e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-oteleme-mi": {
+  "h": "89397d22d320602d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-oteleme-ozellikleri": {
+  "h": "070d69a1a4575015",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-ozet-hesap-dogrula": {
+  "h": "b8b973607245983e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-pisagor-geometri-tahtasi": {
+  "h": "0eeba83946f3552b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-pisagor-kareler": {
+  "h": "94785c82bc656cd5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-pisagor-kavram": {
+  "h": "4420506c39a3a89a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-rasyonel-mi-irrasyonel-mi": {
+  "h": "36862bcb916faf54",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-sayilar-hangisi-farkli": {
+  "h": "f84c7be1404b0cf7",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-sifir-ve-negatif-us": {
+  "h": "9d6fe9d6df02f327",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-silindir-hacim-analoji": {
+  "h": "baad374523bd01b3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-silindir-hacim-problemleri": {
+  "h": "2dc19b2a413e91d5",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-silindir-hacmi": {
+  "h": "a5b9afc49b38ea9e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-silindir-kaplama": {
+  "h": "48d9ef4b5b644a4a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-silindir-yuzey-alani": {
+  "h": "07b579f9bca9a72c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-silindir-yuzey-kavram": {
+  "h": "586dddf8bbf08f49",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-silindir-yuzey-problemleri": {
+  "h": "c8dcfa7d84e1de46",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-sozde-kod": {
+  "h": "e981f19a78042eb1",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-sutun-grafigi-olustur": {
+  "h": "fabdf26a9d9e73bc",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-tablodan-fonksiyona": {
+  "h": "24d868e6a536ce2f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-temsil-ceviri": {
+  "h": "781b94d0f2f9c8fc",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-torba-deneyi": {
+  "h": "b01bdff85312cf1b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-ucgen-esitsizligi": {
+  "h": "ec23427df93adf28",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-ucgen-hangisi-farkli": {
+  "h": "f56b20845090dbcb",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-ucgen-olusur-mu": {
+  "h": "9e8a701df600ff71",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-ucgen-problemleri": {
+  "h": "2ae8c55846ee6f4d",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-ucgen-problemleri-hesapla": {
+  "h": "bb76c064983d8f4c",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-ucgen-strateji-eslestir": {
+  "h": "e5cf292287b2f490",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-ucuncu-kenar": {
+  "h": "910081272835553b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-uslu-ifadenin-anlami": {
+  "h": "7e83cb08852fb763",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-uslu-islemler": {
+  "h": "fcfd090a00a99473",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-uslu-katlama-oruntusu": {
+  "h": "6db8e996846881f1",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-uslu-ozellik-eslestir": {
+  "h": "2f5772424fc5090a",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-uslu-problemler": {
+  "h": "2f72fb168b1825e6",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-ust-uste-daireler": {
+  "h": "26cd7fcdd08782c3",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-veri-hangisi-farkli": {
+  "h": "f5c708f11f83af4f",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-veri-turleri": {
+  "h": "a8f47354da55180e",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-yaniltici-grafik": {
+  "h": "0f2bdaace5eda35b",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-yaniltici-yorumlar": {
+  "h": "ba7b6a8cc9b00559",
+  "d": "2026-11-09"
+ },
+ "/etkinlik/g8-yetisme-problemi": {
+  "h": "e03755f6561e2675",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/alancevre": {
+  "h": "06b9b8542ac2ab3f",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/algebra": {
+  "h": "7091acaeaae3b7e8",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/angle": {
+  "h": "d4eb52c550271ed4",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/balance": {
+  "h": "24319c497a1e2e6f",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/bargraph": {
+  "h": "dafbae52b48eeba2",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/base10": {
+  "h": "727c82acbeda5deb",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/carpanagaci": {
+  "h": "f0dfc8a72af6af39",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/ciftdogru": {
+  "h": "9202088d1a9c8d37",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/clock": {
+  "h": "ae926e080fadbe15",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/coordinate": {
+  "h": "6fef6ade2f299bf8",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/dinamikucgen": {
+  "h": "dc1a3941b0d870ad",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/dizilim": {
+  "h": "d283cbc018d59c90",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/donusum": {
+  "h": "5d58681be02300bb",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/egim": {
+  "h": "34f65581c7981ac4",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/fractions": {
+  "h": "7dc83c4017fd42f2",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/geoboard": {
+  "h": "ff590deb26bf6b64",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/grafiklab": {
+  "h": "845c7724b2f7147f",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/izometrik": {
+  "h": "8a75dc7550f16369",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/kalbur": {
+  "h": "d519756aa2c20e60",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/kesirdaireleri": {
+  "h": "9bfa5e4b2da8ecc2",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/kesirdogrusu": {
+  "h": "aaf8ea992afdd546",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/money": {
+  "h": "60142b95e5fe350e",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/nets": {
+  "h": "b8bbf5872107685a",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/noktakartlari": {
+  "h": "e945eb8b73f0f30c",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/numberline": {
+  "h": "aaa89c83c97b4e7c",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/orantablosu": {
+  "h": "c16f7220d6450aba",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/oruntubloklari": {
+  "h": "6cef4aa9aa9b5b7c",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/probability": {
+  "h": "2154615ddd530f92",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/rastgeledeney": {
+  "h": "91a8b2bef7f43503",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/rekenrek": {
+  "h": "6ec04e9e8655a309",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/sayikartlari": {
+  "h": "2e98248242df5a00",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/symmetry": {
+  "h": "84d5946c24b2d5f8",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/tangram": {
+  "h": "3dce8f43b40f4189",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/tenframe": {
+  "h": "0c5b2363c95cdbb5",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/yuzdeizgarasi": {
+  "h": "72ccd3f36f63b061",
+  "d": "2026-11-09"
+ },
+ "/manipulatif/yuzluk": {
+  "h": "de9b2ba2ef960cfb",
+  "d": "2026-11-09"
+ },
+ "/manipulatifler": {
+  "h": "1716b921d349d6f7",
+  "d": "2026-11-09"
+ },
+ "/online-ozel-ders": {
+  "h": "cecf81c0327a6f16",
+  "d": "2026-11-09"
+ },
+ "/oyun/aci": {
+  "h": "d6fad3e7f9e1ecfe",
+  "d": "2026-11-09"
+ },
+ "/oyun/asal-agaci": {
+  "h": "e83e2b90708b2136",
+  "d": "2026-11-09"
+ },
+ "/oyun/asal-bekci": {
+  "h": "7de6449807134d82",
+  "d": "2026-11-09"
+ },
+ "/oyun/at-yarisi": {
+  "h": "54a0eddee38df2d0",
+  "d": "2026-11-09"
+ },
+ "/oyun/balon": {
+  "h": "cbbca74b32e56c90",
+  "d": "2026-11-09"
+ },
+ "/oyun/bir-islem": {
+  "h": "9b2d1d7f2d3d2cef",
+  "d": "2026-11-09"
+ },
+ "/oyun/bolen-merdiveni": {
+  "h": "65d05abb7d41d2a1",
+  "d": "2026-11-09"
+ },
+ "/oyun/carpan-fabrikasi": {
+  "h": "4738bbec62f73187",
+  "d": "2026-11-09"
+ },
+ "/oyun/denge-kulesi": {
+  "h": "01b3ead9104165f0",
+  "d": "2026-11-09"
+ },
+ "/oyun/denklem-kapilari": {
+  "h": "e36cfd2df42741a6",
+  "d": "2026-11-09"
+ },
+ "/oyun/egim-parkuru": {
+  "h": "2db76c7cc7c6ce71",
+  "d": "2026-11-09"
+ },
+ "/oyun/gemiler": {
+  "h": "f8e36ec1fd8d955b",
+  "d": "2026-11-09"
+ },
+ "/oyun/gizli-sayi": {
+  "h": "1fff7fd215cd7a1b",
+  "d": "2026-11-09"
+ },
+ "/oyun/gokkusagi-carpanlar": {
+  "h": "4dcdf302efaa7ece",
+  "d": "2026-11-09"
+ },
+ "/oyun/hata-avcisi": {
+  "h": "b2b70a5d60e0973a",
+  "d": "2026-11-09"
+ },
+ "/oyun/iklim-istasyonu": {
+  "h": "1b5e4b9b00b141c8",
+  "d": "2026-11-09"
+ },
+ "/oyun/kargo-rotasi": {
+  "h": "67e76eb39c71bb5b",
+  "d": "2026-11-09"
+ },
+ "/oyun/kasa": {
+  "h": "4d43f1a2b9954fe9",
+  "d": "2026-11-09"
+ },
+ "/oyun/kesir-takimadalari": {
+  "h": "db35c4f35f3ac976",
+  "d": "2026-11-09"
+ },
+ "/oyun/kok-dukkani": {
+  "h": "df9db32dc45b03a7",
+  "d": "2026-11-09"
+ },
+ "/oyun/kopru-muhendisi": {
+  "h": "bb94d48fbf5e7f2d",
+  "d": "2026-11-09"
+ },
+ "/oyun/kristal-magarasi": {
+  "h": "e8ccf0598f8fac4a",
+  "d": "2026-11-09"
+ },
+ "/oyun/kurabiye-fabrikasi": {
+  "h": "e09c33c5978bfee6",
+  "d": "2026-11-09"
+ },
+ "/oyun/kurbaga": {
+  "h": "37ba89559ebf187a",
+  "d": "2026-11-09"
+ },
+ "/oyun/labirent": {
+  "h": "7c29df50b5c702ab",
+  "d": "2026-11-09"
+ },
+ "/oyun/lazer-lab": {
+  "h": "2c80b73c1cc691aa",
+  "d": "2026-11-09"
+ },
+ "/oyun/lunapark": {
+  "h": "12e568d5452cc443",
+  "d": "2026-11-09"
+ },
+ "/oyun/makine": {
+  "h": "93b8aee639c3e8cc",
+  "d": "2026-11-09"
+ },
+ "/oyun/matematik-bahcem": {
+  "h": "f4b6bb887955f683",
+  "d": "2026-11-09"
+ },
+ "/oyun/matematik-sehri": {
+  "h": "215ee8ae184f9792",
+  "d": "2026-11-09"
+ },
+ "/oyun/mozaik-ustasi": {
+  "h": "035de3d9ef5e0565",
+  "d": "2026-11-09"
+ },
+ "/oyun/ozdeslik-bulmacasi": {
+  "h": "fba1c800bb3d0215",
+  "d": "2026-11-09"
+ },
+ "/oyun/pizza": {
+  "h": "7cc19320f2032d3a",
+  "d": "2026-11-09"
+ },
+ "/oyun/robot": {
+  "h": "636c1ac98e7b5637",
+  "d": "2026-11-09"
+ },
+ "/oyun/sayi-adalari": {
+  "h": "82815c6300501861",
+  "d": "2026-11-09"
+ },
+ "/oyun/sayi-konusmalari": {
+  "h": "d406a01801897269",
+  "d": "2026-11-09"
+ },
+ "/oyun/sayi-treni": {
+  "h": "fe588fea48cb2791",
+  "d": "2026-11-09"
+ },
+ "/oyun/su-muhendisi": {
+  "h": "2f10dfdcd634405a",
+  "d": "2026-11-09"
+ },
+ "/oyun/tahmin": {
+  "h": "86b05e124b8a767c",
+  "d": "2026-11-09"
+ },
+ "/oyun/trafik-simulatoru": {
+  "h": "304718127cfbe802",
+  "d": "2026-11-09"
+ },
+ "/oyun/uzay-kolonisi": {
+  "h": "3beb6ef33137d7c2",
+  "d": "2026-11-09"
+ },
+ "/oyun/veri-dedektifleri": {
+  "h": "63153744733c3687",
+  "d": "2026-11-09"
+ },
+ "/oyunlar": {
+  "h": "7e37d8bd95804811",
+  "d": "2026-11-09"
+ },
+ "/rehber": {
+  "h": "8d612678738dc262",
+  "d": "2026-11-09"
+ },
+ "/rehber/aci-cesitleri": {
+  "h": "9825f944da9168f0",
+  "d": "2026-11-09"
+ },
+ "/rehber/alan-ve-cevre": {
+  "h": "12aadbc510c48581",
+  "d": "2026-11-09"
+ },
+ "/rehber/aritmetik-ortalama": {
+  "h": "a64c2fec96508706",
+  "d": "2026-11-09"
+ },
+ "/rehber/asal-sayilar": {
+  "h": "ae637ad454498283",
+  "d": "2026-11-09"
+ },
+ "/rehber/basamak-degeri": {
+  "h": "4c0c7a39c5e07beb",
+  "d": "2026-11-09"
+ },
+ "/rehber/bolme-islemi": {
+  "h": "409bf13125aeb824",
+  "d": "2026-11-09"
+ },
+ "/rehber/bolunebilme-kurallari": {
+  "h": "a72be41b70ce0143",
+  "d": "2026-11-09"
+ },
+ "/rehber/buyuk-sayilarin-okunusu": {
+  "h": "012d3e42902eb9ed",
+  "d": "2026-11-09"
+ },
+ "/rehber/carpanlar-ve-katlar": {
+  "h": "5bb73c7fe5d2db04",
+  "d": "2026-11-09"
+ },
+ "/rehber/carpim-tablosu": {
+  "h": "51f58c83033bb6dd",
+  "d": "2026-11-09"
+ },
+ "/rehber/cebirsel-ifadeler": {
+  "h": "7bd09d23bedd0a60",
+  "d": "2026-11-09"
+ },
+ "/rehber/cemberin-cevresi-ve-pi": {
+  "h": "908f4195db3532cb",
+  "d": "2026-11-09"
+ },
+ "/rehber/cokgenler": {
+  "h": "9c656fef21b6ef75",
+  "d": "2026-11-09"
+ },
+ "/rehber/dairenin-alani": {
+  "h": "587265a0a7941a00",
+  "d": "2026-11-09"
+ },
+ "/rehber/denk-kesirler": {
+  "h": "a116b4ea2392066a",
+  "d": "2026-11-09"
+ },
+ "/rehber/denklem-cozme": {
+  "h": "9703293c7fc72f03",
+  "d": "2026-11-09"
+ },
+ "/rehber/donusum-geometrisi": {
+  "h": "5ef3bf0ec32a4ac9",
+  "d": "2026-11-09"
+ },
+ "/rehber/dortgenler": {
+  "h": "15e0251a10ed4732",
+  "d": "2026-11-09"
+ },
+ "/rehber/ebob-ekok": {
+  "h": "0e6389d1a99cb5d8",
+  "d": "2026-11-09"
+ },
+ "/rehber/egim": {
+  "h": "b3b950235a4af743",
+  "d": "2026-11-09"
+ },
+ "/rehber/eldeli-toplama-onluk-bozma": {
+  "h": "d88e9ff0220b91dd",
+  "d": "2026-11-09"
+ },
+ "/rehber/es-ve-benzer-ucgenler": {
+  "h": "e914f405916e8d05",
+  "d": "2026-11-09"
+ },
+ "/rehber/geometrik-cisimler-ve-sekiller": {
+  "h": "c849e328636d2b3f",
+  "d": "2026-11-09"
+ },
+ "/rehber/islem-onceligi": {
+  "h": "770dcdb16ff7c5a5",
+  "d": "2026-11-09"
+ },
+ "/rehber/karekok": {
+  "h": "fa8e679c3da1b341",
+  "d": "2026-11-09"
+ },
+ "/rehber/kesir-nedir": {
+  "h": "b99a8640189a931a",
+  "d": "2026-11-09"
+ },
+ "/rehber/kesirleri-karsilastirma": {
+  "h": "2f816b236ec05188",
+  "d": "2026-11-09"
+ },
+ "/rehber/kesirlerle-toplama-cikarma": {
+  "h": "6ff46379946b4e7d",
+  "d": "2026-11-09"
+ },
+ "/rehber/koordinat-sistemi": {
+  "h": "423445f0cb93b554",
+  "d": "2026-11-09"
+ },
+ "/rehber/olasilik": {
+  "h": "6c1a5adc69134d80",
+  "d": "2026-11-09"
+ },
+ "/rehber/ondalik-gosterim": {
+  "h": "74f17860912fd13f",
+  "d": "2026-11-09"
+ },
+ "/rehber/oran-oranti": {
+  "h": "b27e39c3ca2ba855",
+  "d": "2026-11-09"
+ },
+ "/rehber/oruntu-nedir": {
+  "h": "7d2f17b51f4ee58d",
+  "d": "2026-11-09"
+ },
+ "/rehber/paralarimiz": {
+  "h": "51b90a52a056b994",
+  "d": "2026-11-09"
+ },
+ "/rehber/pisagor-bagintisi": {
+  "h": "f809adaa699efbc0",
+  "d": "2026-11-09"
+ },
+ "/rehber/prizmanin-hacmi": {
+  "h": "b6efd5cc4f0a83f2",
+  "d": "2026-11-09"
+ },
+ "/rehber/rasyonel-sayilar": {
+  "h": "36df7329fb4c80b5",
+  "d": "2026-11-09"
+ },
+ "/rehber/ritmik-sayma": {
+  "h": "1fea12b4d1990eb7",
+  "d": "2026-11-09"
+ },
+ "/rehber/saat-okuma": {
+  "h": "4437c1732b991e86",
+  "d": "2026-11-09"
+ },
+ "/rehber/silindir": {
+  "h": "f4f5aa7d4cad7b6f",
+  "d": "2026-11-09"
+ },
+ "/rehber/simetri": {
+  "h": "3b80b4ce78bbabf1",
+  "d": "2026-11-09"
+ },
+ "/rehber/sutun-grafigi": {
+  "h": "5c16a65ed055927f",
+  "d": "2026-11-09"
+ },
+ "/rehber/tahmin-stratejileri": {
+  "h": "92a29e84752a8e38",
+  "d": "2026-11-09"
+ },
+ "/rehber/tam-sayilarla-islemler": {
+  "h": "b5e8de65e467aa60",
+  "d": "2026-11-09"
+ },
+ "/rehber/tek-ve-cift-sayilar": {
+  "h": "46b084e9c1fd1c45",
+  "d": "2026-11-09"
+ },
+ "/rehber/ucgen-esitsizligi": {
+  "h": "831616864344b894",
+  "d": "2026-11-09"
+ },
+ "/rehber/ucgenin-alani": {
+  "h": "bf447b8a3d65e63e",
+  "d": "2026-11-09"
+ },
+ "/rehber/uslu-ifadeler": {
+  "h": "313c47eae289c954",
+  "d": "2026-11-09"
+ },
+ "/rehber/uzunluk-olcu-birimleri": {
+  "h": "cda672c726557616",
+  "d": "2026-11-09"
+ },
+ "/rehber/veri-analizi-ve-grafikler": {
+  "h": "2d3e266d92aaeca7",
+  "d": "2026-11-09"
+ },
+ "/rehber/yuzde-hesaplama": {
+  "h": "43e025f1095a2449",
+  "d": "2026-11-09"
+ },
+ "/rehber/zihinden-toplama-cikarma": {
+  "h": "96411955fb0ecc55",
+  "d": "2026-11-09"
+ },
+ "/sinif/1": {
+  "h": "88145764cda6c438",
+  "d": "2026-11-09"
+ },
+ "/sinif/1/islemlerden-cebirsel-dusunmeye": {
+  "h": "59c5e624a326b8fa",
+  "d": "2026-11-09"
+ },
+ "/sinif/1/nesnelerin-geometrisi-1": {
+  "h": "32e8a33647166ab7",
+  "d": "2026-11-09"
+ },
+ "/sinif/1/nesnelerin-geometrisi-2": {
+  "h": "0e5a3d37a15121f7",
+  "d": "2026-11-09"
+ },
+ "/sinif/1/sayilar-ve-nicelikler-1": {
+  "h": "db687efa79da4266",
+  "d": "2026-11-09"
+ },
+ "/sinif/1/sayilar-ve-nicelikler-2": {
+  "h": "5123683e06685000",
+  "d": "2026-11-09"
+ },
+ "/sinif/1/sayilar-ve-nicelikler-3": {
+  "h": "4dd8327ddff6c046",
+  "d": "2026-11-09"
+ },
+ "/sinif/1/veriye-dayali-arastirma": {
+  "h": "8def73a90567cf40",
+  "d": "2026-11-09"
+ },
+ "/sinif/2": {
+  "h": "deca6d3022d45e08",
+  "d": "2026-11-09"
+ },
+ "/sinif/2/islemlerden-cebirsel-dusunmeye": {
+  "h": "542f1bdc628db637",
+  "d": "2026-11-09"
+ },
+ "/sinif/2/nesnelerin-geometrisi-1": {
+  "h": "162c6a832638e8f8",
+  "d": "2026-11-09"
+ },
+ "/sinif/2/nesnelerin-geometrisi-2": {
+  "h": "2cbe4758cd74fc94",
+  "d": "2026-11-09"
+ },
+ "/sinif/2/sayilar-ve-nicelikler-1": {
+  "h": "5ab85c77c20692a9",
+  "d": "2026-11-09"
+ },
+ "/sinif/2/sayilar-ve-nicelikler-2": {
+  "h": "47b90fe2e4a7e062",
+  "d": "2026-11-09"
+ },
+ "/sinif/2/veriye-dayali-arastirma": {
+  "h": "fd735dbdc3fc5a1b",
+  "d": "2026-11-09"
+ },
+ "/sinif/3": {
+  "h": "2ca9bee493dcb736",
+  "d": "2026-11-09"
+ },
+ "/sinif/3/islemlerden-cebirsel-dusunmeye": {
+  "h": "d28f5da6ae587a48",
+  "d": "2026-11-09"
+ },
+ "/sinif/3/nesnelerin-geometrisi-1": {
+  "h": "b967f39178bf9bdc",
+  "d": "2026-11-09"
+ },
+ "/sinif/3/nesnelerin-geometrisi-2": {
+  "h": "38320c5d09d7041b",
+  "d": "2026-11-09"
+ },
+ "/sinif/3/sayilar-ve-nicelikler-1": {
+  "h": "e9c5fcd1023e9b34",
+  "d": "2026-11-09"
+ },
+ "/sinif/3/sayilar-ve-nicelikler-2": {
+  "h": "8dfb2e96d1362194",
+  "d": "2026-11-09"
+ },
+ "/sinif/3/veriye-dayali-arastirma": {
+  "h": "d0e533180a4708fa",
+  "d": "2026-11-09"
+ },
+ "/sinif/4": {
+  "h": "39127739948c40c9",
+  "d": "2026-11-09"
+ },
+ "/sinif/4/islemlerden-cebirsel-dusunmeye": {
+  "h": "9bf5d5539f10bad2",
+  "d": "2026-11-09"
+ },
+ "/sinif/4/nesnelerin-geometrisi-1": {
+  "h": "1f71c020d428c3e7",
+  "d": "2026-11-09"
+ },
+ "/sinif/4/nesnelerin-geometrisi-2": {
+  "h": "a87bc60557950490",
+  "d": "2026-11-09"
+ },
+ "/sinif/4/nesnelerin-geometrisi-3": {
+  "h": "9862d60bbd41f7d0",
+  "d": "2026-11-09"
+ },
+ "/sinif/4/olasilik-ve-veri": {
+  "h": "ec8cd61a223231a5",
+  "d": "2026-11-09"
+ },
+ "/sinif/4/sayilar-ve-nicelikler-1": {
+  "h": "ac224de515b15978",
+  "d": "2026-11-09"
+ },
+ "/sinif/4/sayilar-ve-nicelikler-2": {
+  "h": "5f834355b10e3956",
+  "d": "2026-11-09"
+ },
+ "/sinif/5": {
+  "h": "6f12e16ff6415017",
+  "d": "2026-11-09"
+ },
+ "/sinif/5/geometrik-nicelikler": {
+  "h": "53887e8a1e3a7085",
+  "d": "2026-11-09"
+ },
+ "/sinif/5/geometrik-sekiller": {
+  "h": "de953b74d3ca1768",
+  "d": "2026-11-09"
+ },
+ "/sinif/5/islemlerle-cebirsel-dusunme": {
+  "h": "90f9e442c820898d",
+  "d": "2026-11-09"
+ },
+ "/sinif/5/istatistiksel-arastirma-sureci": {
+  "h": "0be68f5eb4cc9268",
+  "d": "2026-11-09"
+ },
+ "/sinif/5/sayilar-ve-nicelikler-1": {
+  "h": "db177e9f62d07942",
+  "d": "2026-11-09"
+ },
+ "/sinif/5/sayilar-ve-nicelikler-2": {
+  "h": "853c9f67f1db8d28",
+  "d": "2026-11-09"
+ },
+ "/sinif/5/veriden-olasiliga": {
+  "h": "893ff360ee830813",
+  "d": "2026-11-09"
+ },
+ "/sinif/6": {
+  "h": "f471a38c77fda18a",
+  "d": "2026-11-09"
+ },
+ "/sinif/6/geometrik-nicelikler": {
+  "h": "bd2e9cfbd8e7a74c",
+  "d": "2026-11-09"
+ },
+ "/sinif/6/geometrik-sekiller": {
+  "h": "745c886c7d2868fc",
+  "d": "2026-11-09"
+ },
+ "/sinif/6/islemlerle-cebirsel-dusunme-ve-degisimler": {
+  "h": "3150e59f37ff336f",
+  "d": "2026-11-09"
+ },
+ "/sinif/6/istatistiksel-arastirma-sureci": {
+  "h": "73aea8404502fe81",
+  "d": "2026-11-09"
+ },
+ "/sinif/6/sayilar-ve-nicelikler-1": {
+  "h": "bbcda83234017e79",
+  "d": "2026-11-09"
+ },
+ "/sinif/6/sayilar-ve-nicelikler-2": {
+  "h": "1096f32da94d324a",
+  "d": "2026-11-09"
+ },
+ "/sinif/6/veriden-olasiliga": {
+  "h": "f42883a3e93387bf",
+  "d": "2026-11-09"
+ },
+ "/sinif/7": {
+  "h": "6508881fa7982a06",
+  "d": "2026-11-09"
+ },
+ "/sinif/7/donusum": {
+  "h": "c7dddbe40d7b15b7",
+  "d": "2026-11-09"
+ },
+ "/sinif/7/geometrik-nicelikler-1": {
+  "h": "21e61e945d1ca8a3",
+  "d": "2026-11-09"
+ },
+ "/sinif/7/geometrik-nicelikler-2": {
+  "h": "733934730c8c9cfa",
+  "d": "2026-11-09"
+ },
+ "/sinif/7/geometrik-sekiller": {
+  "h": "561eebb9e2cbd0f6",
+  "d": "2026-11-09"
+ },
+ "/sinif/7/islemlerle-cebirsel-dusunme-ve-degisimler": {
+  "h": "46230c6ad0ee327a",
+  "d": "2026-11-09"
+ },
+ "/sinif/7/istatistiksel-arastirma-sureci": {
+  "h": "73923fdca6d34570",
+  "d": "2026-11-09"
+ },
+ "/sinif/7/sayilar-ve-nicelikler-1": {
+  "h": "0d92d9ded004c5a6",
+  "d": "2026-11-09"
+ },
+ "/sinif/7/sayilar-ve-nicelikler-2": {
+  "h": "337ae6dd5637f954",
+  "d": "2026-11-09"
+ },
+ "/sinif/7/veriden-olasiliga": {
+  "h": "d8672b9e2c3166e6",
+  "d": "2026-11-09"
+ },
+ "/sinif/8": {
+  "h": "8ad6718b70a9adbf",
+  "d": "2026-11-09"
+ },
+ "/sinif/8/cebirsel-dusunme-ve-degisimler": {
+  "h": "8f9104a2814b3024",
+  "d": "2026-11-09"
+ },
+ "/sinif/8/donusum": {
+  "h": "993b6acf871a290b",
+  "d": "2026-11-09"
+ },
+ "/sinif/8/geometrik-nicelikler": {
+  "h": "c0baf0563df148c0",
+  "d": "2026-11-09"
+ },
+ "/sinif/8/geometrik-sekiller": {
+  "h": "3794702a22623359",
+  "d": "2026-11-09"
+ },
+ "/sinif/8/istatistiksel-arastirma-sureci": {
+  "h": "447cce66a74a3cf3",
+  "d": "2026-11-09"
+ },
+ "/sinif/8/sayilar-ve-nicelikler": {
+  "h": "5e47050b96c1c51c",
+  "d": "2026-11-09"
+ },
+ "/sinif/8/veriden-olasiliga": {
+  "h": "b471f822d4c64f11",
+  "d": "2026-11-09"
+ },
+ "/tuval": {
+  "h": "ad368bffce044644",
+  "d": "2026-11-09"
+ },
+ "/yaklasim": {
+  "h": "9747e4193d303a46",
+  "d": "2026-11-09"
+ }
+}
