@@ -31,11 +31,14 @@ import { gameKeyword, interactionKeyword, outcomeKeyword, themeKeyword, toolKeyw
 import { generatorKind, runGenerator } from '../src/lib/generators.ts'
 import { gradeContent } from '../src/data/gradeContent.ts'
 import {
-  BOARD_PATH, GUIDES_PATH, ONLINE_LESSON_PATH, SITE_NAME, abs, boardSeo, activityHeading, activitySeo, approachSeo, gameHeading, gameKw, gameSeo,
+  BOARD_PATH, GUIDES_PATH, TIMES_PATH, timesFamily, timesFaq, timesSeo, ONLINE_LESSON_PATH, SITE_NAME, abs, boardSeo, activityHeading, activitySeo, approachSeo, gameHeading, gameKw, gameSeo,
   gamesIndexSeo, gradeFaq, gradeSeo, guideSeo, guidesIndexSeo, homeSeo, interactionHeading, interactionKw, interactionSeo,
   interactionsIndexSeo, notFoundSeo, onlineLessonSeo, outcomeKw, plain, privateSeo, readyInteractions, stageLabel,
   themeHeading, themeKw, themeSeo, toolHeading, toolKw, toolSeo, toolsIndexSeo, typeLabel, type PageSeo,
+  gradeTestSeo, testFaq, testsIndexSeo, themeTestHeading, themeTestSeo,
 } from '../src/lib/seo.ts'
+import { TEST_PATH, testItems, testPath, testThemes, type TestItem } from '../src/data/tests.ts'
+import { shuffle } from '../src/lib/random.ts'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const dist = process.argv[2] ?? join(root, 'dist')
@@ -70,6 +73,8 @@ const NAV = [
   ['/etkilesimler', 'Keşif Atölyesi'],
   ['/manipulatifler', 'Manipülatifler'],
   [GUIDES_PATH, 'Konu Anlatımı'],
+  [TEST_PATH, 'Test Çöz'],
+  [TIMES_PATH, 'Çarpım Tablosu'],
   ['/yaklasim', 'Yaklaşımımız'],
   [ONLINE_LESSON_PATH, 'Online Ders'],
 ] as const
@@ -232,7 +237,9 @@ add(
   ${h2('Matematik Oyunları')}${list(gameMeta.map(gameLink))}
   ${h2('Keşif Atölyesi')}${list(interactions.map(interactionLink))}
   ${h2('Sanal Manipülatifler')}${list(toolMeta.map(toolLink))}`,
-  `${h2('Matematik konu anlatımları')}${p('En çok merak edilen sorulara kısa, örnekli cevaplar; her rehberde konuyu deneyerek pekiştirebileceğin etkinlikler var.')}${list(guides.map(guideLink))}
+  `${h2('Çarpım tablosu')}${p(`${link(TIMES_PATH, '1–10 çarpım tablosu')}: tablonun tamamı, her sayının çarpımları ve cevaplı çarpım tablosu alıştırması.`)}
+  ${h2('Matematik test çöz')}${p(`1–8. sınıf her konu için cevaplı, açıklamalı online matematik testleri. ${link(TEST_PATH, 'Tüm matematik testleri')}`)}${list(grades.map((g) => link(testPath(g), `${gradeInfo[g].label} matematik testi`)), 'mt-2 flex flex-wrap gap-x-4 gap-y-1')}
+  ${h2('Matematik konu anlatımları')}${p('En çok merak edilen sorulara kısa, örnekli cevaplar; her rehberde konuyu deneyerek pekiştirebileceğin etkinlikler var.')}${list(guides.map(guideLink))}
   ${h2('Sınıflara göre matematik konuları')}${grades.map((g) => `<h3 class="mt-4 font-black">${link(`/sinif/${g}`, `${gradeInfo[g].label} matematik`, 'hover:text-brand')}</h3>${list(themesByGrade(g).map(themeLink), 'mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm')}`).join('')}
   ${h2('Ücretsiz online matematik araçları')}${list(toolMeta.map((t) => link(`/manipulatif/${t.id}`, toolKw(t))), 'mt-2 flex flex-wrap gap-x-4 gap-y-1')}
   ${h2('Hatay’da online matematik özel ders')}${p(`Aslı Öğretmen; Hatay’da Antakya, Samandağ ve çevresindeki 1–8. sınıf öğrencilerine ${link(ONLINE_LESSON_PATH, 'online birebir ve grup matematik özel dersi')} veriyor. Dersler bu sitedeki oyun, etkinlik ve sanal manipülatiflerle, Maarif Modeli öğretim programına uygun olarak işleniyor; ilkokulda temel kavramlar, ortaokulda konu eksikleri ve 8. sınıfta LGS matematik hazırlığı için.`)}`,
@@ -270,6 +277,8 @@ for (const g of grades) {
     ${h2(`${info.label} matematik konuları`)}${p(`${esc(info.label)} matematik dersinde işlenen konular ve her konu için interaktif etkinlik, oyun ve sanal manipülatifler:`)}
     ${list(themes.map((t) => `${themeLink(t)} <span class="text-ink-soft">– ${esc(t.outcomes.map((o) => outcomeKw(o.code)).join(', '))}</span>`), 'mt-2 space-y-1.5 font-semibold')}
     ${section(`${info.label} konu anlatımları`, guides.filter((x) => x.grades.includes(g)).map((x) => `${guideLink(x)} <span class="text-ink-soft">– ${esc(x.description)}</span>`), 'mt-2 space-y-1.5 font-semibold')}
+    ${g >= 2 && g <= 4 ? `${h2('Çarpım tablosu')}${p(`${link(TIMES_PATH, 'Çarpım tablosu 1–10')}: tablo, ${timesFamily(2)}den ${timesFamily(10)}a çarpımlar ve alıştırma.`)}` : ''}
+    ${h2(`${info.label} matematik testleri`)}${p(`${link(testPath(g), `${info.label} matematik test çöz`)}: bütün konulardan karışık ya da konu konu, cevaplı online testler.`)}${list(testThemes(activitiesByGrade[g], g).map(({ theme: t, count }) => `${link(testPath(g, t.slug), themeTestHeading(t))} <span class="text-ink-soft">(${count} soru)</span>`))}
     ${h2(`${info.label} matematiği evde ve derste nasıl çalışılır?`)}${list(gradeContent[g].tips.map(esc), 'mt-2 list-disc space-y-1 pl-5 font-semibold')}
     ${h2(`${info.label} matematik: sık sorulan sorular`)}${gradeFaq(g).map((f) => `<h3 class="mt-4 font-black">${esc(f.q)}</h3>${p(esc(f.a), 'mt-1 font-semibold text-ink-soft')}`).join('')}
     ${section(`${info.label} matematik oyunları`, gamesForGrade(g).map((m) => `${link(`/oyun/${m.id}`, gameHeading(m))} <span class="text-ink-soft">– ${txt(m.skills[g] ?? m.description)}</span>`), 'mt-2 space-y-1.5 font-semibold')}
@@ -300,6 +309,7 @@ for (const g of grades) {
       `${h2(`${themeHeading(t)}: bu konuda neler var?`)}
       ${p(`${esc(themeHeading(t))} konusunda ${acts.length} ücretsiz interaktif etkinlik bulunur: ${esc(t.outcomes.map((o) => lower(outcomeKw(o.code))).join(', '))}. Etkinlikler Maarif Modeli öğrenme çıktılarına göre somuttan soyuta sıralanmıştır; önce sanal materyalle keşfedilir, sonra model, sembol ve problem adımlarına geçilir.`)}
       ${section('Konu anlatımı', guidesFor(codesT).map(guideLink))}
+      ${section('Test çöz', [link(testPath(g, t.slug), `${themeTestHeading(t)} (cevaplı, online)`)])}
       ${section('Bu konuyla ilgili oyunlar', gamesFor(codesT).map(gameLink))}
       ${section('Keşif Atölyesi', interactionsFor(codesT).map(interactionLink))}
       ${section('Sanal manipülatifler', toolsInActivities(acts).map(toolLink))}
@@ -499,6 +509,7 @@ for (const g of guides) {
     <p class="text-sm font-extrabold text-ink-soft">${range(g.grades)}. sınıf matematik</p>
     <h1 class="text-3xl font-black sm:text-4xl">${esc(g.title)}</h1>
     ${p(esc(g.intro), 'mt-4 text-lg font-bold text-ink')}
+    ${g.cta ? p(`${link(g.cta.to, g.cta.label)} – ${esc(g.cta.desc)}`) : ''}
     ${g.sections.map((s) => `${h2(s.h)}${s.p.map((x) => p(esc(x))).join('')}${s.list ? list(s.list.map(esc), 'mt-2 list-disc space-y-1 pl-5 font-semibold') : ''}`).join('')}
     ${section('Deneyerek öğren: etkinlikler', [...inter.map(interactionLink), ...acts.map(({ a, g: gr }) => `${activityLink(a)} <span class="text-ink-soft">(${esc(gradeInfo[gr].label)})</span>`)])}
     ${section('Oyunlar', games.map(gameLink))}
@@ -509,6 +520,119 @@ for (const g of guides) {
     '',
     g.seoTitle,
   )
+}
+
+// ---------------------------------------------------------------------------
+// Çarpım tablosu: tablonun tamamı ve her sayının çarpımları metin olarak ("7'ler çarpım tablosu")
+// ---------------------------------------------------------------------------
+
+{
+  const N = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  const table = `<table class="mt-4 w-full max-w-xl border-collapse text-center font-bold"><caption class="sr-only">1’den 10’a kadar çarpım tablosu</caption><thead><tr><th scope="col">×</th>${N.map((b) => `<th scope="col">${b}</th>`).join('')}</tr></thead><tbody>${N.map((a) => `<tr><th scope="row">${a}</th>${N.map((b) => `<td>${a * b}</td>`).join('')}</tr>`).join('')}</tbody></table>`
+  add(
+    'carpim-tablosu',
+    timesSeo(),
+    `${crumbs([{ name: 'Çarpım Tablosu' }])}
+    <h1 class="text-3xl font-black sm:text-4xl">Çarpım Tablosu (1–10)</h1>
+    ${p('1’den 10’a kadar çarpım tablosunun tamamı. Bir satır ile bir sütunun kesiştiği kutu, iki sayının çarpımıdır: 7. satır ile 8. sütun 7 × 8 = 56.')}
+    ${table}`,
+    `${h2('Sayılara göre çarpım tablosu')}${p('Her sayının 1’den 10’a kadar çarpımları. Tabloyu tek seferde değil, bu “aileler” hâlinde ve şu sırayla öğrenmek kolaydır: 1’ler, 10’lar, 2’ler, 5’ler; sonra 4’ler, 8’ler, 3’ler, 9’lar; en son 6’lar ve 7’ler.')}
+    ${N.map((a) => `<h3 class="mt-5 font-black">${timesFamily(a)} çarpım tablosu</h3>${p(N.map((b) => `${a} × ${b} = ${a * b}`).join(' · '), 'mt-1 font-semibold text-ink-soft')}`).join('')}
+    ${h2('Çarpım tablosu: sık sorulan sorular')}${timesFaq.map((f) => `<h3 class="mt-4 font-black">${esc(f.q)}</h3>${p(esc(f.a), 'mt-1 font-semibold text-ink-soft')}`).join('')}
+    ${h2('Çarpım tablosunu öğrenmek için')}${list([
+      link(`${GUIDES_PATH}/carpim-tablosu`, 'Çarpım tablosu nasıl ezberlenir? Kolay ezberleme yolları'),
+      ...gameMeta.filter((m) => ['kurabiye-fabrikasi', 'lunapark'].includes(m.id)).map(gameLink),
+      ...toolMeta.filter((t) => ['dizilim', 'yuzluk'].includes(t.id)).map(toolLink),
+      ...interactions.filter((m) => ['parcala-birlestir-dizisi', 'carpim-dikdortgenleri', 'carpmaya-giris'].includes(m.id)).map(interactionLink),
+      link(testPath(3), '3. sınıf matematik testleri'),
+    ])}`,
+    'çarpım tablosu',
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Test Çöz: sınıf ve konu testleri (sorular etkinliklerden; cevaplar <details> içinde)
+// ---------------------------------------------------------------------------
+
+/** Testten örnek sorular: soru, seçenekler (A, B, C…), cevap ve açıklama */
+function testQuestions(items: TestItem[], max: number): string {
+  const out: string[] = []
+  for (const { q, fixedOrder } of items) {
+    if (out.length >= max) break
+    const prompt = plain(ctext(q.prompt))
+    const raw = q.choices.map((c) => plain(ctext(c)))
+    if (!prompt || raw.some((c) => !c)) continue
+    // Veride doğru seçenek çoğu zaman ilk sırada: sayfada hep "A" çıkmasın (sabit tohum, derlemeler arası aynı)
+    const order = fixedOrder ? raw.map((_, i) => i) : seeded(prompt, () => shuffle(raw.map((_, i) => i)))
+    const choices = order.map((i) => raw[i])
+    const ans = order.indexOf(q.answer)
+    const letter = (i: number) => String.fromCharCode(65 + i)
+    out.push(
+      `<p class="font-bold text-ink">${esc(prompt)}</p><p class="text-sm font-semibold text-ink-soft">${choices.map((c, i) => `${letter(i)}) ${esc(c)}`).join(' &nbsp; ')}</p>${answer('Cevap', `${letter(ans)}) ${esc(choices[ans])}${q.explain ? ` — ${txt(q.explain)}` : ''}`)}`,
+    )
+  }
+  return out.length ? `<ol class="mt-2 list-decimal space-y-3 pl-5">${out.map((o) => `<li>${o}</li>`).join('')}</ol>` : ''
+}
+/** Konudaki etkinliklerden sırayla birer soru: örnekler tek bir etkinliğe yığılmasın */
+function spread(items: TestItem[]): TestItem[] {
+  const byAct = new Map<string, TestItem[]>()
+  for (const it of items) byAct.set(it.activity.id, [...(byAct.get(it.activity.id) ?? []), it])
+  const queues = [...byAct.values()]
+  const out: TestItem[] = []
+  while (queues.some((q) => q.length)) for (const q of queues) if (q.length) out.push(q.shift()!)
+  return out
+}
+const faqHtml = (faq: { q: string; a: string }[]) => faq.map((f) => `<h3 class="mt-4 font-black">${esc(f.q)}</h3>${p(esc(f.a), 'mt-1 font-semibold text-ink-soft')}`).join('')
+const testIntro = 'Sorular her açılışta karışık seçilir; cevabını işaretlediğin anda doğru ya da yanlış olduğunu görürsün, yanlışta kısa bir açıklama gösterilir. Ücretsizdir, üyelik gerektirmez; telefon, tablet ve akıllı tahtada çözülür.'
+
+add(
+  'testler',
+  testsIndexSeo(),
+  `${crumbs([{ name: 'Test Çöz' }])}
+  <h1 class="text-3xl font-black sm:text-4xl">Matematik Test Çöz</h1>
+  ${p(`1–8. sınıf her konu için cevaplı, açıklamalı online matematik testleri. ${testIntro}`)}
+  ${grades.map((g) => `${h2(`${gradeInfo[g].label} Matematik Testi`)}${p(link(testPath(g), `${gradeInfo[g].label} matematik test çöz (karışık)`))}${list(testThemes(activitiesByGrade[g], g).map(({ theme: t, count }) => `${link(testPath(g, t.slug), `${themeKw(t)} testi`)} <span class="text-ink-soft">(${count} soru)</span>`))}`).join('')}`,
+  `${h2('Matematik testleri: sık sorulan sorular')}${faqHtml(testFaq())}
+  ${h2('Testten önce konuyu çalış')}${p(`Konu eksikse önce ${link(GUIDES_PATH, 'konu anlatımlarına')} ve sınıfının etkinliklerine göz at: ${grades.map((g) => link(`/sinif/${g}`, `${g}. sınıf`)).join(', ')}.`)}`,
+  'matematik test çöz',
+)
+
+for (const g of grades) {
+  const info = gradeInfo[g]
+  const ths = testThemes(activitiesByGrade[g], g)
+  const all = testItems(activitiesByGrade[g], g)
+  add(
+    'test',
+    gradeTestSeo(g),
+    `${crumbs([{ name: 'Test Çöz', path: TEST_PATH }, { name: `${info.label} Matematik Testi` }])}
+    <h1 class="text-3xl font-black sm:text-4xl">${esc(info.label)} Matematik Testleri</h1>
+    ${p(`${esc(info.label)} matematik konularından ${all.length} soruluk havuz: bütün konulardan karışık 10 ya da 20 soruluk test çöz veya aşağıdan bir konu seç. ${testIntro}`)}
+    ${h2(`Konuya göre ${lower(info.label)} matematik testleri`)}${list(ths.map(({ theme: t, count }) => `${link(testPath(g, t.slug), themeTestHeading(t))} <span class="text-ink-soft">(${count} soru)</span>`))}`,
+    `${h2(`${info.label} matematik test soruları ve cevapları`)}${p('Her konudan örnek sorular; cevabı görmek için “Cevap” yazısına dokun. Testte bu sorular ve daha fazlası karışık sırayla gelir.')}
+    ${ths.map(({ theme: t }) => `<h3 class="mt-6 text-lg font-black">${link(testPath(g, t.slug), themeTestHeading(t), 'hover:text-brand')}</h3>${testQuestions(spread(all.filter((i) => i.theme === t.slug)), 3)}`).join('')}
+    ${h2(`${info.label} matematik testi: sık sorulan sorular`)}${faqHtml(testFaq(g))}
+    ${p(`${link(`/sinif/${g}`, `${info.label} matematik konuları ve etkinlikleri`)} · ${link(TEST_PATH, 'Diğer sınıfların testleri')}`, 'mt-8 font-semibold')}`,
+    `${info.label} matematik test`,
+  )
+
+  for (const { theme: t, count } of ths) {
+    const items = spread(testItems(activitiesByGrade[g], g, t.slug))
+    const codesT = t.outcomes.map((o) => o.code)
+    const others = ths.filter((x) => x.theme.slug !== t.slug)
+    add(
+      'test',
+      themeTestSeo(t),
+      `${crumbs([{ name: 'Test Çöz', path: TEST_PATH }, { name: `${info.label} Matematik Testi`, path: testPath(g) }, { name: themeKw(t) }])}
+      <h1 class="text-3xl font-black sm:text-4xl">${esc(themeTestHeading(t))}</h1>
+      ${p(`${esc(themeHeading(t))} konusunda ${count} soruluk havuzdan cevaplı online test: ${esc(t.outcomes.map((o) => lower(outcomeKw(o.code))).join(', '))}. ${testIntro}`)}`,
+      `${h2(`${themeHeading(t)} soruları ve cevapları`)}${p('Testteki sorulardan örnekler; cevabı ve açıklamayı görmek için “Cevap” yazısına dokun.')}
+      ${testQuestions(items, 15)}
+      ${h2('Testte hangi konular var?')}${list(t.outcomes.map((o) => `<strong>${esc(outcomeKw(o.code))}</strong> <span class="text-ink-soft">– ${esc(o.title)}</span>`), 'mt-2 space-y-1 font-semibold')}
+      ${h2('Konuyu çalış')}${list([themeLink(t), ...guidesFor(codesT).map(guideLink), ...gamesFor(codesT).slice(0, 4).map(gameLink)])}
+      ${section(`Diğer ${lower(info.label)} matematik testleri`, [link(testPath(g), `${info.label} matematik testi (karışık)`), ...others.map(({ theme: x }) => link(testPath(g, x.slug), themeTestHeading(x)))])}`,
+      `${themeTestHeading(t)}`,
+    )
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -615,7 +739,7 @@ writeFileSync(join(dist, '404.html'), render(notFoundSeo('/404'), ''))
 // ---------------------------------------------------------------------------
 
 const today = new Date().toISOString().slice(0, 10)
-const prio = (path: string) => (path === '/' ? '1.0' : path === ONLINE_LESSON_PATH || /^\/sinif\/\d$/.test(path) ? '0.9' : /^\/(sinif|oyunlar|etkilesimler|manipulatifler|rehber)/.test(path) ? '0.8' : '0.6')
+const prio = (path: string) => (path === '/' ? '1.0' : path === ONLINE_LESSON_PATH || path === TIMES_PATH || /^\/sinif\/\d$/.test(path) ? '0.9' : /^\/(sinif|oyunlar|etkilesimler|manipulatifler|rehber|test)/.test(path) ? '0.8' : '0.6')
 const urls = indexed.map((x) => x.seo.path)
 
 const lastmodFile = join(root, 'scripts', 'sitemap-lastmod.json')
@@ -635,6 +759,7 @@ const sitemapGroups: { file: string; test: (path: string) => boolean }[] = [
   { file: 'sitemap-etkilesim.xml', test: (u) => u.startsWith('/etkilesim/') },
   { file: 'sitemap-manipulatif.xml', test: (u) => u.startsWith('/manipulatif/') || u === BOARD_PATH },
   { file: 'sitemap-rehber.xml', test: (u) => u.startsWith(`${GUIDES_PATH}/`) },
+  { file: 'sitemap-test.xml', test: (u) => u === TEST_PATH || u.startsWith(`${TEST_PATH}/`) },
   { file: 'sitemap-sayfalar.xml', test: () => true },
 ]
 const grouped = new Map<string, string[]>(sitemapGroups.map((s) => [s.file, []]))

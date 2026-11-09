@@ -33,6 +33,8 @@ export interface Guide {
   tools?: ManipulativeTool[]
   games?: GameId[]
   interactions?: string[]
+  /** Girişin hemen altında öne çıkan bağlantı (ör. çarpım tablosu rehberinden /carpim-tablosu) */
+  cta?: { to: string; label: string; desc: string }
 }
 
 const baseGuides: Guide[] = [

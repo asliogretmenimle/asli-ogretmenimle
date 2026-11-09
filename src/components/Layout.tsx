@@ -58,6 +58,8 @@ const NAV = [
   { to: GUIDES_PATH, label: 'Konu Anlatımı' },
 ]
 const MORE = [
+  { to: '/test', label: 'Test Çöz' },
+  { to: '/carpim-tablosu', label: 'Çarpım Tablosu' },
   { to: '/yaklasim', label: 'Yaklaşımımız' },
   { to: ONLINE_LESSON_PATH, label: 'Online Özel Ders' },
 ]
@@ -170,7 +172,7 @@ export default function Layout() {
   return (
     <div className="flex min-h-dvh flex-col">
       {!focusMode && (
-        <header className="sticky top-0 z-30 border-b border-line bg-white/95 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-line bg-white/95 backdrop-blur print:hidden">
           <div className="relative mx-auto flex h-16 max-w-6xl items-center gap-4 px-4">
             <Logo />
             <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Ana menü">
@@ -199,7 +201,7 @@ export default function Layout() {
       </main>
       <SeoArticleSlot />
       {!focusMode && (
-        <footer className="mt-16 border-t border-line bg-white">
+        <footer className="mt-16 border-t border-line bg-white print:hidden">
           <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 text-sm text-ink-soft sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr]">
             <div>
               <Logo small />

@@ -86,6 +86,14 @@ export function GuidePage() {
       <p className="chip bg-cream px-3 py-1 text-sm text-amber-800">{range(g.grades)}. sınıf matematik</p>
       <h1 className="mt-3 text-3xl leading-tight font-black sm:text-4xl">{g.title}</h1>
       <p className="mt-4 rounded-3xl bg-brand-soft/60 p-5 text-lg font-bold text-ink">{g.intro}</p>
+      {g.cta && (
+        <Link to={g.cta.to} className="mt-4 flex items-center gap-3 rounded-2xl bg-white p-4 ring-1 ring-line transition hover:shadow-[var(--shadow-lift)]">
+          <span className="min-w-0 flex-1">
+            <span className="block font-extrabold text-brand">{g.cta.label} →</span>
+            <span className="block text-sm font-semibold text-ink-soft">{g.cta.desc}</span>
+          </span>
+        </Link>
+      )}
 
       {g.sections.map((s) => (
         <section key={s.h} className="mt-8">

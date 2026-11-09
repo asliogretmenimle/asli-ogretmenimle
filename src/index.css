@@ -125,3 +125,10 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Yazdırırken (ör. çarpım tablosu) yalnızca sayfanın kendisi çıksın */
+@media print {
+  #seo-article {
+    display: none;
+  }
+}

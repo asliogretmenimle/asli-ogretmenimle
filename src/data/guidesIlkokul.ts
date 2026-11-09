@@ -6,8 +6,9 @@ import type { Guide } from './guides'
 export const guidesIlkokul: Guide[] = [
   {
     slug: 'carpim-tablosu',
-    title: 'Çarpım Tablosu Nasıl Öğrenilir? Kolay Ezberleme Yolları',
-    seoTitle: 'Çarpım Tablosu Nasıl Öğrenilir? Kolay Ezberleme Yolları',
+    title: 'Çarpım Tablosu Nasıl Ezberlenir? Kolay Ezberleme Yolları',
+    // "çarpım tablosu" aramasının hedefi /carpim-tablosu (tablo + alıştırma); bu rehber "nasıl ezberlenir" niyetini karşılar
+    seoTitle: 'Çarpım Tablosu Nasıl Ezberlenir? Kolay Ezberleme Yolları',
     description: 'Çarpım tablosu nasıl kolay ezberlenir? 1–10 çarpım tablosu, ikiye katlama, 5’ler ve 9’ların parmak yöntemi, değişme özelliği. 2–3. sınıf için etkinlikler.',
     grades: [2, 3],
     outcomes: ['MAT.2.2.4', 'MAT.2.2.5', 'MAT.3.2.3', 'MAT.3.2.4'],
@@ -73,6 +74,7 @@ export const guidesIlkokul: Guide[] = [
     ],
     tools: ['dizilim', 'yuzluk'],
     games: ['kurabiye-fabrikasi', 'lunapark'],
+    cta: { to: '/carpim-tablosu', label: 'Çarpım tablosu ve alıştırma', desc: '1–10 çarpım tablosunun tamamı, istediğin sayının çarpımları ve cevaplı çarpım tablosu alıştırması' },
     interactions: ['parcala-birlestir-dizisi', 'carpmaya-giris', 'carpma-dikdortgeni', 'carpim-dikdortgenleri', 'sepetlere-grupla'],
   },
   {

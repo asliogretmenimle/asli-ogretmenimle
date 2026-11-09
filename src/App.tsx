@@ -16,6 +16,8 @@ const load = {
   games: () => import('./pages/Games'),
   onlineLesson: () => import('./pages/OnlineLesson'),
   guide: () => import('./pages/Guide'),
+  tests: () => import('./pages/Tests'),
+  times: () => import('./pages/TimesTable'),
 }
 
 const ThemePage = lazy(load.theme)
@@ -31,6 +33,9 @@ const GamePage = lazy(() => load.games().then((m) => ({ default: m.GamePage })))
 const OnlineLesson = lazy(load.onlineLesson)
 const GuidesIndex = lazy(() => load.guide().then((m) => ({ default: m.GuidesIndex })))
 const GuidePage = lazy(() => load.guide().then((m) => ({ default: m.GuidePage })))
+const TestsIndex = lazy(() => load.tests().then((m) => ({ default: m.TestsIndex })))
+const TestPage = lazy(() => load.tests().then((m) => ({ default: m.TestPage })))
+const TimesTable = lazy(load.times)
 // Büyük bir modül: diğer sayfalar gibi boşta önceden indirilmez
 const Board = lazy(() => import('./polypad/Polypad'))
 
@@ -72,6 +77,10 @@ export default function App() {
           <Route path="oyun/:id" element={<GamePage />} />
           <Route path="rehber" element={<GuidesIndex />} />
           <Route path="rehber/:slug" element={<GuidePage />} />
+          <Route path="carpim-tablosu" element={<TimesTable />} />
+          <Route path="test" element={<TestsIndex />} />
+          <Route path="test/:grade" element={<TestPage />} />
+          <Route path="test/:grade/:slug" element={<TestPage />} />
           <Route path="yaklasim" element={<Approach />} />
           <Route path="online-ozel-ders" element={<OnlineLesson />} />
           <Route path="etkilesimler" element={<InteractionsIndex />} />

@@ -1,5 +1,5 @@
 import { Link, Navigate, useParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ClipboardCheck, Sparkles } from 'lucide-react'
 import { findTheme, gradeInfo, isGrade, themesByGrade } from '../data/curriculum'
 import { STAGE_ORDER, forOutcome, themeNotes, useGradeActivities } from '../data/activityStore'
 import { linksFor } from '../data/links'
@@ -8,7 +8,7 @@ import { stageMeta, themeIcon } from '../components/meta'
 import { usePageTitle } from '../components/Layout'
 import { ShareButton } from '../components/ShareButton'
 import { MathText } from '../components/MathText'
-import { themeHeading } from '../lib/seo'
+import { themeHeading, themeKw } from '../lib/seo'
 import NotFound from './NotFound'
 
 export default function ThemePage() {
@@ -47,6 +47,9 @@ export default function ThemePage() {
             <div className="mt-3 flex flex-wrap gap-1.5">
               {theme.topics.map((tp) => <span key={tp} className="chip bg-white/80 text-ink">{tp}</span>)}
             </div>
+            <Link to={`/test/${g}/${theme.slug}`} className="btn-ghost mt-4 min-h-10 bg-white px-3 text-sm">
+              <ClipboardCheck size={17} />{themeKw(theme)} testi çöz
+            </Link>
           </div>
         </div>
       </header>

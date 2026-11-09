@@ -14,6 +14,7 @@ import { lessonFaq, lessonIntro } from '../data/onlineLesson'
 import { gameKeyword, interactionKeyword, outcomeKeyword, themeKeyword, toolKeyword } from '../data/seoKeywords'
 import { guideBySlug, guides, guidesUpdated, type Guide } from '../data/guides'
 import { gradeContent } from '../data/gradeContent'
+import { TEST_PATH, testPath } from '../data/tests'
 
 export const SITE_URL = 'https://www.asliogretmenimle.com'
 export const SITE_NAME = 'Aslı Öğretmenimle'
@@ -21,6 +22,13 @@ export const SITE_ALT_NAMES = ['Aslı Öğretmen', 'Aslı Öğretmenle', 'Aslı 
 export const OG_IMAGE = `${SITE_URL}/og-image.png`
 export const ONLINE_LESSON_PATH = '/online-ozel-ders'
 export const BOARD_PATH = '/tuval'
+export const TIMES_PATH = '/carpim-tablosu'
+
+/** Eğitim-öğretim yılı: Eylül'den itibaren yeni yıl ("2026-2027"). Rakip test sayfaları başlıkta yıl kullanıyor */
+export function schoolYear(d = new Date()) {
+  const y = d.getFullYear()
+  return d.getMonth() >= 8 ? `${y}-${y + 1}` : `${y - 1}-${y}`
+}
 
 export interface PageSeo {
   title: string
@@ -520,6 +528,133 @@ export function guideSeo(g: Guide): PageSeo {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Test Çöz (/test, /test/7, /test/7/<tema>)
+// ---------------------------------------------------------------------------
+
+const faqLd = (faq: { q: string; a: string }[]) => ({ '@type': 'FAQPage', mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) })
+
+/** Test sayfalarının sık sorulan soruları; g verilirse o sınıfa özgü */
+export function testFaq(g?: Grade) {
+  if (!g) {
+    return [
+      { q: 'Matematik testleri cevaplı mı?', a: 'Evet. Her soruyu işaretlediğinde doğru ya da yanlış olduğunu hemen görürsün; yanlış cevapta kısa bir açıklama, ikinci yanlıştan sonra doğru cevap gösterilir. Test sonunda kaç soruyu ilk denemede çözdüğün yazılır.' },
+      { q: 'Kaç soruluk test çözebilirim?', a: '10 ya da 20 soruluk test seçebilirsin. Sorular her açılışta konular arasından karışık seçilir; aynı testi tekrar çözdüğünde farklı sorularla karşılaşırsın.' },
+      { q: 'Testler Maarif Modeli’ne uygun mu?', a: 'Sorular, Türkiye Yüzyılı Maarif Modeli matematik öğretim programının öğrenme çıktılarına göre hazırlanan etkinliklerden gelir; test konuları programdaki temalarla aynıdır.' },
+      { q: 'Matematik testleri ücretsiz mi?', a: 'Evet. Bütün testler ücretsizdir, üyelik gerektirmez; telefon, tablet, bilgisayar ve akıllı tahtada çözülür. Öğretmenler test linkini öğrencilerine gönderebilir.' },
+    ]
+  }
+  const label = gradeInfo[g].label
+  const names = themesByGrade(g).map(themeKw)
+  return [
+    { q: `${label} matematik testinde hangi konular var?`, a: `${label} matematik testleri şu konuları kapsar: ${names.join(', ')}. Her konu için ayrı test çözebilir ya da bütün konulardan karışık test oluşturabilirsin.` },
+    { q: `${label} matematik testleri cevaplı mı?`, a: 'Evet. Cevabını işaretlediğin anda doğru ya da yanlış olduğunu görürsün; yanlışta kısa bir açıklama gösterilir. Test sonunda puanın ve konuya dönüp çalışabileceğin etkinlikler listelenir.' },
+    g === 8
+      ? { q: '8. sınıf matematik testleri LGS’ye hazırlık için uygun mu?', a: '8. sınıf testleri LGS matematik konularını (üslü ve kareköklü ifadeler, doğrusal denklemler, eğim, üçgenler, Pisagor, dönüşüm geometrisi, olasılık, veri analizi) kapsar. Sorular konuyu kavramaya ve eksikleri görmeye yöneliktir; deneme sınavlarının yerine değil, onlara hazırlık için kullanılmalıdır.' }
+      : { q: `${label} matematik testi kaç soru?`, a: '10 ya da 20 soruluk test seçebilirsin. Sorular her açılışta konular arasından dengeli ve karışık seçildiği için test her seferinde farklıdır.' },
+  ]
+}
+
+const testResource = (path: string, name: string, description: string, grades: Grade[], teaches?: string[]) => ({
+  ...learningResource({ path, name, description, type: 'Test', grades, teaches }),
+  '@type': 'Quiz',
+  eduQuestionType: 'Multiple choice',
+})
+
+export function testsIndexSeo(): PageSeo {
+  const path = TEST_PATH
+  const description = clip('Ücretsiz online matematik testleri: 1–8. sınıf her konu için cevaplı ve açıklamalı çoktan seçmeli sorular. Her açılışta karışık 10 ya da 20 soru; üyeliksiz, telefonda ve akıllı tahtada çözülür.')
+  return {
+    title: withBrand('Matematik Test Çöz: 1–8. Sınıf Online Testler'),
+    description,
+    path,
+    jsonLd: graph(
+      {
+        '@type': 'CollectionPage',
+        '@id': `${abs(path)}#page`,
+        url: abs(path),
+        name: 'Matematik Test Çöz',
+        description,
+        inLanguage: 'tr-TR',
+        isPartOf: { '@id': SITE_ID },
+        hasPart: grades.map((g) => ({ '@type': 'Quiz', name: `${gradeInfo[g].label} Matematik Testi`, url: abs(testPath(g)) })),
+      },
+      faqLd(testFaq()),
+      breadcrumb([{ name: 'Test Çöz', path }]),
+    ),
+  }
+}
+
+export function gradeTestSeo(g: Grade): PageSeo {
+  const info = gradeInfo[g]
+  const path = testPath(g)
+  const description = clip(`Maarif Modeli’ne uygun ${lower(info.label)} matematik testleri: ${themesByGrade(g).map((t) => lower(themeKw(t))).join(', ')}. Konu konu ya da karışık, cevaplı; ücretsiz.`)
+  return {
+    // "7. sınıf matematik test çöz", "7. sınıf matematik testleri", "7. sınıf matematik testi"
+    title: `${info.label} Matematik Testleri Çöz (${schoolYear()}, Cevaplı)`,
+    description,
+    path,
+    jsonLd: graph(
+      testResource(path, `${info.label} Matematik Testi`, description, [g], themesByGrade(g).map(themeKw)),
+      faqLd(testFaq(g)),
+      breadcrumb([
+        { name: 'Test Çöz', path: TEST_PATH },
+        { name: `${info.label} Matematik Testi`, path },
+      ]),
+    ),
+  }
+}
+
+export const themeTestHeading = (t: Theme) => `${themeHeading(t)} Testi`
+
+export function themeTestSeo(t: Theme): PageSeo {
+  const info = gradeInfo[t.grade]
+  const path = testPath(t.grade, t.slug)
+  const description = clip(`${themeTestHeading(t)}: ${t.outcomes.map((o) => lower(outcomeKw(o.code))).join(', ')}. Cevaplı, açıklamalı online test; sorular her açılışta karışır. Ücretsiz.`)
+  return {
+    title: withBrand(`${themeTestHeading(t)} (Cevaplı)`),
+    description,
+    path,
+    jsonLd: graph(
+      testResource(path, themeTestHeading(t), description, [t.grade], t.outcomes.map((o) => outcomeKw(o.code))),
+      breadcrumb([
+        { name: 'Test Çöz', path: TEST_PATH },
+        { name: `${info.label} Matematik Testi`, path: testPath(t.grade) },
+        { name: themeKw(t), path },
+      ]),
+    ),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Çarpım tablosu (/carpim-tablosu): "çarpım tablosu", "çarpım tablosu 10'a kadar", "7'ler çarpım tablosu"
+// ---------------------------------------------------------------------------
+
+/** 1'ler, 2'ler … 6'lar … 10'lar */
+export const timesFamily = (n: number) => `${n}’${[6, 9, 10].includes(n) ? 'lar' : 'ler'}`
+
+export const timesFaq = [
+  { q: 'Çarpım tablosu kaça kadar öğrenilir?', a: 'İlkokulda 10’a kadar çarpım tablosu (1 × 1’den 10 × 10’a kadar 100 çarpım) öğrenilir. Değişme özelliği sayesinde (3 × 8 = 8 × 3) bunların yalnızca 55’i birbirinden farklıdır.' },
+  { q: 'Çarpım tablosu kaçıncı sınıfta öğretilir?', a: 'Çarpmanın anlamı, eşit gruplar ve 2’ler, 5’ler, 10’lar 2. sınıfta başlar; 10’a kadar çarpım tablosunun tamamı 3. sınıfta zihinden çarpma ve bölme ile pekiştirilir. 4. sınıf ve sonrasında çok basamaklı çarpmanın temelidir.' },
+  { q: 'Çarpım tablosunda en zor çarpımlar hangileri?', a: '6 × 7 = 42, 6 × 8 = 48, 7 × 7 = 49, 7 × 8 = 56 ve 8 × 8 = 64 en sık karıştırılanlardır. 7 × 8 için 5 × 8 = 40’a 2 × 8 = 16 eklemek (56) gibi bilinen bir çarpımdan yola çıkmak işe yarar.' },
+  { q: 'Çarpım tablosu nasıl kolay ezberlenir?', a: 'Önce 1’ler, 2’ler, 5’ler ve 10’lar; sonra ikiye katlama ile 4’ler ve 8’ler; en son bilinen bir çarpımdan ekleyerek ya da çıkararak 6’lar, 7’ler ve 9’lar. Her gün 5–10 dakikalık kısa alıştırma, uzun ezber saatlerinden daha etkilidir.' },
+]
+
+export function timesSeo(): PageSeo {
+  const path = TIMES_PATH
+  const description = 'Çarpım tablosu 1–10: tablonun tamamı, 2’lerden 10’lara her sayının çarpımları ve cevaplı çarpım tablosu alıştırması. Ezberleme yolları ve çarpma oyunları; ücretsiz.'
+  return {
+    title: withBrand('Çarpım Tablosu 1–10: Tablo, Alıştırma ve Oyun'),
+    description,
+    path,
+    jsonLd: graph(
+      learningResource({ path, name: 'Çarpım Tablosu', description, type: 'Etkileşimli tablo ve alıştırma', grades: [2, 3, 4], teaches: ['Çarpım tablosu', 'Zihinden çarpma'], outcomes: ['MAT.2.2.4', 'MAT.3.2.3', 'MAT.3.2.4'] }),
+      faqLd(timesFaq),
+      breadcrumb([{ name: 'Çarpım Tablosu', path }]),
+    ),
+  }
+}
+
 export function approachSeo(): PageSeo {
   const path = '/yaklasim'
   return {
@@ -601,6 +736,12 @@ export function seoForPath(pathname: string, findActivity: (id: string) => Activ
     const t = seg.length === 3 ? findTheme(g, c) : undefined
     return t ? themeSeo(t) : null
   }
+  if (a === TEST_PATH.slice(1) && isGrade(Number(b))) {
+    const g = Number(b) as Grade
+    if (seg.length === 2) return gradeTestSeo(g)
+    const t = seg.length === 3 ? findTheme(g, c) : undefined
+    return t ? themeTestSeo(t) : null
+  }
   if (seg.length === 1) {
     if (a === 'oyunlar') return gamesIndexSeo()
     if (a === 'manipulatifler') return toolsIndexSeo()
@@ -609,6 +750,8 @@ export function seoForPath(pathname: string, findActivity: (id: string) => Activ
     if (a === GUIDES_PATH.slice(1)) return guidesIndexSeo()
     if (a === ONLINE_LESSON_PATH.slice(1)) return onlineLessonSeo()
     if (a === BOARD_PATH.slice(1)) return boardSeo()
+    if (a === TEST_PATH.slice(1)) return testsIndexSeo()
+    if (a === TIMES_PATH.slice(1)) return timesSeo()
     if (a === 'rapor') return privateSeo('Öğrenci raporu', p)
     return null
   }

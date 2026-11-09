@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowRight, Blocks, Gamepad2, Telescope } from 'lucide-react'
+import { ArrowRight, Blocks, ClipboardCheck, Gamepad2, Telescope } from 'lucide-react'
 import { gradeInfo, grades, isGrade, themesByGrade } from '../data/curriculum'
 import { STAGE_ORDER, activityTheme, useGradeActivities } from '../data/activityStore'
 import type { Activity, Grade } from '../data/types'
@@ -49,6 +49,7 @@ function GradeView({ grade }: { grade: Grade }) {
     { to: `/oyunlar?sinif=${grade}`, icon: Gamepad2, label: 'Oyunlar', count: gamesForGrade(grade).length, unit: 'oyun' },
     { to: `/etkilesimler?sinif=${grade}`, icon: Telescope, label: 'Etkileşimler', count: interactionMeta.filter((m) => m.ready && m.grades.includes(grade)).length, unit: 'etkileşim' },
     { to: `/manipulatifler?sinif=${grade}`, icon: Blocks, label: 'Manipülatifler', count: toolMeta.filter((t) => toolGrades(t).includes(grade)).length, unit: 'materyal' },
+    { to: `/test/${grade}`, icon: ClipboardCheck, label: 'Test Çöz', count: themes.length, unit: 'konu testi' },
   ]
 
   const sections = topics
@@ -86,7 +87,7 @@ function GradeView({ grade }: { grade: Grade }) {
         </p>
       </header>
 
-      <div className="mb-10 grid gap-3 sm:grid-cols-3">
+      <div className="mb-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {shortcuts.map((s) => (
           <Link key={s.to} to={s.to} className="group flex items-center gap-3 rounded-2xl bg-white p-4 ring-1 ring-line transition hover:shadow-[var(--shadow-lift)]">
             <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-paper text-ink"><s.icon size={21} /></span>
