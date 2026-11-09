@@ -207,8 +207,8 @@ export function Board({ maxL, W, parts, onResize, onRelease, split, renderDrop, 
               <>
                 {!p.hidden && p.paint && (
                   <>
-                    <span className="absolute inset-0" style={{ background: '#fff', backgroundImage: 'repeating-linear-gradient(45deg, #fecaca 0 4px, transparent 4px 10px)' }} />
-                    <span className="absolute top-0 left-0" style={{ width: p.paint[0] * cell, height: p.paint[1] * cell, background: t.strong, ...gridBg(cell, 'rgb(255 255 255 / 0.7)') }} />
+                    <span className="absolute inset-0" style={{ backgroundColor: '#fff', backgroundImage: 'repeating-linear-gradient(45deg, #fecaca 0 4px, transparent 4px 10px)' }} />
+                    <span className="absolute top-0 left-0" style={{ width: p.paint[0] * cell, height: p.paint[1] * cell, backgroundColor: t.strong, ...gridBg(cell, 'rgb(255 255 255 / 0.7)') }} />
                   </>
                 )}
                 {p.hidden && (
@@ -220,7 +220,7 @@ export function Board({ maxL, W, parts, onResize, onRelease, split, renderDrop, 
               <div
                 key={i}
                 className="absolute overflow-hidden"
-                style={{ ...style, background: p.hidden ? undefined : t.fill, ...(p.hidden ? {} : gridBg(cell, 'rgb(255 255 255 / 0.9)')), boxShadow: `inset 0 0 0 2.5px ${t.strong}`, transition: 'width 150ms, height 150ms, left 150ms' }}
+                style={{ ...style, backgroundColor: p.hidden ? undefined : t.fill, ...(p.hidden ? {} : gridBg(cell, 'rgb(255 255 255 / 0.9)')), boxShadow: `inset 0 0 0 2.5px ${t.strong}`, transition: 'width 150ms, height 150ms, left 150ms' }}
               >
                 {body}
               </div>

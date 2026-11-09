@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Parçala ve Birleştir Dizisi</title>
+<meta name="description" content="Çarpım tablosunu ezberlemeden öğren: bir diziyi makasla kes, zor bir çarpmayı iki kolay çarpmaya ayır. 7 × 8 = (5 × 8) + (2 × 8) = 40 + 16 = 56.">
+<style>
+:root {
+  --ink: #0f172a; --soft: #475569; --line: #e2e8f0; --paper: #ffffff;
+  --pink: #db2777; --pink-soft: #fce7f3; --sky: #0284c7; --sky-soft: #e0f2fe;
+  --ok: #059669; --ok-soft: #ecfdf5; --warn: #b45309; --warn-soft: #fffbeb;
+  --p0: #3b82f6; --p0i: #1d4ed8; --p1: #22c55e; --p1i: #15803d; --p2: #f97316; --p2i: #c2410c; --p3: #a855f7; --p3i: #7e22ce;
+  --whole: #fbbf24; --wholei: #b45309; --gone: #cbd5e1;
+  --radius: 22px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: var(--font); color: var(--ink); min-height: 100vh;
+  background: radial-gradient(circle at 15% 5%, #fff3c4 0, transparent 38%), radial-gradient(circle at 92% 85%, #dbeafe 0, transparent 45%), linear-gradient(180deg, #fffdf5, #f0f9ff);
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 12px 16px 40px; }
+header.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.logo { width: 48px; height: 48px; border-radius: 16px; background: #fff; display: grid; place-items: center; font-size: 26px; box-shadow: 0 3px 0 #f9a8d4; border: 2px solid #fbcfe8; flex-shrink: 0; }
+h1 { font-size: clamp(20px, 3.4vw, 28px); margin: 0; line-height: 1.1; font-weight: 900; }
+.sub { margin: 2px 0 0; font-size: 13px; font-weight: 700; color: var(--soft); }
+.stars { display: inline-flex; align-items: center; gap: 6px; min-height: 48px; padding: 0 16px; border-radius: 999px; background: #fef3c7; border: 2px solid #fcd34d; font-weight: 900; font-size: 20px; color: #92400e; }
+.stars.bump { animation: pop .45s cubic-bezier(.34,1.56,.64,1); }
+nav.modes { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 10px; margin-bottom: 4px; scrollbar-width: none; }
+nav.modes::-webkit-scrollbar { display: none; }
+.mode { flex-shrink: 0; min-height: 52px; padding: 0 16px; border-radius: 16px; border: 2px solid var(--line); background: #fff; font-weight: 900; font-size: 15px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 3px 0 #cbd5e1; }
+.mode[aria-pressed="true"] { background: var(--pink); color: #fff; border-color: #9d174d; box-shadow: 0 3px 0 #9d174d; }
+.mode .done { font-size: 14px; }
+.layout { display: grid; gap: 14px; }
+@media (min-width: 1000px) { .layout { grid-template-columns: minmax(0, 1fr) 360px; align-items: start; } .panel { position: sticky; top: 12px; } }
+.card { background: rgba(255,255,255,.95); border-radius: var(--radius); border: 1px solid var(--line); box-shadow: 0 6px 20px -12px rgba(15,23,42,.25); }
+.stage { padding: 12px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.panel { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.controls { display: grid; gap: 8px; background: #f8fafc; border: 1px solid var(--line); border-radius: 18px; padding: 8px; }
+@media (min-width: 640px) { .controls { grid-template-columns: 1fr 1fr auto; } }
+.stepper { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 4px 8px; }
+.stepper .lbl { flex: 1; font-weight: 800; font-size: 14px; color: var(--soft); }
+.stepper .val { min-width: 44px; text-align: center; font-size: 26px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.sbtn { width: 48px; height: 48px; border-radius: 12px; border: 1px solid var(--line); background: #fff; font-size: 26px; font-weight: 900; display: grid; place-items: center; line-height: 1; }
+.sbtn:active { transform: scale(.94); }
+.sbtn:disabled { opacity: .35; cursor: default; }
+.views { display: flex; gap: 6px; }
+.vbtn { flex: 1; min-height: 48px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line); background: #fff; font-weight: 900; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.vbtn[aria-pressed="true"] { background: var(--sky); color: #fff; border-color: #0369a1; }
+.vbtn i { width: 14px; height: 14px; background: currentColor; border-radius: 3px; display: inline-block; }
+.vbtn i.dot { border-radius: 50%; }
+.known { align-self: center; display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 16px; background: #fffbeb; border: 2px solid #fcd34d; font-size: 18px; font-weight: 900; color: #78350f; }
+.easy { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; font-size: 14px; font-weight: 900; }
+.easy span.e { padding: 4px 10px; border-radius: 999px; background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+
+/* dizi */
+.gridwrap { width: 100%; }
+.board { position: relative; margin: 0 auto; touch-action: pan-y; }
+.cells { position: absolute; }
+.cell { position: absolute; }
+.cell b { display: block; width: 100%; height: 100%; border-radius: 22%; transition: background-color .25s, opacity .25s; box-shadow: inset 0 -3px 0 rgba(0,0,0,.16); }
+.board.dot .cell b { border-radius: 50%; }
+.cell b.gone { background: repeating-linear-gradient(45deg, #cbd5e1 0 3px, #f1f5f9 3px 6px) !important; box-shadow: none; opacity: .8; }
+.lbl-part { position: absolute; display: grid; place-items: center; pointer-events: none; }
+.lbl-part span { background: rgba(255,255,255,.96); border-radius: 999px; padding: 2px 10px; font-weight: 900; font-size: 17px; white-space: nowrap; font-variant-numeric: tabular-nums; animation: pop .35s cubic-bezier(.34,1.56,.64,1); }
+.lbl-part.sm span { font-size: 12px; padding: 1px 6px; }
+.lbl-part.xs span { font-size: 11px; padding: 0 3px; }
+.rail { position: absolute; touch-action: none; }
+.rail.r { cursor: ns-resize; } .rail.c { cursor: ew-resize; }
+.rail.r::before { content: ""; position: absolute; top: 24px; bottom: 24px; left: 50%; width: 4px; transform: translateX(-50%); border-radius: 4px; background: repeating-linear-gradient(#f9a8d4 0 6px, transparent 6px 11px); }
+.rail.c::before { content: ""; position: absolute; left: 24px; right: 24px; top: 50%; height: 4px; transform: translateY(-50%); border-radius: 4px; background: repeating-linear-gradient(90deg, #f9a8d4 0 6px, transparent 6px 11px); }
+.hit { position: absolute; touch-action: none; }
+.line { position: absolute; border-radius: 999px; pointer-events: none; transition: top .1s, left .1s; background: rgba(236,72,153,.4); }
+.line.on { background: var(--ink); box-shadow: 0 0 0 2px #fff; }
+.knob { position: absolute; width: 50px; height: 50px; border-radius: 50%; background: #fff; border: 4px solid var(--pink); display: grid; place-items: center; font-size: 22px; pointer-events: none; box-shadow: 0 5px 12px -3px rgba(15,23,42,.45); transition: top .1s, left .1s, transform .12s, border-color .12s; }
+.knob.on { border-color: var(--ink); }
+.knob.act { transform: scale(1.15); border-color: var(--sky); }
+.knob.hint.r { animation: nudgeY 1.6s ease-in-out infinite; }
+.knob.hint.c { animation: nudgeX 1.6s ease-in-out infinite; }
+.knob em { position: absolute; font-style: normal; font-size: 11px; font-weight: 900; color: var(--pink); }
+.knob.r em { bottom: -3px; } .knob.c em { right: -2px; }
+
+/* denklem */
+.eqbox { border: 2px solid #bae6fd; background: #fff; border-radius: 18px; padding: 10px 12px; }
+.eqbox .t { text-align: center; font-size: 11px; letter-spacing: .06em; font-weight: 900; color: var(--sky); text-transform: uppercase; margin: 0 0 4px; }
+.eq { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 10px; font-size: clamp(19px, 3.4vw, 26px); font-weight: 900; font-variant-numeric: tabular-nums; }
+.eq .seg { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; white-space: nowrap; }
+.q { display: inline-grid; place-items: center; min-width: 42px; height: 42px; padding: 0 8px; border-radius: 12px; background: #fef3c7; border: 2px solid #fcd34d; color: var(--warn); }
+.slot { display: inline-grid; place-items: center; min-width: 50px; height: 46px; padding: 0 8px; border-radius: 12px; border: 2px dashed #38bdf8; background: #f0f9ff; color: #0ea5e9; font-size: 18px; transition: transform .12s, background .12s; }
+.slot.hot { background: #bae6fd; border-color: var(--sky); transform: scale(1.08); }
+.dragging .slot:not(.full) { outline: 2px dashed #38bdf8; outline-offset: 2px; }
+.slot.full { border: 0; background: var(--ok); color: #fff; animation: pop .35s cubic-bezier(.34,1.56,.64,1); }
+
+/* kartlar */
+.tray { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 10px; }
+.tray p { margin: 0 0 8px; font-size: 12px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; color: var(--soft); }
+.tray .row { display: flex; flex-wrap: wrap; gap: 8px; }
+.tray.sticky { position: sticky; bottom: 8px; z-index: 20; box-shadow: 0 -8px 24px -12px rgba(15,23,42,.35); }
+.ncard { min-width: 58px; height: 58px; padding: 0 12px; border-radius: 16px; background: #fff; border: 2px solid var(--line); box-shadow: 0 3px 0 #cbd5e1; font-size: 24px; font-weight: 900; touch-action: none; font-variant-numeric: tabular-nums; }
+.ncard.held { outline: 4px solid var(--sky); }
+.ncard.lifted { opacity: .3; outline: 2px dashed #94a3b8; outline-offset: 2px; }
+.ncard.shake { animation: shake .4s; }
+.ghost { position: fixed; z-index: 1000; pointer-events: none; transform: translate(-50%, -50%) scale(1.08) rotate(-2deg); filter: drop-shadow(0 12px 14px rgba(15,23,42,.4)); }
+.ghost.back { transition: left .26s ease-out, top .26s ease-out, transform .2s; transform: translate(-50%, -50%); }
+.ghost.in { transition: transform .18s, opacity .18s; transform: translate(-50%, -50%) scale(.7); opacity: 0; }
+
+/* panel */
+.prompt { padding: 12px 16px; }
+.prompt .k { margin: 0 0 4px; font-size: 11px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; color: var(--pink); }
+.prompt .m { margin: 0; font-size: 18px; line-height: 1.35; font-weight: 800; }
+.say { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 18px; font-weight: 800; font-size: 16px; line-height: 1.35; animation: fadeUp .35s ease-out both; }
+.say.think { background: var(--warn-soft); border: 1px solid #fde68a; color: #78350f; }
+.say.ok { background: var(--ok-soft); border: 1px solid #6ee7b7; color: #064e3b; }
+.say .ic { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 18px; }
+.say.think .ic { background: #fbbf24; } .say.ok .ic { background: var(--ok); color: #fff; }
+.goals { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.goals li { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; border-radius: 12px; background: #f8fafc; border: 1px solid var(--line); font-weight: 800; font-size: 15px; }
+.goals li.done { background: var(--ok-soft); border-color: #6ee7b7; }
+.goals li .s { flex-shrink: 0; }
+.log { padding: 12px; }
+.log h3 { margin: 0 0 6px; font-size: 12px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; color: #b45309; }
+.log ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; max-height: 260px; overflow-y: auto; }
+.log li { padding: 5px 8px; border-radius: 10px; background: #fffbeb; border: 1px solid #fde68a; font-weight: 800; font-size: 14px; font-variant-numeric: tabular-nums; animation: fadeUp .35s both; }
+.big { min-height: 56px; width: 100%; border: 0; border-radius: 16px; background: var(--pink); color: #fff; font-size: 18px; font-weight: 900; box-shadow: 0 4px 0 #9d174d; }
+.big:active { transform: translateY(2px); box-shadow: 0 2px 0 #9d174d; }
+.how { padding: 0; }
+.how summary { list-style: none; display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 14px; font-weight: 900; cursor: pointer; }
+.how summary::-webkit-details-marker { display: none; }
+.how summary .qm { width: 32px; height: 32px; border-radius: 50%; background: var(--sky-soft); color: var(--sky); display: grid; place-items: center; flex-shrink: 0; }
+.how summary .g { flex: 1; font-size: 15px; line-height: 1.3; }
+.how summary .g small { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--sky); }
+.how summary .tg { font-size: 12px; color: var(--sky); flex-shrink: 0; }
+.how ul { margin: 0; padding: 4px 16px 14px 36px; display: grid; gap: 6px; font-weight: 700; font-size: 15px; line-height: 1.35; }
+.badge { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 2000; pointer-events: none; font-size: 88px; animation: star 1s ease-out forwards; }
+.held-tip { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 999; max-width: 460px; margin: 0 auto; padding: 12px 16px; border-radius: 16px; background: var(--sky); color: #fff; font-weight: 800; font-size: 15px; box-shadow: 0 10px 30px -10px rgba(15,23,42,.5); }
+@keyframes pop { 0% { transform: scale(.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+@keyframes fadeUp { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes nudgeY { 0%,100% { translate: 0 0; } 50% { translate: 0 -8px; } }
+@keyframes nudgeX { 0%,100% { translate: 0 0; } 50% { translate: -8px 0; } }
+@keyframes star { 0% { transform: translate(-50%, -50%) scale(.3); opacity: 0; } 30% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; } 100% { transform: translate(-50%, -120%) scale(.9); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">✂️</div>
+      <div>
+        <h1>Parçala ve Birleştir Dizisi</h1>
+        <p class="sub">Zor bir çarpmayı makasla iki kolay çarpmaya ayır.</p>
+      </div>
+    </div>
+    <div class="stars" id="stars" aria-live="polite">⭐ <span id="starN">0</span></div>
+  </header>
+  <nav class="modes" id="modes" aria-label="Oyun modları"></nav>
+  <details class="card how" id="how" open>
+    <summary><span class="qm">?</span><span class="g"><small>Bu modda amaç</small><span id="goal"></span></span><span class="tg">Nasıl kullanılır?</span></summary>
+    <ul>
+      <li><b>Satır makası (solda):</b> ✂ tutamacını parmağınla tut, yukarı aşağı sürükle. Çizgi satırların arasına yapışır ve diziyi ikiye keser. Sol kenarda bir yere dokunmak da çizgiyi oraya taşır.</li>
+      <li><b>Sütun makası (üstte):</b> sağa sola sürükle. İki makası birlikte kullanırsan dört parça, dört renk olur.</li>
+      <li><b>Makas en uçtaysa</b> dizi kesilmemiştir. Denklem “7 × 8 = ?” der.</li>
+      <li><b>Sayı kartı:</b> kartı tut, denklemdeki boş kutuya sürükle. Sürükleyemiyorsan önce karta, sonra kutuya dokun.</li>
+      <li><b>Satır ve sütun:</b> − ve + ile 1 ile 10 arasında seç. <b>Kare / Nokta</b> görünümü değiştirir.</li>
+    </ul>
+  </details>
+  <div class="layout" style="margin-top:12px">
+    <main class="card stage" id="stage">
+      <div id="known"></div>
+      <div class="controls" id="controls">
+        <div class="stepper"><span class="lbl">Satır</span><button class="sbtn" data-step="r-1" aria-label="Satır: azalt">−</button><span class="val" id="rVal">7</span><button class="sbtn" data-step="r+1" aria-label="Satır: artır">+</button></div>
+        <div class="stepper"><span class="lbl">Sütun</span><button class="sbtn" data-step="c-1" aria-label="Sütun: azalt">−</button><span class="val" id="cVal">8</span><button class="sbtn" data-step="c+1" aria-label="Sütun: artır">+</button></div>
+        <div class="views"><button class="vbtn" data-view="sq" aria-pressed="true"><i></i>Kare</button><button class="vbtn" data-view="dot" aria-pressed="false"><i class="dot"></i>Nokta</button></div>
+      </div>
+      <div class="gridwrap" id="gridwrap"><div class="board" id="board"></div></div>
+      <div class="eqbox"><p class="t" id="eqTitle">Denklem</p><div class="eq" id="eq" aria-live="polite"></div></div>
+      <div id="sayWork"></div>
+      <div id="trayHost"></div>
+    </main>
+    <aside class="panel" id="panel">
+      <div class="card prompt"><p class="k" id="pk"></p><p class="m" id="pm"></p></div>
+      <div id="sayPanel"></div>
+      <div id="extra"></div>
+    </aside>
+  </div>
+</div>
+<script>
+(() => {
+'use strict'
+/* ───────── yardımcılar ───────── */
+const $ = (s, el = document) => el.querySelector(s)
+const h = (tag, attrs = {}, ...kids) => {
+  const el = document.createElement(tag)
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') el.className = v
+    else if (k === 'style') Object.assign(el.style, v)
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v)
+    else el.setAttribute(k, v)
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k instanceof Node ? k : document.createTextNode(String(k)))
+  return el
+}
+const shuffle = (a) => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]] } return b }
+const pick = (a) => a[Math.floor(Math.random() * a.length)]
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
+const EASY = [1, 2, 5, 10]
+const isEasy = (a, b) => EASY.includes(a) || EASY.includes(b)
+const isCut = (k, n) => k > 0 && k < n
+const canSplit = (n) => EASY.some((e) => e < n && EASY.includes(n - e))
+const PART = [['--p0', '--p0i'], ['--p1', '--p1i'], ['--p2', '--p2i'], ['--p3', '--p3i']].map(([c, i]) => ({ c: `var(${c})`, i: `var(${i})` }))
+const WHOLE = { c: 'var(--whole)', i: 'var(--wholei)' }
+const GONE = { c: 'var(--gone)', i: '#475569' }
+const NB = ' × '
+const x = (a, b) => `${a}${NB}${b}`
+
+/* ───────── ses (WebAudio, dosya yok) ───────── */
+let actx = null
+function tone(fs, d = 0.09) {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)()
+    let t = actx.currentTime
+    for (const f of fs) {
+      const o = actx.createOscillator(), g = actx.createGain()
+      o.frequency.value = f; o.type = 'triangle'
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.15, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + d)
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + d + 0.02); t += d * 0.9
+    }
+  } catch (e) { /* ses yoksa sessiz devam */ }
+}
+const sfx = { ok: () => tone([660, 880]), win: () => tone([523, 659, 784, 1047], 0.11) }
+
+/* ───────── durum ───────── */
+const S = { mode: 'explore', r: 7, c: 8, cutR: 7, cutC: 8, view: 'sq', stars: 0, axes: ['r', 'c'], minus: false, locked: false, hint: true, fillSlots: null }
+const done = {}
+function star(n = 1) {
+  S.stars += n
+  $('#starN').textContent = S.stars
+  const el = $('#stars'); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump')
+  const b = h('div', { class: 'badge', 'aria-hidden': 'true' }, '⭐'); document.body.append(b); setTimeout(() => b.remove(), 1000)
+  sfx.win()
+}
+
+/* ───────── parçalar ve denklem ───────── */
+function partsOf(r, c, cutR, cutC) {
+  const rs = isCut(cutR, r) ? [[0, cutR], [cutR, r - cutR]] : [[0, r]]
+  const cs = isCut(cutC, c) ? [[0, cutC], [cutC, c - cutC]] : [[0, c]]
+  const out = []
+  rs.forEach(([r0, a], ri) => cs.forEach(([c0, b], ci) => out.push({ i: ri * 2 + ci, a, b, r0, c0 })))
+  return out
+}
+function eqOf() {
+  const { r, c, cutR, cutC } = S
+  if (S.minus) {
+    if (!isCut(cutR, r)) return null
+    return { lhs: [cutR, c], op: '−', total: cutR * c, terms: [{ a: r, b: c, col: WHOLE }, { a: r - cutR, b: c, col: GONE }] }
+  }
+  const ps = partsOf(r, c, cutR, cutC)
+  if (ps.length === 1) return null
+  return { lhs: [r, c], op: '+', total: r * c, terms: ps.map((p) => ({ a: p.a, b: p.b, col: PART[p.i] })) }
+}
+const eqText = (e) => `${x(e.lhs[0], e.lhs[1])} = ${e.terms.map((t) => `(${x(t.a, t.b)})`).join(` ${e.op} `)} = ${e.terms.map((t) => t.a * t.b).join(` ${e.op} `)} = ${e.total}`
+const eqKey = (e) => e.terms.map((t) => `${t.a}x${t.b}`).sort().join('+')
+
+/** slots: { p0: değer, ... t: değer } doldurulacak yuvalar; fill: doldurulan değerler */
+function renderEq(slots = null, fill = {}) {
+  const box = $('#eq'); box.innerHTML = ''
+  const e = eqOf()
+  if (!e) {
+    box.append(h('span', { class: 'seg' }, x(S.r, S.c)), h('span', {}, '='), S.minus ? h('span', { style: { color: WHOLE.i } }, S.r * S.c) : h('span', { class: 'q' }, '?'))
+    box.setAttribute('aria-label', `${S.r} × ${S.c} = ?`)
+    return
+  }
+  box.setAttribute('aria-label', eqText(e).replace(/ /g, ' '))
+  const val = (k, v, color) => {
+    if (slots && slots[k] !== undefined) {
+      if (fill[k] !== undefined) return h('span', { class: 'slot full' }, fill[k])
+      return h('span', { class: 'slot', 'data-slot': k }, '?')
+    }
+    return h('span', { style: { color } }, v)
+  }
+  const join = (arr) => arr.flatMap((n, i) => (i ? [h('span', {}, e.op), n] : [n]))
+  box.append(
+    h('span', { class: 'seg' }, x(e.lhs[0], e.lhs[1])),
+    h('span', { class: 'seg' }, '=', ...join(e.terms.map((t) => h('span', { style: { color: t.col.i } }, `(${x(t.a, t.b)})`)))),
+    h('span', { class: 'seg' }, '=', ...join(e.terms.map((t, i) => val('p' + i, t.a * t.b, t.col.i)))),
+    h('span', { class: 'seg' }, '=', val('t', e.total, 'var(--ink)')),
+  )
+}
+
+/* ───────── kesilebilen dizi ───────── */
+const G = 58, P = 28
+const board = $('#board')
+let L = null // yerleşim (hücre boyu, kenar boşlukları)
+let drag = null
+
+function can(axis) { return !S.locked && S.axes.includes(axis) && !(S.minus && axis === 'c') }
+function layout() {
+  const W = $('#gridwrap').clientWidth || 320
+  const GL = can('r') ? G : 10, GT = can('c') ? G : 10, PR = can('c') ? P : 10, PB = can('r') ? P : 10
+  const avail = Math.max(170, Math.min(470, window.innerHeight * 0.62))
+  const s = clamp(Math.floor(Math.min((W - GL - PR) / S.c, (avail - GT - PB) / S.r)), 18, 52)
+  return { s, GL, GT, PR, PB, gw: S.c * s, gh: S.r * s }
+}
+
+/** Diziyi baştan kurar (boyut, görünüm ya da mod değişince; sürüklerken değil) */
+function buildGrid() {
+  L = layout()
+  const { s, GL, GT, PR, PB, gw, gh } = L
+  board.innerHTML = ''
+  board.className = 'board' + (S.view === 'dot' ? ' dot' : '')
+  board.style.width = GL + gw + PR + 'px'
+  board.style.height = GT + gh + PB + 'px'
+  const cells = h('div', { class: 'cells', 'data-grid': '', 'aria-label': `${S.r} satır, ${S.c} sütun`, style: { left: GL + 'px', top: GT + 'px', width: gw + 'px', height: gh + 'px' } })
+  const gap = Math.max(2, Math.round(s * 0.09))
+  for (let i = 0; i < S.r; i++)
+    for (let j = 0; j < S.c; j++) {
+      const pad = S.view === 'dot' ? (s - gap) * 0.12 : 0
+      cells.append(h('span', { class: 'cell', 'data-i': i, 'data-j': j, style: { left: j * s + gap / 2 + 'px', top: i * s + gap / 2 + 'px', width: s - gap + 'px', height: s - gap + 'px', padding: pad + 'px' } }, h('b')))
+    }
+  board.append(cells, h('div', { id: 'labels' }))
+  for (const axis of ['r', 'c']) {
+    const isR = axis === 'r'
+    board.append(h('span', { class: 'line ' + axis, id: 'line-' + axis }))
+    if (!can(axis)) continue
+    const rail = h('div', { class: 'rail ' + axis, 'data-rail': axis, style: isR ? { left: 0, top: GT - 24 + 'px', width: GL - 2 + 'px', height: gh + 48 + 'px' } : { top: 0, left: GL - 24 + 'px', height: GT - 2 + 'px', width: gw + 48 + 'px' } })
+    const hit = h('div', { class: 'hit', id: 'hit-' + axis, style: isR ? { left: GL + 'px', width: gw + 'px', height: '32px', cursor: 'ns-resize' } : { top: GT + 'px', height: gh + 'px', width: '32px', cursor: 'ew-resize' } })
+    const knob = h('button', { class: 'knob ' + axis, id: 'knob-' + axis, 'data-knob': axis, role: 'slider', 'aria-label': isR ? 'Satır makası: yukarı aşağı sürükle' : 'Sütun makası: sağa sola sürükle', 'aria-valuemin': 0, 'aria-valuemax': isR ? S.r : S.c, style: isR ? { left: (GL - 50) / 2 - 2 + 'px' } : { top: (GT - 50) / 2 - 2 + 'px' } }, h('span', { style: { transform: isR ? '' : 'rotate(90deg)', display: 'inline-block' } }, '✂'), h('em', {}, isR ? '⇕' : '⇔'))
+    for (const el of [rail, hit]) bindRail(el, axis)
+    knob.addEventListener('keydown', (ev) => {
+      const d = ['ArrowDown', 'ArrowRight'].includes(ev.key) ? 1 : ['ArrowUp', 'ArrowLeft'].includes(ev.key) ? -1 : 0
+      if (!d) return
+      ev.preventDefault()
+      const k = clamp((isR ? S.cutR : S.cutC) + d, 0, isR ? S.r : S.c)
+      setCut(axis, k); commit(axis)
+    })
+    board.append(rail, hit, knob)
+  }
+  updateCut()
+}
+
+/** Kesik değişince: renkler, çizgiler, tutamaçlar, etiketler, denklem */
+function updateCut() {
+  const { s, GL, GT, gw, gh } = L
+  const ps = partsOf(S.r, S.c, S.cutR, S.minus ? S.c : S.cutC)
+  const whole = ps.length === 1
+  const splitR = isCut(S.cutR, S.r)
+  for (const cell of board.querySelectorAll('.cell')) {
+    const i = +cell.dataset.i, j = +cell.dataset.j
+    const b = cell.firstChild
+    let col
+    if (S.minus) col = splitR && i >= S.cutR ? GONE : WHOLE
+    else if (whole) col = WHOLE
+    else col = PART[ps.find((q) => i >= q.r0 && i < q.r0 + q.a && j >= q.c0 && j < q.c0 + q.b).i]
+    b.style.background = col.c
+    b.classList.toggle('gone', col === GONE)
+  }
+  const labels = $('#labels', board); labels.innerHTML = ''
+  for (const p of ps) {
+    const g = S.minus && splitR && p.r0 >= S.cutR
+    const col = S.minus ? (g ? GONE : WHOLE) : whole ? WHOLE : PART[p.i]
+    const w = p.b * s, hh = p.a * s
+    const cls = w < 50 || hh < 26 ? ' xs' : Math.min(w, hh) < 46 || w < 70 ? ' sm' : ''
+    labels.append(h('div', { class: 'lbl-part' + cls, style: { left: GL + p.c0 * s + 'px', top: GT + p.r0 * s + 'px', width: w + 'px', height: hh + 'px' } }, h('span', { 'data-part': '', style: { color: col.i, boxShadow: `0 0 0 2px ${col.c}, 0 2px 4px rgba(15,23,42,.2)` } }, (g ? '− ' : '') + x(p.a, p.b))))
+  }
+  for (const axis of ['r', 'c']) {
+    const isR = axis === 'r', k = isR ? S.cutR : S.cutC, n = isR ? S.r : S.c
+    const on = isCut(k, n), line = $('#line-' + axis, board)
+    const show = can(axis) || (on && !(S.minus && !isR))
+    line.style.display = show ? '' : 'none'
+    line.classList.toggle('on', on)
+    Object.assign(line.style, isR ? { left: GL - 8 + 'px', top: GT + k * s - 2.5 + 'px', width: gw + 16 + 'px', height: '5px' } : { top: GT - 8 + 'px', left: GL + k * s - 2.5 + 'px', height: gh + 16 + 'px', width: '5px' })
+    const hit = $('#hit-' + axis, board)
+    if (hit) Object.assign(hit.style, isR ? { top: GT + k * s - 16 + 'px' } : { left: GL + k * s - 16 + 'px' })
+    const knob = $('#knob-' + axis, board)
+    if (knob) {
+      Object.assign(knob.style, isR ? { top: GT + k * s - 25 + 'px' } : { left: GL + k * s - 25 + 'px' })
+      knob.classList.toggle('on', on)
+      knob.classList.toggle('hint', S.hint && !on && !drag)
+      knob.setAttribute('aria-valuenow', k)
+    }
+  }
+  if (!S.fillSlots) renderEq()
+}
+
+function kAt(axis, ev) {
+  const r = $('[data-grid]', board).getBoundingClientRect()
+  const v = axis === 'r' ? (ev.clientY - r.top) / L.s : (ev.clientX - r.left) / L.s
+  return clamp(Math.round(v), 0, axis === 'r' ? S.r : S.c)
+}
+function setCut(axis, k) {
+  if (k === (axis === 'r' ? S.cutR : S.cutC)) return
+  if (axis === 'r') S.cutR = k; else S.cutC = k
+  if (navigator.vibrate) try { navigator.vibrate(4) } catch (e) { /* titreşim yok */ }
+  updateCut()
+}
+function bindRail(el, axis) {
+  el.addEventListener('pointerdown', (ev) => {
+    if (ev.button > 0 || !can(axis)) return
+    ev.preventDefault()
+    el.setPointerCapture(ev.pointerId)
+    drag = { axis, id: ev.pointerId }
+    $('#knob-' + axis, board)?.classList.add('act')
+    setCut(axis, kAt(axis, ev))
+  })
+  el.addEventListener('pointermove', (ev) => { if (drag && drag.id === ev.pointerId) setCut(axis, kAt(axis, ev)) })
+  const up = (ev) => {
+    if (!drag || drag.id !== ev.pointerId) return
+    drag = null
+    $('#knob-' + axis, board)?.classList.remove('act')
+    if (ev.type === 'pointerup') { setCut(axis, kAt(axis, ev)); commit(axis) }
+    updateCut()
+  }
+  el.addEventListener('pointerup', up)
+  el.addEventListener('pointercancel', up)
+}
+/** Parmak kalkınca: moda göre kontrol */
+function commit(axis) { MODES[S.mode].commit?.(axis) }
+
+/* ───────── çarpan seçici ───────── */
+document.querySelectorAll('[data-step]').forEach((b) => b.addEventListener('click', () => {
+  const ax = b.dataset.step[0], d = Number(b.dataset.step.slice(1))
+  if (ax === 'r') { const nr = clamp(S.r + d, 1, 10); S.cutR = isCut(S.cutR, S.r) && S.cutR < nr ? S.cutR : nr; S.r = nr }
+  else { const nc = clamp(S.c + d, 1, 10); S.cutC = isCut(S.cutC, S.c) && S.cutC < nc ? S.cutC : nc; S.c = nc }
+  syncControls(); buildGrid()
+}))
+document.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => { S.view = b.dataset.view; syncControls(); buildGrid() }))
+function syncControls() {
+  $('#rVal').textContent = S.r; $('#cVal').textContent = S.c
+  document.querySelectorAll('[data-step]').forEach((b) => { const ax = b.dataset.step[0], up = b.dataset.step[1] === '+', v = ax === 'r' ? S.r : S.c; b.disabled = up ? v >= 10 : v <= 1 })
+  document.querySelectorAll('[data-view]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === S.view)))
+}
+let rz = 0
+new ResizeObserver(() => { cancelAnimationFrame(rz); rz = requestAnimationFrame(() => { if (!drag && L && layout().s !== L.s) buildGrid() }) }).observe($('#gridwrap'))
+
+/* ───────── ipucu kutusu ───────── */
+const wide = () => window.matchMedia('(min-width: 1000px)').matches
+function say(text, tone = 'think') {
+  const box = h('div', { class: 'say ' + tone, role: 'status' }, h('span', { class: 'ic' }, tone === 'ok' ? '✓' : '💡'), h('span', {}, text))
+  $('#sayWork').innerHTML = ''; $('#sayPanel').innerHTML = ''
+  ;(wide() ? $('#sayPanel') : $('#sayWork')).append(box)
+}
+const clearSay = () => { $('#sayWork').innerHTML = ''; $('#sayPanel').innerHTML = '' }
+const prompt = (k, m) => { $('#pk').textContent = k; $('#pm').innerHTML = m }
+
+/* ───────── sayı kartları (sürükle-bırak, Polypad gibi) ───────── */
+let held = null
+function tray(values, onDrop, title = 'Sayı kartları') {
+  const host = $('#trayHost'); host.innerHTML = ''
+  const row = h('div', { class: 'row' })
+  const box = h('div', { class: 'tray sticky' }, h('p', {}, '✋ ' + title), row)
+  values.forEach((v) => row.append(card(v, onDrop)))
+  host.append(box)
+}
+function slotAt(px, py) {
+  for (const el of document.elementsFromPoint(px, py)) if (el.dataset && el.dataset.slot && !el.classList.contains('full')) return el
+  return null
+}
+/** Kart tutulunca kalkar, parmağı izler; doğru kutuya oturur ya da uçarak geri döner */
+function card(v, onDrop) {
+  const el = h('button', { class: 'ncard', 'data-card': v, 'aria-label': `${v} kartı` }, v)
+  let st = null, ghost = null, raf = 0, last = { x: 0, y: 0 }, hotEl = null
+  const hot = (s2) => { if (hotEl === s2) return; hotEl?.classList.remove('hot'); hotEl = s2; s2?.classList.add('hot') }
+  /** Parmak ekranın üst ya da alt kenarına yaklaşınca sayfa kayar */
+  const loop = () => {
+    const y = last.y, H = window.innerHeight
+    const sp = y < 70 ? -Math.ceil((70 - y) / 5) : y > H - 70 ? Math.ceil((y - (H - 70)) / 5) : 0
+    if (sp) { window.scrollBy(0, sp); hot(slotAt(last.x, last.y)) }
+    raf = requestAnimationFrame(loop)
+  }
+  el.addEventListener('pointerdown', (ev) => { if (ev.button > 0) return; st = { x: ev.clientX, y: ev.clientY, id: ev.pointerId, moved: false }; el.setPointerCapture(ev.pointerId) })
+  el.addEventListener('pointermove', (ev) => {
+    if (!st || st.id !== ev.pointerId) return
+    last = { x: ev.clientX, y: ev.clientY }
+    if (!st.moved) {
+      if (Math.hypot(ev.clientX - st.x, ev.clientY - st.y) < 6) return
+      st.moved = true
+      ghost = el.cloneNode(true); ghost.classList.add('ghost'); ghost.removeAttribute('data-card'); document.body.append(ghost)
+      el.classList.add('lifted'); document.body.classList.add('dragging')
+      raf = requestAnimationFrame(loop)
+    }
+    ghost.style.left = ev.clientX + 'px'; ghost.style.top = ev.clientY + 'px'
+    hot(slotAt(ev.clientX, ev.clientY))
+  })
+  const end = (ev) => {
+    if (!st || st.id !== ev.pointerId) return
+    const moved = st.moved; st = null
+    cancelAnimationFrame(raf); document.body.classList.remove('dragging'); hot(null)
+    if (!moved) return
+    el.dataset.dragged = Date.now()
+    const target = ev.type === 'pointerup' ? slotAt(ev.clientX, ev.clientY) : null
+    const ok = target && onDrop(v, target.dataset.slot)
+    if (ok) { ghost.classList.add('in'); setTimeout(() => ghost.remove(), 200); return }
+    const r = el.getBoundingClientRect()
+    ghost.classList.add('back'); ghost.style.left = r.left + r.width / 2 + 'px'; ghost.style.top = r.top + r.height / 2 + 'px'
+    setTimeout(() => { ghost.remove(); el.classList.remove('lifted'); el.classList.add('shake'); setTimeout(() => el.classList.remove('shake'), 420) }, 280)
+  }
+  el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end)
+  /** Sürükleyemeyenler için: önce karta, sonra kutuya dokun */
+  el.addEventListener('click', () => {
+    if (Date.now() - (+el.dataset.dragged || 0) < 350) return
+    document.querySelectorAll('.ncard.held').forEach((c) => c !== el && c.classList.remove('held'))
+    held = el.classList.toggle('held') ? { v, onDrop, el } : null
+    $('.held-tip')?.remove()
+    if (held) document.body.append(h('div', { class: 'held-tip', role: 'status' }, `${v} kartı elinde. Şimdi boş kutuya dokun.`))
+  })
+  return el
+}
+document.addEventListener('click', (ev) => {
+  const s2 = ev.target.closest?.('[data-slot]')
+  if (!held || !s2 || s2.classList.contains('full')) return
+  const hd = held; held = null; $('.held-tip')?.remove(); hd.el.classList.remove('held')
+  if (!hd.onDrop(hd.v, s2.dataset.slot)) { hd.el.classList.add('shake'); setTimeout(() => hd.el.classList.remove('shake'), 420) }
+})
+
+/** Denklemdeki boşlukları kartla doldurma oturumu. given: değeri bilinen parçalar */
+function fillSession({ given = [], extra = [], onDone }) {
+  const e = eqOf()
+  const need = {}
+  e.terms.forEach((t, i) => { if (!given.includes(i)) need['p' + i] = t.a * t.b })
+  need.t = e.total
+  const fill = {}
+  const decoys = [...extra]
+  for (const t of e.terms) if (t.a > 1 && t.b > 1) decoys.push({ v: t.a + t.b, q: `${t.a} + ${t.b} = ${t.a + t.b}. Ama ${x(t.a, t.b)} demek: ${t.a} sıra, her sırada ${t.b} kare. Renkli parçada ${t.a + t.b} kare mi var?` })
+  decoys.push({ v: e.op === '+' ? e.total - e.lhs[1] : e.total + e.lhs[1] })
+  const needV = Object.values(need)
+  const ds = []
+  for (const d of decoys) if (d.v > 0 && !needV.includes(d.v) && !ds.some((y) => y.v === d.v)) ds.push(d)
+  /** Tepside kalan kartlar */
+  const rest = shuffle([...needV, ...ds.slice(0, extra.length + 2).map((d) => d.v)])
+  S.fillSlots = need
+  $('#eqTitle').textContent = 'Denklemi kartlarla tamamla'
+  renderEq(need, fill)
+  function drop(v, slot) {
+    if (fill[slot] !== undefined) return false
+    if (v !== need[slot]) {
+      const partsLeft = Object.keys(need).some((k) => k !== 't' && fill[k] === undefined)
+      if (slot === 't' && partsLeft) { say(`Önce parçaların sonuçlarını yerleştir, sonra ${e.op === '+' ? 'topla' : 'çıkar'}.`); return false }
+      const d = ds.find((y) => y.v === v && y.q)
+      if (d) say(d.q)
+      else if (slot !== 't') { const t = e.terms[+slot.slice(1)]; say(`${x(t.a, t.b)} parçasına bak. ${hint(t.a, t.b)}`) }
+      else say(`${e.terms.map((t) => t.a * t.b).join(` ${e.op} `)} kaç eder? ${e.op === '+' ? 'Önce onlukları, sonra birlikleri topla.' : 'Onluklardan geriye doğru düşün.'}`)
+      return false
+    }
+    clearSay(); sfx.ok()
+    fill[slot] = v
+    rest.splice(rest.indexOf(v), 1)
+    renderEq(need, fill)
+    if (Object.keys(fill).length === Object.keys(need).length) {
+      $('#trayHost').innerHTML = ''; S.fillSlots = null; $('#eqTitle').textContent = 'Denklem'
+      setTimeout(() => { updateCut(); onDone(eqText(e)) }, 500)
+    } else tray(rest, drop)
+    return true
+  }
+  tray(rest, drop)
+}
+function hint(a, b) {
+  const e = EASY.includes(a) ? a : b, o = e === a ? b : a
+  if (e === 1) return 'Yalnızca 1 sıra var: kaç kare?'
+  if (e === 2) return `2 tane ${o}: ${o} + ${o}, yani ikiye katla.`
+  if (e === 5) return `${x(10, o)} = ${10 * o}. ${x(5, o)} bunun yarısı.`
+  if (e === 10) return `10 tane ${o}: ${o} onluk.`
+  return `Her sırada ${b} kare var; sıraları say.`
+}
+
+/* ───────── modlar ───────── */
+function setup({ r, c, axes = ['r', 'c'], minus = false, controls = true, hintKnobs = false }) {
+  Object.assign(S, { r, c, cutR: r, cutC: c, axes, minus, locked: false, hint: hintKnobs, fillSlots: null })
+  $('#controls').style.display = controls ? '' : 'none'
+  $('#trayHost').innerHTML = ''; $('#extra').innerHTML = ''; $('#known').innerHTML = ''; clearSay()
+  $('#eqTitle').textContent = 'Denklem'
+  syncControls(); buildGrid()
+}
+const logBox = (title, items) => h('div', { class: 'card log' }, h('h3', {}, '📒 ' + title), h('ol', {}, items.map((t) => h('li', {}, t))))
+const nextBtn = (label, fn) => h('button', { class: 'big', onclick: fn }, label)
+
+const MODES = {
+  /* 1. Serbest keşif */
+  explore: {
+    name: '✂️ Serbest keşif',
+    goal: 'Diziyi kes, denklemi izle: 7 × 8’i 5 ve 2 satır diye kes, sonra iki makasla dört parça yap.',
+    start() {
+      setup({ r: 7, c: 8, hintKnobs: true })
+      this.g = { a: false, b: false, d: false }
+      prompt('Serbest keşif', 'Ekranda 7 satır var, her satırda 8 kare: <b>7 × 8</b>. Soldaki <b>✂ makası</b> tut ve yukarı sürükle. 7 satırı <b>5</b> ve <b>2</b> diye kes. Sonra satır ve sütun sayısını değiştir, iki makası birlikte dene!')
+      this.draw()
+    },
+    draw() {
+      const g = this.g
+      const li = (ok, t) => h('li', { class: ok ? 'done' : '' }, h('span', { class: 's' }, ok ? '⭐' : '☆'), h('span', {}, t))
+      $('#extra').innerHTML = ''
+      $('#extra').append(h('div', { class: 'card log' }, h('h3', {}, '🎯 Mini görevler'), h('ul', { class: 'goals' }, li(g.a, '7 × 8’i 5 satır ve 2 satır diye kes'), li(g.b, 'İki makası birlikte kullan: dört parça, dört renk'), li(g.d, 'Nokta görünümünde bir diziyi kes'))))
+    },
+    commit() {
+      const g = this.g
+      if (!eqOf()) return
+      let won = false
+      if (!g.a && S.r === 7 && S.c === 8 && (S.cutR === 5 || S.cutR === 2) && !isCut(S.cutC, S.c)) { g.a = won = true; say('Kesmek kare eklemez, kare silmez: 40 + 16 = 56, yine 7 × 8!', 'ok') }
+      if (!g.b && isCut(S.cutR, S.r) && isCut(S.cutC, S.c)) { g.b = won = true; say(`Dört parça! Hepsinin toplamı yine ${x(S.r, S.c)} = ${S.r * S.c}.`, 'ok') }
+      if (!g.d && S.view === 'dot') { g.d = won = true }
+      if (won) { star(); this.draw(); S.hint = false; updateCut() }
+      if (g.a && g.b && g.d && !done.explore) { done.explore = true; renderModes() }
+    },
+  },
+
+  /* 2. Kolay parçalar */
+  easy: {
+    name: '🧱 Kolay parçalar',
+    goal: 'Zor bir çarpmayı ×1, ×2, ×5, ×10 gibi kolay parçalara kes, parçaların sonuçlarını sayı kartlarıyla yaz.',
+    start() {
+      const A = [[6, 7], [7, 6], [6, 8], [7, 8], [6, 9], [7, 4], [4, 6], [7, 7], [3, 8]]
+      const B = [[8, 6], [9, 4], [8, 7], [9, 6], [8, 3], [9, 7]]
+      const a = pick(A), b = pick(B), c = pick([...A, ...B].filter((q) => q !== a && q !== b))
+      this.list = [a, b, c]; this.k = 0; this.found = []
+      this.round()
+    },
+    round() {
+      const [r, c] = this.list[this.k]
+      setup({ r, c, controls: false })
+      $('#known').append(h('div', { class: 'easy' }, 'Kolay gerçekler:', EASY.map((e) => h('span', { class: 'e' }, '× ' + e))))
+      this.phase = 'cut'
+      prompt(`Çarpma ${this.k + 1} / ${this.list.length}`, `<b>${x(r, c)}</b> zor mu? Diziyi öyle kes ki <b>her parça kolay</b> olsun: içinde 1, 2, 5 ya da 10 olsun. İki makası da kullanabilirsin.`)
+      if (this.found.length) $('#extra').append(logBox('Bulduklarım', this.found))
+    },
+    commit() {
+      if (this.phase !== 'cut') return
+      const ps = partsOf(S.r, S.c, S.cutR, S.cutC)
+      if (ps.length === 1) return
+      const hard = ps.find((q) => !isEasy(q.a, q.b))
+      if (hard) {
+        if (!canSplit(S.r) && isCut(S.cutR, S.r) && !isCut(S.cutC, S.c)) return say(`${S.r} satırı iki kolay parçaya bölemezsin: ${x(hard.a, hard.b)} hâlâ zor. Üstteki sütun makasını dene!`)
+        return say(`Bu kesikte ${x(hard.a, hard.b)} parçası var; o da zor. Her parçada 1, 2, 5 ya da 10 olsun.`)
+      }
+      clearSay(); sfx.ok(); this.phase = 'fill'; S.locked = true; buildGrid()
+      prompt(`Çarpma ${this.k + 1} / ${this.list.length}`, 'Harika kesik! Şimdi sayı kartlarını tutup <b>?</b> kutularına sürükle.')
+      fillSession({ onDone: (t) => {
+        this.found.push(t); star()
+        prompt(`Çarpma ${this.k + 1} / ${this.list.length}`, 'Tamam! Zor çarpmayı iki kolay parçanın toplamı olarak buldun.')
+        $('#extra').innerHTML = ''; $('#extra').append(logBox('Bulduklarım', this.found))
+        say(`Süper! ${x(S.r, S.c)} = ${S.r * S.c}. Bunu kolay parçalardan buldun.`, 'ok')
+        const last = this.k === this.list.length - 1
+        $('#extra').append(nextBtn(last ? 'Yeni çarpmalar ↻' : 'Sonraki çarpma →', () => { if (last) this.start(); else { this.k++; this.round() } }))
+        if (last) { done.easy = true; renderModes() }
+      } })
+    },
+  },
+
+  /* 3. Bildiğinden türet */
+  derive: {
+    name: '💡 Bildiğinden türet',
+    goal: 'Bildiğin bir çarpmadan (5 × 8, 10 × 7) bir satır ekleyerek ya da bir satırı çıkararak yenisini bul.',
+    start() {
+      const cs = shuffle([6, 7, 8, 9])
+      this.items = [{ minus: false, R: 6, c: cs[0], known: 5, target: 6 }, { minus: true, R: 10, c: cs[1], known: 10, target: 9 }, { minus: true, R: 5, c: cs[2], known: 5, target: 4 }]
+      this.k = 0; this.found = []
+      this.round()
+    },
+    round() {
+      const it = this.items[this.k]
+      setup({ r: it.R, c: it.c, axes: ['r'], minus: it.minus, controls: false })
+      $('#known').append(h('div', { class: 'known' }, '💡 Biliyorum: ' + x(it.known, it.c) + ' = ' + it.known * it.c))
+      this.phase = 'cut'
+      prompt(`Gerçek ${this.k + 1} / 3`, it.minus
+        ? `<b>${x(it.target, it.c)}</b> zor mu? Ama ${x(it.known, it.c)} = ${it.known * it.c}, bunu biliyorsun! Soldaki makası <b>yukarı</b> çek: alttaki satır gölgelenip çıkarılsın, üstte <b>${it.target} satır</b> kalsın.`
+        : `<b>${x(it.R, it.c)}</b> kaç? Bildiğin gerçek: ${x(it.known, it.c)} = ${it.known * it.c}. Makasla kes: bir parça tam <b>${x(it.known, it.c)}</b> olsun.`)
+      if (this.found.length) $('#extra').append(logBox('Türettiğim gerçekler', this.found))
+    },
+    commit() {
+      const it = this.items[this.k]
+      if (this.phase !== 'cut' || !isCut(S.cutR, S.r)) return
+      const k = S.cutR
+      const good = it.minus ? k === it.target : k === it.known || it.R - k === it.known
+      if (!good) return say(it.minus ? `Şimdi üstte ${k} satır kaldı, ${it.R - k} satır gölgelendi. ${x(it.target, it.c)} için üstte ${it.target} satır kalmalı.` : `Bildiğin parça ${x(it.known, it.c)}. Çizgiyi öyle çek ki bir parça tam ${it.known} satır olsun.`)
+      clearSay(); sfx.ok(); this.phase = 'fill'; S.locked = true; buildGrid()
+      const e = eqOf(), kv = it.known * it.c
+      const given = [e.terms.findIndex((t) => t.a === it.known)]
+      const extra = it.minus
+        ? [{ v: kv - 1, q: `${kv} − 1 mi? Gölgeli satırda kaç kare var? Bir satırı çıkarmak ${it.c} çıkarmak demek.` }]
+        : [{ v: kv + 1, q: `${kv} + 1 mi? Turuncu satırda kaç kare var? Bir satır eklemek ${it.c} eklemek demek.` }]
+      extra.push({ v: 1, q: `${x(1, it.c)} parçasında 1 kare mi var? Bir satırdaki kareleri say.` })
+      prompt(`Gerçek ${this.k + 1} / 3`, 'Bildiğin parça hazır. Kalanını sayı kartlarıyla tamamla.')
+      fillSession({ given, extra, onDone: (t) => {
+        this.found.push(t); star()
+        prompt(`Gerçek ${this.k + 1} / 3`, it.minus ? 'Tamam! Bir satırı çıkararak yeni bir gerçek türettin.' : 'Tamam! Bir satır ekleyerek yeni bir gerçek türettin.')
+        $('#extra').innerHTML = ''; $('#extra').append(logBox('Türettiğim gerçekler', this.found))
+        say(`Süper! ${x(it.target, it.c)} = ${it.target * it.c}. Ezberlemeden, bildiğinden türettin.`, 'ok')
+        const last = this.k === 2
+        $('#extra').append(nextBtn(last ? 'Yeni gerçekler ↻' : 'Sonraki gerçek →', () => { if (last) this.start(); else { this.k++; this.round() } }))
+        if (last) { done.derive = true; renderModes() }
+      } })
+    },
+  },
+
+  /* 4. Farklı kes, aynı sonuç */
+  ways: {
+    name: '🔀 Farklı kes, aynı sonuç',
+    goal: 'Aynı çarpmayı 4 farklı biçimde kes: hepsi aynı sonucu verir mi?',
+    start() {
+      const [r, c] = pick([[7, 8], [6, 8], [8, 7], [7, 9], [6, 7]])
+      setup({ r, c, controls: false })
+      this.found = []; this.over = false
+      prompt('Kesiş 0 / 4', `<b>${x(r, c)}</b> dizisini <b>4 farklı</b> biçimde kes. Satır makasını, sütun makasını ya da ikisini birlikte kullan. Her yeni kesiş deftere yazılır.`)
+      this.draw()
+    },
+    draw() { $('#extra').innerHTML = ''; $('#extra').append(logBox(`Kesiş defterim · ${this.found.length}`, this.found.map((f) => '✓ ' + f.text))) },
+    commit() {
+      if (this.over) return
+      const e = eqOf()
+      if (!e) return
+      const key = eqKey(e)
+      if (this.found.some((f) => f.key === key)) return say('Bu kesişi zaten buldun. Çizgiyi başka bir yere çek ya da diğer makası dene.')
+      clearSay(); sfx.ok()
+      this.found.push({ key, text: eqText(e), vert: isCut(S.cutC, S.c) })
+      this.draw()
+      prompt(`Kesiş ${Math.min(4, this.found.length)} / 4`, `<b>${x(S.r, S.c)}</b> dizisini <b>4 farklı</b> biçimde kes. Her yeni kesiş deftere yazılır.`)
+      if (this.found.length >= 4) {
+        if (!this.found.some((f) => f.vert)) return say('Bir de üstteki sütun makasını dene: sütunları kesince de aynı sonuç çıkar mı?')
+        if (!this.found.some((f) => !f.vert)) return say('Bir de yalnızca satırları kesmeyi dene: sütun makasını sağ kenara geri çek.')
+        this.over = true; star(); done.ways = true; renderModes()
+        say(`Hepsi ${S.r * S.c}! Kesmek kare eklemez, kare silmez: aynı diziyi farklı gruplara ayırdın.`, 'ok')
+        $('#extra').append(nextBtn('Yeni dizi ↻', () => this.start()))
+      }
+    },
+  },
+}
+
+/* ───────── mod seçici ───────── */
+function renderModes() {
+  const nav = $('#modes'); nav.innerHTML = ''
+  for (const [id, m] of Object.entries(MODES))
+    nav.append(h('button', { class: 'mode', 'aria-pressed': String(S.mode === id), 'data-mode': id, onclick: () => go(id) }, m.name, done[id] ? h('span', { class: 'done' }, '✅') : null))
+}
+let first = true
+function go(id) {
+  if (!first) $('#how').open = false
+  first = false
+  S.mode = id
+  renderModes()
+  $('#goal').textContent = MODES[id].goal
+  MODES[id].start()
+}
+go('explore')
+})()
+</script>
+</body>
+</html>

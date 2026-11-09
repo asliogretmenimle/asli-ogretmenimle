@@ -475,7 +475,7 @@ const CTXS = (N: number): Ctx[] => [
 ]
 const REASON: Record<QType, string> = { at: 'artanlar sayılmaz', ekle: 'artanlar için bir tane daha gerekir', kalan: 'cevap kalanın kendisidir', bol: 'artanlar da bölünüp paylaştırılır' }
 
-function PoseTask({ onDone, last, setup, ledger, add }: TaskProps) {
+function PoseTask({ onDone, last, setup, ledger }: TaskProps) {
   const { N, q, r, grade } = setup
   const checks = useChecks()
   const s = useSay(checks)
@@ -509,7 +509,6 @@ function PoseTask({ onDone, last, setup, ledger, add }: TaskProps) {
       sfx.ok()
       setMade({ ctx, qt: text, a })
       setStories((x) => [...x, `${ctx.icon} ${ctx.text} ${text} → ${a}`])
-      add(`✍️ Benim hikâyem: ${ctx.text} ${text} → cevap ${a}`)
       window.setTimeout(() => {
         setMade(null)
         setCtx(null)

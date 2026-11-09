@@ -642,9 +642,10 @@ function SortTask({ onDone, last, grade }: TaskProps) {
               </Drop>
             ))}
           </div>
-          {s.view('work')}
+          {complete && s.view('work')}
           {!complete && (
             <Sticky>
+              {s.view('work')}
               <Tray title="İşlem kartları">
                 {items.map((it, i) => (where[i] ? null : <Drag key={i} dnd={dnd} item={`it-${i}`} label={it.t} className="min-h-14 rounded-2xl bg-white px-3 text-2xl font-black text-ink tabular-nums shadow-[0_3px_0_#cbd5e1] ring-2 ring-line">{it.t}</Drag>))}
               </Tray>

@@ -177,7 +177,7 @@ function look(e: E, cell: number): CSSProperties {
   return {
     width: w * cell,
     height: h * cell,
-    background: c.fill,
+    backgroundColor: c.fill,
     backgroundImage: e === 0 ? undefined : `linear-gradient(to bottom, ${line} 1px, transparent 1px)${e === 2 ? `, linear-gradient(to right, ${line} 1px, transparent 1px)` : ''}`,
     backgroundSize: `${cell}px ${cell}px`,
     boxShadow: `inset 0 0 0 1.5px ${c.edge}`,
