@@ -104,7 +104,13 @@ export function Drag({ dnd, item, label, className = '', children, disabled, gho
 
   useEffect(() => () => cancelAnimationFrame(raf.current), [])
   const scrollLoop = () => {
-    const v = edgeSpeed(last.current.y)
+    let v = edgeSpeed(last.current.y)
+    /**
+     * Kart ekranın kenarında (ör. alta yapışık tepside) tutulduysa sayfa hemen kaymasın:
+     * kaydırma yalnızca parmak o kenara doğru en az 24 px ilerleyince başlar.
+     */
+    const y0 = start.current?.y ?? last.current.y
+    if ((v > 0 && last.current.y < y0 + 24) || (v < 0 && last.current.y > y0 - 24)) v = 0
     if (v) {
       window.scrollBy(0, v)
       dnd.setOver(dropAt(last.current.x, last.current.y))
