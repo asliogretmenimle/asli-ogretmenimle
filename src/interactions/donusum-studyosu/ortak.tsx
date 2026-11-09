@@ -128,7 +128,7 @@ export function Split({ work, panel, panelFirst }: { work: ReactNode; panel: Rea
 
 /** Çalışma alanı çerçevesi (koyu sahnede “laboratuvar” görünümü) */
 export function Stage({ children, dark, className = '' }: { children: ReactNode; dark?: boolean; className?: string }) {
-  return <div className={`relative overflow-hidden rounded-3xl p-2 ${dark ? 'bg-slate-900/70 ring-1 ring-slate-600' : 'bg-white/90 ring-1 ring-line shadow-sm'} ${className}`}>{children}</div>
+  return <div className={`relative overflow-clip rounded-3xl p-2 ${dark ? 'bg-slate-900/70 ring-1 ring-slate-600' : 'bg-white/90 ring-1 ring-line shadow-sm'} ${className}`}>{children}</div>
 }
 
 export function Card({ children, className = '', dark }: { children: ReactNode; className?: string; dark?: boolean }) {

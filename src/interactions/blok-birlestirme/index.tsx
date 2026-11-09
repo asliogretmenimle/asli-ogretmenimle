@@ -343,7 +343,7 @@ function BuildTask({ onDone, last }: TaskProps) {
       { label: `${tt}: onlar basamağında ${tt} yazıyor`, nudge: `Tuvaldeki onluk çubuklara bak: her birinde kaç küp var? ${tt} tane 10 kaç eder?`, mis: 'Onlukların değerini basamaktaki rakamla karıştırıyor' },
       { label: `${th * 100 + tt * 10}: yüzlüklerle birlikte`, nudge: 'Yalnızca onluk çubuklarını say. Yüzlükler ayrı bir parça.' },
     ]),
-  }), [target]) // eslint-disable-line react-hooks/exhaustive-deps
+  }), [target])
   const askZero: Ask = useMemo(() => ({
     q: zeroAt === 1 ? `${n(target)}’ü kurarken hiç onluk koymadın. Sayıyı yazarken onlar basamağına ne yazarız?` : `${n(target)}’ü kurarken hiç birlik koymadın. Sayıyı yazarken birler basamağına ne yazarız?`,
     options: shuffle([
@@ -355,7 +355,7 @@ function BuildTask({ onDone, last }: TaskProps) {
       },
       { label: '1 yazarız: bir boşluk var', nudge: '1 yazarsak 1 tane blok var demek olur. Tuvalde o türden kaç blok var?' },
     ]),
-  }), [target]) // eslint-disable-line react-hooks/exhaustive-deps
+  }), [target])
 
   return (
     <Split

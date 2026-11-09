@@ -73,7 +73,7 @@ export const guidesIlkokul: Guide[] = [
     ],
     tools: ['dizilim', 'yuzluk'],
     games: ['kurabiye-fabrikasi', 'lunapark'],
-    interactions: ['carpmaya-giris', 'carpma-dikdortgeni', 'carpim-dikdortgenleri', 'sepetlere-grupla'],
+    interactions: ['parcala-birlestir-dizisi', 'carpmaya-giris', 'carpma-dikdortgeni', 'carpim-dikdortgenleri', 'sepetlere-grupla'],
   },
   {
     slug: 'ritmik-sayma',

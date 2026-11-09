@@ -35,7 +35,7 @@ export function useAge(grade: Grade) {
 /** Oyun sahnesi: yaşa uygun arka planlı, tablet için geniş alan */
 export function Scene({ grade, children, className = '' }: { grade: Grade; children: ReactNode; className?: string }) {
   const a = useAge(grade)
-  return <div className={`relative overflow-hidden rounded-3xl p-3 shadow-[var(--shadow-card)] ring-1 ring-line sm:p-5 ${a.sceneClass} ${className}`}>{children}</div>
+  return <div className={`relative overflow-clip rounded-3xl p-3 shadow-[var(--shadow-card)] ring-1 ring-line sm:p-5 ${a.sceneClass} ${className}`}>{children}</div>
 }
 
 /** Görev / problem kartı */

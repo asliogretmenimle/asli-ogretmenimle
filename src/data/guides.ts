@@ -872,7 +872,7 @@ const baseGuides: Guide[] = [
     ],
     tools: ['base10'],
     games: ['kasa'],
-    interactions: ['elde-ve-bozma', 'basamak-laboratuvari'],
+    interactions: ['elde-ve-bozma', 'blok-birlestirme', 'basamak-laboratuvari'],
   },
 ]
 

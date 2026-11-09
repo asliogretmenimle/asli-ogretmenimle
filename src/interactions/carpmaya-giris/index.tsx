@@ -68,7 +68,7 @@ function plan(grade: Grade) {
 const TASKS: TaskDef[] = [
   { emoji: '🍽️', title: 'Eşit gruplar kur', goal: 'Tabaklara meyve koyarak eşit gruplar kurmak; gruplar eşit olmayınca “tane” diyemeyeceğimizi keşfetmek.', tools: [GTOOL.stack, GTOOL.heap, GTOOL.plate, 'answer'] },
   { emoji: '➕', title: 'Tabak tabak topla', goal: 'Her yeni tabakla toplamın nasıl büyüdüğünü görmek; tekrarlı toplamayı “3 tane 5” ve 3 × 5 ile yazmak.', tools: [GTOOL.stack, GTOOL.num, 'answer'] },
-  { emoji: '🔲', title: 'Dizi kur, döndür', goal: 'Nesneleri sıra sıra dizmek; diziyi döndürünce 3 × 4 ile 4 × 3’ün aynı sayıda nesne olduğunu görmek.', tools: [ATOOL.first, ATOOL.row, ATOOL.turn, 'answer'] },
+  { emoji: '🔲', title: 'Dizi kur, döndür', goal: 'Nesneleri sıra sıra dizmek; diziyi döndürünce sıra sayısı ile bir sıradaki sayı yer değiştirse de nesne sayısının değişmediğini görmek.', tools: [ATOOL.first, ATOOL.row, ATOOL.turn, 'answer'] },
   { emoji: '🔗', title: 'Aynı çarpma, farklı modeller', goal: 'Bir hikâyeyi eşit gruplar, tekrarlı toplama, dizi ve çarpma cümlesiyle eşleştirmek.', tools: [{ icon: <span className="text-base leading-none">🃏</span>, name: 'Model kartları', text: 'Alttaki kartlardan birini tutup ona uyan hikâyenin üstüne bırak. Önce resimler, sonra toplamalar, diziler ve çarpmalar gelir.' }] },
   { emoji: '🛠️', title: 'Çarpmayı sen kur', goal: 'Verilen çarpmayı istediğin modelle (eşit gruplar ya da dizi) kendin kurmak.', tools: [{ icon: <span className="text-base leading-none">🧩</span>, name: 'Model kartı', text: '“Eşit gruplar” ya da “Dizi” kartını “Model” kutusuna sürükle.' }, GTOOL.stack, GTOOL.heap, ATOOL.row, ATOOL.turn, 'answer'] },
 ]
