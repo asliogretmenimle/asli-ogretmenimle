@@ -416,7 +416,7 @@ export function Line({ start, ms, dnd, target }: { start: number; ms: Mv[]; dnd:
   return (
     <Drop dnd={dnd} id="line" className="rounded-2xl bg-white ring-1 ring-line">
       <div ref={ref} className="w-full">
-        <svg width={W} height={negs ? H + 50 : H} className="block" role="img" aria-label={`Boş sayı doğrusu: ${pts.map((p) => n(p)).join(', ')}`}>
+        <svg width={W} height={negs ? H + 66 : H} className="block" role="img" aria-label={`Boş sayı doğrusu: ${pts.map((p) => n(p)).join(', ')}`}>
           <line x1={8} x2={W - 8} y1={Y} y2={Y} stroke="#334155" strokeWidth={4} strokeLinecap="round" />
           {target != null && (
             <g>
@@ -427,10 +427,10 @@ export function Line({ start, ms, dnd, target }: { start: number; ms: Mv[]; dnd:
           {pts.slice(1).map((p, i) => {
             const a = X(pts[i]), b = X(p)
             const up = p > pts[i]
-            const h = up ? Math.max(18, Math.min(78, Math.abs(b - a) * 0.45)) : Math.max(46, Math.min(56, Math.abs(b - a) * 0.45))
+            const h = up ? Math.max(18, Math.min(78, Math.abs(b - a) * 0.45)) : Math.max(58, Math.min(64, Math.abs(b - a) * 0.45))
             const c = JCOL[i % JCOL.length]
             const my = up ? Y - 2 * h : Y + 2 * h
-            const ly = up ? Y - h - 8 : Y + h + 24
+            const ly = up ? Y - h - 8 : Y + h + 30
             const d = p - pts[i]
             return (
               <g key={i} className="animate-fade-up">

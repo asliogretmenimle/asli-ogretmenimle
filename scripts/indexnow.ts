@@ -40,5 +40,9 @@ for (let i = 0; i < urls.length; i += 10000) {
     429: 'çok sık gönderim; bir süre sonra tekrar deneyin',
   }
   const body = res.ok ? '' : (await res.text()).slice(0, 300)
+  if (body.includes('SiteVerificationNotCompleted')) {
+    console.log('indexnow: anahtar dosyası bulundu ama doğrulama henüz bitmedi (ilk gönderimden sonra birkaç dakika–birkaç saat sürer). Hiçbir adres kaybolmadı; daha sonra aynı komutu tekrar çalıştırın.')
+    process.exit(1)
+  }
   console.log(`indexnow: ${urls.slice(i, i + 10000).length} adres → HTTP ${res.status} (${hint[res.status] ?? res.statusText})${body ? `\n${body}` : ''}`)
 }

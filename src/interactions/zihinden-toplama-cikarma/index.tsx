@@ -550,7 +550,7 @@ function UpTask({ onDone, last, grade }: TaskProps) {
     <Split
       work={
         <Stage className="space-y-3 overflow-visible! p-3 sm:p-4">
-          <Problem a={t} b={sm} op="−" value={d} done={phase !== 'play' && (phase === 'done')} />
+          <Problem a={t} b={sm} op="−" value={d} done={phase === 'done'} />
           {s.view('work')}
           <Line start={sm} ms={mv.ms} dnd={dnd} target={t} />
           {!reached && <Tools onUndo={() => { s.clear(); mv.undo() }} onReset={() => { s.clear(); mv.reset() }} disabled={!mv.ms.length} />}
