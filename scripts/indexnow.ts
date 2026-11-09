@@ -31,5 +31,14 @@ for (let i = 0; i < urls.length; i += 10000) {
     headers: { 'Content-Type': 'application/json; charset=utf-8' },
     body: JSON.stringify({ host: new URL(SITE_URL).host, key: KEY, keyLocation: `${SITE_URL}/${KEY}.txt`, urlList: urls.slice(i, i + 10000) }),
   })
-  console.log(`indexnow: ${urls.slice(i, i + 10000).length} adres → HTTP ${res.status} ${res.statusText}`)
+  const hint: Record<number, string> = {
+    200: 'tamam',
+    202: 'kabul edildi; anahtar doğrulanıyor',
+    400: 'istek biçimi hatalı',
+    403: `anahtar doğrulanamadı: ${SITE_URL}/${KEY}.txt canlıda açılıyor mu? (dağıtım bitmeden çalıştırılmış olabilir)`,
+    422: 'adresler bu alan adına ait değil ya da anahtar eşleşmiyor',
+    429: 'çok sık gönderim; bir süre sonra tekrar deneyin',
+  }
+  const body = res.ok ? '' : (await res.text()).slice(0, 300)
+  console.log(`indexnow: ${urls.slice(i, i + 10000).length} adres → HTTP ${res.status} (${hint[res.status] ?? res.statusText})${body ? `\n${body}` : ''}`)
 }

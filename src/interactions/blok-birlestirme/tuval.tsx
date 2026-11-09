@@ -113,7 +113,6 @@ function mergePlan(list: Blk[], parts: Blk[]) {
       pref = [x + 1, near.y]
     }
     const [tx, ty] = freeSpot(1, 10, pref[0], pref[1], others)
-    console.info('DBG', JSON.stringify({ pref, tx, ty, parts: parts.map((p) => [p.x, p.y]), rods: rods.map((r) => [r.x, r.y]) }))
     ;[...parts].sort((a, b) => a.y - b.y || a.x - b.x).forEach((p, i) => (slots[p.id] = { x: tx, y: ty + i }))
     return { slots, made: { id: nid(), e: 1 as E, x: tx, y: ty }, others }
   }
