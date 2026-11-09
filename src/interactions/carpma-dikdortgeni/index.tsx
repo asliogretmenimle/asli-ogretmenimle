@@ -58,7 +58,7 @@ export default function CarpmaDikdortgeni({ grade, onFinish }: InteractionProps)
 
   const props = { onDone: done, last, grade }
   return (
-    <Scene grade={grade} className="select-none [-webkit-touch-callout:none]">
+    <Scene grade={grade} className="overflow-clip! select-none [-webkit-touch-callout:none]">
       <Header
         emoji={end ? '📒' : t.emoji}
         kicker={end ? 'Tamamlandı' : 'Görev'}
@@ -342,14 +342,14 @@ function TargetRound({ round, total, tL, tW, grade, checks, onNext }: { round: n
     )
 
   const fill = phase !== 'set'
-  const parts = fill ? partsFor(tL, (len, i) => ({ label: <span className="flex items-center gap-1">{len} × {tW} = {slot(i)}</span> })) : partsFor(L)
+  const parts = fill ? partsFor(tL, (len, i) => ({ labelWidth: 118, label: <span className="flex items-center gap-1">{len} × {tW} = {slot(i)}</span> })) : partsFor(L)
   const shownLens = fill ? lens : tens(L)
   const match = L === tL && W === tW
 
   return (
     <Split
       work={
-        <Stage className="space-y-3 p-2 sm:p-4">
+        <Stage className="space-y-3 overflow-clip! p-2 sm:p-4">
           <Board maxL={maxLFor(grade)} W={fill ? tW : W} parts={parts} onResize={fill ? undefined : (l, w) => {
             setL(l)
             setW(w)
@@ -455,7 +455,7 @@ function HiddenTask({ onDone, last }: TaskProps) {
   const hiddenLabel = solved ? undefined : askLen ? <span className="flex items-center gap-1">{gap} × {r.W} = {n(rest * r.W)}</span> : <span className="flex items-center gap-1">? × {r.W} = {gap}</span>
   const parts: Part[] = [
     { len: 10, tone: 'ten' },
-    { len: rest, tone: 'rest', hidden: !solved, label: hiddenLabel },
+    { len: rest, tone: 'rest', hidden: !solved, label: hiddenLabel, labelWidth: 118 },
   ]
   const done = k >= 2
 
@@ -467,7 +467,7 @@ function HiddenTask({ onDone, last }: TaskProps) {
             <RulesFound rules={rules} />
           </Stage>
         ) : (
-          <Stage className="space-y-3 p-2 sm:p-4">
+          <Stage className="space-y-3 overflow-clip! p-2 sm:p-4">
             <Board key={k} maxL={20} W={r.W} parts={parts} hideL={!solved} />
             <Equation
               names={solved ? undefined : ['10', '?']}
@@ -637,11 +637,11 @@ function SplitTask({ onDone, last }: TaskProps) {
 /* ───────────── 5. Hatalı cevap avı ───────────── */
 
 interface Term { text: string; part: number; paint: [number, number]; claim: number }
-interface Hunt { who: string; L: number; W: number; work: string; wrong: number; terms: Term[]; wrongPart: string; ask: Ask; ok: string }
+interface Hunt { who: string; /** “Can’ın”, “Ece’nin” */ whose: string; L: number; W: number; work: string; wrong: number; terms: Term[]; wrongPart: string; ask: Ask; ok: string }
 
 const HUNTS: Hunt[] = [
   {
-    who: 'Can', L: 14, W: 5, work: '14 × 5 = 10 × 5 + 4 = 54', wrong: 54,
+    who: 'Can', whose: 'Can’ın', L: 14, W: 5, work: '14 × 5 = 10 × 5 + 4 = 54', wrong: 54,
     terms: [
       { text: '10 × 5', part: 0, paint: [10, 5], claim: 50 },
       { text: '+ 4', part: 1, paint: [4, 1], claim: 4 },
@@ -658,7 +658,7 @@ const HUNTS: Hunt[] = [
     ok: 'Evet! Turuncu parça 4 × 5 = 20 kare; Can yalnızca 4’ünü saydı.',
   },
   {
-    who: 'Ece', L: 13, W: 6, work: '13 × 6 = 1 × 6 ve 3 × 6 → 6 | 18 = 618', wrong: 618,
+    who: 'Ece', whose: 'Ece’nin', L: 13, W: 6, work: '13 × 6 = 1 × 6 ve 3 × 6 → 6 | 18 = 618', wrong: 618,
     terms: [
       { text: '1 × 6 = 6', part: 0, paint: [1, 6], claim: 6 },
       { text: '3 × 6 = 18', part: 1, paint: [3, 6], claim: 18 },
@@ -726,9 +726,9 @@ function HuntRound({ h, round, checks, onNext }: { h: Hunt; round: number; check
   return (
     <Split
       work={
-        <Stage className="space-y-3 p-2 sm:p-4">
+        <Stage className="space-y-3 overflow-clip! p-2 sm:p-4">
           <div className="rounded-2xl bg-amber-50 px-3 py-2 text-center ring-1 ring-amber-300">
-            <p className="text-xs font-black tracking-wide text-amber-800 uppercase">{h.who}’nin çözümü</p>
+            <p className="text-xs font-black tracking-wide text-amber-800 uppercase">{h.whose} çözümü</p>
             <p className="text-xl font-black text-amber-950 tabular-nums sm:text-2xl">{h.work}</p>
           </div>
           <Board
@@ -739,14 +739,14 @@ function HuntRound({ h, round, checks, onNext }: { h: Hunt; round: number; check
           />
           {Object.keys(placed).length > 0 && !reveal && (
             <p className="text-center text-sm font-black text-ink-soft">
-              {h.who}’nin saydığı kareler boyalı. {missing > 0 ? <span className="text-red-600">Taralı {missing} kare hiç sayılmadı!</span> : 'Bu parçanın bütün kareleri sayıldı.'}
+              {h.whose} saydığı kareler boyalı. {missing > 0 ? <span className="text-red-600">Taralı {missing} kare hiç sayılmadı!</span> : 'Bu parçanın bütün kareleri sayıldı.'}
             </p>
           )}
           {reveal && <Equation lens={lens} W={h.W} tones={tonesFor(lens)} />}
           {s.view('work')}
           {phase === 'place' && (
             <Sticky>
-              <Tray title={`${h.who}’nin hesabındaki parçalar`}>
+              <Tray title={`${h.whose} hesabındaki parçalar`}>
                 {h.terms.map((t, i) => (Object.values(placed).includes(t) ? null : (
                   <Drag key={i} dnd={dnd} item={`term-${i}`} label={t.text} className="grid min-h-14 min-w-16 place-items-center rounded-2xl bg-amber-100 px-3 text-xl font-black text-amber-950 shadow-[0_3px_0_#f59e0b] ring-2 ring-amber-400">{t.text}</Drag>
                 )))}

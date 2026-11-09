@@ -342,7 +342,7 @@ export function useSay(checks: ReturnType<typeof useChecks>) {
       setWrong(null)
       setSay((s) => ({ q, k: (s?.k ?? 0) + 1, ok: true }))
     },
-    view: (spot: 'work' | 'panel') => (say && (spot === 'panel') === wide ? <Nudge key={say.k} question={say.q} misconception={say.mis} tone={say.ok ? 'ok' : 'think'} /> : null),
+    view: (spot: 'work' | 'panel') => (say && (spot === 'panel') === wide ? <Nudge key={`say-${say.k}`} question={say.q} misconception={say.mis} tone={say.ok ? 'ok' : 'think'} /> : null),
   }
 }
 export type SayApi = ReturnType<typeof useSay>

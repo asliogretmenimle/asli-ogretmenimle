@@ -49,6 +49,8 @@ export interface Part {
   tone: Tone
   /** parçanın üstündeki etiket (varsayılan “10 × 5 = 50”) */
   label?: ReactNode
+  /** etiketin yaklaşık genişliği (px); parça daha darsa etiketler ayrı sıraya geçer */
+  labelWidth?: number
   /** perdeyle kapalı */
   hidden?: boolean
   /** yalnızca sol üstteki [sütun, satır] kadar kare boyalı, kalanı “sayılmadı” */
@@ -162,7 +164,9 @@ export function Board({ maxL, W, parts, onResize, onRelease, split, renderDrop, 
   const cell = clamp(Math.floor((width - padL - padR) / maxL), 8, 40)
   const gw = maxL * cell
   const gh = MAXW * cell
-  const top = 54
+  /** dar ekranda etiketler parçaların üstüne sığmıyorsa dikdörtgenin üstünde ayrı bir sıra olur */
+  const narrow = showLabels && parts.some((p) => p.len * cell < (p.labelWidth ?? (p.label ? 80 : 40)))
+  const top = showLabels && !narrow ? 54 : 12
   const grid = useRef<HTMLDivElement>(null)
   const pid = useRef<number | null>(null)
   const sid = useRef<number | null>(null)
@@ -181,6 +185,16 @@ export function Board({ maxL, W, parts, onResize, onRelease, split, renderDrop, 
 
   return (
     <div ref={ref} className="w-full">
+      {narrow && (
+        <div className="mb-1 flex flex-wrap justify-center gap-1.5">
+          {placed.map((p, i) => (
+            <span key={i} className="flex items-center gap-1 rounded-lg bg-white px-1.5 py-0.5 text-sm font-black whitespace-nowrap tabular-nums shadow-sm ring-2" style={{ color: TONE[p.tone].text, ['--tw-ring-color' as string]: TONE[p.tone].strong }}>
+              <span className="size-3 rounded-sm" style={{ background: TONE[p.tone].strong }} aria-hidden />
+              {p.label ?? partLabel(p.len, W)}
+            </span>
+          ))}
+        </div>
+      )}
       <div className="relative mx-auto touch-none select-none" style={{ width: gw + padL + padR, height: top + gh + 70 }}>
         {/* uzunluk cetveli */}
         <div className="absolute" style={{ left: padL, top: top + gh + 6, width: gw }}>
@@ -291,6 +305,7 @@ export function Board({ maxL, W, parts, onResize, onRelease, split, renderDrop, 
 
         {/* parça etiketleri: her parçanın üstünde */}
         {showLabels &&
+          !narrow &&
           placed.map((p, i) => (
             <div key={i} className="absolute flex items-end justify-center" style={{ left: padL + p.at * cell, top: 0, width: p.len * cell, height: top - 6, transition: 'left 150ms, width 150ms' }}>
               <span className={`rounded-lg bg-white px-1.5 py-0.5 text-center leading-tight font-black whitespace-nowrap tabular-nums shadow-sm ring-2 ${p.len * cell < 70 ? 'text-[11px]' : 'text-sm sm:text-base'}`} style={{ color: TONE[p.tone].text, ['--tw-ring-color' as string]: TONE[p.tone].strong }}>
