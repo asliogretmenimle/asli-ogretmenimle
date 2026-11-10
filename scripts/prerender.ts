@@ -31,7 +31,7 @@ import { gameKeyword, interactionKeyword, outcomeKeyword, themeKeyword, toolKeyw
 import { generatorKind, runGenerator } from '../src/lib/generators.ts'
 import { gradeContent } from '../src/data/gradeContent.ts'
 import {
-  BOARD_PATH, GUIDES_PATH, TIMES_PATH, timesFamily, timesFaq, timesSeo, ONLINE_LESSON_PATH, SITE_NAME, abs, boardSeo, activityHeading, activitySeo, approachSeo, gameHeading, gameKw, gameSeo,
+  BOARD_PATH, GUIDES_PATH, MAX_TITLE, TIMES_PATH, timesFamily, timesFaq, timesSeo, ONLINE_LESSON_PATH, SITE_NAME, abs, boardSeo, activityHeading, activitySeo, approachSeo, gameHeading, gameKw, gameSeo,
   gamesIndexSeo, gradeFaq, gradeSeo, guideSeo, guidesIndexSeo, homeSeo, interactionHeading, interactionKw, interactionSeo,
   interactionsIndexSeo, notFoundSeo, onlineLessonSeo, outcomeKw, plain, privateSeo, readyInteractions, stageLabel,
   themeHeading, themeKw, themeSeo, toolHeading, toolKw, toolSeo, toolsIndexSeo, typeLabel, type PageSeo,
@@ -708,6 +708,8 @@ if (missing.length) console.warn(`prerender: src/data/seoKeywords.ts içinde ana
 const indexed = pages.filter((x) => !x.seo.noindex)
 const byTitle = new Map<string, string[]>()
 for (const x of indexed) byTitle.set(x.seo.title, [...(byTitle.get(x.seo.title) ?? []), x.seo.path])
+const tooLong = indexed.filter((x) => x.seo.title.length > MAX_TITLE)
+if (tooLong.length) console.warn(`prerender: ${tooLong.length} başlık ${MAX_TITLE} karakterden uzun (Bing uyarır):\n${tooLong.map((x) => `  ${x.seo.title.length} ${x.seo.path}: ${x.seo.title}`).join('\n')}`)
 const dups = [...byTitle].filter(([, ps]) => ps.length > 1)
 if (dups.length) console.warn(`prerender: ${dups.length} başlık birden fazla sayfada kullanılıyor:\n${dups.map(([t, ps]) => `  "${t}": ${ps.join(', ')}`).join('\n')}`)
 

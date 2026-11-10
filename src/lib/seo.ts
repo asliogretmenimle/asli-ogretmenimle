@@ -77,6 +77,26 @@ export function clip(text: string, max = 158): string {
 
 /** Marka yalnızca sığıyorsa eklenir: Google ~60 karakterden sonrasını keser, konu kelimesi önde kalmalı */
 const withBrand = (t: string) => (t.length + SITE_NAME.length + 3 <= 65 ? `${t} | ${SITE_NAME}` : t)
+
+/** Bing 70 karakterden uzun <title>'ları uyarır (Google da kısaltır) */
+export const MAX_TITLE = 70
+/**
+ * Adaylardan sırayla ilk sığanı döndürür. İlk aday her zaman en açıklayıcısıdır, bu yüzden
+ * zaten kısa olan başlıklar hiç değişmez. Hiçbiri sığmazsa sonuncusu kelime sınırında kesilir.
+ */
+export function fitTitle(...candidates: string[]): string {
+  const list = [...new Set(candidates.map((c) => c.replace(/\s+/g, ' ').trim()).filter(Boolean))]
+  const hit = list.find((c) => c.length <= MAX_TITLE)
+  if (hit) return hit
+  const last = list[list.length - 1]
+  return last.slice(0, last.lastIndexOf(' ', MAX_TITLE)).replace(/[\s,;:–-]+$/, '')
+}
+/** "Şerit modeli: bir bütün, iki parça" → "Şerit modeli"; "Hangisi farklı? (Kesirler)" → "Hangisi farklı?" */
+const firstClause = (t: string) => {
+  const m = /^(.{6,}?)(?:[:–—(]|(?<=\?)\s)/.exec(t)
+  return m ? m[1].trim() : t
+}
+const noEtkinlik = (kw: string) => kw.replace(/ Etkinliği$/, '')
 const norm = (s: string) => s.toLocaleLowerCase('tr').replace(/[^0-9a-zçğıöşüâî]/g, '')
 /** a, b'yi (ya da b, a'yı) içeriyor mu? Başlıkta aynı ifadeyi iki kez yazmamak için */
 const overlaps = (a: string, b: string) => norm(a).includes(norm(b)) || norm(b).includes(norm(a))
@@ -216,6 +236,25 @@ export function gameHeading(m: GameMeta) {
   return overlaps(m.name, kw) ? `${m.name} – ${gradeRange(m.grades)}. Sınıf Matematik Oyunu` : `${kw}: ${m.name} (${gradeRange(m.grades)}. Sınıf)`
 }
 
+/** Etkinliğin <title>'ı: H1 (activityHeading) uzunsa kısa adaylara iner */
+export function activityTitle(a: Activity, g: Grade) {
+  const label = gradeInfo[g].label
+  const t = plain(a.title)
+  const kw = outcomeKw(a.outcomes[0])
+  const full = activityHeading(a, g)
+  if (!kw || overlaps(t, kw)) return fitTitle(full, `${label} ${upperFirst(firstClause(t))}`)
+  // Anahtar kelime başlıkta kalmalı: sınıf adı düşebilir, konu adı düşmez
+  return fitTitle(full, `${label} ${kw}: ${firstClause(t)}`, `${kw}: ${t}`, `${kw}: ${firstClause(t)}`, `${label} ${kw} – ${typeLabel[a.type]} Etkinliği`, `${label} ${kw}`)
+}
+
+export function interactionTitle(m: InteractionMeta) {
+  const kw = interactionKw(m)
+  const r = `(${gradeRange(m.grades)}. Sınıf)`
+  // Ad zaten konu adını içeriyorsa ("Zihinden Toplama ve Çıkarma Stratejileri") ikisini art arda yazma
+  if (overlaps(m.name, noEtkinlik(kw))) return fitTitle(interactionHeading(m), `${m.name} ${r}`, m.name)
+  return fitTitle(interactionHeading(m), `${noEtkinlik(kw)}: ${m.name} ${r}`, `${kw}: ${m.name}`, `${noEtkinlik(kw)}: ${m.name}`, `${m.name} ${r}`, `${kw} ${r}`)
+}
+
 export function interactionHeading(m: InteractionMeta) {
   const kw = interactionKw(m)
   return overlaps(m.name, kw) ? `${kw} (${gradeRange(m.grades)}. Sınıf)` : `${kw}: ${m.name} (${gradeRange(m.grades)}. Sınıf)`
@@ -285,7 +324,7 @@ export function themeSeo(t: Theme): PageSeo {
   const info = gradeInfo[t.grade]
   const path = `/sinif/${t.grade}/${t.slug}`
   return {
-    title: withBrand(`${themeHeading(t)} Etkinlikleri`),
+    title: withBrand(fitTitle(`${themeHeading(t)} Etkinlikleri`, themeHeading(t))),
     description: clip(`${themeHeading(t)} etkinlikleri ve oyunları: ${t.outcomes.map((o) => lower(outcomeKw(o.code))).join(', ')}. Ücretsiz, interaktif, Maarif Modeli’ne uygun.`),
     path,
     jsonLd: graph(
@@ -316,7 +355,7 @@ export function activitySeo(a: Activity, g: Grade): PageSeo {
   const kw = outcomeKw(a.outcomes[0])
   const description = clip(`${info.label} ${kw ? lower(kw) : 'matematik'} etkinliği (${lower(typeLabel[a.type])}): ${/[.!?…]$/.test(title) ? title : `${title}.`} ${plain(a.instructions)} Ücretsiz ve online; telefonda, tablette ve akıllı tahtada çalışır.`)
   return {
-    title: withBrand(activityHeading(a, g)),
+    title: withBrand(activityTitle(a, g)),
     description,
     path,
     jsonLd: graph(
@@ -363,7 +402,7 @@ export function gameSeo(m: GameMeta): PageSeo {
   const range = gradeRange(m.grades)
   const description = clip(`${m.name}: ${range}. sınıflar için ücretsiz online ${lower(gameKw(m))}. ${plain(m.description)} Telefon, tablet ve bilgisayarda üyeliksiz oynanır.`)
   return {
-    title: withBrand(gameHeading(m)),
+    title: withBrand(fitTitle(gameHeading(m), `${m.name} – ${gameKw(m)}`, m.name)),
     description,
     path,
     jsonLd: graph(
@@ -411,7 +450,7 @@ export function toolSeo(t: ToolMeta): PageSeo {
   const gs = t.grades.split(/[–-]/).map(Number).filter(isGrade)
   const span = gs.length === 2 ? grades.filter((g) => g >= gs[0] && g <= gs[1]) : gs
   return {
-    title: withBrand(toolHeading(t)),
+    title: withBrand(fitTitle(toolHeading(t), toolKw(t))),
     description,
     path,
     jsonLd: graph(
@@ -452,7 +491,7 @@ export function interactionSeo(m: InteractionMeta): PageSeo {
   const range = gradeRange(m.grades)
   const description = clip(`${interactionKw(m)}: ${plain(m.description)} ${range}. sınıf için ücretsiz, interaktif matematik etkinliği; akıllı tahtada ve tablette çalışır.`)
   return {
-    title: withBrand(interactionHeading(m)),
+    title: withBrand(interactionTitle(m)),
     description,
     path,
     jsonLd: graph(
@@ -612,7 +651,7 @@ export function themeTestSeo(t: Theme): PageSeo {
   const path = testPath(t.grade, t.slug)
   const description = clip(`${themeTestHeading(t)}: ${t.outcomes.map((o) => lower(outcomeKw(o.code))).join(', ')}. Cevaplı, açıklamalı online test; sorular her açılışta karışır. Ücretsiz.`)
   return {
-    title: withBrand(`${themeTestHeading(t)} (Cevaplı)`),
+    title: withBrand(fitTitle(`${themeTestHeading(t)} (Cevaplı)`, themeTestHeading(t), `${themeKw(t)} Testi (${t.grade}. Sınıf)`)),
     description,
     path,
     jsonLd: graph(
