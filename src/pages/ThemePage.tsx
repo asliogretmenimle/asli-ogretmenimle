@@ -3,7 +3,8 @@ import { ChevronLeft, ChevronRight, ClipboardCheck, Sparkles } from 'lucide-reac
 import { findTheme, gradeInfo, isGrade, themesByGrade } from '../data/curriculum'
 import { STAGE_ORDER, forOutcome, themeNotes, useGradeActivities } from '../data/activityStore'
 import { linksFor } from '../data/links'
-import { ActivityCard, LinkCard } from '../components/Cards'
+import { ActivityCard, LinkCard, MiniCard } from '../components/Cards'
+import { interactionMeta } from '../interactions/meta'
 import { stageMeta, themeIcon } from '../components/meta'
 import { usePageTitle } from '../components/Layout'
 import { ShareButton } from '../components/ShareButton'
@@ -83,6 +84,7 @@ export default function ThemePage() {
             .filter((a) => !seen.has(a.id))
             .sort((x, y) => STAGE_ORDER.indexOf(x.stage!) - STAGE_ORDER.indexOf(y.stage!))
           list.forEach((a) => seen.add(a.id))
+          const sims = interactionMeta.filter((m) => m.ready && m.grades.includes(g) && m.showUnder?.includes(o.code))
           return (
             <section key={o.code}>
               <div className="mb-3">
@@ -92,6 +94,11 @@ export default function ThemePage() {
                 </div>
                 <p className="mt-0.5 text-sm font-semibold text-ink-soft">{o.title}</p>
               </div>
+              {sims.length > 0 && (
+                <div className="mb-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {sims.map((m) => <MiniCard key={m.id} to={`/etkilesim/${m.id}?sinif=${g}`} label="Mini konu anlatımı · simülasyon" emoji={m.emoji} title={m.name} sub={m.skills?.[g] ?? m.description} />)}
+                </div>
+              )}
               {!all ? (
                 <div className="h-28 animate-pulse rounded-2xl bg-white/70 ring-1 ring-line" />
               ) : list.length > 0 ? (

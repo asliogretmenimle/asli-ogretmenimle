@@ -1327,33 +1327,6 @@ export const grade6: Activity[] = [
     ],
   },
   {
-    id: 'g6-sonlu-devirli',
-    outcomes: ['MAT.6.1.6'],
-    type: 'categorize',
-    stage: 'sembol',
-    title: 'Sonlu mu, devirli mi?',
-    instructions: 'Payı paydaya böldüğünde bölme işlemi biter mi, yoksa rakamlar sürekli tekrar mı eder? Kesirleri grupla.',
-    level: 3,
-    launch: { text: 'Ali hesap makinesiyle [[1/4]] için 0,25; [[1/3]] için 0,3333333 buldu. Neden bazı bölmeler bitiyor da bazıları bitmiyor?' },
-    reflect: 'Sadeleştirilmiş bir kesrin ondalık gösteriminin sonlu mu devirli mi olacağını paydaya bakarak nasıl tahmin edersin?',
-    categories: [
-      { id: 'sonlu', label: 'Sonlu ondalık gösterim', color: '#22c55e' },
-      { id: 'devirli', label: 'Devirli ondalık gösterim', color: '#a855f7' },
-    ],
-    items: [
-      { content: '[[3/4]]', category: 'sonlu', explain: '3 ÷ 4 = 0,75; bölme biter. Payda 4 = 2 · 2.' },
-      { content: '[[2/5]]', category: 'sonlu', explain: '2 ÷ 5 = 0,4; payda 5.' },
-      { content: '[[7/8]]', category: 'sonlu', explain: '7 ÷ 8 = 0,875; payda 8 = 2 · 2 · 2.' },
-      { content: '[[9/20]]', category: 'sonlu', explain: '9 ÷ 20 = 0,45; payda 20 = 2 · 2 · 5.' },
-      { content: '[[3/15]]', category: 'sonlu', explain: '[[3/15]] = [[1/5]] = 0,2; sadeleşince paydada yalnızca 5 kalır.' },
-      { content: '[[1/3]]', category: 'devirli', explain: '1 ÷ 3 = 0,333...; her adımda kalan 1.' },
-      { content: '[[5/6]]', category: 'devirli', explain: '5 ÷ 6 = 0,8333...; 6 = 2 · 3, paydada 3 çarpanı var.' },
-      { content: '[[2/9]]', category: 'devirli', explain: '2 ÷ 9 = 0,222...' },
-      { content: '[[4/11]]', category: 'devirli', explain: '4 ÷ 11 = 0,3636...' },
-      { content: '[[7/12]]', category: 'devirli', explain: '7 ÷ 12 = 0,58333...; 12 = 2 · 2 · 3.' },
-    ],
-  },
-  {
     id: 'g6-devirli-oruntu',
     outcomes: ['MAT.6.1.6'],
     type: 'quiz',
@@ -3097,7 +3070,7 @@ export const grade6Notes: ThemeNotes = {
   'sayilar-ve-nicelikler-2': {
     bigIdeas: [
       'Ondalık gösterim, basamak değeri sisteminin virgülün sağına doğru uzantısıdır: her basamak solundakinin onda biridir; 0,6 ile 0,60 aynı büyüklüktür.',
-      'Kesir bir bölmedir: a tane bütün b kişiye eşit paylaşılırsa bir kişinin payı a ÷ b = [[a/b]] olur; paydanın asal çarpanları ondalık gösterimin sonlu ya da devirli olacağını belirler.',
+      'Kesir bir bölmedir: a tane bütün b kişiye eşit paylaşılırsa bir kişinin payı a ÷ b = [[a/b]] olur. Paylaştırılamayan bütünler 10 onda birliğe bozulur; bölümdeki virgül bütünlerin bittiği yeri, kalanın yanına eklenen sıfır ise bu bozmayı gösterir.',
       'Kesir, ondalık ve yüzde işlemlerinin anlamı doğal sayılarla aynıdır; ancak 1’den küçük bir sayıyla çarpmak küçültür, 1’den küçük bir sayıya bölmek büyütür.',
       'Yüzde “yüzde kaç parça” demektir; %10, %25 ve %50 gibi referanslar ve şerit modeli tahmin ve hesaplamayı kolaylaştırır. Uzunluk birimleri de basamaklar gibi 10’ar kat değişir.',
     ],

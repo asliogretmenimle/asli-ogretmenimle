@@ -33,6 +33,8 @@ export interface InteractionMeta {
   skills?: Partial<Record<Grade, string>>
   /** İlgili öğrenme çıktıları */
   outcomes?: string[]
+  /** Tema sayfasında bu öğrenme çıktılarının başlığı altında kart olarak gösterilir (ör. 6. sınıf “Kesir ve bölme”) */
+  showUnder?: string[]
 }
 
 export interface InteractionProps {

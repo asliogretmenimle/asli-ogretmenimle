@@ -3,7 +3,8 @@
   "trailingSlash": false,
   "redirects": [
     { "source": "/index", "destination": "/", "permanent": true },
-    { "source": "/ogretmen", "destination": "/", "permanent": true }
+    { "source": "/ogretmen", "destination": "/", "permanent": true },
+    { "source": "/etkinlik/g6-sonlu-devirli", "destination": "/etkinlik/g7-sonlu-mu-devirli-mi", "permanent": true }
   ],
   "headers": [
     {

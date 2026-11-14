@@ -77,4 +77,7 @@ export const interactions: Record<string, ComponentType<InteractionProps>> = {
   'pasta-paylasimi': lazy(() => import('./pasta-paylasimi')),
   'kalani-yorumla': lazy(() => import('./kalani-yorumla')),
   'parcala-birlestir-dizisi': lazy(() => import('./parcala-birlestir-dizisi')),
+  'virgul-nereden-geliyor': lazy(() => import('./virgul-nereden-geliyor')),
+  'butunu-onda-birlere-kir': lazy(() => import('./butunu-onda-birlere-kir')),
+  'kalanin-yanina-sifir': lazy(() => import('./kalanin-yanina-sifir')),
 }

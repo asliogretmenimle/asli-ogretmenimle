@@ -426,7 +426,7 @@ export const grade7: Activity[] = [
     outcomes: ['MAT.7.1.2'],
     type: 'categorize',
     stage: 'sembol',
-    title: 'Biter mi, döner mi?',
+    title: 'Sonlu mu, devirli mi?',
     instructions: 'Payı paydaya böl: Bölme bir yerde bitiyorsa sonlu, aynı kalanlar dönüp duruyorsa devirli. Sadeleştirmeyi unutma!',
     level: 2,
     launch: {

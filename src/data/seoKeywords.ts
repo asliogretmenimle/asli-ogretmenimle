@@ -454,4 +454,7 @@ export const interactionKeyword: Record<string, string> = {
   'pasta-paylasimi': 'Eşit Paylaştırma ve Kesir Etkinliği',
   'kalani-yorumla': 'Kalanlı Bölme Problemleri',
   'parcala-birlestir-dizisi': 'Çarpım Tablosu Stratejileri Etkinliği',
+  'virgul-nereden-geliyor': 'Bölümde Virgül Neden Konur?',
+  'butunu-onda-birlere-kir': 'Bütün ve Onda Bir İlişkisi',
+  'kalanin-yanina-sifir': 'Bölmede Kalanın Yanına Sıfır Ekleme',
 }

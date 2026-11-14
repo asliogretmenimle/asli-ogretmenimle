@@ -74,7 +74,7 @@ export const guidesOrtaokul1: Guide[] = [
     ],
     tools: ['yuzdeizgarasi', 'kesirdogrusu', 'numberline'],
     games: ['kesir-takimadalari', 'tahmin', 'gizli-sayi'],
-    interactions: ['ondalik-yakinlastirici', 'kesir-tahmincisi', 'kesir-yanilgilari'],
+    interactions: ['virgul-nereden-geliyor', 'butunu-onda-birlere-kir', 'kalanin-yanina-sifir', 'ondalik-yakinlastirici', 'kesir-tahmincisi', 'kesir-yanilgilari'],
   },
   {
     slug: 'yuzde-hesaplama',
