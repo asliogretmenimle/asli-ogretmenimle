@@ -51,8 +51,15 @@ export const setSound = (on: boolean) => {
   }
 }
 
+/** Sessiz etkinlikler (ör. mini konu anlatımları) açıkken hiç ses çalınmaz */
+let silenced = 0
+export const silence = (on: boolean) => {
+  silenced = Math.max(0, silenced + (on ? 1 : -1))
+}
+const canPlay = () => silenced === 0 && soundOn()
+
 export const sfx = {
-  ok: () => soundOn() && tone([660, 880]),
-  bad: () => soundOn() && tone([220, 180], 0.14),
-  win: () => soundOn() && tone([523, 659, 784, 1047], 0.11),
+  ok: () => canPlay() && tone([660, 880]),
+  bad: () => canPlay() && tone([220, 180], 0.14),
+  win: () => canPlay() && tone([523, 659, 784, 1047], 0.11),
 }

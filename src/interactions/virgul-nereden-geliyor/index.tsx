@@ -1,106 +1,85 @@
 import { useMemo, useState } from 'react'
 import type { InteractionProps } from '../types'
-import { pick, shuffle, useChecks, NextButton } from '../donusum-studyosu/ortak'
+import { NextButton, pick, shuffle, useChecks } from '../donusum-studyosu/ortak'
 import { Drag, Drop, RulesFound, useDnd, type ToolInfo } from '../sayilari-karsilastir/parts'
 import { useSay } from '../sepetlere-grupla/sepet'
-import { sfx } from '../../lib/feedback'
-import { LessonTask, PLAY_TOOL, Runner, SIM_TOOLS, ShareSim, SimTask, type Done, type TaskDef } from './bolme'
+import { LessonTask, Now, PLAY_TOOL, Runner, SIM_TOOLS, ShareSim, SimTask, longDiv, quotientText, tr, type Done, type TaskDef } from './bolme'
 import { lessonScenes } from './ders'
 
 /**
  * 98. Virgül Nereden Geliyor? (6. sınıf, MAT.6.1.6 kesir–bölme ilişkisi)
- *  1. Mini ders (video): 7 ÷ 2 paylaştırması; virgülün “bütünler bitti” anında konduğu
- *  2. Virgülü sen koy: a ÷ b’yi paylaştır, bütünler bitince virgül kartını bölüm tablosunda doğru aralığa sürükle
- *  3. Kimseye bütün düşmezse: 3 ÷ 4 gibi; birler basamağına 0 kartı, sonra virgül → 0,75
- *  4. Virgül nereye?: virgül tuşu bozuk hesap makinesi; önce herkese kaç bütün düştüğünü tahmin et, sonra virgülü rakamların arasına sürükle
+ *  1. Mini ders (adım adım): 7 ÷ 2; virgül “bütün çikolatalar bitti” anında konur
+ *  2. Virgülü sen koy: a ÷ b’yi paylaştır, bütünler bitince virgül kartını payın içine koy
+ *  3. Kimseye bütün düşmezse: c ÷ d (c < d); “Bütün” kutusuna 0 → 0,…
+ *  4. Virgül nereye?: virgül tuşu bozuk hesap makinesi; önce herkese kaç bütün düştüğünü bul, sonra virgülü koy
  */
 
-const GAP_TOOL: ToolInfo = { icon: <span className="text-xl leading-none font-black text-pink-600">,</span>, name: 'Virgül kartı', text: 'Rakamların arasındaki kesikli aralıklardan birine bırak.' }
-const EST_TOOL: ToolInfo = { icon: <span className="grid size-5 place-items-center rounded-md bg-white text-xs font-black ring-1 ring-line">2</span>, name: 'Tahmin kartları', text: 'Herkese kaç bütün düştüğünü gösteren kartı tahmin kutusuna bırak.' }
+const GAP_TOOL: ToolInfo = { icon: <span className="text-xl leading-none font-black text-pink-600">,</span>, name: 'Virgül kartı', text: 'Ekrandaki rakamların arasındaki kesikli boşluklardan birine bırak.' }
+const EST_TOOL: ToolInfo = { icon: <span className="grid size-5 place-items-center rounded-md bg-white text-xs font-black ring-1 ring-line">3</span>, name: 'Sayı kartları', text: 'Herkese kaç bütün çikolata düştüğünü gösteren kartı kutuya bırak.' }
 
 export default function VirgulNeredenGeliyor({ grade, onFinish }: InteractionProps) {
-  const [ab] = useState(() => pick([[9, 4], [7, 4], [5, 2], [6, 4], [9, 2]] as const))
-  const [small] = useState(() => pick([[3, 4], [1, 4], [2, 5], [3, 5], [1, 2]] as const))
-  const [a, b] = ab
-  const [c, d] = small
+  const [[a, b]] = useState(() => pick([[7, 2], [5, 2], [6, 4], [9, 2], [3, 2]] as const))
+  const [[c, d]] = useState(() => pick([[1, 2], [2, 5], [3, 5], [4, 5], [1, 5]] as const))
+  const q1 = quotientText(longDiv(a, b))
+  const q2 = quotientText(longDiv(c, d))
 
   const tasks: TaskDef[] = [
     {
       emoji: '🎬',
       title: 'Mini ders: 7 ÷ 2',
-      goal: 'Kısa animasyonu izleyerek bölüme virgülün hangi anda ve neden konduğunu görmek.',
+      goal: 'Adım adım ilerleyerek bölüme virgülün ne zaman ve neden konduğunu görmek.',
       tools: [PLAY_TOOL],
-      render: (done) => <LessonTask scenes={lessonScenes(7, 2, 'virgul')} rule="Bölmede önce bütünler paylaştırılır; bir kişinin aldığı bütün sayısı bölümün birler basamağına yazılır." onDone={done} />,
+      render: (done) => <LessonTask scenes={lessonScenes(7, 2, 'virgul')} rule="Önce bütün çikolatalar paylaştırılır. Bir kişinin aldığı bütün sayısı “Bütün” kutusuna yazılır." onDone={done} />,
     },
     {
       emoji: '🍫',
       title: 'Virgülü sen koy',
-      goal: `${a} çikolatayı ${b} arkadaşa eşit paylaştırmak ve bütünler bittiği anda virgülü bölüm tablosunda doğru yere koymak.`,
-      tools: [SIM_TOOLS.pile, SIM_TOOLS.comma, SIM_TOOLS.hammer],
+      goal: `${a} çikolatayı ${b} arkadaşa paylaştırmak ve bütün çikolatalar bitince virgülü koymak.`,
+      tools: [SIM_TOOLS.pile, SIM_TOOLS.comma, SIM_TOOLS.cut],
       render: (done, last) => (
         <SimTask
           onDone={done}
           last={last}
-          rule="Virgül, bütünlerin bittiği yeri gösterir: solunda bir kişinin aldığı bütünler, sağında bütünden küçük parçalar yazılır."
+          rule="Virgül, bütün çikolatalar bitince konur. Virgülün solunda bütünler, sağında parçalar yazılır."
           ask={{
-            q: 'Bölüme virgülü koyduğun an masada ne olmuştu?',
+            q: 'Virgülü ne zaman koydun?',
             options: [
-              { label: 'Bütün çikolatalar herkese yetmez olmuştu; sıra bütünden küçük parçalara geçiyordu.', ok: true },
-              { label: 'Bölme işlemi bitmişti.', nudge: 'Virgülü koyduktan sonra paylaştırmaya devam ettin mi? Masada hâlâ çikolata var mıydı?' },
-              { label: 'Kalan sıfır olmuştu.', nudge: 'Virgülü koyduğunda masada kalan çikolata vardı. Onları ne yaptın?' },
-              { label: 'Hiçbir şey; virgül sadece bir yazım kuralı.', nudge: 'Virgülün solundaki ve sağındaki rakamlar aynı büyüklükte parçaları mı sayıyor?', mis: 'Virgül süs değildir: bütünle parçanın sınırını gösterir.' },
+              { label: 'Bütün çikolatalar herkese yetmeyince.', ok: true },
+              { label: 'Bölme bitince.', nudge: 'Virgülü koyduktan sonra masada hâlâ çikolata vardı, değil mi?' },
+              { label: 'En başta.', nudge: 'En başta herkese bütün çikolata verebiliyordun.' },
+              { label: 'Hiç koymasam da olur.', nudge: `Virgül olmazsa ${q1.replace(',', '')} yazarız. Herkes ${q1.replace(',', '')} çikolata almış gibi olur!`, mis: 'Virgül, bütünle parçayı ayırır.' },
             ],
           }}
-          render={(checks, finish) => (
-            <ShareSim
-              a={a}
-              b={b}
-              checks={checks}
-              comma="drag"
-              onDone={finish}
-              prompt={<>{a} çikolatayı {b} arkadaşa eşit paylaştır. <span className="text-pink-700">Bütün çikolatalar bittiği anda bölüme virgülü sen koy!</span></>}
-            />
-          )}
+          render={(checks, finish) => <ShareSim a={a} b={b} checks={checks} comma="drag" onDone={finish} prompt={<>{a} çikolatayı {b} arkadaşa eşit paylaştır. <span className="text-pink-700">Bütün çikolatalar bitince virgülü sen koy!</span></>} />}
         />
       ),
     },
     {
       emoji: '🥧',
       title: 'Kimseye bütün düşmezse',
-      goal: `Bölünen bölenden küçükken (${c} ÷ ${d}) bölümün neden “0,” ile başladığını keşfetmek.`,
-      tools: [SIM_TOOLS.pile, SIM_TOOLS.digit, SIM_TOOLS.comma, SIM_TOOLS.hammer],
+      goal: `Çikolata az, arkadaş çok olunca (${c} ÷ ${d}) sonucun neden 0 ile başladığını görmek.`,
+      tools: [SIM_TOOLS.pile, SIM_TOOLS.digit, SIM_TOOLS.comma, SIM_TOOLS.cut],
       render: (done, last) => (
         <SimTask
           onDone={done}
           last={last}
-          rule={`Bölünen bölenden küçükse kimseye bütün düşmez: bölümün birler basamağına 0 yazılır, sonra virgül konur (${c} ÷ ${d} = ${String(c / d).replace('.', ',')}).`}
+          rule={`Çikolata arkadaş sayısından azsa kimseye bütün düşmez. “Bütün” kutusuna 0 yazılır: ${c} ÷ ${d} = ${q2}.`}
           ask={{
-            q: `${c} ÷ ${d} sonucu neden ${String(c / d).replace('.', ',')} yazılır da “${String(c / d).split('.')[1]}” ya da “,${String(c / d).split('.')[1]}” yazılmaz?`,
+            q: `${c} ÷ ${d} = ${q2}. Bu sayı neden 0 ile başlıyor?`,
             options: [
-              { label: 'Çünkü kimse bütün çikolata almadı; birler basamağı 0 ve virgülden sonrası parçaları gösteriyor.', ok: true },
-              { label: `Çünkü ${String(c / d).split('.')[1]} de doğru, ikisi aynı şey.`, nudge: `${String(c / d).split('.')[1]} çikolata, masadaki ${c} çikolatadan çok değil mi?`, mis: 'Virgül ve birler basamağındaki 0 olmadan sayı bütünleri sayar.' },
-              { label: 'Çünkü sonuç her zaman 0 ile başlar.', nudge: 'Önceki görevde bölüm 0 ile mi başlamıştı? Ne zaman 0 ile başlıyor?' },
-              { label: 'Sıfır sadece süs için yazılır.', nudge: 'Birler basamağı bir kişinin kaç bütün aldığını söyler. Kaç bütün almıştı?' },
+              { label: 'Çünkü kimse bütün çikolata almadı.', ok: true },
+              { label: 'Çünkü her sonuç 0 ile başlar.', nudge: 'Önceki görevde sonuç 0 ile mi başlamıştı?' },
+              { label: 'Çünkü 0 yazmak güzel görünür.', nudge: '“Bütün” kutusu, bir kişinin kaç bütün çikolata aldığını gösterir.' },
             ],
           }}
-          render={(checks, finish) => (
-            <ShareSim
-              a={c}
-              b={d}
-              checks={checks}
-              comma="drag"
-              zeroDigit="drag"
-              onDone={finish}
-              prompt={<>Bu kez masada yalnızca {c} çikolata var ama {d} arkadaş paylaşacak. Önce dene: herkese bir bütün düşer mi? <span className="text-pink-700">Bölüme ne yazacağına sen karar ver.</span></>}
-            />
-          )}
+          render={(checks, finish) => <ShareSim a={c} b={d} checks={checks} comma="drag" zeroDigit="drag" onDone={finish} prompt={<>Masada sadece {c} çikolata var ama {d} arkadaş paylaşacak. <span className="text-pink-700">Ne olacak, deneyip gör!</span></>} />}
         />
       ),
     },
     {
-      emoji: '🕵️',
+      emoji: '🧮',
       title: 'Virgül nereye?',
-      goal: 'Virgülü kaybolmuş bölümlerde virgülün yerini, herkese kaç bütün düştüğünü tahmin ederek bulmak.',
+      goal: 'Virgülü kaybolmuş sonuçlarda virgülün yerini bulmak.',
       tools: [EST_TOOL, GAP_TOOL],
       render: (done, last) => <CommaHunt onDone={done} last={last} />,
     },
@@ -111,9 +90,9 @@ export default function VirgulNeredenGeliyor({ grade, onFinish }: InteractionPro
       grade={grade}
       onFinish={onFinish}
       tasks={tasks}
-      summary={(rules) => `Paylaştırma modeliyle ${a} ÷ ${b} ve ${c} ÷ ${d} bölmelerinde virgülü kendin koydun, virgülü kaybolmuş bölümleri tahminle düzelttin; ${rules.length} kuralı kendin buldun.`}
-      insight="Virgül, bölmede bütünlerin bittiği ve onda birlerin başladığı yeri gösterir. Önce herkese kaç bütün düştüğünü tahmin edersen virgülün yerini hiç şaşırmazsın."
-      note="Bu kuralları ezberlemedin: çikolataları paylaştırırken virgülün neden orada olduğunu kendin gördün."
+      summary={(rules) => `${a} ÷ ${b} ve ${c} ÷ ${d} bölmelerinde çikolataları paylaştırıp virgülü kendin koydun; virgül tuşu bozuk hesap makinesini düzelttin. ${rules.length} kural öğrendin.`}
+      insight="Virgül, bütün çikolataların bittiği yeri gösterir: solunda bütünler, sağında parçalar. Önce herkese kaç bütün düştüğünü bulursan virgülün yerini şaşırmazsın."
+      note="Bu kuralları çikolataları paylaştırırken kendin gördün."
     />
   )
 }
@@ -122,31 +101,30 @@ export default function VirgulNeredenGeliyor({ grade, onFinish }: InteractionPro
 
 interface Round { a: number; b: number; digits: string; whole: number }
 const ROUNDS: Round[] = [
-  { a: 9, b: 4, digits: '225', whole: 2 },
-  { a: 50, b: 4, digits: '125', whole: 12 },
-  { a: 3, b: 8, digits: '0375', whole: 0 },
-  { a: 63, b: 4, digits: '1575', whole: 15 },
+  { a: 7, b: 2, digits: '35', whole: 3 },
+  { a: 9, b: 2, digits: '45', whole: 4 },
+  { a: 25, b: 2, digits: '125', whole: 12 },
+  { a: 3, b: 5, digits: '06', whole: 0 },
 ]
 const asNum = (digits: string, pos: number) => Number(`${digits.slice(0, pos) || '0'}.${digits.slice(pos) || '0'}`)
-const tr = (v: number) => String(v).replace('.', ',')
 
 function CommaHunt({ onDone, last }: { onDone: Done; last: boolean }) {
   const checks = useChecks()
   const [r, setR] = useState(0)
   const [all, setAll] = useState(false)
-  const R = ROUNDS[r]
+  const rule = 'Önce herkese kaç bütün çikolata düştüğünü bulurum. O sayı virgülün soluna gelir.'
   return (
     <div className="mx-auto max-w-3xl space-y-3">
       <div className="flex gap-1.5" aria-label="Turlar">
-        {ROUNDS.map((_, i) => <span key={i} className={`h-2.5 flex-1 rounded-full ${i < r || all ? 'bg-emerald-500' : i === r ? 'bg-pink-500' : 'bg-slate-200'}`} />)}
+        {ROUNDS.map((_, i) => <span key={i} className={`h-3 flex-1 rounded-full ${i < r || all ? 'bg-emerald-500' : i === r ? 'bg-pink-500' : 'bg-slate-200'}`} />)}
       </div>
       {all ? (
         <>
-          <RulesFound rules={['Virgülün yerini tahminle kontrol edebilirim: önce herkese kaç bütün düştüğünü bulurum; o sayı virgülün soluna gelir.']} />
-          <NextButton last={last} onClick={() => onDone(checks.pass(), ['Virgülün yerini tahminle kontrol edebilirim: önce herkese kaç bütün düştüğünü bulurum; o sayı virgülün soluna gelir.'])} />
+          <RulesFound rules={[rule]} />
+          <NextButton last={last} onClick={() => onDone(checks.pass(), [rule])} />
         </>
       ) : (
-        <HuntRound key={r} R={R} checks={checks} onOk={() => (r === ROUNDS.length - 1 ? setAll(true) : setR(r + 1))} />
+        <HuntRound key={r} R={ROUNDS[r]} checks={checks} onOk={() => (r === ROUNDS.length - 1 ? setAll(true) : setR(r + 1))} />
       )}
     </div>
   )
@@ -160,67 +138,57 @@ function HuntRound({ R, checks, onOk }: { R: Round; checks: ReturnType<typeof us
   const dnd = useDnd((it, target) => {
     if (it.startsWith('est-') && target === 'est' && est === null) {
       const v = Number(it.slice(4))
-      if (v !== R.whole) {
-        const many = v * R.b > R.a
-        return s.nudge(many ? `Herkese ${v} bütün verirsen ${R.b} × ${v} = ${R.b * v} çikolata gerekir. Masada yalnızca ${R.a} tane var!` : `Herkese ${v} bütün verirsen ${R.b * v} çikolata dağıtılır, geriye ${R.a - R.b * v} kalır. Herkese bir bütün daha verebilir misin?`, { mis: 'Bir kişinin payındaki bütün sayısı, bölenle çarpınca bölüneni geçmeyen en büyük sayıdır.' })
-      }
+      if (v !== R.whole) return s.nudge(v * R.b > R.a ? `Herkese ${v} çikolata verirsen ${R.b} × ${v} = ${R.b * v} çikolata gerekir. Ama sadece ${R.a} tane var!` : `Herkese ${v} çikolata verirsen geriye ${R.a - R.b * v} çikolata kalır. Herkese 1 tane daha verebilirsin!`)
       setEst(v)
-      sfx.ok()
-      s.ok(`Evet: ${R.b} × ${v} = ${R.b * v} ≤ ${R.a}. Herkese ${v} bütün düşer. Şimdi virgülü rakamların arasına sürükle.`)
+      s.ok(`Evet! Herkese ${v} bütün çikolata düşer.`)
       return true
     }
     if (it === 'comma' && target.startsWith('gap-') && est !== null) {
       const g = Number(target.slice(4))
       const v = asNum(R.digits, g)
-      if (g !== String(R.whole).length) {
-        return s.nudge(`Virgülü buraya koyarsan sonuç ${tr(v)} olur: herkese ${Math.floor(v)} bütün düşer demek. Ama sen tahminde ${R.whole} bütün buldun!`, { at: target, mis: 'Virgülün solu bir kişinin aldığı bütünleri gösterir.' })
-      }
+      if (g !== String(R.whole).length) return s.nudge(`Virgülü buraya koyarsan ${tr(v)} olur. Bu, herkes ${Math.floor(v)} bütün çikolata aldı demek. Ama sen ${R.whole} buldun!`)
       setPos(g)
-      sfx.ok()
-      s.ok(`Harika! ${R.a} ÷ ${R.b} = ${tr(v)}: herkese ${R.whole} bütün ve biraz parça düşer.`)
-      window.setTimeout(onOk, 1600)
+      s.ok(`Harika! ${R.a} ÷ ${R.b} = ${tr(v)}`)
+      window.setTimeout(onOk, 1800)
       return true
     }
     return false
   })
   const digits = R.digits.split('')
+  const open = est !== null && pos === null
   return (
     <div className="space-y-3">
       <div className="rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-line">
-        <p className="text-[11px] font-black tracking-wide text-pink-700 uppercase">Virgül tuşu bozuk hesap makinesi</p>
-        <p className="text-[17px] leading-snug font-extrabold sm:text-lg">{R.a} çikolata {R.b} arkadaşa paylaştırılacak. Hesap makinesi {R.a} ÷ {R.b} için ekranda virgülsüz <b className="tabular-nums">{R.digits}</b> gösteriyor. Virgül nereye gelmeli?</p>
+        <p className="text-lg leading-snug font-extrabold sm:text-xl">Hesap makinesinin virgül tuşu bozuldu! {R.a} çikolata {R.b} arkadaşa paylaştırılınca ekranda <b className="tabular-nums">{R.digits}</b> yazıyor.</p>
       </div>
+      <Now done={pos !== null}>{pos !== null ? `${R.a} ÷ ${R.b} = ${tr(asNum(R.digits, pos))}` : est === null ? <>Önce düşün: herkese kaç <b>bütün</b> çikolata düşer? Doğru sayı kartını kutuya sürükle.</> : <>Herkese {est} bütün düşüyor. Öyleyse <b>{est}</b> virgülün solunda olmalı. Virgül kartını ekrana sürükle.</>}</Now>
 
-      <div className="mx-auto w-fit rounded-3xl bg-slate-800 p-3 shadow-[0_8px_0_#0f172a]">
-        <div className="flex items-end rounded-2xl bg-lime-100 px-3 py-2 font-mono text-5xl font-black text-slate-800 tabular-nums ring-4 ring-slate-600 sm:text-6xl">
+      <div className="mx-auto w-fit rounded-3xl bg-slate-700 p-3 shadow-[0_6px_0_#334155]">
+        <div className="flex items-end rounded-2xl bg-lime-100 px-4 py-2 font-mono text-6xl font-black text-slate-800 tabular-nums">
           {digits.map((ch, i) => (
             <span key={i} className="flex items-end">
-              <Gap i={i} pos={pos} dnd={dnd} open={est !== null && pos === null} />
+              <Gap i={i} pos={pos} dnd={dnd} open={open} />
               <span>{ch}</span>
             </span>
           ))}
-          <Gap i={digits.length} pos={pos} dnd={dnd} open={est !== null && pos === null} />
+          <Gap i={digits.length} pos={pos} dnd={dnd} open={open} />
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl bg-white p-3 ring-1 ring-line">
-          <p className="mb-2 text-sm font-extrabold">1. Tahmin et: herkese kaç <b>bütün</b> çikolata düşer?</p>
-          <Drop dnd={dnd} id="est" className={`mb-2 grid min-h-14 place-items-center rounded-2xl border-2 border-dashed text-sm font-black ${est !== null ? 'border-emerald-400 bg-emerald-50 text-2xl text-emerald-800' : 'border-sky-400 bg-sky-50 text-sky-600'}`}>
-            {est !== null ? `${est} bütün` : 'Tahmin kartını buraya sürükle'}
+          <p className="mb-2 text-base font-extrabold">1. Herkese kaç bütün çikolata düşer?</p>
+          <Drop dnd={dnd} id="est" className={`mb-2 grid min-h-16 place-items-center rounded-2xl border-[3px] border-dashed text-base font-black ${est !== null ? 'border-emerald-400 bg-emerald-50 text-2xl text-emerald-800' : 'border-sky-400 bg-sky-50 text-sky-600'}`}>
+            {est !== null ? `${est} bütün` : 'kartı buraya sürükle'}
           </Drop>
-          {est === null && (
-            <div className="flex flex-wrap gap-2">
-              {cards.map((v) => <Drag key={v} dnd={dnd} item={`est-${v}`} label={`${v} bütün`} className="grid size-14 place-items-center rounded-2xl bg-white text-2xl font-black shadow-[0_3px_0_#cbd5e1] ring-2 ring-line">{v}</Drag>)}
-            </div>
-          )}
+          {est === null && <div className="flex flex-wrap gap-2">{cards.map((v) => <Drag key={v} dnd={dnd} item={`est-${v}`} label={`${v} bütün`} className="grid size-16 place-items-center rounded-2xl bg-white text-3xl font-black shadow-[0_4px_0_#cbd5e1] ring-2 ring-line">{v}</Drag>)}</div>}
         </div>
-        <div className={`rounded-2xl bg-white p-3 ring-1 ring-line ${est === null ? 'opacity-50' : ''}`}>
-          <p className="mb-2 text-sm font-extrabold">2. Virgül kartını ekrandaki doğru aralığa sürükle.</p>
+        <div className={`rounded-2xl bg-white p-3 ring-1 ring-line ${est === null ? 'opacity-40' : ''}`}>
+          <p className="mb-2 text-base font-extrabold">2. Virgülü ekrana koy.</p>
           {pos === null ? (
-            <Drag dnd={dnd} item="comma" label="Virgül kartı" disabled={est === null} className="grid h-16 w-14 place-items-end justify-center rounded-2xl bg-white pb-2 text-5xl leading-none font-black text-pink-600 shadow-[0_3px_0_#cbd5e1] ring-2 ring-pink-300">,</Drag>
+            <Drag dnd={dnd} item="comma" label="Virgül kartı" disabled={est === null} className="grid h-20 w-16 place-items-end justify-center rounded-2xl bg-white pb-2 text-6xl leading-none font-black text-pink-600 shadow-[0_4px_0_#f9a8d4] ring-[3px] ring-pink-400">,</Drag>
           ) : (
-            <p className="text-2xl font-black text-emerald-700 tabular-nums">{R.a} ÷ {R.b} = {tr(asNum(R.digits, pos))}</p>
+            <p className="text-3xl font-black text-emerald-700 tabular-nums">{R.a} ÷ {R.b} = {tr(asNum(R.digits, pos))}</p>
           )}
         </div>
       </div>
@@ -233,5 +201,5 @@ function HuntRound({ R, checks, onOk }: { R: Round; checks: ReturnType<typeof us
 function Gap({ i, pos, dnd, open }: { i: number; pos: number | null; dnd: ReturnType<typeof useDnd>; open: boolean }) {
   if (pos === i) return <span className="animate-pop text-pink-600">,</span>
   if (!open) return <span className="w-1" />
-  return <Drop dnd={dnd} id={`gap-${i}`} className="mx-0.5 h-14 w-5 self-center rounded-md border-2 border-dashed border-slate-400/70" />
+  return <Drop dnd={dnd} id={`gap-${i}`} className="mx-1 h-16 w-6 self-center rounded-lg border-[3px] border-dashed border-pink-400 bg-pink-50/70" />
 }
