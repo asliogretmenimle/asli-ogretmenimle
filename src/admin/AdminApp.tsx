@@ -2,7 +2,7 @@
  * Yönetim paneli (/yonetim). Site ziyaretçileri bu parçayı indirmez.
  * Giriş: Supabase Auth (e-posta + şifre). Yetki: public.cms_admins tablosu.
  */
-import { Suspense, lazy, useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, NavLink, Route, Routes, matchPath, useLocation } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
 import {
@@ -56,10 +56,11 @@ export default function AdminApp() {
   )
 }
 
-type AuthState = { phase: 'loading' } | { phase: 'out' } | { phase: 'checking'; session: Session } | { phase: 'denied'; session: Session; canClaim: boolean } | { phase: 'in'; session: Session }
+type AuthState = { phase: 'loading' } | { phase: 'out' } | { phase: 'recovery' } | { phase: 'checking'; session: Session } | { phase: 'denied'; session: Session; canClaim: boolean } | { phase: 'in'; session: Session }
 
 function Gate() {
   const [state, setState] = useState<AuthState>({ phase: 'loading' })
+  const recovering = useRef(false)
 
   useEffect(() => {
     if (!cmsEnabled) return
@@ -75,9 +76,15 @@ function Gate() {
       const { data: has } = await sb.rpc('cms_has_admins')
       setState({ phase: 'denied', session, canClaim: has === false })
     }
-    sb.auth.getSession().then(({ data }) => check(data.session))
+    // Şifre sıfırlama bağlantısında oturum açılır ama önce yeni şifre istenir
+    if (/type=recovery/.test(location.hash)) recovering.current = true
+    sb.auth.getSession().then(({ data }) => (recovering.current ? setState({ phase: 'recovery' }) : check(data.session)))
     const { data: sub } = sb.auth.onAuthStateChange((ev, session) => {
-      if (ev === 'SIGNED_IN' || ev === 'SIGNED_OUT') check(session)
+      // E-postadaki şifre sıfırlama bağlantısıyla gelindi: önce yeni şifre belirlensin
+      if (ev === 'PASSWORD_RECOVERY') {
+        recovering.current = true
+        setState({ phase: 'recovery' })
+      } else if (ev === 'SIGNED_OUT' || (ev === 'SIGNED_IN' && !recovering.current)) check(session)
     })
     return () => sub.subscription.unsubscribe()
   }, [])
@@ -85,6 +92,10 @@ function Gate() {
   if (!cmsEnabled) return <SetupScreen />
   if (state.phase === 'loading' || state.phase === 'checking') return <FullSpinner />
   if (state.phase === 'out') return <LoginScreen />
+  if (state.phase === 'recovery') return <NewPasswordScreen onDone={() => {
+    recovering.current = false
+    sb.auth.getSession().then(({ data }) => setState(data.session ? { phase: 'loading' } : { phase: 'out' })).then(() => location.reload())
+  }} />
   if (state.phase === 'denied') return <DeniedScreen session={state.session} canClaim={state.canClaim} onClaimed={() => setState({ phase: 'in', session: state.session })} />
   return <Shell email={state.session.user.email ?? ''} />
 }
@@ -114,7 +125,7 @@ function AuthFrame({ children, title, desc }: { children: ReactNode; title: stri
 }
 
 function LoginScreen() {
-  const [mode, setMode] = useState<'in' | 'up' | 'reset'>('in')
+  const [mode, setMode] = useState<'in' | 'reset'>('in')
   const [email, setEmail] = useState('')
   const [pw, setPw] = useState('')
   const [busy, setBusy] = useState(false)
@@ -128,10 +139,6 @@ function LoginScreen() {
       if (mode === 'in') {
         const { error } = await sb.auth.signInWithPassword({ email, password: pw })
         if (error) throw error
-      } else if (mode === 'up') {
-        const { data, error } = await sb.auth.signUp({ email, password: pw, options: { emailRedirectTo: `${location.origin}${ADMIN}` } })
-        if (error) throw error
-        if (!data.session) setMsg({ tone: 'green', text: 'Hesap oluşturuldu. E-postanıza gelen bağlantıyla hesabı doğrulayıp giriş yapın.' })
       } else {
         const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}${ADMIN}` })
         if (error) throw error
@@ -146,28 +153,61 @@ function LoginScreen() {
   }
 
   return (
-    <AuthFrame title={mode === 'in' ? 'Yönetim paneline giriş' : mode === 'up' ? 'Hesap oluştur' : 'Şifremi unuttum'} desc={mode === 'up' ? 'Hesabınız oluşturulduktan sonra panel sahibi sizi yönetici olarak eklemeli.' : 'Sitenin içeriklerini düzenlemek ve Stüdyo’yu kullanmak için giriş yapın.'}>
+    <AuthFrame title={mode === 'in' ? 'Yönetim paneline giriş' : 'Şifremi unuttum'} desc={mode === 'in' ? 'E-posta adresiniz ve şifrenizle giriş yapın.' : 'E-posta adresinize şifre sıfırlama bağlantısı gönderilir.'}>
       <form onSubmit={submit} className="space-y-4">
         <Field label="E-posta">
           <TextInput type="email" autoComplete="email" required value={email} onChange={setEmail} placeholder="ornek@eposta.com" />
         </Field>
         {mode !== 'reset' && (
           <Field label="Şifre" action={mode === 'in' && <button type="button" onClick={() => setMode('reset')} className="text-xs font-bold text-brand hover:underline">Şifremi unuttum</button>}>
-            <TextInput type="password" autoComplete={mode === 'in' ? 'current-password' : 'new-password'} required minLength={6} value={pw} onChange={setPw} placeholder="••••••••" />
+            <TextInput type="password" autoComplete="current-password" required minLength={6} value={pw} onChange={setPw} placeholder="••••••••" />
           </Field>
         )}
         {msg && <Callout tone={msg.tone}>{msg.text}</Callout>}
         <Button type="submit" variant="primary" size="lg" className="w-full" loading={busy} icon={<KeyRound size={18} />}>
-          {mode === 'in' ? 'Giriş yap' : mode === 'up' ? 'Hesap oluştur' : 'Bağlantı gönder'}
+          {mode === 'in' ? 'Giriş yap' : 'Bağlantı gönder'}
         </Button>
       </form>
       <p className="mt-5 text-center text-sm font-semibold text-ink-soft">
         {mode === 'in' ? (
-          <>Hesabınız yok mu? <button type="button" onClick={() => setMode('up')} className="font-extrabold text-brand hover:underline">Hesap oluşturun</button></>
+          'Hesabınız yoksa panel sahibinden sizin için oluşturmasını isteyin.'
         ) : (
           <button type="button" onClick={() => setMode('in')} className="font-extrabold text-brand hover:underline">← Girişe dön</button>
         )}
       </p>
+    </AuthFrame>
+  )
+}
+
+function NewPasswordScreen({ onDone }: { onDone: () => void }) {
+  const [pw, setPw] = useState('')
+  const [pw2, setPw2] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const submit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (pw.length < 6) return setErr('Şifre en az 6 karakter olmalı.')
+    if (pw !== pw2) return setErr('Şifreler aynı değil.')
+    setBusy(true)
+    const { error } = await sb.auth.updateUser({ password: pw })
+    setBusy(false)
+    if (error) return setErr(error.message)
+    onDone()
+  }
+  return (
+    <AuthFrame title="Yeni şifre belirleyin" desc="Bundan sonra bu şifreyle giriş yapacaksınız.">
+      <form onSubmit={submit} className="space-y-4">
+        <Field label="Yeni şifre">
+          <TextInput type="password" autoComplete="new-password" required minLength={6} value={pw} onChange={setPw} />
+        </Field>
+        <Field label="Yeni şifre (tekrar)">
+          <TextInput type="password" autoComplete="new-password" required minLength={6} value={pw2} onChange={setPw2} />
+        </Field>
+        {err && <Callout tone="red">{err}</Callout>}
+        <Button type="submit" variant="primary" size="lg" className="w-full" loading={busy} icon={<KeyRound size={18} />}>
+          Şifreyi kaydet
+        </Button>
+      </form>
     </AuthFrame>
   )
 }
@@ -198,7 +238,7 @@ function DeniedScreen({ session, canClaim, onClaimed }: { session: Session; canC
         </div>
       ) : (
         <div className="space-y-4">
-          <Callout tone="amber">Bu hesap yönetici değil. Panel sahibinden sizi <strong>Ayarlar → Yöneticiler</strong> bölümünden eklemesini isteyin, sonra sayfayı yenileyin.</Callout>
+          <Callout tone="amber">Bu hesap yönetici değil. Panel sahibinden sizi <strong>Ayarlar → Yöneticiler</strong> bölümünden eklemesini isteyin.</Callout>
         </div>
       )}
       <Button variant="ghost" className="mt-4 w-full" icon={<LogOut size={16} />} onClick={() => sb.auth.signOut()}>

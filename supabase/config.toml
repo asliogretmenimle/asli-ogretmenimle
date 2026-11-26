@@ -1,0 +1,5 @@
+# Yalnızca Edge Function ayarı: kimlik doğrulamayı fonksiyonun kendisi yapar (is_cms_admin / is_cms_owner)
+project_id = "swwfgmgxqqmynmjpchxv"
+
+[functions.studio]
+verify_jwt = false

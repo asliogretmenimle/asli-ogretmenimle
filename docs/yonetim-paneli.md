@@ -32,46 +32,46 @@ Sitedeki içerik kodda durmaya devam eder (`src/data`, `src/games`, `src/interac
 ## Kurulum (bir kez)
 
 ### 1. Veritabanı
-Supabase → **SQL Editor** → `supabase/migrations/20261126120000_cms.sql` dosyasının tamamını yapıştırıp **Run**.
+Supabase → **SQL Editor** → `supabase/migrations/20261126120000_cms.sql` dosyasının tamamını yapıştırıp **Run**. (Dosyayı bu güncellemeden önce çalıştırdıysanız yalnızca `20261126130000_cms_grants.sql` dosyasını çalıştırın: yeni projelerde tablolara okuma izni otomatik verilmiyor.)
 
 ### 2. Giriş ayarları
-Supabase → **Authentication → URL Configuration**
-- Site URL: `https://www.asliogretmenimle.com`
-- Redirect URLs: `https://www.asliogretmenimle.com/yonetim`, `http://localhost:5173/yonetim`
-
-(İsterseniz Authentication → Providers → Email altında “Confirm email”i kapatabilirsiniz; açıksa yeni hesaplar e-postadaki bağlantıyla doğrulanır.)
+- **Authentication → Sign In / Providers**: “Allow new users to sign up” kapalı olsun. Hesapları panel sahibi açar.
+- **Authentication → URL Configuration**: Site URL `https://www.asliogretmenimle.com`; Redirect URLs `https://www.asliogretmenimle.com/yonetim`, `http://localhost:5173/yonetim` (şifre sıfırlama bağlantısı için).
 
 ### 3. Site anahtarı
-Supabase → **Project Settings → API** → *anon / publishable* anahtarı.
-- Yerelde proje köküne `.env.local`:
-  ```
-  VITE_SUPABASE_URL=https://swwfgmgxqqmynmjpchxv.supabase.co
-  VITE_SUPABASE_ANON_KEY=…
-  ```
-- Vercel → Project → Settings → **Environment Variables**: aynı iki değişken (Production + Preview), sonra yeniden deploy.
+Supabase → **Project Settings → API Keys** → *publishable* anahtar (`sb_publishable_…`).
+- Yerelde `.env.local` (hazır).
+- Vercel → Settings → **Environment Variables**: `VITE_SUPABASE_URL` ve `VITE_SUPABASE_ANON_KEY`, sonra yeniden deploy.
+
+Bu anahtar Edge Function Secrets'a eklenmez; fonksiyon Supabase'in kendi anahtarlarını kullanır.
 
 ### 4. Stüdyo sunucusu (OpenAI)
-OpenAI anahtarı tarayıcıya hiç gitmez; Supabase Edge Function'da gizli tutulur.
+OpenAI anahtarı tarayıcıya hiç gitmez; Edge Function'da gizli tutulur.
+
+**Panelden (en kolay):**
+1. Edge Functions → **Deploy a new function → Via Editor**, adı `studio`.
+2. `supabase/functions/studio/index.ts` dosyasının tamamını yapıştırıp **Deploy**.
+3. Fonksiyonun **Details/Settings** bölümünde **Verify JWT** (Enforce JWT verification) **kapalı** olsun; yetkiyi fonksiyon kendisi denetler.
+4. Edge Functions → **Secrets**: `OPENAI_API_KEY` = `sk-…` (isteğe bağlı `OPENAI_MODEL`, `VERCEL_DEPLOY_HOOK`).
+
+**CLI ile:** tarayıcı girişi çalışmazsa https://supabase.com/dashboard/account/tokens adresinden bir erişim belirteci oluşturun:
 ```bash
-supabase login                      # projenin sahibi olan hesapla
-supabase functions deploy studio --project-ref swwfgmgxqqmynmjpchxv
+supabase login --token sbp_…
+supabase functions deploy studio --project-ref swwfgmgxqqmynmjpchxv --no-verify-jwt
 supabase secrets set OPENAI_API_KEY=sk-… --project-ref swwfgmgxqqmynmjpchxv
-# isteğe bağlı:
-supabase secrets set OPENAI_MODEL=gpt-5 --project-ref swwfgmgxqqmynmjpchxv
-supabase secrets set VERCEL_DEPLOY_HOOK=https://api.vercel.com/v1/integrations/deploy/… --project-ref swwfgmgxqqmynmjpchxv
 ```
 `VERCEL_DEPLOY_HOOK`, GitHub'daki aynı adlı secret ile aynı adrestir (Vercel → Settings → Git → Deploy Hooks).
 
-Stüdyo, OpenAI **Responses API**'yi arka plan modunda kullanır (uzun üretimler zaman aşımına uğramaz; sayfa kapansa da iş sürer, açınca kaldığı yerden devam eder). Model ve düşünme düzeyi panelde Ayarlar'dan değiştirilebilir.
-
-### 5. İlk giriş
-`/yonetim` → **Hesap oluştur** → giriş yapınca **Panel sahibi ol**. Diğer öğretmenler önce hesap oluşturur, sonra sahip onları Ayarlar → Yöneticiler'den ekler.
+### 5. İlk giriş (e-posta + şifre)
+1. Supabase → **Authentication → Users → Add user → Create new user**: e-posta ve şifre girin, **Auto Confirm User** işaretli olsun.
+2. `/yonetim` → bu e-posta ve şifreyle **Giriş yap** → **Panel sahibi ol**.
+3. Diğer öğretmenlerin hesaplarını panelde **Ayarlar → Yöneticiler**'den e-posta + şifreyle oluşturun. Herkes şifresini Ayarlar → “Şifremi değiştir”den değiştirebilir; unutulursa giriş ekranındaki “Şifremi unuttum” e-postayla sıfırlar.
 
 ## Dosyalar
 
 ```
 supabase/migrations/…_cms.sql   tablolar, yetkiler (RLS), geçmiş tetikleyicisi
-supabase/functions/studio/      OpenAI köprüsü (index.ts) ve asistan yönergesi (prompt.ts)
+supabase/functions/studio/      OpenAI köprüsü ve asistan yönergesi (tek dosya: index.ts)
 src/cms/                        sitenin panel katmanı: overlay, yükleme, HTML çerçevesi, SEO
 src/admin/                      panel arayüzü (yalnızca /yonetim açılınca indirilir)
   studio/                       Stüdyo

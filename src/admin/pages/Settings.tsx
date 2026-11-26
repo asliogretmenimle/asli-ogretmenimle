@@ -19,6 +19,7 @@ export function SettingsPage({ email }: { email: string }) {
       <PageHead title="Ayarlar" desc="Stüdyo asistanı, yöneticiler ve yayın ayarları." />
       <StudioCard />
       <PublishCard />
+      <PasswordCard />
       <AdminsCard email={email} />
     </div>
   )
@@ -143,6 +144,7 @@ function AdminsCard({ email }: { email: string }) {
   const [rows, setRows] = useState<AdminRow[] | null>(null)
   const [isOwner, setIsOwner] = useState(false)
   const [newEmail, setNewEmail] = useState('')
+  const [newPw, setNewPw] = useState('')
   const [role, setRole] = useState<'editor' | 'owner'>('editor')
   const [busy, setBusy] = useState(false)
   const [tick, setTick] = useState(0)
@@ -154,13 +156,17 @@ function AdminsCard({ email }: { email: string }) {
 
   const add = async () => {
     setBusy(true)
-    const { data, error } = await sb.rpc('add_cms_admin', { p_email: newEmail, p_role: role })
-    setBusy(false)
-    if (error) return toast(error.message, 'error')
-    if (data === 'not_found') return toast('Bu e-postayla kayıtlı hesap yok. Önce kişi /yonetim adresinden “Hesap oluştur” ile kaydolmalı.', 'error')
-    toast(`${newEmail} yönetici olarak eklendi`)
-    setNewEmail('')
-    setTick((x) => x + 1)
+    try {
+      const r = await studioCall<{ ok: boolean; existed?: boolean }>({ action: 'create_admin', email: newEmail, password: newPw, role })
+      toast(r.existed ? `${newEmail} zaten kayıtlıydı; yönetici yapıldı (şifresi değiştirilmedi)` : `${newEmail} için hesap oluşturuldu. Bu e-posta ve şifreyle /yonetim adresinden giriş yapabilir.`)
+      setNewEmail('')
+      setNewPw('')
+      setTick((x) => x + 1)
+    } catch (e) {
+      toast((e as Error).message, 'error')
+    } finally {
+      setBusy(false)
+    }
   }
   const remove = async (r: AdminRow) => {
     if (!(await confirm({ title: 'Yöneticilik kaldırılsın mı?', desc: `${r.email} artık panele giremez.`, confirm: 'Kaldır', danger: true }))) return
@@ -198,7 +204,8 @@ function AdminsCard({ email }: { email: string }) {
             Yönetici ekle
           </p>
           <div className="flex flex-wrap gap-2">
-            <TextInput value={newEmail} onChange={setNewEmail} placeholder="ogretmen@eposta.com" type="email" className="min-w-56 flex-1" />
+            <TextInput value={newEmail} onChange={setNewEmail} placeholder="ogretmen@eposta.com" type="email" autoComplete="off" className="min-w-56 flex-1" />
+            <TextInput value={newPw} onChange={setNewPw} placeholder="Şifre (en az 6 karakter)" type="text" autoComplete="new-password" className="min-w-48 flex-1" />
             <Select
               value={role}
               onChange={setRole}
@@ -208,15 +215,44 @@ function AdminsCard({ email }: { email: string }) {
               ]}
               className="w-36"
             />
-            <Button variant="primary" icon={<Plus size={16} />} loading={busy} disabled={!/\S+@\S+\.\S+/.test(newEmail)} onClick={add}>
-              Ekle
+            <Button variant="primary" icon={<Plus size={16} />} loading={busy} disabled={!/\S+@\S+\.\S+/.test(newEmail) || newPw.length < 6} onClick={add}>
+              Hesap oluştur
             </Button>
           </div>
-          <p className="mt-2 text-xs font-semibold text-ink-soft">Eklenecek kişi önce /yonetim adresinde “Hesap oluştur” ile kaydolmalı. Editörler içerik düzenler; sahipler ayrıca yönetici ekleyip çıkarabilir.</p>
+          <p className="mt-2 text-xs font-semibold text-ink-soft">Kişi bu e-posta ve şifreyle /yonetim adresinden giriş yapar; şifresini sonra Ayarlar’dan değiştirebilir. Editörler içerik düzenler; sahipler ayrıca yönetici ekleyip çıkarabilir.</p>
         </div>
       ) : (
         <p className="mt-3 text-xs font-semibold text-ink-soft">Yönetici eklemek için “Sahip” yetkisi gerekir.</p>
       )}
+    </Card>
+  )
+}
+
+function PasswordCard() {
+  const toast = useToast()
+  const [pw, setPw] = useState('')
+  const [pw2, setPw2] = useState('')
+  const [busy, setBusy] = useState(false)
+  const save = async () => {
+    if (pw.length < 6) return toast('Şifre en az 6 karakter olmalı', 'error')
+    if (pw !== pw2) return toast('Şifreler aynı değil', 'error')
+    setBusy(true)
+    const { error } = await sb.auth.updateUser({ password: pw })
+    setBusy(false)
+    if (error) return toast(error.message, 'error')
+    setPw('')
+    setPw2('')
+    toast('Şifreniz değiştirildi')
+  }
+  return (
+    <Card title="Şifremi değiştir">
+      <div className="flex flex-wrap gap-2">
+        <TextInput type="password" autoComplete="new-password" value={pw} onChange={setPw} placeholder="Yeni şifre" className="min-w-48 flex-1" />
+        <TextInput type="password" autoComplete="new-password" value={pw2} onChange={setPw2} placeholder="Yeni şifre (tekrar)" className="min-w-48 flex-1" />
+        <Button variant="primary" loading={busy} disabled={!pw || !pw2} onClick={save}>
+          Kaydet
+        </Button>
+      </div>
     </Card>
   )
 }

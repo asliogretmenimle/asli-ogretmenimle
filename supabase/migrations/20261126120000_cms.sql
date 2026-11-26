@@ -273,3 +273,12 @@ create policy "admins manage settings" on public.cms_settings for all using (pub
 grant execute on function public.is_cms_admin, public.is_cms_owner, public.claim_first_admin, public.cms_has_admins,
   public.add_cms_admin, public.remove_cms_admin to authenticated;
 grant execute on function public.cms_has_admins to anon;
+
+-- Tablo izinleri (yeni projelerde otomatik verilmiyor; erişimi RLS sınırlar)
+grant usage on schema public to anon, authenticated;
+grant select on public.cms_entries to anon;
+grant select, insert, update, delete on public.cms_entries to authenticated;
+grant select on public.cms_revisions to authenticated;
+grant select, insert, update, delete on public.studio_sessions to authenticated;
+grant select, insert, update, delete on public.cms_settings to authenticated;
+grant select on public.cms_admins to authenticated;
