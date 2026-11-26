@@ -14,11 +14,13 @@ import { SendReport } from '../components/SendReport'
 import { SessionTracker } from '../lib/report'
 import { TrackerProvider } from '../lib/trackerContext'
 import { celebrate, sfx } from '../lib/feedback'
-import { CardGrid, EmptyState, FilterBar, ItemCard, PageHeader, categoryTint, gradeRange, useCatalogFilters } from '../components/Catalog'
+import { CardGrid, FilterBar, ItemCard, PageHeader, categoryTint, gradeRange, useCatalogFilters } from '../components/Catalog'
 import NotFound from './NotFound'
 import { PageSpinner } from '../cms/PageSpinner'
 import { useCmsSettled } from '../cms/runtime'
 import { interactionFrame } from '../cms/frames'
+import { usePageContent } from '../cms/pageContent'
+import { interactionsPage } from '../cms/pages/etkilesimler'
 import type { CustomMark } from '../cms/types'
 
 const GRADE_KEY = 'ao-grade'
@@ -30,10 +32,16 @@ const storedGrade = () => {
   }
 }
 
+/** Panelden gelen metin: boşsa varsayılan, {n} → sayı */
+const fill = (t: unknown, fallback: string, vars: Record<string, string | number> = {}) =>
+  Object.entries(vars).reduce((s, [k, v]) => s.split(`{${k}}`).join(String(v)), typeof t === 'string' && t.trim() ? t : fallback)
+
 const CATEGORIES = (Object.keys(categoryInfo) as InteractionCategory[]).map((id) => ({ id, label: categoryInfo[id].label }))
 
 export function InteractionsIndex() {
   usePageTitle('Keşif Atölyesi')
+  const c = usePageContent(interactionsPage)
+  const d = interactionsPage.defaults
   const f = useCatalogFilters()
   const ready = interactionMeta.filter((m) => m.ready)
   const list = ready
@@ -47,18 +55,19 @@ export function InteractionsIndex() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 pt-8 sm:pt-10">
-      <PageHeader title="Etkileşimler" desc={`${ready.length} kısa keşif etkinliği. Her biri tek bir matematiksel fikre odaklanır; linkini doğrudan öğrencilere gönderebilirsiniz.`} />
+      <PageHeader title={fill(c.title, d.title)} desc={fill(c.desc, d.desc, { n: ready.length })} />
       <FilterBar
         q={f.q}
         onQ={f.setQ}
-        placeholder="Etkileşim ara: alan, oran, olasılık…"
+        placeholder={fill(c.searchPlaceholder, d.searchPlaceholder)}
         grade={f.grade}
         onGrade={f.setGrade}
         categories={CATEGORIES}
         category={f.category}
         onCategory={f.setCategory}
+        allLabel={fill(c.allLabel, d.allLabel)}
       />
-      <p className="mb-3 text-sm font-semibold text-ink-soft">{list.length} etkileşim</p>
+      <p className="mb-3 text-sm font-semibold text-ink-soft">{fill(c.countLabel, d.countLabel, { n: list.length })}</p>
       {list.length ? (
         <CardGrid>
           {list.map((m) => (
@@ -74,7 +83,10 @@ export function InteractionsIndex() {
           ))}
         </CardGrid>
       ) : (
-        <EmptyState onClear={f.clear} />
+        <div className="rounded-2xl bg-white p-10 text-center ring-1 ring-line">
+          <p className="font-bold text-ink">{fill(c.emptyText, d.emptyText)}</p>
+          <button type="button" onClick={f.clear} className="mt-3 text-sm font-bold text-brand hover:underline">{fill(c.emptyClear, d.emptyClear)}</button>
+        </div>
       )}
     </div>
   )

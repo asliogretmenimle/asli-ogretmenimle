@@ -13,7 +13,7 @@
  * adı "studio" olarak yapıştırılabilir (ayarlarda "Verify JWT" kapalı olmalı; yetkiyi fonksiyon kendisi denetler).
  *
  * Gizli değişkenler (Edge Functions → Secrets ya da supabase secrets set …):
- *   OPENAI_API_KEY       zorunlu
+ *   OPENAI_API_KEY       panelden (Ayarlar → OpenAI anahtarı) girilmediyse gerekli
  *   OPENAI_MODEL         isteğe bağlı (varsayılan gpt-5); panel Ayarlar'dan da değiştirilebilir
  *   VERCEL_DEPLOY_HOOK   isteğe bağlı
  */
@@ -184,9 +184,31 @@ interface StartBody {
   images?: string[]
 }
 
-async function openai(path: string, init: RequestInit = {}) {
-  const key = Deno.env.get('OPENAI_API_KEY')
-  if (!key) throw new Error('OPENAI_API_KEY tanımlı değil (supabase secrets set OPENAI_API_KEY=…)')
+/** Sunucu yetkili istemci (gizli tablolar, kullanıcı oluşturma) */
+function serviceClient() {
+  const service = projectKey('secret')
+  if (!service) throw new Error('Sunucu anahtarı bulunamadı (SUPABASE_SECRET_KEYS).')
+  return createClient(Deno.env.get('SUPABASE_URL')!, service, { auth: { persistSession: false, autoRefreshToken: false } })
+}
+
+/** OpenAI anahtarı: önce panelden kaydedilen (cms_secrets), yoksa Edge Function secret'ı */
+let keyCache: { key: string; source: 'panel' | 'env' } | null | undefined
+async function openaiKey() {
+  if (keyCache !== undefined) return keyCache
+  try {
+    const { data } = await serviceClient().from('cms_secrets').select('value').eq('key', 'openai_api_key').maybeSingle()
+    if (data?.value) return (keyCache = { key: String(data.value), source: 'panel' })
+  } catch {
+    /* tablo yoksa ortam değişkenine düş */
+  }
+  const env = Deno.env.get('OPENAI_API_KEY')
+  return (keyCache = env ? { key: env, source: 'env' } : null)
+}
+const hint = (k: string) => `${k.slice(0, 3)}…${k.slice(-4)}`
+
+async function openai(path: string, init: RequestInit = {}, keyOverride?: string) {
+  const key = keyOverride ?? (await openaiKey())?.key
+  if (!key) throw new Error('OpenAI anahtarı tanımlı değil. Panelde Ayarlar → OpenAI anahtarı bölümünden ekleyin.')
   const r = await fetch(`${OPENAI}${path}`, {
     ...init,
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...(init.headers ?? {}) },
@@ -269,19 +291,24 @@ Deno.serve(async (req) => {
     return json({ error: 'Geçersiz istek' }, 400)
   }
 
+  keyCache = undefined
   try {
     const { data: settingRow } = await sb.from('cms_settings').select('value').eq('key', 'studio').maybeSingle()
     const settings = (settingRow?.value ?? {}) as { model?: string; effort?: string; instructions?: string }
     const model = settings.model?.trim() || Deno.env.get('OPENAI_MODEL') || 'gpt-5'
 
     switch (body.action) {
-      case 'status':
+      case 'status': {
+        const k = await openaiKey()
         return json({
           ok: true,
           model,
-          hasKey: !!Deno.env.get('OPENAI_API_KEY'),
+          hasKey: !!k,
+          keySource: k?.source ?? null,
+          keyHint: k ? hint(k.key) : null,
           hasDeployHook: !!Deno.env.get('VERCEL_DEPLOY_HOOK'),
         })
+      }
 
       case 'start': {
         const b = body as unknown as StartBody
@@ -337,6 +364,41 @@ Deno.serve(async (req) => {
         return json({ ok: true })
       }
 
+      case 'set_openai_key': {
+        // Yalnızca panel sahibi. Anahtar hiçbir rolün okuyamadığı cms_secrets tablosunda durur.
+        const { data: owner } = await sb.rpc('is_cms_owner')
+        if (!owner) return json({ error: 'OpenAI anahtarını yalnızca panel sahibi değiştirebilir.' }, 403)
+        const key = String(body.key ?? '').trim()
+        const svc = serviceClient()
+        const { data: who } = await sb.auth.getUser()
+        if (!key) {
+          const { error } = await svc.from('cms_secrets').delete().eq('key', 'openai_api_key')
+          if (error) return json({ error: error.message }, 500)
+          return json({ ok: true, removed: true })
+        }
+        if (!/^sk-[\w-]{20,}$/.test(key)) return json({ error: 'Bu bir OpenAI API anahtarına benzemiyor (sk- ile başlamalı).' }, 400)
+        // Kaydetmeden önce dene
+        try {
+          await openai('/models?limit=1', {}, key)
+        } catch (e) {
+          return json({ error: `Anahtar doğrulanamadı: ${(e as Error).message}` }, 400)
+        }
+        const { error } = await svc.from('cms_secrets').upsert({ key: 'openai_api_key', value: key, updated_at: new Date().toISOString(), updated_by_email: who.user?.email ?? null })
+        if (error) return json({ error: /relation|does not exist/i.test(error.message) ? 'cms_secrets tablosu yok: supabase/migrations/20261126140000_cms_v2.sql dosyasını çalıştırın.' : error.message }, 500)
+        return json({ ok: true, hint: hint(key) })
+      }
+
+      case 'test_openai': {
+        const k = await openaiKey()
+        if (!k) return json({ ok: false, error: 'Anahtar tanımlı değil' })
+        try {
+          await openai('/models?limit=1')
+          return json({ ok: true, source: k.source })
+        } catch (e) {
+          return json({ ok: false, error: (e as Error).message })
+        }
+      }
+
       case 'create_admin': {
         // Yalnızca panel sahibi: e-posta + şifreyle yönetici hesabı oluşturur (ya da var olanı yönetici yapar)
         const { data: owner } = await sb.rpc('is_cms_owner')
@@ -345,9 +407,7 @@ Deno.serve(async (req) => {
         const password = String(body.password ?? '')
         const role = body.role === 'owner' ? 'owner' : 'editor'
         if (!/^\S+@\S+\.\S+$/.test(email)) return json({ error: 'Geçerli bir e-posta girin.' }, 400)
-        const service = projectKey('secret')
-        if (!service) return json({ error: 'Sunucu anahtarı bulunamadı (SUPABASE_SECRET_KEYS).' }, 500)
-        const admin = createClient(Deno.env.get('SUPABASE_URL')!, service, { auth: { persistSession: false, autoRefreshToken: false } })
+        const admin = serviceClient()
         let userId: string | undefined
         let existed = false
         const created = await admin.auth.admin.createUser({ email, password, email_confirm: true })

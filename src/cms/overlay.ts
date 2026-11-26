@@ -16,6 +16,7 @@ import { guideBySlug, guides, type Guide } from '../data/guides'
 import { externalLinks } from '../data/links'
 import type { Activity, ExternalLink, Grade, ManipulativeTool } from '../data/types'
 import { seoOverrides } from './seoOverrides'
+import { pageData } from './pageStore'
 import type { CmsEntry, CmsKind, CustomMark } from './types'
 
 interface Base {
@@ -200,6 +201,9 @@ export function applyOverlay(entries: CmsEntry[], activities?: Record<Grade, Act
   })
   for (const e of entries) if (e.kind === 'link' && e.origin === 'custom' && !e.hidden && e.data.url) links.push(e.data as ExternalLink)
   externalLinks.splice(0, externalLinks.length, ...links)
+
+  pageData.clear()
+  for (const e of entries) if (e.kind === 'page' && !e.hidden) pageData.set(e.ref, e.data)
 
   seoOverrides.clear()
   for (const e of entries) if (e.kind === 'seo' && !e.hidden) seoOverrides.set(e.ref, e.data)

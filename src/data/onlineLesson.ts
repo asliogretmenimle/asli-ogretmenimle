@@ -1,14 +1,8 @@
 /**
  * Online özel ders sayfasının metinleri.
- * Hem sayfa (pages/OnlineLesson.tsx) hem de arama motorları için üretilen statik HTML (scripts/prerender.ts) bu dosyayı kullanır.
+ * Bunlar varsayılanlardır: sayfa ve prerender metinleri panelden düzenlenebilen src/cms/pages/onlineOzelDers.ts üzerinden okur.
+ * Ön kayıt sayfadaki form ile alınır (components/LessonRequestForm.tsx → Supabase lesson_requests).
  */
-
-/**
- * Ön kayıt formunun adresi (Google Form).
- * docs.google.com/forms/... biçimindeki tam adres verilirse form sayfanın altına da gömülür;
- * forms.gle kısa linki verilirse yalnızca düğmeler formu yeni sekmede açar.
- */
-export const LESSON_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSd4L6v2T0r8e4bV_a4p8QFMGDEUTjyao8DykD1N9My4HOHISg/viewform'
 
 export const lessonAreas = ['Antakya', 'Samandağ', 'Hatay'] as const
 
@@ -19,7 +13,7 @@ export const lessonHero = {
   kicker: 'Birebir ve küçük grup · Online · 1–8. sınıf',
   title: 'Çocuğunuz matematiği ezberlemesin, gerçekten anlasın.',
   lead: 'Aslı Öğretmen ile birebir ya da 3–4 kişilik küçük grup online matematik derslerinde çocuğunuz evinden katılır, kendi hızında ilerler ve “anlamadım” demekten çekinmez. Konular modellerle, oyunlarla ve somut araçlarla önce anlaşılır, sonra pekiştirilir.',
-  promise: 'Ön kayıt 1 dakika sürer, ücretsizdir ve hiçbir yükümlülük getirmez. Formu doldurun, Aslı Öğretmen sizinle iletişime geçsin.',
+  promise: 'Ön kayıt 2 dakika sürer, ücretsizdir ve hiçbir yükümlülük getirmez. Formu doldurun, Aslı Öğretmen sizinle iletişime geçsin.',
 }
 
 export const lessonTrust = ['Birebir ya da 3–4 kişilik grup', '1–8. sınıf + LGS', 'Maarif Modeli’ne uygun', 'Evden katılım', 'Veliye düzenli bilgi']
@@ -82,7 +76,7 @@ export const lessonPersonas = [
     label: 'Güveniyorum ama karar veremiyorum',
     title: 'Matematikteki eksikler beklerken kapanmaz, büyür.',
     body: 'Matematik üst üste kurulan bir derstir: bugün oturmayan kesirler yarın ondalıkları, oran-orantıyı ve denklemleri zorlaştırır. Ders saatleri ve grup kontenjanları bir öğretmenin gününe sığdığı kadardır. Ön kayıt bırakmak size yer ayırmak ve konuşmak için bir adımdır; vazgeçmek her zaman serbesttir.',
-    points: ['1 dakikalık form', 'Ücretsiz ve yükümlülüksüz', 'Uygun saatler dolmadan yer ayırtın'],
+    points: ['Kısa bir form', 'Ücretsiz ve yükümlülüksüz', 'Uygun saatler dolmadan yer ayırtın'],
     cta: 'Şimdi ön kayıt bırakıyorum',
     more: { href: '#sss', label: 'Kalan sorularınız için SSS' },
   },
@@ -110,7 +104,7 @@ export const lessonFormats = [
 
 /** Başlama süreci */
 export const lessonSteps = [
-  { t: 'Formu doldurun', d: 'Öğrencinin sınıfı, zorlandığı konular ve uygun saatleriniz. Yaklaşık 1 dakika.' },
+  { t: 'Formu doldurun', d: 'Bu sayfadaki kısa formda öğrencinin sınıfını, beklentilerinizi ve size uygun saatleri yazın. Yaklaşık 2 dakika.' },
   { t: 'Aslı Öğretmen sizi arasın', d: 'İhtiyacı birlikte konuşur; birebir mi grup mu, ders sıklığı ve ücret hakkında net bilgi alırsınız.' },
   { t: 'Eksikleri birlikte bulalım', d: 'İlk derslerde öğrencinin nerede takıldığı tespit edilir ve ona özel bir yol çizilir.' },
   { t: 'Düzenli ders, görünür ilerleme', d: 'Belirlenen saatlerde dersler yapılır; veli gelişmeden düzenli olarak haberdar edilir.' },

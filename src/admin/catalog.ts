@@ -51,6 +51,7 @@ export const kindInfo: Record<CmsKind, { label: string; plural: string; prefix: 
   guide: { label: 'Konu anlatımı', plural: 'Konu anlatımları', prefix: '/rehber/', emoji: '📖' },
   link: { label: 'Bağlantı', plural: 'Bağlantılar', prefix: '', emoji: '🔗' },
   seo: { label: 'Sayfa başlığı', plural: 'Sayfa başlıkları', prefix: '', emoji: '🔎' },
+  page: { label: 'Sayfa', plural: 'Sayfalar', prefix: '', emoji: '📄' },
 }
 
 function stateOf(e: CmsEntry | undefined, custom: boolean): ItemState {

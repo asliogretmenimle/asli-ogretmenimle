@@ -6,7 +6,7 @@ import { Suspense, lazy, useEffect, useRef, useState, type FormEvent, type React
 import { Link, NavLink, Route, Routes, matchPath, useLocation } from 'react-router-dom'
 import type { Session } from '@supabase/supabase-js'
 import {
-  BookOpen, ExternalLink, Gamepad2, GraduationCap, History, KeyRound, LayoutDashboard, Link2, LogOut, Menu, Puzzle, Search, Settings, ShieldCheck, Sparkles, X,
+  BarChart3, BookOpen, ExternalLink, FileText, Inbox, Gamepad2, GraduationCap, History, KeyRound, LayoutDashboard, Link2, LogOut, Menu, Puzzle, Search, Settings, ShieldCheck, Sparkles, X,
 } from 'lucide-react'
 import { ADMIN_PATH, cmsEnabled, SUPABASE_URL } from '../cms/config'
 import { gradeInfo, grades } from '../data/curriculum'
@@ -21,6 +21,9 @@ import { LinksPage } from './pages/Links'
 import { SeoPage } from './pages/Seo'
 import { HistoryPage } from './pages/History'
 import { SettingsPage } from './pages/Settings'
+import { PageEditorRoute, PagesList } from './pages/Pages'
+import { AnalyticsPage } from './pages/Analytics'
+import { RequestsPage } from './pages/Requests'
 
 const StudioHome = lazy(() => import('./studio/StudioHome').then((m) => ({ default: m.StudioHome })))
 const StudioWorkspace = lazy(() => import('./studio/StudioWorkspace').then((m) => ({ default: m.StudioWorkspace })))
@@ -283,6 +286,8 @@ const NAV: { title?: string; items: NavItem[] }[] = [
     items: [
       { to: ADMIN, label: 'Genel bakış', icon: <LayoutDashboard size={18} />, end: true },
       { to: `${ADMIN}/studyo`, label: 'Stüdyo', icon: <Sparkles size={18} /> },
+      { to: `${ADMIN}/basvurular`, label: 'Ders başvuruları', icon: <Inbox size={18} /> },
+      { to: `${ADMIN}/analiz`, label: 'Analiz', icon: <BarChart3 size={18} /> },
     ],
   },
   {
@@ -298,6 +303,7 @@ const NAV: { title?: string; items: NavItem[] }[] = [
   {
     title: 'Site',
     items: [
+      { to: `${ADMIN}/sayfalar`, label: 'Sayfalar ve ana sayfa', icon: <FileText size={18} /> },
       { to: `${ADMIN}/seo`, label: 'Sayfa başlıkları (SEO)', icon: <Search size={18} /> },
       { to: `${ADMIN}/gecmis`, label: 'Değişiklik geçmişi', icon: <History size={18} /> },
       { to: `${ADMIN}/ayarlar`, label: 'Ayarlar', icon: <Settings size={18} /> },
@@ -308,7 +314,32 @@ const NAV: { title?: string; items: NavItem[] }[] = [
 const navCls = ({ isActive }: { isActive: boolean }) =>
   cx('flex h-9 items-center gap-2.5 rounded-xl px-3 text-[14px] font-bold transition', isActive ? 'bg-ink text-white shadow-sm' : 'text-ink-soft hover:bg-paper hover:text-ink')
 
+/** Yeni (işlenmemiş) ders başvurusu sayısı: menüde rozet */
+function useNewRequests() {
+  const [n, setN] = useState(0)
+  useEffect(() => {
+    let alive = true
+    const load = () =>
+      sb
+        .from('lesson_requests')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'new')
+        .then(({ count }) => alive && setN(count ?? 0))
+    load()
+    const t = setInterval(load, 60000)
+    const onFocus = () => load()
+    window.addEventListener('focus', onFocus)
+    return () => {
+      alive = false
+      clearInterval(t)
+      window.removeEventListener('focus', onFocus)
+    }
+  }, [])
+  return n
+}
+
 function Sidebar({ email, onNavigate }: { email: string; onNavigate?: () => void }) {
+  const newRequests = useNewRequests()
   return (
     <div className="flex h-full flex-col">
       <Link to={ADMIN} onClick={onNavigate} className="flex items-center gap-2.5 px-5 pt-5 pb-4">
@@ -326,6 +357,7 @@ function Sidebar({ email, onNavigate }: { email: string; onNavigate?: () => void
                 {it.icon}
                 {it.label}
                 {it.label === 'Stüdyo' && <span className="ml-auto rounded-full bg-brand px-1.5 py-px text-[10px] font-black text-white">AI</span>}
+                {it.label === 'Ders başvuruları' && newRequests > 0 && <span className="ml-auto grid min-w-5 place-items-center rounded-full bg-ok px-1.5 text-[11px] font-black text-white">{newRequests}</span>}
               </NavLink>
             ))}
           </div>
@@ -433,6 +465,10 @@ function Shell({ email }: { email: string }) {
               <Route path="rehberler" element={<Library kind="guide" />} />
               <Route path="baglantilar" element={<LinksPage />} />
               <Route path="seo" element={<SeoPage />} />
+              <Route path="sayfalar" element={<PagesList />} />
+              <Route path="sayfalar/:id" element={<PageEditorRoute />} />
+              <Route path="analiz" element={<AnalyticsPage />} />
+              <Route path="basvurular" element={<RequestsPage />} />
               <Route path="gecmis" element={<HistoryPage />} />
               <Route path="ayarlar" element={<SettingsPage email={email} />} />
               <Route path="duzenle/activity/:ref" element={<ActivityEditorPage />} />

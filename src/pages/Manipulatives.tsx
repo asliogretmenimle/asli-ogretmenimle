@@ -10,49 +10,61 @@ import { ShareButton } from '../components/ShareButton'
 import { usePageTitle } from '../components/Layout'
 import { BOARD_PATH } from '../lib/seo'
 import type { ManipulativeTool } from '../data/types'
-import { CardGrid, EmptyState, FilterBar, ItemCard, PageHeader, categoryTint, useCatalogFilters } from '../components/Catalog'
+import { CardGrid, FilterBar, ItemCard, PageHeader, categoryTint, useCatalogFilters } from '../components/Catalog'
 import NotFound from './NotFound'
 import { HtmlFrame } from '../cms/HtmlFrame'
 import { PageSpinner } from '../cms/PageSpinner'
 import { useCmsSettled } from '../cms/runtime'
 import type { CustomMark } from '../cms/types'
+import { usePageContent } from '../cms/pageContent'
+import { toolsPage } from '../cms/pages/manipulatifler'
+
+/** Panelden gelen metin: boşsa varsayılan, {n} → sayı */
+const fill = (t: unknown, fallback: string, vars: Record<string, string | number> = {}) =>
+  Object.entries(vars).reduce((s, [k, v]) => s.split(`{${k}}`).join(String(v)), typeof t === 'string' && t.trim() ? t : fallback)
 
 const CATEGORIES = (['sayilar', 'kesirler', 'geometri', 'cebir-veri'] as const).map((id) => ({ id, label: categoryInfo[id].label }))
 
 export function ManipulativesIndex() {
   usePageTitle('Sanal Manipülatifler')
+  const c = usePageContent(toolsPage)
+  const d = toolsPage.defaults
   const f = useCatalogFilters()
   const list = toolList.filter(
     (t) => (!f.grade || toolGrades(t).includes(f.grade)) && (!f.category || t.category === f.category) && f.matches(`${t.name} ${t.description}`),
   )
   return (
     <div className="mx-auto max-w-6xl px-4 pt-8 sm:pt-10">
-      <PageHeader title="Sanal Manipülatifler" desc={`${toolList.length} dijital materyal. Akıllı tahtada ya da tablette serbestçe kullanılır; kurulum ve üyelik gerekmez.`} />
+      <PageHeader title={fill(c.title, d.title)} desc={fill(c.desc, d.desc, { n: toolList.length })} />
       <Link to={BOARD_PATH} className="group mb-6 flex items-center gap-4 rounded-2xl bg-white p-4 ring-1 ring-line transition hover:shadow-[var(--shadow-lift)]">
         <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#fff5e8] text-[#b8660b]"><LayoutDashboard size={22} /></span>
         <span className="min-w-0 flex-1">
-          <span className="block font-bold text-ink">Matematik Tuvali</span>
-          <span className="block text-sm font-semibold text-ink-soft">Bütün materyaller tek ekranda: blokları, şeritleri ve şekilleri yan yana kullanın.</span>
+          <span className="block font-bold text-ink">{fill(c.boardTitle, d.boardTitle)}</span>
+          <span className="block text-sm font-semibold text-ink-soft">{fill(c.boardDesc, d.boardDesc)}</span>
         </span>
         <ArrowRight size={18} className="shrink-0 text-ink-soft transition group-hover:translate-x-0.5" />
       </Link>
       <FilterBar
         q={f.q}
         onQ={f.setQ}
-        placeholder="Materyal ara: kesir, blok, saat…"
+        placeholder={fill(c.searchPlaceholder, d.searchPlaceholder)}
         grade={f.grade}
         onGrade={f.setGrade}
         categories={CATEGORIES}
         category={f.category}
         onCategory={f.setCategory}
+        allLabel={fill(c.allLabel, d.allLabel)}
       />
-      <p className="mb-3 text-sm font-semibold text-ink-soft">{list.length} manipülatif</p>
+      <p className="mb-3 text-sm font-semibold text-ink-soft">{fill(c.countLabel, d.countLabel, { n: list.length })}</p>
       {list.length ? (
         <CardGrid>
           {list.map((t) => <ItemCard key={t.id} to={`/manipulatif/${t.id}`} emoji={t.emoji} title={t.name} desc={t.description} meta={`${t.grades}. sınıf`} tint={categoryTint[t.category]} />)}
         </CardGrid>
       ) : (
-        <EmptyState onClear={f.clear} />
+        <div className="rounded-2xl bg-white p-10 text-center ring-1 ring-line">
+          <p className="font-bold text-ink">{fill(c.emptyText, d.emptyText)}</p>
+          <button type="button" onClick={f.clear} className="mt-3 text-sm font-bold text-brand hover:underline">{fill(c.emptyClear, d.emptyClear)}</button>
+        </div>
       )}
     </div>
   )

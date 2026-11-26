@@ -2,7 +2,7 @@
  * Oyun, etkileşim, manipülatif ve konu anlatımı düzenleyicisi.
  * Koddaki öğelerde yalnızca değişen alanlar kaydedilir (yama); panelden eklenenlerde tüm veri + HTML.
  */
-import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ExternalLink, Eye, EyeOff, History, Plus, Save, Send, Sparkles, Trash2, Undo2 } from 'lucide-react'
 import { ADMIN_PATH } from '../../cms/config'
@@ -14,11 +14,11 @@ import { deleteEntry, loadHtml, loadRevisions, restoreRevision, saveEntry, useEn
 import { diffPatch, kindInfo, refTaken, stateInfo, type AdminItem } from '../catalog'
 import { itemsOf } from '../pages/Library'
 import { MultiPicker, OutcomePicker } from '../components/pickers'
+import { SitePreview, draftEntry } from '../components/SitePreview'
 import {
-  Badge, Button, Callout, Card, Empty, Field, GradePicker, IconButton, JsonEditor, ListEditor, Select, TextArea, TextInput, cx, inputCls, isSlug, slugify, timeAgo, useConfirm, useSaveShortcut, useToast,
+  Badge, Button, Callout, Card, Empty, Field, GradePicker, IconButton, JsonEditor, ListEditor, Select, TextArea, TextInput, cx, isSlug, slugify, timeAgo, useConfirm, useSaveShortcut, useToast,
 } from '../ui'
 
-const HtmlFrame = lazy(() => import('../../cms/HtmlFrame').then((m) => ({ default: m.HtmlFrame })))
 
 type Data = Record<string, unknown>
 type FieldDef =
@@ -266,6 +266,30 @@ function Editor({ kind, item }: { kind: CmsKind; item?: AdminItem }) {
   const st = item ? stateInfo[item.state] : null
   const publicHref = `${info.prefix}${item?.ref ?? slug}`
   const live = item && item.state !== 'draft' && item.state !== 'hidden'
+  const [showPreview, setShowPreview] = useState(false)
+
+  // Önizleme: kaydedilmemiş hâli sitenin gerçek sayfasında göster
+  const previewRef = isCustom ? slug || 'onizleme' : item!.ref
+  const draftId = item?.entry?.id ?? `taslak-${kind}`
+  const drafts = useMemo(
+    () => [
+      draftEntry({
+        id: draftId,
+        kind,
+        ref: previewRef,
+        origin: isCustom ? 'custom' : 'builtin',
+        data: isCustom ? form : diffPatch(item!.original as Data, { ...(item!.original as Data), ...form }),
+      }),
+    ],
+    [draftId, kind, previewRef, isCustom, form, item],
+  )
+  const previewHtmlMap = useMemo(() => (isCustom && html ? { [draftId]: html } : undefined), [isCustom, html, draftId])
+  const listPath = kind === 'game' ? '/oyunlar' : kind === 'interaction' ? '/etkilesimler' : kind === 'manipulative' ? '/manipulatifler' : '/rehber'
+  const targets = [
+    { label: `${info.label} sayfası`, path: `${info.prefix}${previewRef}` },
+    { label: `${info.plural} listesi`, path: listPath },
+  ]
+  const previewGrade = Array.isArray(form.grades) ? (form.grades as number[])[0] : undefined
 
   return (
     <div>
@@ -287,6 +311,9 @@ function Editor({ kind, item }: { kind: CmsKind; item?: AdminItem }) {
             </h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <Button className="xl:hidden" icon={<Eye size={16} />} onClick={() => setShowPreview((x) => !x)}>
+              {showPreview ? 'Formu göster' : 'Önizle'}
+            </Button>
             {live && (
               <a href={publicHref} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-bold text-ink-soft hover:bg-white hover:text-ink">
                 <ExternalLink size={16} />
@@ -303,8 +330,8 @@ function Editor({ kind, item }: { kind: CmsKind; item?: AdminItem }) {
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="min-w-0 space-y-6">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className={cx('min-w-0 space-y-6', showPreview && 'max-xl:hidden')}>
           {item?.state === 'draft' && <Callout tone="amber" title="Taslak">Bu değişiklikler henüz sitede görünmüyor. Hazır olduğunuzda “Yayınla”ya basın.</Callout>}
           {item?.state === 'hidden' && <Callout tone="red" title="Gizli">Bu içerik sitede görünmüyor ve bağlantısı açılmıyor.</Callout>}
 
@@ -374,9 +401,10 @@ function Editor({ kind, item }: { kind: CmsKind; item?: AdminItem }) {
         </div>
 
         {/* Sağ sütun */}
-        <aside className="space-y-6 xl:sticky xl:top-24 xl:self-start">
-          <PreviewCard kind={kind} form={form} />
-          {isCustom && HTML_KINDS.includes(kind) && html && <LivePreview kind={kind} html={html} grades={(form.grades as Grade[]) ?? []} />}
+        <aside className={cx('min-w-0 space-y-6 xl:sticky xl:top-24 xl:self-start', !showPreview && 'max-xl:hidden')}>
+          <Card title="Önizleme" desc="Kaydetmeden önce sitede nasıl görüneceği: telefon, tablet ve bilgisayar">
+            <SitePreview targets={targets} entries={drafts} html={previewHtmlMap} grade={previewGrade} maxHeight="calc(100dvh - 12rem)" />
+          </Card>
           {item && (
             <Card title="Durum" pad>
               <dl className="space-y-2 text-sm">
@@ -610,67 +638,6 @@ function FaqField({ value, onChange, label }: { value: Faq[]; onChange: (v: unkn
 // ---------------------------------------------------------------------------
 // Sağ sütun
 // ---------------------------------------------------------------------------
-function PreviewCard({ kind, form }: { kind: CmsKind; form: Data }) {
-  const name = String(form.name ?? form.title ?? '') || 'Adsız'
-  const grades = Array.isArray(form.grades) ? (form.grades as number[]) : []
-  const gr = typeof form.grades === 'string' ? `${form.grades}. sınıf` : grades.length ? (grades.length === 1 ? `${grades[0]}. sınıf` : `${grades[0]}–${grades[grades.length - 1]}. sınıf`) : ''
-  if (kind === 'guide')
-    return (
-      <Card title="Google önizlemesi">
-        <p className="truncate text-xs text-green-800">asliogretmenimle.com › rehber</p>
-        <p className="mt-0.5 line-clamp-2 text-[17px] leading-snug text-[#1a0dab]">{String(form.seoTitle || form.title || 'Başlık')} | Aslı Öğretmenimle</p>
-        <p className="mt-1 line-clamp-3 text-[13px] text-ink-soft">{String(form.description || 'Açıklama…')}</p>
-      </Card>
-    )
-  return (
-    <Card title="Sitedeki kart">
-      <div className="rounded-2xl bg-white p-4 ring-1 ring-line">
-        <div className="flex items-start gap-3">
-          <span className="grid size-12 shrink-0 place-items-center rounded-2xl text-2xl" style={{ background: `${String(form.color || '#d6457a')}18` }}>
-            {String(form.emoji || '✨')}
-          </span>
-          <div className="min-w-0">
-            <p className="font-black">{name}</p>
-            <p className="mt-0.5 line-clamp-3 text-sm font-semibold text-ink-soft">{String(form.description || '')}</p>
-            {gr && <p className="mt-2 text-xs font-extrabold text-ink-soft">{gr}</p>}
-          </div>
-        </div>
-      </div>
-      {typeof form.launch === 'string' && form.launch && (
-        <div className="mt-3 rounded-2xl bg-cream p-3">
-          <p className="mb-1 text-[11px] font-black tracking-wide text-amber-800 uppercase">🌱 Başlarken</p>
-          <p className="text-sm font-extrabold">{form.launch}</p>
-        </div>
-      )}
-    </Card>
-  )
-}
-
-function LivePreview({ kind, html, grades }: { kind: CmsKind; html: string; grades: Grade[] }) {
-  const [open, setOpen] = useState(false)
-  const [g, setG] = useState<number>(grades[0] ?? 3)
-  return (
-    <Card title="Canlı önizleme" action={<Button size="sm" variant={open ? 'secondary' : 'soft'} onClick={() => setOpen((o) => !o)}>{open ? 'Kapat' : 'Çalıştır'}</Button>}>
-      {open ? (
-        <div className="space-y-2">
-          <select value={g} onChange={(e) => setG(Number(e.target.value))} className={cx(inputCls, 'h-9 py-1 text-sm')}>
-            {([1, 2, 3, 4, 5, 6, 7, 8] as const).map((x) => (
-              <option key={x} value={x}>
-                {x}. sınıf olarak dene
-              </option>
-            ))}
-          </select>
-          <Suspense fallback={<div className="h-96 animate-pulse rounded-xl bg-paper" />}>
-            <HtmlFrame kind={kind as 'game'} grade={g} html={html} height="480px" />
-          </Suspense>
-        </div>
-      ) : (
-        <p className="text-sm font-semibold text-ink-soft">İçeriği burada deneyin. Tam boyut için yayınlayıp sitede açın ya da Stüdyo’yu kullanın.</p>
-      )}
-    </Card>
-  )
-}
-
 function RevisionsCard({ entry }: { entry: CmsEntry }) {
   const toast = useToast()
   const confirm = useConfirm()

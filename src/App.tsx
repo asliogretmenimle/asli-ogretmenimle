@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import GradePage from './pages/Grade'
 import NotFound from './pages/NotFound'
 import { useCmsVersion } from './cms/runtime'
+import { useTrackPageViews } from './cms/analytics'
 
 const load = {
   theme: () => import('./pages/ThemePage'),
@@ -65,6 +66,8 @@ export default function App() {
   usePrefetchPages()
   // Panel kayıtları gelince (oyun adı, yeni etkinlik …) sayfalar yeniden çizilsin
   useCmsVersion()
+  // Ziyaret analizi (panel → Analiz)
+  useTrackPageViews()
   return (
     <ErrorBoundary>
     <Suspense fallback={<Loading />}>

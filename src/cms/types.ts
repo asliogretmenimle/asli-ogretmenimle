@@ -3,7 +3,7 @@
  * Koddaki içeriğin üstüne uygulanır (bkz. overlay.ts).
  */
 
-export type CmsKind = 'activity' | 'game' | 'interaction' | 'manipulative' | 'guide' | 'link' | 'seo'
+export type CmsKind = 'activity' | 'game' | 'interaction' | 'manipulative' | 'guide' | 'link' | 'seo' | 'page'
 export type CmsOrigin = 'builtin' | 'custom'
 export type CmsStatus = 'published' | 'draft'
 

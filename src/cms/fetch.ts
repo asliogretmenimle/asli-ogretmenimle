@@ -23,8 +23,13 @@ export async function fetchPublishedEntries(timeoutMs = 6000): Promise<CmsEntry[
 
 const htmlCache = new Map<string, Promise<string>>()
 
+/** Paneldeki önizleme: kaydedilmemiş HTML (kayıt kimliği → HTML) */
+export const previewHtml = new Map<string, string>()
+
 /** Stüdyo'da üretilmiş öğenin HTML'i (öğe sayfası açılınca) */
 export function fetchEntryHtml(id: string): Promise<string> {
+  const draft = previewHtml.get(id)
+  if (draft !== undefined) return Promise.resolve(draft)
   let p = htmlCache.get(id)
   if (!p) {
     p = get<{ html: string | null }[]>(`cms_entries?select=html&id=eq.${encodeURIComponent(id)}`, 15000).then((rows) => rows[0]?.html ?? '')

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CloudUpload, Plus, Trash2, UserPlus } from 'lucide-react'
+import { CloudUpload, Eye, EyeOff, KeyRound, Plus, Trash2, UserPlus, Zap } from 'lucide-react'
 import { loadSetting, saveSetting, studioCall, triggerDeploy, type StudioSettings } from '../api'
 import { sb } from '../supabase'
 import { Badge, Button, Callout, Card, Field, PageHead, Segmented, Select, TextArea, TextInput, Toggle, useConfirm, useToast } from '../ui'
@@ -17,6 +17,7 @@ export function SettingsPage({ email }: { email: string }) {
   return (
     <div className="space-y-6">
       <PageHead title="Ayarlar" desc="Stüdyo asistanı, yöneticiler ve yayın ayarları." />
+      <OpenAiKeyCard />
       <StudioCard />
       <PublishCard />
       <PasswordCard />
@@ -252,6 +253,123 @@ function PasswordCard() {
         <Button variant="primary" loading={busy} disabled={!pw || !pw2} onClick={save}>
           Kaydet
         </Button>
+      </div>
+    </Card>
+  )
+}
+
+interface KeyStatus {
+  ok: boolean
+  hasKey?: boolean
+  keySource?: 'panel' | 'env' | null
+  keyHint?: string | null
+  error?: string
+}
+
+/** OpenAI API anahtarı: panelden değiştirilebilir, tarayıcıya hiç geri gönderilmez */
+function OpenAiKeyCard() {
+  const toast = useToast()
+  const confirm = useConfirm()
+  const [status, setStatus] = useState<KeyStatus | null>(null)
+  const [isOwner, setIsOwner] = useState(false)
+  const [key, setKey] = useState('')
+  const [show, setShow] = useState(false)
+  const [busy, setBusy] = useState<'save' | 'test' | 'remove' | null>(null)
+  const [tick, setTick] = useState(0)
+
+  useEffect(() => {
+    setStatus(null)
+    studioCall<KeyStatus>({ action: 'status' }).then(setStatus, (e) => setStatus({ ok: false, error: (e as Error).message }))
+    sb.rpc('is_cms_owner').then(({ data }) => setIsOwner(!!data))
+  }, [tick])
+
+  const save = async () => {
+    setBusy('save')
+    try {
+      const r = await studioCall<{ ok: boolean; hint: string }>({ action: 'set_openai_key', key })
+      toast(`Anahtar doğrulandı ve kaydedildi (${r.hint})`)
+      setKey('')
+      setTick((x) => x + 1)
+    } catch (e) {
+      toast((e as Error).message, 'error')
+    } finally {
+      setBusy(null)
+    }
+  }
+  const test = async () => {
+    setBusy('test')
+    try {
+      const r = await studioCall<{ ok: boolean; error?: string }>({ action: 'test_openai' })
+      if (r.ok) toast('OpenAI bağlantısı çalışıyor')
+      else toast(`OpenAI bağlantısı başarısız: ${r.error}`, 'error')
+    } catch (e) {
+      toast((e as Error).message, 'error')
+    } finally {
+      setBusy(null)
+    }
+  }
+  const remove = async () => {
+    if (!(await confirm({ title: 'Panelden kaydedilen anahtar silinsin mi?', desc: 'Sunucuda OPENAI_API_KEY secret’ı varsa o kullanılır; yoksa Stüdyo çalışmaz.', confirm: 'Sil', danger: true }))) return
+    setBusy('remove')
+    try {
+      await studioCall({ action: 'set_openai_key', key: '' })
+      toast('Panel anahtarı silindi')
+      setTick((x) => x + 1)
+    } catch (e) {
+      toast((e as Error).message, 'error')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  return (
+    <Card title={<span className="flex items-center gap-2"><KeyRound size={16} />OpenAI anahtarı</span>} desc="Stüdyo’nun yapay zekâ üretimi için kullanılır. Anahtar güvenli sunucuda saklanır; kaydedildikten sonra panelde bile tamamı gösterilmez.">
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-2 text-sm font-bold">
+          <span className="text-ink-soft">Durum:</span>
+          {!status ? (
+            <Badge>kontrol ediliyor…</Badge>
+          ) : !status.ok ? (
+            <Badge tone="red">Stüdyo sunucusuna ulaşılamıyor</Badge>
+          ) : status.hasKey ? (
+            <>
+              <Badge tone="green">Tanımlı{status.keyHint ? ` · ${status.keyHint}` : ''}</Badge>
+              <Badge>{status.keySource === 'panel' ? 'Panelden girildi' : 'Sunucu secret’ı (OPENAI_API_KEY)'}</Badge>
+            </>
+          ) : (
+            <Badge tone="red">Anahtar yok</Badge>
+          )}
+          {status?.hasKey && (
+            <Button size="sm" variant="ghost" icon={<Zap size={14} />} loading={busy === 'test'} onClick={test}>
+              Bağlantıyı test et
+            </Button>
+          )}
+        </div>
+        {status && !status.ok && <Callout tone="amber">{status.error}</Callout>}
+        {isOwner ? (
+          <div>
+            <Field label={status?.hasKey ? 'Yeni anahtar' : 'Anahtar'} help="platform.openai.com → API keys bölümünden oluşturun. Kaydetmeden önce OpenAI’ye bağlanıp doğrulanır.">
+              <div className="flex flex-wrap gap-2">
+                <div className="relative min-w-60 flex-1">
+                  <TextInput type={show ? 'text' : 'password'} value={key} onChange={setKey} placeholder="sk-…" autoComplete="off" spellCheck={false} className="pr-10 font-mono" />
+                  <button type="button" onClick={() => setShow((x) => !x)} className="absolute top-1/2 right-2 grid size-7 -translate-y-1/2 place-items-center rounded-lg text-ink-soft hover:bg-paper" aria-label={show ? 'Gizle' : 'Göster'}>
+                    {show ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+                <Button variant="primary" loading={busy === 'save'} disabled={key.trim().length < 20} onClick={save}>
+                  Doğrula ve kaydet
+                </Button>
+              </div>
+            </Field>
+            {status?.keySource === 'panel' && (
+              <Button size="sm" variant="ghost" className="mt-2" icon={<Trash2 size={14} />} loading={busy === 'remove'} onClick={remove}>
+                Panel anahtarını kaldır
+              </Button>
+            )}
+          </div>
+        ) : (
+          <p className="text-xs font-semibold text-ink-soft">Anahtarı yalnızca panel sahibi değiştirebilir.</p>
+        )}
       </div>
     </Card>
   )

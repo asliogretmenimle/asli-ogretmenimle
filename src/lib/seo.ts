@@ -11,7 +11,8 @@ import { toolMeta, toolMetaById, type ToolMeta } from '../manipulatives/meta'
 import { interactionById, interactionMeta } from '../interactions/meta'
 import type { InteractionMeta } from '../interactions/types'
 import type { ManipulativeTool } from '../data/types'
-import { lessonFaq, lessonIntro } from '../data/onlineLesson'
+import { getPageContent } from '../cms/pageContent'
+import { lessonPage } from '../cms/pages/onlineOzelDers'
 import { gameKeyword, interactionKeyword, outcomeKeyword, themeKeyword, toolKeyword } from '../data/seoKeywords'
 import { guideBySlug, guides, guidesUpdated, type Guide } from '../data/guides'
 import { gradeContent } from '../data/gradeContent'
@@ -722,7 +723,7 @@ export function onlineLessonSeo(): PageSeo {
         url: abs(path),
         name: 'Online Birebir ve Grup Matematik Özel Ders',
         serviceType: 'Online matematik özel ders',
-        description: lessonIntro,
+        description: String(getPageContent(lessonPage).intro || ''),
         provider: { '@id': TEACHER_ID },
         areaServed,
         availableChannel: { '@type': 'ServiceChannel', name: 'Online görüntülü ders', serviceUrl: abs(path) },
@@ -731,7 +732,7 @@ export function onlineLessonSeo(): PageSeo {
       },
       {
         '@type': 'FAQPage',
-        mainEntity: lessonFaq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+        mainEntity: (getPageContent(lessonPage).faq as { q: string; a: string }[]).filter((f) => f?.q && f?.a).map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
       },
       breadcrumb([{ name: 'Online Özel Ders', path }]),
     ),

@@ -7,8 +7,14 @@ import { ShareButton } from '../components/ShareButton'
 import { GUIDES_PATH, timesFamily } from '../lib/seo'
 import { pick, randInt, shuffle } from '../lib/random'
 import { celebrate, sfx } from '../lib/feedback'
+import { usePageContent } from '../cms/pageContent'
+import { timesPage } from '../cms/pages/carpimTablosu'
 
 const Quiz = lazy(() => import('../engine/Quiz'))
+
+/** Panelden gelen metin: boşsa varsayılan, {n} → değer */
+const fill = (t: unknown, fallback: string, vars: Record<string, string | number> = {}) =>
+  Object.entries(vars).reduce((s, [k, v]) => s.split(`{${k}}`).join(String(v)), typeof t === 'string' && t.trim() ? t : fallback)
 const N = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 /** Bilinen bir çarpımdan yola çıkan kısa strateji: ezber yerine ilişki */
@@ -58,6 +64,9 @@ function makeQuestions(tables: number[], count: number): QuizQuestion[] {
 
 export default function TimesTable() {
   usePageTitle()
+  const c = usePageContent(timesPage)
+  const d = timesPage.defaults
+  const link = (i: number) => fill(Array.isArray(c.links) ? c.links[i] : '', d.links[i])
   const [sel, setSel] = useState<{ a: number; b: number } | null>({ a: 7, b: 8 })
   const [hidden, setHidden] = useState(false)
   const [shown, setShown] = useState<Set<string>>(new Set())
@@ -98,7 +107,7 @@ export default function TimesTable() {
   return (
     <div className="mx-auto max-w-5xl px-4 pt-6">
       <div className="mb-5 flex items-center justify-between gap-2 print:hidden">
-        <p className="chip bg-cream px-3 py-1 text-sm text-amber-800">2–4. sınıf matematik</p>
+        <p className="chip bg-cream px-3 py-1 text-sm text-amber-800">{fill(c.chip, d.chip)}</p>
         <div className="flex gap-2">
           <button type="button" onClick={() => window.print()} className="btn-ghost min-h-10 px-3 text-sm"><Printer size={16} />Yazdır</button>
           <ShareButton title="Çarpım Tablosu" />
@@ -106,19 +115,17 @@ export default function TimesTable() {
       </div>
 
       <header className="mb-6">
-        <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Çarpım Tablosu (1–10)</h1>
-        <p className="mt-2 max-w-2xl font-semibold text-ink-soft print:hidden">
-          Bir kutuya dokun: satırı ve sütunu birlikte görürsün. Kendini sınamak için sonuçları gizle, sonra aşağıdaki alıştırmayı çöz.
-        </p>
+        <h1 className="text-3xl font-black tracking-tight sm:text-4xl">{fill(c.title, d.title)}</h1>
+        <p className="mt-2 max-w-2xl font-semibold text-ink-soft print:hidden">{fill(c.intro, d.intro)}</p>
       </header>
 
       <section aria-label="Çarpım tablosu" className="rounded-3xl bg-white p-3 ring-1 ring-line sm:p-5">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2 print:hidden">
           <p className="text-2xl font-black text-ink" aria-live="polite">
-            {sel ? <>{sel.a} × {sel.b} = <span className="text-brand">{hidden && !shown.has(`${sel.a}×${sel.b}`) ? '?' : sel.a * sel.b}</span></> : 'Bir kutu seç'}
+            {sel ? <>{sel.a} × {sel.b} = <span className="text-brand">{hidden && !shown.has(`${sel.a}×${sel.b}`) ? '?' : sel.a * sel.b}</span></> : fill(c.pickPrompt, d.pickPrompt)}
           </p>
           <button type="button" onClick={() => { setHidden((h) => !h); setShown(new Set()) }} className="btn-ghost min-h-10 px-3 text-sm" aria-pressed={hidden}>
-            {hidden ? <><Eye size={16} />Sonuçları göster</> : <><EyeOff size={16} />Sonuçları gizle</>}
+            {hidden ? <><Eye size={16} />{fill(c.showLabel, d.showLabel)}</> : <><EyeOff size={16} />{fill(c.hideLabel, d.hideLabel)}</>}
           </button>
         </div>
         <table className="w-full table-fixed border-separate border-spacing-0.5 text-center text-sm font-extrabold tabular-nums sm:border-spacing-1 sm:text-base">
@@ -159,7 +166,7 @@ export default function TimesTable() {
       </section>
 
       <section className="mt-8 print:hidden" aria-labelledby="aile">
-        <h2 id="aile" className="text-xl font-black sm:text-2xl">{timesFamily(family)} çarpım tablosu</h2>
+        <h2 id="aile" className="text-xl font-black sm:text-2xl">{fill(c.familyHeading, d.familyHeading, { n: timesFamily(family) })}</h2>
         <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label="Sayı seç">
           {N.map((n) => (
             <button key={n} type="button" className="pill min-w-11 justify-center" aria-pressed={family === n} onClick={() => setFamily(n)}>{n}</button>
@@ -175,24 +182,24 @@ export default function TimesTable() {
       </section>
 
       <section className="mt-10 rounded-3xl bg-white p-5 ring-1 ring-line sm:p-7 print:hidden" aria-labelledby="alistirma">
-        <h2 id="alistirma" className="text-xl font-black sm:text-2xl">Çarpım tablosu alıştırması</h2>
+        <h2 id="alistirma" className="text-xl font-black sm:text-2xl">{fill(c.practiceTitle, d.practiceTitle)}</h2>
         {!activity ? (
           <>
-            <p className="mt-1 font-semibold text-ink-soft">Çalışmak istediğin sayıları seç; 10 soruluk alıştırma bu sayılardan gelir. Yanlışta hangi hatayı yaptığını ve kısa yolu görürsün.</p>
+            <p className="mt-1 font-semibold text-ink-soft">{fill(c.practiceDesc, d.practiceDesc)}</p>
             <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label="Alıştırma sayıları">
               {N.slice(1).map((n) => (
                 <button key={n} type="button" className="pill min-w-11 justify-center" aria-pressed={tables.includes(n)} onClick={() => toggleTable(n)}>{timesFamily(n)}</button>
               ))}
             </div>
-            <button type="button" onClick={start} className="btn-primary mt-5 min-w-56 text-lg"><Play size={20} fill="currentColor" />Alıştırmaya başla</button>
+            <button type="button" onClick={start} className="btn-primary mt-5 min-w-56 text-lg"><Play size={20} fill="currentColor" />{fill(c.startLabel, d.startLabel)}</button>
           </>
         ) : result ? (
           <div className="mt-4 text-center animate-fade-up">
             <p className="text-5xl font-black text-brand">{result.correct}<span className="text-2xl text-ink-soft"> / {result.total}</span></p>
-            <p className="mt-2 font-bold text-ink-soft">{result.correct >= 9 ? 'Muhteşem! Bu sayılar artık senin.' : result.correct >= 6 ? 'Çok iyi! Zorlandıklarını bir kez daha dene.' : 'Güzel çaba! Tablodan zorlandığın satıra bak, sonra tekrar dene.'}</p>
+            <p className="mt-2 font-bold text-ink-soft">{result.correct >= 9 ? fill(c.resultHigh, d.resultHigh) : result.correct >= 6 ? fill(c.resultMid, d.resultMid) : fill(c.resultLow, d.resultLow)}</p>
             <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
-              <button type="button" onClick={start} className="btn-primary"><RotateCcw size={18} />Yeni sorular</button>
-              <button type="button" onClick={() => { setRun(0); setResult(null) }} className="btn-ghost">Sayıları değiştir</button>
+              <button type="button" onClick={start} className="btn-primary"><RotateCcw size={18} />{fill(c.newQuestions, d.newQuestions)}</button>
+              <button type="button" onClick={() => { setRun(0); setResult(null) }} className="btn-ghost">{fill(c.changeNumbers, d.changeNumbers)}</button>
             </div>
           </div>
         ) : (
@@ -214,9 +221,9 @@ export default function TimesTable() {
       </section>
 
       <nav className="mt-8 grid gap-3 sm:grid-cols-3 print:hidden" aria-label="İlgili sayfalar">
-        <Link to={`${GUIDES_PATH}/carpim-tablosu`} className="card flex items-center gap-3 p-4 transition hover:shadow-[var(--shadow-lift)]"><BookOpen size={22} className="text-brand" /><span className="font-extrabold">Çarpım tablosu nasıl ezberlenir?</span></Link>
-        <Link to="/oyun/kurabiye-fabrikasi" className="card flex items-center gap-3 p-4 transition hover:shadow-[var(--shadow-lift)]"><Gamepad2 size={22} className="text-brand" /><span className="font-extrabold">Çarpma oyunu: Kurabiye Fabrikası</span></Link>
-        <Link to="/manipulatif/dizilim" className="card flex items-center gap-3 p-4 transition hover:shadow-[var(--shadow-lift)]"><span aria-hidden className="text-xl">▦</span><span className="font-extrabold">Çarpma dizilim tahtası</span></Link>
+        <Link to={`${GUIDES_PATH}/carpim-tablosu`} className="card flex items-center gap-3 p-4 transition hover:shadow-[var(--shadow-lift)]"><BookOpen size={22} className="text-brand" /><span className="font-extrabold">{link(0)}</span></Link>
+        <Link to="/oyun/kurabiye-fabrikasi" className="card flex items-center gap-3 p-4 transition hover:shadow-[var(--shadow-lift)]"><Gamepad2 size={22} className="text-brand" /><span className="font-extrabold">{link(1)}</span></Link>
+        <Link to="/manipulatif/dizilim" className="card flex items-center gap-3 p-4 transition hover:shadow-[var(--shadow-lift)]"><span aria-hidden className="text-xl">▦</span><span className="font-extrabold">{link(2)}</span></Link>
       </nav>
     </div>
   )

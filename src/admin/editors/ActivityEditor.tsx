@@ -18,6 +18,7 @@ import { activityTypeLabel, refTaken, stateInfo, type ItemState } from '../catal
 import { Badge, Button, Callout, Card, Empty, Field, GradePicker, JsonEditor, Segmented, Tabs, TextArea, TextInput, cx, isSlug, slugify, timeAgo, useConfirm, useSaveShortcut, useToast } from '../ui'
 import { NEW_TYPES, NOTATION_HINT, TypeEditor, templateFor, validate } from './activityFields'
 import { ActivityPreview } from './activityPreview'
+import { SitePreview, draftEntry } from '../components/SitePreview'
 
 const STAGES: { value: Stage; label: string }[] = [
   { value: 'somut', label: 'Somut (yaparak)' },
@@ -212,6 +213,12 @@ function Editor({ grade, rawList, entries, initial, raw, entry, isNew }: { grade
   const effSlug = slugTouched ? slug : autoSlug
   const ref = isNew ? `g${grade}-${effSlug}` : initial.id
   const cleaned = useMemo(() => clean(draft, ref), [draft, ref])
+  const [previewMode, setPreviewMode] = useState<'hizli' | 'site'>('hizli')
+
+  const siteDrafts = useMemo(
+    () => [draftEntry({ id: entry?.id, kind: 'activity', ref, origin: raw ? 'builtin' : 'custom', data: cleaned as unknown as Record<string, unknown>, grade })],
+    [entry?.id, ref, raw, cleaned, grade],
+  )
   const dirty = JSON.stringify(cleaned) !== baseline
   const issues = useMemo(() => validate(cleaned), [cleaned])
 
@@ -528,9 +535,21 @@ function Editor({ grade, rawList, entries, initial, raw, entry, isNew }: { grade
 
         <aside className={cx('min-w-0', mobileView === 'edit' && 'max-xl:hidden')}>
           <div className="xl:sticky xl:top-24">
-            <Card title="Önizleme" desc="Öğrencinin göreceği hâli: deneyebilirsiniz." pad={false}>
+            <Card title="Önizleme" desc="Öğrencinin göreceği hâli: deneyebilirsiniz." pad={false} action={<Segmented size="sm" value={previewMode} onChange={setPreviewMode} options={[{ value: 'hizli', label: 'Hızlı' }, { value: 'site', label: 'Sitede' }]} />}>
               <div className="p-3 sm:p-4">
-                <ActivityPreview activity={cleaned} />
+                {previewMode === 'hizli' ? (
+                  <ActivityPreview activity={cleaned} />
+                ) : (
+                  <SitePreview
+                    targets={[
+                      { label: 'Etkinlik sayfası', path: `/etkinlik/${ref}` },
+                      ...(theme ? [{ label: 'Tema sayfası', path: `/sinif/${grade}/${theme.slug}` }] : []),
+                      ...(cleaned.type === 'quiz' && theme ? [{ label: 'Test Çöz (tema)', path: `/test/${grade}/${theme.slug}` }] : []),
+                    ]}
+                    entries={siteDrafts}
+                    maxHeight="calc(100dvh - 14rem)"
+                  />
+                )}
               </div>
             </Card>
           </div>

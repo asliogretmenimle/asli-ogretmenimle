@@ -15,6 +15,8 @@ import { SessionTracker } from '../lib/report'
 import { TrackerProvider } from '../lib/trackerContext'
 import { celebrate, sfx } from '../lib/feedback'
 import NotFound from './NotFound'
+import { usePageContent } from '../cms/pageContent'
+import { testsPage } from '../cms/pages/test'
 
 const Quiz = lazy(() => import('../engine/Quiz'))
 
@@ -24,22 +26,25 @@ const Spinner = () => (
   </div>
 )
 
+/** Panelden gelen metin: boşsa varsayılan, {n} → değer */
+const fill = (t: unknown, fallback: string, vars: Record<string, string | number> = {}) =>
+  Object.entries(vars).reduce((s, [k, v]) => s.split(`{${k}}`).join(String(v)), typeof t === 'string' && t.trim() ? t : fallback)
+
 /** /test: sınıf seçimi */
 export function TestsIndex() {
   usePageTitle()
+  const c = usePageContent(testsPage)
+  const d = testsPage.defaults
   return (
     <div className="mx-auto max-w-6xl px-4 pt-6 sm:pt-8">
-      <PageHeader
-        title="Matematik Test Çöz"
-        desc="1–8. sınıf her konu için cevaplı, açıklamalı online testler. Sorular her açılışta karışık seçilir; yanlış cevapta neden yanlış olduğunu görürsün."
-      />
+      <PageHeader title={fill(c.title, d.title)} desc={fill(c.desc, d.desc)} />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {grades.map((g) => (
           <Link key={g} to={testPath(g)} className="group flex items-center gap-3 rounded-2xl bg-white p-4 ring-1 ring-line transition hover:shadow-[var(--shadow-lift)]">
             <span className="grid size-12 shrink-0 place-items-center rounded-xl text-2xl" style={{ background: gradeInfo[g].soft }} aria-hidden>{gradeInfo[g].emoji}</span>
             <span className="min-w-0 flex-1">
-              <span className="block font-extrabold text-ink">{gradeInfo[g].label} Matematik Testi</span>
-              <span className="block text-sm font-semibold text-ink-soft">Konu konu ya da karışık</span>
+              <span className="block font-extrabold text-ink">{fill(c.cardTitle, d.cardTitle, { sinif: gradeInfo[g].label })}</span>
+              <span className="block text-sm font-semibold text-ink-soft">{fill(c.cardSub, d.cardSub)}</span>
             </span>
             <ArrowRight size={18} className="shrink-0 text-ink-soft transition group-hover:translate-x-0.5" />
           </Link>
@@ -61,6 +66,8 @@ export function TestPage() {
 
 function TestView({ grade, theme }: { grade: Grade; theme?: Theme }) {
   const info = gradeInfo[grade]
+  const c = usePageContent(testsPage)
+  const d = testsPage.defaults
   const all = useGradeActivities(grade)
   const items = useMemo(() => (all ? testItems(all, grade, theme?.slug) : null), [all, grade, theme])
   const themesWithTests = useMemo(() => (all ? testThemes(all, grade) : []), [all, grade])
@@ -112,10 +119,10 @@ function TestView({ grade, theme }: { grade: Grade; theme?: Theme }) {
       </nav>
 
       <header className="mb-6 rounded-3xl p-5 sm:p-7" style={{ background: info.soft }}>
-        <p className="text-sm font-extrabold" style={{ color: info.ink }}>{info.label} · Online test · Cevaplı</p>
+        <p className="text-sm font-extrabold" style={{ color: info.ink }}>{fill(c.kicker, d.kicker, { sinif: info.label })}</p>
         <h1 className="mt-1 text-2xl leading-tight font-black text-ink sm:text-4xl">{title}</h1>
         <p className="mt-2 font-semibold text-ink-soft">
-          {items ? `${items.length} soruluk havuzdan` : 'Soru havuzundan'} her seferinde karışık sorular. Yanlış cevapta kısa bir açıklama, ikinci yanlıştan sonra doğru cevap gösterilir.
+          {items ? fill(c.poolText, d.poolText, { n: items.length }) : fill(c.poolText, d.poolText).replace('{n} soruluk havuzdan', 'Soru havuzundan').split('{n}').join('…')}
         </p>
       </header>
 
@@ -141,17 +148,17 @@ function TestView({ grade, theme }: { grade: Grade; theme?: Theme }) {
           </Suspense>
         </section>
       ) : result ? (
-        <Finish result={result} color={info.color} tracker={tracker} onRestart={start} grade={grade} theme={theme} />
+        <Finish result={result} color={info.color} tracker={tracker} onRestart={start} grade={grade} theme={theme} restartLabel={fill(c.restartLabel, d.restartLabel)} />
       ) : (
         <section className="rounded-3xl bg-white p-5 ring-1 ring-line sm:p-7">
-          <p className="text-sm font-extrabold text-ink-soft">Kaç soru çözmek istersin?</p>
+          <p className="text-sm font-extrabold text-ink-soft">{fill(c.sizeQuestion, d.sizeQuestion)}</p>
           <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Soru sayısı">
             {TEST_SIZES.filter((n, i) => i === 0 || n <= items.length).map((n) => (
               <button key={n} type="button" className="pill" aria-pressed={size === n} onClick={() => setSize(n)}>{Math.min(n, items.length)} soru</button>
             ))}
           </div>
           <button type="button" onClick={start} className="btn-primary mt-5 min-w-56 text-lg" disabled={!items.length}>
-            <Play size={20} fill="currentColor" />Teste başla
+            <Play size={20} fill="currentColor" />{fill(c.startLabel, d.startLabel)}
           </button>
         </section>
       )}
@@ -160,7 +167,7 @@ function TestView({ grade, theme }: { grade: Grade; theme?: Theme }) {
         <div className="mt-10 space-y-10">
           {!theme && themesWithTests.length > 0 && (
             <section>
-              <h2 className="mb-3 text-lg font-black">Konuya göre {info.label.toLocaleLowerCase('tr')} matematik testleri</h2>
+              <h2 className="mb-3 text-lg font-black">{fill(c.themesHeading, d.themesHeading, { sinif: info.label.toLocaleLowerCase('tr') })}</h2>
               <div className="grid gap-3 sm:grid-cols-2">
                 {themesWithTests.map(({ theme: t, count }) => (
                   <Link key={t.slug} to={testPath(grade, t.slug)} className="group flex items-center gap-3 rounded-2xl bg-white p-4 ring-1 ring-line transition hover:shadow-[var(--shadow-lift)]">
@@ -177,7 +184,7 @@ function TestView({ grade, theme }: { grade: Grade; theme?: Theme }) {
           )}
           {theme && (
             <section>
-              <h2 className="mb-3 text-lg font-black">Konuyu çalış</h2>
+              <h2 className="mb-3 text-lg font-black">{fill(c.studyHeading, d.studyHeading)}</h2>
               <div className="flex flex-wrap gap-2">
                 <Link to={`/sinif/${grade}/${theme.slug}`} className="btn-ghost min-h-10 px-3 text-sm"><LayoutGrid size={16} />{themeKw(theme)} etkinlikleri</Link>
                 {relatedGuides.slice(0, 4).map((x) => (
@@ -197,7 +204,7 @@ function TestView({ grade, theme }: { grade: Grade; theme?: Theme }) {
   )
 }
 
-function Finish({ result, color, tracker, onRestart, grade, theme }: { result: { correct: number; total: number }; color: string; tracker: SessionTracker; onRestart: () => void; grade: Grade; theme?: Theme }) {
+function Finish({ result, color, tracker, onRestart, grade, theme, restartLabel }: { result: { correct: number; total: number }; color: string; tracker: SessionTracker; onRestart: () => void; grade: Grade; theme?: Theme; restartLabel: string }) {
   const ratio = result.correct / Math.max(1, result.total)
   const msg = ratio >= 0.9 ? 'Muhteşem!' : ratio >= 0.6 ? 'Çok iyi!' : 'Güzel çaba!'
   return (
@@ -213,7 +220,7 @@ function Finish({ result, color, tracker, onRestart, grade, theme }: { result: {
       <div className="mt-6 flex w-full justify-center">
         <SendReport tracker={tracker} compact />
       </div>
-      <button type="button" onClick={onRestart} className="btn-primary mt-6 min-w-56"><RotateCcw size={18} />Yeni test (farklı sorular)</button>
+      <button type="button" onClick={onRestart} className="btn-primary mt-6 min-w-56"><RotateCcw size={18} />{restartLabel}</button>
     </section>
   )
 }

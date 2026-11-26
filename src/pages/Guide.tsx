@@ -10,24 +10,30 @@ import { gameMetaById } from '../games/meta'
 import { toolMetaById } from '../manipulatives/meta'
 import { interactionById } from '../interactions/meta'
 import { GUIDES_PATH, gameKw, interactionKw, outcomeKw, toolKw } from '../lib/seo'
+import { usePageContent } from '../cms/pageContent'
+import { guidesPage } from '../cms/pages/rehber'
 import NotFound from './NotFound'
 
 const range = (g: number[]) => (g.length === 1 ? `${g[0]}` : `${g[0]}–${g[g.length - 1]}`)
 
+/** Panelden gelen metin: boşsa varsayılan, {n} → değer */
+const fill = (t: unknown, fallback: string, vars: Record<string, string | number> = {}) =>
+  Object.entries(vars).reduce((s, [k, v]) => s.split(`{${k}}`).join(String(v)), typeof t === 'string' && t.trim() ? t : fallback)
+
 export function GuidesIndex() {
   usePageTitle('Konu Anlatımları')
+  const c = usePageContent(guidesPage)
+  const d = guidesPage.defaults
   return (
     <div className="mx-auto max-w-5xl px-4 pt-8">
-      <p className="chip bg-cream px-3 py-1 text-sm text-amber-800">Öğrenciler, veliler ve öğretmenler için</p>
-      <h1 className="mt-3 text-3xl leading-tight font-black sm:text-4xl">Matematik Konu Anlatımları</h1>
-      <p className="mt-3 max-w-3xl text-lg font-semibold text-ink-soft">
-        En çok merak edilen matematik sorularına kısa ve örnekli cevaplar. Her rehberin sonunda konuyu deneyerek pekiştirebileceğin etkinlikler, oyunlar ve sanal manipülatifler var.
-      </p>
-      {guideBands.map((band) => {
+      <p className="chip bg-cream px-3 py-1 text-sm text-amber-800">{fill(c.kicker, d.kicker)}</p>
+      <h1 className="mt-3 text-3xl leading-tight font-black sm:text-4xl">{fill(c.title, d.title)}</h1>
+      <p className="mt-3 max-w-3xl text-lg font-semibold text-ink-soft">{fill(c.intro, d.intro)}</p>
+      {guideBands.map((band, i) => {
         const list = band.guides()
         return list.length ? (
           <section key={band.title} className="mt-10">
-            <h2 className="text-xl font-black">{band.title}</h2>
+            <h2 className="text-xl font-black">{fill(Array.isArray(c.bandTitles) ? c.bandTitles[i] : '', band.title)}</h2>
             <ul className="mt-3 grid gap-3 sm:grid-cols-2">
               {list.map((g) => (
                 <li key={g.slug}>
@@ -35,7 +41,7 @@ export function GuidesIndex() {
                     <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-brand-soft text-brand-ink"><BookOpen size={20} /></span>
                     <span>
                       <span className="block font-black text-ink">{g.title}</span>
-                      <span className="mt-1 block text-sm font-semibold text-ink-soft">{range(g.grades)}. sınıf</span>
+                      <span className="mt-1 block text-sm font-semibold text-ink-soft">{fill(c.gradeSuffix, d.gradeSuffix, { n: range(g.grades) })}</span>
                     </span>
                   </Link>
                 </li>

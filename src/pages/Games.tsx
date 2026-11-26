@@ -14,12 +14,14 @@ import { celebrate, sfx } from '../lib/feedback'
 import { SessionTracker } from '../lib/report'
 import { TrackerProvider } from '../lib/trackerContext'
 import { SendReport } from '../components/SendReport'
-import { CardGrid, EmptyState, FilterBar, ItemCard, PageHeader, gradeRange, useCatalogFilters } from '../components/Catalog'
+import { CardGrid, FilterBar, ItemCard, PageHeader, gradeRange, useCatalogFilters } from '../components/Catalog'
 import NotFound from './NotFound'
 import { PageSpinner } from '../cms/PageSpinner'
 import { useCmsSettled } from '../cms/runtime'
 import { gameFrame } from '../cms/frames'
 import type { CustomMark } from '../cms/types'
+import { usePageContent } from '../cms/pageContent'
+import { gamesPage } from '../cms/pages/oyunlar'
 
 const GRADE_KEY = 'ao-grade'
 
@@ -54,6 +56,10 @@ const GAME_KINDS = [
   { id: 'strateji', label: 'Strateji oyunları' },
 ]
 
+/** Panelden gelen metin: boşsa varsayılan, {n} → sayı */
+const fill = (t: unknown, fallback: string, vars: Record<string, string | number> = {}) =>
+  Object.entries(vars).reduce((s, [k, v]) => s.split(`{${k}}`).join(String(v)), typeof t === 'string' && t.trim() ? t : fallback)
+
 function GameItem({ m, grade }: { m: GameMeta; grade?: Grade | null }) {
   return (
     <ItemCard
@@ -69,6 +75,9 @@ function GameItem({ m, grade }: { m: GameMeta; grade?: Grade | null }) {
 
 export function GamesIndex() {
   usePageTitle('Oyunlar')
+  const c = usePageContent(gamesPage)
+  const d = gamesPage.defaults
+  const kinds = GAME_KINDS.map((k, i) => ({ ...k, label: fill(Array.isArray(c.kindLabels) ? c.kindLabels[i] : '', k.label) }))
   const f = useCatalogFilters()
   const list = gameMeta.filter(
     (m) =>
@@ -79,23 +88,26 @@ export function GamesIndex() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 pt-8 sm:pt-10">
-      <PageHeader title="Matematik Oyunları" desc={`${gameMeta.length} oyun. Her oyun seçilen sınıfa göre zorlaşır; derste tahtada ya da öğrencinin kendi cihazında oynanır.`} />
+      <PageHeader title={fill(c.title, d.title)} desc={fill(c.desc, d.desc, { n: gameMeta.length })} />
       <FilterBar
         q={f.q}
         onQ={f.setQ}
-        placeholder="Oyun ara: kesir, çarpma, açı…"
+        placeholder={fill(c.searchPlaceholder, d.searchPlaceholder)}
         grade={f.grade}
         onGrade={f.setGrade}
-        categories={GAME_KINDS}
+        categories={kinds}
         category={f.category}
         onCategory={f.setCategory}
-        allLabel="Tüm oyunlar"
+        allLabel={fill(c.allLabel, d.allLabel)}
       />
-      <p className="mb-3 text-sm font-semibold text-ink-soft">{list.length} oyun</p>
+      <p className="mb-3 text-sm font-semibold text-ink-soft">{fill(c.countLabel, d.countLabel, { n: list.length })}</p>
       {list.length ? (
         <CardGrid>{list.map((m) => <GameItem key={m.id} m={m} grade={f.grade} />)}</CardGrid>
       ) : (
-        <EmptyState onClear={f.clear} />
+        <div className="rounded-2xl bg-white p-10 text-center ring-1 ring-line">
+          <p className="font-bold text-ink">{fill(c.emptyText, d.emptyText)}</p>
+          <button type="button" onClick={f.clear} className="mt-3 text-sm font-bold text-brand hover:underline">{fill(c.emptyClear, d.emptyClear)}</button>
+        </div>
       )}
     </div>
   )
