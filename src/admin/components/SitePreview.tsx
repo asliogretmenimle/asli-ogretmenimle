@@ -1,6 +1,6 @@
 /**
  * Sitenin gerçek sayfasını panelde, kaydedilmemiş değişikliklerle gösterir.
- * Site bir iframe'de ?onizleme=1 ile açılır; taslak kayıtlar postMessage ile gönderilir (bkz. cms/runtime.tsx).
+ * Site bir iframe'de ?onizleme=1 ile açılır; taslak kayıtlar postMessage ile gönderilir (bkz. cms/runtime.ts).
  * Cihaz genişliği gerçekten değiştiği için sitenin mobil/tablet düzeni birebir görünür.
  */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
