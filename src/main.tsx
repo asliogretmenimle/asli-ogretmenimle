@@ -6,9 +6,11 @@ import './index.css'
 import App from './App'
 import { installChunkReload } from './lib/chunkReload'
 import { captureSeoArticle } from './lib/seoArticle'
+import { initCms } from './cms/runtime'
 
 installChunkReload()
 captureSeoArticle()
+initCms()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

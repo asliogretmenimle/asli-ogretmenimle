@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowRight, ChevronLeft, LayoutDashboard, RotateCcw } from 'lucide-react'
 import { tools } from '../manipulatives/registry'
-import { toolGrades, toolMeta as toolList, toolMetaById } from '../manipulatives/meta'
+import { toolGrades, toolMeta as toolList, toolMetaById, type ToolMeta } from '../manipulatives/meta'
 import { categoryInfo } from '../interactions/types'
 import { activityGrade, useAllActivities } from '../data/activityStore'
 import { ActivityCard } from '../components/Cards'
@@ -12,6 +12,10 @@ import { BOARD_PATH } from '../lib/seo'
 import type { ManipulativeTool } from '../data/types'
 import { CardGrid, EmptyState, FilterBar, ItemCard, PageHeader, categoryTint, useCatalogFilters } from '../components/Catalog'
 import NotFound from './NotFound'
+import { HtmlFrame } from '../cms/HtmlFrame'
+import { PageSpinner } from '../cms/PageSpinner'
+import { useCmsSettled } from '../cms/runtime'
+import type { CustomMark } from '../cms/types'
 
 const CATEGORIES = (['sayilar', 'kesirler', 'geometri', 'cebir-veri'] as const).map((id) => ({ id, label: categoryInfo[id].label }))
 
@@ -56,10 +60,32 @@ export function ManipulativesIndex() {
 
 export function ManipulativePage() {
   const { tool = '' } = useParams()
-  const def = tools[tool as ManipulativeTool]
-  usePageTitle(def ? toolMetaById[tool as ManipulativeTool].name : 'Bulunamadı')
-  if (!def) return <NotFound />
+  const meta = toolMetaById[tool as ManipulativeTool] as (ToolMeta & CustomMark) | undefined
+  const def = meta && tools[tool as ManipulativeTool]
+  const settled = useCmsSettled()
+  usePageTitle(meta ? meta.name : settled ? 'Bulunamadı' : undefined)
+  if (meta?.custom && meta.cmsId) return <CustomTool key={tool} meta={meta} cmsId={meta.cmsId} />
+  if (!def) return settled ? <NotFound /> : <PageSpinner />
   return <FreeTool key={tool} id={tool as ManipulativeTool} />
+}
+
+/** Panelin Stüdyo'sunda üretilmiş manipülatif */
+function CustomTool({ meta, cmsId }: { meta: ToolMeta; cmsId: string }) {
+  return (
+    <div className="mx-auto max-w-5xl px-4 pt-6">
+      <nav className="mb-4 flex items-center justify-between gap-2">
+        <Link to="/manipulatifler" className="inline-flex min-h-10 items-center gap-1 rounded-xl pr-3 text-sm font-extrabold text-ink-soft hover:text-ink">
+          <ChevronLeft size={18} /> Manipülatifler
+        </Link>
+        <ShareButton title={meta.name} />
+      </nav>
+      <header className="mb-5">
+        <h1 className="text-2xl font-extrabold sm:text-3xl"><span aria-hidden>{meta.emoji}</span> {meta.name}</h1>
+        <p className="mt-1 text-[15px] font-semibold text-ink-soft">{meta.description} · {meta.grades}. sınıf</p>
+      </header>
+      <HtmlFrame kind="manipulative" cmsId={cmsId} grade={toolGrades(meta)[0] ?? 1} />
+    </div>
+  )
 }
 
 function FreeTool({ id }: { id: ManipulativeTool }) {

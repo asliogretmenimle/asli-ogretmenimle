@@ -16,6 +16,8 @@ import { TrackerProvider } from '../lib/trackerContext'
 import { celebrate, sfx } from '../lib/feedback'
 import { CardGrid, EmptyState, FilterBar, ItemCard, PageHeader, categoryTint, gradeRange, useCatalogFilters } from '../components/Catalog'
 import NotFound from './NotFound'
+import { PageSpinner } from '../cms/PageSpinner'
+import { useCmsSettled } from '../cms/runtime'
 
 const GRADE_KEY = 'ao-grade'
 const storedGrade = () => {
@@ -79,8 +81,9 @@ export function InteractionsIndex() {
 export function InteractionPage() {
   const { id = '' } = useParams()
   const m = interactionById[id]
-  usePageTitle(m ? m.name : 'Bulunamadı')
-  if (!m || !m.ready) return <NotFound />
+  const settled = useCmsSettled()
+  usePageTitle(m ? m.name : settled ? 'Bulunamadı' : undefined)
+  if (!m || !m.ready) return settled || m ? <NotFound /> : <PageSpinner />
   return <InteractionView key={m.id} m={m} />
 }
 

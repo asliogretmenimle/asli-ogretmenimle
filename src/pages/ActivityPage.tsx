@@ -16,6 +16,7 @@ import { SessionTracker } from '../lib/report'
 import { TrackerProvider } from '../lib/trackerContext'
 import { SendReport } from '../components/SendReport'
 import NotFound from './NotFound'
+import { useCmsSettled } from '../cms/runtime'
 
 const engines: Record<ActivityType, ComponentType<EngineProps<any>>> = {
   quiz: lazy(() => import('../engine/Quiz')),
@@ -30,9 +31,10 @@ export default function ActivityPage() {
   const { id = '' } = useParams()
   const list = useGradeActivities(gradeFromId(id))
   const a = list?.find((x) => x.id === id)
-  usePageTitle(a?.title ?? (list || !gradeFromId(id) ? 'Etkinlik bulunamadı' : undefined))
+  const settled = useCmsSettled()
+  usePageTitle(a?.title ?? ((list && settled) || !gradeFromId(id) ? 'Etkinlik bulunamadı' : undefined))
   if (!a) {
-    if (!list && gradeFromId(id)) return <div className="grid h-[60vh] place-items-center"><span className="size-10 animate-spin rounded-full border-4 border-line border-t-brand" aria-label="Yükleniyor" /></div>
+    if ((!list || !settled) && gradeFromId(id)) return <div className="grid h-[60vh] place-items-center"><span className="size-10 animate-spin rounded-full border-4 border-line border-t-brand" aria-label="Yükleniyor" /></div>
     const g = gradeFromId(id)
     if (g && list) return <MovedActivity grade={g} />
     return <NotFound />

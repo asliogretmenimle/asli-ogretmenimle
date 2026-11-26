@@ -109,6 +109,7 @@ function HeroArt() {
       <img src="/asli-400.webp" alt="" width={300} height={300} className="absolute inset-0 m-auto size-[300px] rounded-full shadow-[var(--shadow-lift)]" />
       {chips.map((c) => {
         const t = toolMetaById[c.id]
+        if (!t) return null
         return (
           <Link key={c.id} to={`/manipulatif/${c.id}`} tabIndex={-1} className={`absolute flex items-center gap-2 rounded-2xl bg-white py-2 pr-4 pl-2 text-sm font-bold text-ink shadow-[var(--shadow-lift)] ring-1 ring-line animate-float ${c.cls}`} style={{ animationDelay: c.delay }}>
             <span className="grid size-8 place-items-center rounded-xl bg-paper text-lg">{t.emoji}</span>{t.name}
@@ -195,7 +196,7 @@ function Landing() {
       <section className="mx-auto mt-14 max-w-6xl px-4 sm:mt-16">
         <SectionTitle title="Sık kullanılan manipülatifler" desc="Akıllı tahtada serbestçe kullanılan dijital materyaller." action={<AllLink to="/manipulatifler" />} />
         <CardGrid>
-          {POPULAR_TOOLS.map((id) => toolMetaById[id]).map((t) => (
+          {POPULAR_TOOLS.map((id) => toolMetaById[id]).filter(Boolean).map((t) => (
             <ItemCard key={t.id} to={`/manipulatif/${t.id}`} emoji={t.emoji} title={t.name} desc={t.description} meta={`${t.grades}. sınıf`} tint={categoryTint[t.category]} />
           ))}
         </CardGrid>

@@ -13,6 +13,8 @@
  * Ayrıca sitemap.xml, 404.html ve docs/seo-envanter.csv (her adresin başlık/açıklama/H1/kelime sayısı) üretir.
  * (vercel.json: cleanUrls → /oyun/balon ⇒ oyun/balon.html)
  */
+// .env / .env.local içindeki VITE_SUPABASE_* değişkenleri (diğer modüllerden önce yüklenmeli)
+import './load-env.ts'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -39,6 +41,22 @@ import {
 } from '../src/lib/seo.ts'
 import { TEST_PATH, testItems, testPath, testThemes, type TestItem } from '../src/data/tests.ts'
 import { shuffle } from '../src/lib/random.ts'
+
+import { applyOverlay } from '../src/cms/overlay.ts'
+import { fetchPublishedEntries } from '../src/cms/fetch.ts'
+import { cmsEnabled } from '../src/cms/config.ts'
+import { withSeoOverride } from '../src/cms/seoOverrides.ts'
+
+// Yönetim panelinde yayınlanan değişiklikler (yeni oyunlar, düzenlenen etkinlikler, gizlenen içerik, SEO metinleri)
+if (cmsEnabled) {
+  try {
+    const entries = await fetchPublishedEntries(15000)
+    applyOverlay(entries, activitiesByGrade)
+    console.log(`prerender: yönetim panelinden ${entries.length} kayıt uygulandı`)
+  } catch (e) {
+    console.warn('prerender: yönetim paneli kayıtları alınamadı, koddaki içerikle devam ediliyor:', (e as Error).message)
+  }
+}
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const dist = process.argv[2] ?? join(root, 'dist')
@@ -726,7 +744,7 @@ for (const { seo, body } of pages) {
   seen.add(seo.path)
   const file = seo.path === '/' ? join(dist, 'index.html') : join(dist, `${seo.path}.html`)
   mkdirSync(dirname(file), { recursive: true })
-  writeFileSync(file, render(seo, body))
+  writeFileSync(file, render(withSeoOverride(seo), body))
 }
 
 // Bilinmeyen yollar: gerçek 404 durum kodu, uygulama "bulunamadı" sayfasını çizer

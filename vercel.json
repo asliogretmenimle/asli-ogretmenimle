@@ -2,14 +2,50 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "redirects": [
-    { "source": "/index", "destination": "/", "permanent": true },
-    { "source": "/ogretmen", "destination": "/", "permanent": true },
-    { "source": "/etkinlik/g6-sonlu-devirli", "destination": "/etkinlik/g7-sonlu-mu-devirli-mi", "permanent": true }
+    {
+      "source": "/index",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/ogretmen",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/etkinlik/g6-sonlu-devirli",
+      "destination": "/etkinlik/g7-sonlu-mu-devirli-mi",
+      "permanent": true
+    }
   ],
   "headers": [
     {
       "source": "/assets/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/yonetim(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/yonetim",
+      "destination": "/404.html"
+    },
+    {
+      "source": "/yonetim/(.*)",
+      "destination": "/404.html"
     }
   ]
 }

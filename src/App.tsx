@@ -5,6 +5,7 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import Home from './pages/Home'
 import GradePage from './pages/Grade'
 import NotFound from './pages/NotFound'
+import { useCmsVersion } from './cms/runtime'
 
 const load = {
   theme: () => import('./pages/ThemePage'),
@@ -38,6 +39,8 @@ const TestPage = lazy(() => load.tests().then((m) => ({ default: m.TestPage })))
 const TimesTable = lazy(load.times)
 // Büyük bir modül: diğer sayfalar gibi boşta önceden indirilmez
 const Board = lazy(() => import('./polypad/Polypad'))
+// Yönetim paneli: ayrı parça, site ziyaretçileri indirmez
+const Admin = lazy(() => import('./admin/AdminApp'))
 
 /** Sayfa açıldıktan sonra, tarayıcı boştayken diğer sayfaların kodunu indir: menü geçişleri beklemeden açılır */
 function usePrefetchPages() {
@@ -60,12 +63,15 @@ const Loading = () => (
 
 export default function App() {
   usePrefetchPages()
+  // Panel kayıtları gelince (oyun adı, yeni etkinlik …) sayfalar yeniden çizilsin
+  useCmsVersion()
   return (
     <ErrorBoundary>
     <Suspense fallback={<Loading />}>
       <Routes>
         {/* Tam ekran uygulama: site menüsü ve alt bilgisi olmadan */}
         <Route path="tuval" element={<Board />} />
+        <Route path="yonetim/*" element={<Admin />} />
         <Route element={<Layout />}>
           <Route index element={<Home />} />
           <Route path="sinif/:grade" element={<GradePage />} />

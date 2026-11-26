@@ -16,6 +16,8 @@ import { TrackerProvider } from '../lib/trackerContext'
 import { SendReport } from '../components/SendReport'
 import { CardGrid, EmptyState, FilterBar, ItemCard, PageHeader, gradeRange, useCatalogFilters } from '../components/Catalog'
 import NotFound from './NotFound'
+import { PageSpinner } from '../cms/PageSpinner'
+import { useCmsSettled } from '../cms/runtime'
 
 const GRADE_KEY = 'ao-grade'
 
@@ -100,8 +102,9 @@ export function GamesIndex() {
 export function GamePage() {
   const { id = '' } = useParams()
   const m = gameMetaById[id as GameId]
-  usePageTitle(m ? m.name : 'Bulunamadı')
-  if (!m) return <NotFound />
+  const settled = useCmsSettled()
+  usePageTitle(m ? m.name : settled ? 'Bulunamadı' : undefined)
+  if (!m) return settled ? <NotFound /> : <PageSpinner />
   return <GameView key={m.id} m={m} />
 }
 

@@ -3,6 +3,7 @@
  * Tarayıcıda usePageTitle (components/Layout.tsx), derlemede scripts/prerender.ts aynı fonksiyonları kullanır.
  */
 import type { Activity, ActivityType, Grade, Stage, Theme } from '../data/types'
+import { withSeoOverride } from '../cms/seoOverrides'
 import { findTheme, gradeInfo, grades, isGrade, outcomeByCode, themesByGrade } from '../data/curriculum'
 import { topicsByGrade } from '../data/topics'
 import { gameMeta, gameMetaById, type GameId, type GameMeta } from '../games/meta'
@@ -764,7 +765,10 @@ export const privateSeo = (title: string, path: string): PageSeo => ({
 export const notFoundSeo = (path: string): PageSeo => privateSeo('Sayfa bulunamadı', path)
 
 /** Bir yolun SEO bilgisi; bilinmeyen yollar için null */
-export function seoForPath(pathname: string, findActivity: (id: string) => Activity | undefined): PageSeo | null {
+/** Sayfanın SEO bilgisi; panelden yazılmış başlık/açıklama varsa onunla */
+export const seoForPath = (pathname: string, findActivity: (id: string) => Activity | undefined): PageSeo | null => withSeoOverride(baseSeoForPath(pathname, findActivity))
+
+export function baseSeoForPath(pathname: string, findActivity: (id: string) => Activity | undefined): PageSeo | null {
   const p = pathname.replace(/\/+$/, '') || '/'
   const seg = p.split('/').filter(Boolean).map(decodeURIComponent)
   if (p === '/') return homeSeo()

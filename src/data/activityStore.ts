@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import type { Activity, Grade, ThemeNotes } from './types'
 import { grades, isGrade, outcomeByCode } from './curriculum'
 import { isChunkError, reloadOnce } from '../lib/chunkReload'
+import { overlayActivities } from '../cms/overlay'
+import { subscribeCms, useCmsVersion } from '../cms/runtime'
 
 /**
  * Etkinlik verisi sınıf başına ayrı parçalar hâlinde, ihtiyaç anında yüklenir.
@@ -31,7 +33,13 @@ const loaders = Object.fromEntries(
 ) as Record<Grade, () => Promise<Activity[]>>
 
 const cache = new Map<Grade, Activity[]>()
+/** Koddaki hâli: panel kayıtları değişince overlay bundan yeniden uygulanır */
+const raw = new Map<Grade, Activity[]>()
 const pending = new Map<Grade, Promise<Activity[]>>()
+
+subscribeCms(() => {
+  for (const [g, list] of raw) cache.set(g, overlayActivities(g, list))
+})
 
 export function loadGrade(g: Grade): Promise<Activity[]> {
   const hit = cache.get(g)
@@ -40,9 +48,11 @@ export function loadGrade(g: Grade): Promise<Activity[]> {
   if (!p) {
     p = loaders[g]().then(
       (list) => {
-        cache.set(g, list)
+        raw.set(g, list)
+        const out = overlayActivities(g, list)
+        cache.set(g, out)
         pending.delete(g)
-        return list
+        return out
       },
       (e) => {
         // Bir sonraki denemede yeniden indirilsin; yeni sürüm yayınlandıysa sayfa yenilenir
@@ -56,12 +66,16 @@ export function loadGrade(g: Grade): Promise<Activity[]> {
   return p
 }
 
+/** Koddaki (panel değişiklikleri uygulanmamış) hâli: yönetim paneli için */
+export const loadGradeRaw = (g: Grade): Promise<Activity[]> => loadGrade(g).then(() => raw.get(g) ?? [])
+
 export const loadAll = () => Promise.all(grades.map(loadGrade)).then((l) => l.flat())
 
 /** Seçili sınıfın etkinlikleri (yüklenene kadar null) */
 export function useGradeActivities(g: Grade | null): Activity[] | null {
   const [list, setList] = useState<Activity[] | null>(() => (g ? cache.get(g) ?? null : null))
   const [error, setError] = useState<unknown>(null)
+  const v = useCmsVersion()
   // Yüklenemezse sonsuz "yükleniyor" yerine sayfanın hata ekranı (ErrorBoundary) görünsün
   if (error) throw error
   useEffect(() => {
@@ -72,7 +86,7 @@ export function useGradeActivities(g: Grade | null): Activity[] | null {
     return () => {
       alive = false
     }
-  }, [g])
+  }, [g, v])
   return list
 }
 
@@ -81,6 +95,7 @@ export function useAllActivities(enabled = true): Activity[] | null {
   const ready = () => (grades.every((g) => cache.has(g)) ? grades.flatMap((g) => cache.get(g)!) : null)
   const [list, setList] = useState<Activity[] | null>(ready)
   const [error, setError] = useState<unknown>(null)
+  const v = useCmsVersion()
   if (error) throw error
   useEffect(() => {
     if (!enabled) return
@@ -89,7 +104,7 @@ export function useAllActivities(enabled = true): Activity[] | null {
     return () => {
       alive = false
     }
-  }, [enabled])
+  }, [enabled, v])
   return list
 }
 
