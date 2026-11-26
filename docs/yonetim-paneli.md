@@ -12,9 +12,12 @@ Adres: **`/yonetim`** (ör. https://www.asliogretmenimle.com/yonetim). Arama mot
 | **Kütüphane** | Oyunlar, etkileşimler, manipülatifler, konu anlatımları (rehberler), dış bağlantılar |
 | **Sayfa başlıkları (SEO)** | Her sayfanın Google başlığı/açıklaması, noindex; Google önizlemesi |
 | **Değişiklik geçmişi** | Her kayıt saklanır; tek tıkla eski hâle dönülür (silinen de geri gelir) |
-| **Ayarlar** | Stüdyo modeli, düşünme düzeyi, kalıcı yönergeler; yöneticiler; siteyi yeniden derle |
+| **Ders başvuruları** | /online-ozel-ders sayfasındaki formdan gelen ön kayıtlar: durum (Yeni / Arandı / Kayıt oldu / Kapandı), not, tek dokunuşla arama ve WhatsApp, CSV. Menüde yeni başvuru sayısı görünür. |
+| **Analiz** | Ziyaretçi, görüntülenme, oturum, en çok açılan sayfalar, bölümler, kaynak siteler, cihaz ve saat dağılımı. Çerez yok, IP saklanmaz; panel ve önizleme sayılmaz. “Bu tarayıcıdaki ziyaretlerimi sayma” ile kendi ziyaretlerinizi dışarıda bırakın. |
+| **Sayfalar ve ana sayfa** | Ana sayfa düzeni (Klasik / Odak / Vitrin / Öğretmen), bölümlerin sırası ve görünürlüğü, tüm karşılama metinleri; Oyunlar, Etkileşimler, Manipülatifler, Konu Anlatımı, Test Çöz, Çarpım Tablosu, Yaklaşımımız ve Online Özel Ders sayfalarının metinleri (form soruları dahil). |
+| **Ayarlar** | OpenAI anahtarı (yalnızca panel sahibi değiştirir, sunucuda gizli saklanır), Stüdyo modeli, düşünme düzeyi, kalıcı yönergeler; yöneticiler; siteyi yeniden derle |
 
-Etkinlik/test düzenleyicisi sitenin gerçek etkinlik motorlarıyla **canlı önizleme** gösterir. Her düzenleyicide **Taslak** (sitede görünmez) ve **Yayınla** vardır; Ctrl/Cmd + S kaydeder.
+Tüm düzenleyicilerde sağda **canlı önizleme** vardır: sitenin gerçek sayfası, kaydedilmemiş değişikliklerle telefon, tablet ve bilgisayar genişliğinde açılır. Her düzenleyicide **Taslak** (sitede görünmez) ve **Yayınla** vardır; Ctrl/Cmd + S kaydeder.
 
 ## Nasıl çalışır?
 
@@ -34,6 +37,8 @@ Sitedeki içerik kodda durmaya devam eder (`src/data`, `src/games`, `src/interac
 ### 1. Veritabanı
 Supabase → **SQL Editor** → `supabase/migrations/20261126120000_cms.sql` dosyasının tamamını yapıştırıp **Run**. (Dosyayı bu güncellemeden önce çalıştırdıysanız yalnızca `20261126130000_cms_grants.sql` dosyasını çalıştırın: yeni projelerde tablolara okuma izni otomatik verilmiyor.)
 
+Ardından `supabase/migrations/20261126140000_cms_v2.sql` dosyasını da çalıştırın (sayfa içerikleri, ders başvuruları, ziyaret analizi, OpenAI anahtarı tablosu).
+
 ### 2. Giriş ayarları
 - **Authentication → Sign In / Providers**: “Allow new users to sign up” kapalı olsun. Hesapları panel sahibi açar.
 - **Authentication → URL Configuration**: Site URL `https://www.asliogretmenimle.com`; Redirect URLs `https://www.asliogretmenimle.com/yonetim`, `http://localhost:5173/yonetim` (şifre sıfırlama bağlantısı için).
@@ -52,7 +57,9 @@ OpenAI anahtarı tarayıcıya hiç gitmez; Edge Function'da gizli tutulur.
 1. Edge Functions → **Deploy a new function → Via Editor**, adı `studio`.
 2. `supabase/functions/studio/index.ts` dosyasının tamamını yapıştırıp **Deploy**.
 3. Fonksiyonun **Details/Settings** bölümünde **Verify JWT** (Enforce JWT verification) **kapalı** olsun; yetkiyi fonksiyon kendisi denetler.
-4. Edge Functions → **Secrets**: `OPENAI_API_KEY` = `sk-…` (isteğe bağlı `OPENAI_MODEL`, `VERCEL_DEPLOY_HOOK`).
+4. OpenAI anahtarını panelde **Ayarlar → OpenAI anahtarı**'ndan girin (ya da Edge Functions → Secrets: `OPENAI_API_KEY`). İsteğe bağlı secret'lar: `OPENAI_MODEL`, `VERCEL_DEPLOY_HOOK`.
+
+`index.ts` her güncellendiğinde fonksiyonun kodunu aynı şekilde yeniden yapıştırıp **Deploy** edin.
 
 **CLI ile:** tarayıcı girişi çalışmazsa https://supabase.com/dashboard/account/tokens adresinden bir erişim belirteci oluşturun:
 ```bash
