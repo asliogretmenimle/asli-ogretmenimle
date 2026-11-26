@@ -709,7 +709,7 @@ export function StudioWorkspace() {
 
           <div className="min-h-0 flex-1 overflow-auto">
             {gen && live && tab === 'preview' ? (
-              <LiveBuild kind={session.kind} live={live} baseHtml={session.versions[session.current]?.html ?? null} elapsed={elapsed} device={device} className="h-full w-full" />
+              <LiveBuild key={gen.startedAt} kind={session.kind} live={live} baseHtml={session.versions[session.current]?.html ?? null} elapsed={elapsed} device={device} className="h-full w-full" />
             ) : !version ? (
               <div className="grid h-full place-items-center p-6">
                 {gen ? (
