@@ -4,18 +4,11 @@
  * 1. Önceki ziyaretten kalan kayıtlar (localStorage) hemen uygulanır: sayfa beklemeden doğru içerikle açılır.
  * 2. Güncel kayıtlar Supabase'den alınır; farklıysa yeniden uygulanır ve sayfa yeniden çizilir.
  */
-import { useSyncExternalStore, type ComponentType } from 'react'
-import { games } from '../games/registry'
-import { gameMeta, type GameId } from '../games/meta'
-import type { GameProps } from '../games/kit'
-import { interactions } from '../interactions/registry'
-import { interactionMeta } from '../interactions/meta'
-import type { InteractionProps } from '../interactions/types'
+import { useSyncExternalStore } from 'react'
 import { cmsEnabled } from './config'
 import { fetchPublishedEntries } from './fetch'
 import { applyOverlay, currentEntries } from './overlay'
-import { HtmlFrame } from './HtmlFrame'
-import type { CmsEntry, CustomMark } from './types'
+import type { CmsEntry } from './types'
 
 const CACHE_KEY = 'ao-cms-v1'
 
@@ -29,36 +22,8 @@ const emit = () => {
 
 const signature = (list: CmsEntry[]) => list.map((e) => `${e.id}:${e.updated_at}:${e.status}:${e.hidden ? 1 : 0}`).join('|')
 
-// Panelden eklenen oyun ve etkileşimler için bileşenler: sayfaların giriş/bitiş akışı aynen kullanılır
-const gameFrames = new Map<string, ComponentType<GameProps>>()
-const interactionFrames = new Map<string, ComponentType<InteractionProps>>()
-
-function registerCustom() {
-  for (const m of gameMeta as (typeof gameMeta[number] & CustomMark)[]) {
-    if (!m.custom || !m.cmsId) continue
-    const cmsId = m.cmsId
-    let C = gameFrames.get(cmsId)
-    if (!C) {
-      C = ({ grade, onFinish }: GameProps) => <HtmlFrame kind="game" cmsId={cmsId} grade={grade} onFinish={onFinish} />
-      gameFrames.set(cmsId, C)
-    }
-    games[m.id as GameId] = C
-  }
-  for (const m of interactionMeta as (typeof interactionMeta[number] & CustomMark)[]) {
-    if (!m.custom || !m.cmsId) continue
-    const cmsId = m.cmsId
-    let C = interactionFrames.get(cmsId)
-    if (!C) {
-      C = ({ grade, onFinish }: InteractionProps) => <HtmlFrame kind="interaction" cmsId={cmsId} grade={grade} onFinish={onFinish} />
-      interactionFrames.set(cmsId, C)
-    }
-    interactions[m.id] = C
-  }
-}
-
 function apply(entries: CmsEntry[]) {
   applyOverlay(entries)
-  registerCustom()
   emit()
 }
 

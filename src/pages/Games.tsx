@@ -18,6 +18,8 @@ import { CardGrid, EmptyState, FilterBar, ItemCard, PageHeader, gradeRange, useC
 import NotFound from './NotFound'
 import { PageSpinner } from '../cms/PageSpinner'
 import { useCmsSettled } from '../cms/runtime'
+import { gameFrame } from '../cms/frames'
+import type { CustomMark } from '../cms/types'
 
 const GRADE_KEY = 'ao-grade'
 
@@ -120,7 +122,8 @@ function GameView({ m }: { m: GameMeta }) {
   const [run, setRun] = useState(0)
   const [result, setResult] = useState<GameResult | null>(null)
   const [best, setBest] = useState(() => readBest(m.id, grade))
-  const Game = games[m.id]
+  const cmsId = (m as GameMeta & CustomMark).cmsId
+  const Game = games[m.id] ?? (cmsId ? gameFrame(cmsId) : undefined)
   const tracker = useMemo(() => new SessionTracker(m.id, m.name, 'oyun', grade), [m.id, m.name, grade, run])
 
   useEffect(() => setBest(readBest(m.id, grade)), [m.id, grade, result])

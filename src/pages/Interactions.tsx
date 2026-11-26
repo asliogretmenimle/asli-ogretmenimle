@@ -18,6 +18,8 @@ import { CardGrid, EmptyState, FilterBar, ItemCard, PageHeader, categoryTint, gr
 import NotFound from './NotFound'
 import { PageSpinner } from '../cms/PageSpinner'
 import { useCmsSettled } from '../cms/runtime'
+import { interactionFrame } from '../cms/frames'
+import type { CustomMark } from '../cms/types'
 
 const GRADE_KEY = 'ao-grade'
 const storedGrade = () => {
@@ -96,7 +98,8 @@ function InteractionView({ m }: { m: InteractionMeta }) {
   const [phase, setPhase] = useState<'intro' | 'play' | 'done'>('intro')
   const [run, setRun] = useState(0)
   const [result, setResult] = useState<{ summary: string; insight?: string; stars?: 1 | 2 | 3 } | null>(null)
-  const Comp = interactions[m.id]
+  const cmsId = (m as InteractionMeta & CustomMark).cmsId
+  const Comp = interactions[m.id] ?? (cmsId ? interactionFrame(cmsId) : undefined)
   const tracker = useMemo(() => new SessionTracker(m.id, m.name, 'etkinlik', grade), [m.id, m.name, grade, run])
 
   const setGrade = (g: Grade) => {

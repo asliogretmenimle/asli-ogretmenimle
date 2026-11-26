@@ -275,7 +275,7 @@ function Editor({ kind, item }: { kind: CmsKind; item?: AdminItem }) {
           <IconButton label="Geri" onClick={back} className="size-10 ring-1 ring-line">
             <ArrowLeft size={18} />
           </IconButton>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 max-sm:basis-[calc(100%-3.5rem)]">
             <p className="text-xs font-bold text-ink-soft">
               {info.label} {item && !isCustom && <span>· koddaki içerik</span>}
             </p>
@@ -446,7 +446,7 @@ function FieldInput({ f, value, onChange, grades, originalHint }: { f: FieldDef;
     case 'emoji':
       return (
         <Field label={label} help="Bir emoji yapıştırın">
-          <TextInput value={s} onChange={onChange} className="text-center text-2xl" maxLength={8} />
+          <TextInput value={s} onChange={onChange} className="text-center text-2xl!" maxLength={8} />
         </Field>
       )
     case 'color':

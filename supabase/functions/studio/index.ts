@@ -147,6 +147,8 @@ Deno.serve(async (req) => {
         if (!b.prompt?.trim()) return json({ error: 'İstek boş' }, 400)
         const instructions = settings.instructions?.trim() ? `${SYSTEM_PROMPT}\n\n# Öğretmenin kalıcı yönergeleri\n${settings.instructions.trim()}` : SYSTEM_PROMPT
         const effort = ['minimal', 'low', 'medium', 'high'].includes(settings.effort ?? '') ? settings.effort : 'medium'
+        // Düşünme (reasoning) yalnızca gpt-5 / o-serisi modellerde var; diğerlerinde parametre hata verir
+        const reasoning = /^(gpt-5|o\d)/i.test(model)
         const resp = await openai('/responses', {
           method: 'POST',
           body: JSON.stringify({
@@ -155,8 +157,8 @@ Deno.serve(async (req) => {
             input: buildInput(b),
             background: true,
             store: true,
-            reasoning: { effort },
-            max_output_tokens: 100000,
+            ...(reasoning ? { reasoning: { effort } } : {}),
+            max_output_tokens: reasoning ? 100000 : 32000,
             text: { format: { type: 'json_schema', name: 'studio_output', strict: true, schema: OUTPUT_SCHEMA } },
           }),
         })

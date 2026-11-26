@@ -10,7 +10,7 @@ Tüm etkinlikler **John A. Van de Walle’ün gelişimsel, problem çözme odakl
 - 13 matematik oyunu (`/oyunlar`), her biri seçilen sınıfa göre zorlaşır: Balon Patlat, Kurbağa Zıplatma, Gizli Sayı Dedektifi, Bir İşlem, Kesir Pizzacısı, Bakkal Kasası, Robot Kodlama, Sayı Doğrusu Tahmini, Sihirli Makine, Sayı Labirenti, Koordinat Amirali, Açı Topçusu, Zar Yarışı
 - 15 sanal manipülatif: onluk çerçeve, onluk taban blokları, sayı doğrusu, kesir şeritleri, saat, paralar, geometri tahtası, simetri tahtası, açı ölçer, terazi, cebir karoları, grafik oluşturucu, olasılık deneyleri, koordinat düzlemi, cisimler ve açınımlar
 - Her etkinliğin kendi linki vardır (`/etkinlik/...`); **Paylaş** düğmesi linki kopyalar ya da telefonun paylaşım menüsünü açar
-- Veritabanı ve üyelik yoktur; telefon, tablet ve bilgisayarda çalışır
+- Öğrenciler için üyelik yoktur; telefon, tablet ve bilgisayarda çalışır. İçerik yönetimi için Supabase'e bağlı bir yönetim paneli vardır (`/yonetim`)
 
 ## Geliştirme
 
@@ -43,6 +43,10 @@ pnpm preview      # üretim çıktısını yerelde dene
 - Online özel ders sayfasının (`/online-ozel-ders`) metinleri `src/data/onlineLesson.ts` içindedir.
 - Alan adı `src/lib/seo.ts` içindeki `SITE_URL`, `index.html` ve `public/robots.txt` dosyalarında yazılıdır (`https://www.asliogretmenimle.com`).
 - Yayından sonra: [Google Search Console](https://search.google.com/search-console)'a alan adını ekleyin ve `https://www.asliogretmenimle.com/sitemap.xml` adresini gönderin.
+
+## Yönetim paneli ve Stüdyo
+
+`/yonetim` adresindeki panelden her sınıfın etkinlikleri, testleri, oyunları, etkileşimleri ve manipülatifleri düzenlenir, gizlenir, silinir ve eklenir; **Stüdyo**'da yapay zekâ ile yeni oyun, etkileşim, manipülatif ve test üretilip tek tıkla yayınlanır. Veriler Supabase'de tutulur ve koddaki içeriğin üstüne uygulanır. Kurulum ve ayrıntılar: [docs/yonetim-paneli.md](docs/yonetim-paneli.md).
 
 ## Aslı Hoca için: dış link ekleme
 
