@@ -457,4 +457,6 @@ export const interactionKeyword: Record<string, string> = {
   'virgul-nereden-geliyor': 'Bölümde Virgül Neden Konur?',
   'butunu-onda-birlere-kir': 'Bütün ve Onda Bir İlişkisi',
   'kalanin-yanina-sifir': 'Bölmede Kalanın Yanına Sıfır Ekleme',
+  'kup-yapi-gorunumleri': 'Eş Küplerle Oluşturulan Yapılar ve Görünümleri (3B)',
+  'prizma-acinim-yuzey-alani': 'Dikdörtgenler Prizmasının Açınımı ve Yüzey Alanı (3B)',
 }

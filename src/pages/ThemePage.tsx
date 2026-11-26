@@ -96,7 +96,7 @@ export default function ThemePage() {
               </div>
               {sims.length > 0 && (
                 <div className="mb-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {sims.map((m) => <MiniCard key={m.id} to={`/etkilesim/${m.id}?sinif=${g}`} label="Mini konu anlatımı · simülasyon" emoji={m.emoji} title={m.name} sub={m.skills?.[g] ?? m.description} />)}
+                  {sims.map((m) => <MiniCard key={m.id} to={`/etkilesim/${m.id}?sinif=${g}`} label={m.cardLabel ?? 'Mini konu anlatımı · simülasyon'} emoji={m.emoji} title={m.name} sub={m.skills?.[g] ?? m.description} />)}
                 </div>
               )}
               {!all ? (

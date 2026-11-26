@@ -206,7 +206,7 @@ export const guidesOrtaokul2: Guide[] = [
     ],
     tools: ['nets', 'izometrik'],
     games: ['kristal-magarasi'],
-    interactions: ['hacim-insaati', 'acinim-bulmacasi'],
+    interactions: ['kup-yapi-gorunumleri', 'prizma-acinim-yuzey-alani', 'hacim-insaati', 'acinim-bulmacasi'],
   },
   {
     slug: 'dairenin-alani',

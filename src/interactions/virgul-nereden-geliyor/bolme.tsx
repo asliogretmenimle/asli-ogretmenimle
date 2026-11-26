@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
 import { silence } from '../../lib/feedback'
 import { MathText } from '../../components/MathText'
 import type { Grade } from '../../data/types'
-import { Scene as GameScene } from '../../games/kit2'
+import { Scene as GameScene, useAge } from '../../games/kit2'
 import { starsFor } from '../../games/kit'
 import type { InteractionProps } from '../types'
 import { Header, NextButton, useChecks } from '../donusum-studyosu/ortak'
@@ -645,10 +645,12 @@ export const PLAY_TOOL: ToolInfo = { icon: <span className="grid size-5 place-it
 
 /** Görevleri sırayla oynatır; sonunda kural defterini gösterir. Açıkken geri bildirim sesleri susturulur. */
 export function Runner({ grade, onFinish, tasks, summary, insight, note }: { grade: Grade; onFinish: InteractionProps['onFinish']; tasks: TaskDef[]; summary: (rules: string[]) => string; insight: string; note: string }) {
-  const [idx, setIdx] = useState(0)
+  // geliştirirken ?gorev=N ile doğrudan N. göreve atlanabilir
+  const [idx, setIdx] = useState(() => (import.meta.env.DEV ? Math.max(0, Math.min(tasks.length - 1, Number(new URLSearchParams(window.location.search).get('gorev') ?? 1) - 1 || 0)) : 0))
   const [rules, setRules] = useState<string[]>([])
   const [help, setHelp] = useState(false)
   const firsts = useRef<boolean[]>([])
+  const dark = useAge(grade).tier === 'atolye'
   useEffect(() => {
     silence(true)
     return () => silence(false)
@@ -672,6 +674,7 @@ export function Runner({ grade, onFinish, tasks, summary, insight, note }: { gra
         title={end ? 'Kural defterin' : t.title}
         idx={Math.min(idx, tasks.length - 1)}
         total={tasks.length}
+        dark={dark}
         right={end ? null : (
           <button type="button" onClick={() => setHelp((h) => !h)} aria-pressed={help} aria-label="Nasıl kullanılır?" className={`grid size-11 place-items-center rounded-full text-lg font-black ring-1 transition ${help ? 'bg-sky-600 text-white ring-sky-700' : 'bg-white text-sky-700 ring-sky-200 hover:bg-sky-50'}`}>?</button>
         )}

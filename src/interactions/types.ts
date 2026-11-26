@@ -35,6 +35,8 @@ export interface InteractionMeta {
   outcomes?: string[]
   /** Tema sayfasında bu öğrenme çıktılarının başlığı altında kart olarak gösterilir (ör. 6. sınıf “Kesir ve bölme”) */
   showUnder?: string[]
+  /** Tema sayfasındaki kartın üst etiketi (varsayılan: “Mini konu anlatımı · simülasyon”) */
+  cardLabel?: string
 }
 
 export interface InteractionProps {
