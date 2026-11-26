@@ -11,7 +11,6 @@ export function shuffle<T>(arr: readonly T[]): T[] {
   return a
 }
 
-/** Karıştırır ama orijinal sırayla aynı kalmamasını garanti eder (2+ öğe varsa) */
 export function shuffleNotSame<T>(arr: readonly T[], same: (a: T[], b: readonly T[]) => boolean = (a, b) => a.every((x, i) => x === b[i])): T[] {
   if (arr.length < 2) return arr.slice()
   for (let tries = 0; tries < 20; tries++) {
