@@ -114,11 +114,22 @@ export class AgentDirector {
     return { w: this.layer.clientWidth || 600, h: this.layer.clientHeight || 400 }
   }
 
+  /** Cihaz çerçevesinin katmandaki yeri: ajanlar boşta bunun içinde dolaşır */
+  private bounds: Rect | null = null
+  setBounds(r: Rect | null) {
+    this.bounds = r && r.w > 40 && r.h > 40 ? r : null
+  }
+  private area(): Rect {
+    const { w, h } = this.size()
+    return this.bounds ?? { x: 0, y: 0, w, h }
+  }
+
   /** Her ajanın dolaştığı bölge: üst üste binmesinler */
-  private home(i: number, w: number, h: number) {
+  private home(i: number, _w: number, _h: number) {
+    const b = this.area()
     const cols = [0.28, 0.72, 0.3, 0.7]
     const rows = [0.3, 0.34, 0.68, 0.72]
-    return { x: w * cols[i % 4], y: h * rows[i % 4] }
+    return { x: b.x + b.w * cols[i % 4], y: b.y + b.h * rows[i % 4] }
   }
 
   setPaused(p: boolean) {
@@ -290,7 +301,11 @@ export class AgentDirector {
     }
     // Boşta: kendi bölgesinde hafifçe dolaş
     const home = this.home(i, w, h)
-    const p = this.clampPoint(home.x + (Math.random() - 0.5) * w * 0.32, home.y + (Math.random() - 0.5) * h * 0.26)
+    const ar = this.area()
+    const p = this.clampPoint(
+      Math.max(ar.x + 8, Math.min(ar.x + ar.w - 40, home.x + (Math.random() - 0.5) * ar.w * 0.32)),
+      Math.max(ar.y + 8, Math.min(ar.y + ar.h - 40, home.y + (Math.random() - 0.5) * ar.h * 0.26)),
+    )
     a.tx = p.x
     a.ty = p.y
     a.mode = 'moving'
@@ -321,7 +336,7 @@ export const LIVE_BUILD_CSS = `
 .lb-agent{position:absolute;left:0;top:0;will-change:transform;z-index:5;pointer-events:none}
 .lb-arrow{display:block;filter:drop-shadow(0 2px 3px rgb(30 36 51 / .25))}
 .lb-name{position:absolute;left:15px;top:19px;white-space:nowrap;border-radius:999px;background:var(--c);color:#fff;font:800 11px/1 'Nunito Variable',Nunito,system-ui,sans-serif;padding:4px 8px;box-shadow:0 2px 6px rgb(30 36 51 / .18)}
-.lb-bubble,.lb-thought{position:absolute;left:15px;top:44px;max-width:240px;border-radius:14px;border-top-left-radius:4px;background:#fff;color:#1e2433;font:700 12.5px/1.35 'Nunito Variable',Nunito,system-ui,sans-serif;padding:7px 10px;box-shadow:0 6px 20px rgb(30 36 51 / .14);border:1.5px solid var(--c);opacity:0;transform:translateY(4px) scale(.96);transform-origin:top left;transition:opacity .22s,transform .22s;white-space:normal}
+.lb-bubble,.lb-thought{position:absolute;left:15px;top:44px;width:max-content;max-width:240px;border-radius:14px;border-top-left-radius:4px;background:#fff;color:#1e2433;font:700 12.5px/1.35 'Nunito Variable',Nunito,system-ui,sans-serif;padding:7px 10px;box-shadow:0 6px 20px rgb(30 36 51 / .14);border:1.5px solid var(--c);opacity:0;transform:translateY(4px) scale(.96);transform-origin:top left;transition:opacity .22s,transform .22s;white-space:normal}
 .lb-thought{max-width:280px;top:44px;font-weight:700;font-size:12px;color:#3a4152}
 .lb-thought::before{content:'💭 ';}
 .lb-show{opacity:1;transform:none}

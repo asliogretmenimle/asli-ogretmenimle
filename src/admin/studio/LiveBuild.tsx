@@ -54,7 +54,19 @@ function phaseLabel(kind: StudioKind, live: LiveState) {
   if (live.phase === 'done') return 'Hazır'
   if (kind === 'test') return 'Soruları yazıyor'
   if (!live.html && live.edits?.length) return 'Düzenliyor'
-  return live.html.length < 1800 ? 'Tasarlıyor' : 'Kod yazıyor'
+  if (!hasBodyContent(live.html)) return 'Stilleri yazıyor'
+  return /<script\b/i.test(live.html) ? 'Kod yazıyor' : 'Tasarlıyor'
+}
+
+/** Betikleri etkisiz şablona çevir (sandbox zaten çalıştırmaz; konsolu da kirletmesin) */
+const neutralize = (h: string) => h.replace(/<script\b/gi, '<template data-lb-script').replace(/<\/script>/gi, '</template>')
+
+/** Gövdede görünür bir öğe başladı mı? (Önce uzun <style> bloğu yazılır; o sırada eskiz kalsın) */
+const hasBodyContent = (h: string) => {
+  const b = h.search(/<body[^>]*>/i)
+  if (b >= 0) return /<[a-z]/i.test(h.slice(b).replace(/^<body[^>]*>/i, ''))
+  const afterHead = h.search(/<\/head>/i)
+  return afterHead >= 0 ? /<[a-z]/i.test(h.slice(afterHead + 7)) : /<(div|main|section|header|h1|h2|p|button|svg|canvas)\b/i.test(h.replace(/<style[\s\S]*?(<\/style>|$)/gi, ''))
 }
 
 const fmtTime = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
@@ -66,13 +78,15 @@ export function LiveBuild({ kind, live, baseHtml, elapsed, device, className }: 
   const sketch = useRef<HTMLDivElement>(null)
   const quizBox = useRef<HTMLDivElement>(null)
   const director = useRef<AgentDirector | null>(null)
+  const deviceBox = useRef<HTMLDivElement>(null)
   const [box, setBox] = useState({ w: 0, h: 0 })
   const [count, setCount] = useState(0)
   const countRef = useRef(0)
 
   const isHtmlKind = kind !== 'test'
   const editMode = isHtmlKind && !!baseHtml && !live.html
-  const showSketch = isHtmlKind ? !live.html && !baseHtml : !(live.quiz?.questions?.length ?? 0)
+  const bodyStarted = useMemo(() => hasBodyContent(live.html), [live.html])
+  const showSketch = isHtmlKind ? !baseHtml && !bodyStarted : !(live.quiz?.questions?.length ?? 0)
   const done = live.phase === 'done'
 
   const reduced = useMemo(() => {
@@ -109,6 +123,13 @@ export function LiveBuild({ kind, live, baseHtml, elapsed, device, className }: 
     }
   }, [reduced])
 
+  // Ajanlar boştayken cihaz çerçevesinin içinde dolaşsın
+  useEffect(() => {
+    const el = deviceBox.current
+    if (!el || !director.current) return
+    director.current.setBounds(relRect(el.getBoundingClientRect()))
+  }, [box.w, box.h, devW, devH, scale, reduced]) // eslint-disable-line react-hooks/exhaustive-deps
+
   /** Katman koordinatlarında dikdörtgen */
   const relRect = (r: DOMRect | { left: number; top: number; width: number; height: number }): Rect | null => {
     const lr = layer.current?.getBoundingClientRect()
@@ -142,6 +163,7 @@ export function LiveBuild({ kind, live, baseHtml, elapsed, device, className }: 
 
   // ------------------------------------------------------------ iframe: kademeli yazım
   const written = useRef('')
+  const held = useRef('')
   const mode = useRef<'none' | 'base' | 'stream'>('none')
   const feedOn = useRef(false)
 
@@ -154,17 +176,20 @@ export function LiveBuild({ kind, live, baseHtml, elapsed, device, className }: 
         doc.open()
         doc.write(IFRAME_HEAD)
         written.current = ''
+        held.current = ''
         mode.current = 'stream'
         feedOn.current = true
       }
-      const chunk = live.html.slice(written.current.length)
-      if (chunk) {
-        doc.write(chunk)
-        written.current = live.html
-      }
+      let chunk = held.current + live.html.slice(written.current.length)
+      written.current = live.html
+      // Yarım kalmış etiketi (ör. "<scr") bir sonraki parçaya bırak
+      const tail = /<[^>]{0,12}$/.exec(chunk)
+      held.current = tail ? tail[0] : ''
+      if (tail) chunk = chunk.slice(0, -tail[0].length)
+      if (chunk) doc.write(neutralize(chunk))
     } else if (baseHtml && mode.current === 'none') {
       doc.open()
-      doc.write(IFRAME_HEAD + baseHtml)
+      doc.write(IFRAME_HEAD + neutralize(baseHtml))
       doc.close()
       mode.current = 'base'
       feedOn.current = false
@@ -373,9 +398,9 @@ export function LiveBuild({ kind, live, baseHtml, elapsed, device, className }: 
       {/* Sahne */}
       <div ref={stage} className="relative min-h-0 flex-1 overflow-hidden bg-[radial-gradient(#dfe2ea_1px,transparent_1px)] [background-size:16px_16px]">
         <div className="absolute inset-0 flex justify-center" style={{ padding: pad }}>
-          <div className="relative shrink-0" style={{ width: devW * scale, height: devH * scale }}>
+          <div ref={deviceBox} className="relative shrink-0" style={{ width: devW * scale, height: devH * scale }}>
             <div
-              className={cx('absolute top-0 left-0 overflow-hidden bg-white shadow-[var(--shadow-lift)] ring-1 ring-line', device === 'phone' ? 'rounded-[28px] ring-4 ring-ink/80' : 'rounded-2xl')}
+              className={cx('absolute top-0 left-0 overflow-hidden bg-white shadow-[var(--shadow-lift)]', device === 'phone' ? 'rounded-[30px] ring-[6px] ring-ink/85' : 'rounded-2xl ring-1 ring-line')}
               style={{ width: devW, height: devH, transform: `scale(${scale})`, transformOrigin: 'top left' }}
             >
               {isHtmlKind && (
