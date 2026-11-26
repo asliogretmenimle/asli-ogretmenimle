@@ -1,7 +1,7 @@
 {
  "/": {
-  "h": "612f7fe910ad512f",
-  "d": "2026-11-14"
+  "h": "1d52b8803f858dd0",
+  "d": "2026-11-26"
  },
  "/carpim-tablosu": {
   "h": "fbda05aabd3f8521",
@@ -203,6 +203,10 @@
   "h": "ec0af75adb5b6ca7",
   "d": "2026-11-09"
  },
+ "/etkilesim/kup-yapi-gorunumleri": {
+  "h": "a03f8126bb4379ff",
+  "d": "2026-11-26"
+ },
  "/etkilesim/matematiksel-tartisma": {
   "h": "4f4c2e94ebe8221e",
   "d": "2026-11-09"
@@ -238,6 +242,10 @@
  "/etkilesim/pisagor-kesif": {
   "h": "db4004041254a1e0",
   "d": "2026-11-09"
+ },
+ "/etkilesim/prizma-acinim-yuzey-alani": {
+  "h": "bbd2efe616d15197",
+  "d": "2026-11-26"
  },
  "/etkilesim/sayi-piramitleri": {
   "h": "88b543dbee3f722c",
@@ -320,8 +328,8 @@
   "d": "2026-11-10"
  },
  "/etkilesimler": {
-  "h": "151d134d5927e6c6",
-  "d": "2026-11-14"
+  "h": "c6d1a8e5d9110708",
+  "d": "2026-11-26"
  },
  "/etkinlik/g1-alisveris": {
   "h": "378ef401e3a3fc4e",
@@ -2796,8 +2804,8 @@
   "d": "2026-11-09"
  },
  "/etkinlik/g7-acinimlar": {
-  "h": "062f7651ab98647b",
-  "d": "2026-11-09"
+  "h": "3251d7a729a2ca0a",
+  "d": "2026-11-26"
  },
  "/etkinlik/g7-adil-mi": {
   "h": "8bf2f13cab00f1c7",
@@ -2812,8 +2820,8 @@
   "d": "2026-11-09"
  },
  "/etkinlik/g7-alan-mi-hacim-mi": {
-  "h": "f933e84fdfd92663",
-  "d": "2026-11-09"
+  "h": "8be7998e618abb2d",
+  "d": "2026-11-26"
  },
  "/etkinlik/g7-alan-problemleri": {
   "h": "6b71b692ae11af0d",
@@ -2948,8 +2956,8 @@
   "d": "2026-11-09"
  },
  "/etkinlik/g7-gorunum-problem": {
-  "h": "0dc042c412ae3b3e",
-  "d": "2026-11-09"
+  "h": "88bef88fe5af603e",
+  "d": "2026-11-26"
  },
  "/etkinlik/g7-grafik-olustur": {
   "h": "5dc253a6d729bc31",
@@ -3004,8 +3012,8 @@
   "d": "2026-11-09"
  },
  "/etkinlik/g7-kup-yapilari-gorunum": {
-  "h": "2ba1a937a483ee43",
-  "d": "2026-11-09"
+  "h": "c788cf4ea3f4eeea",
+  "d": "2026-11-26"
  },
  "/etkinlik/g7-merkez-acisi-eslestir": {
   "h": "51393cde0d2c002c",
@@ -3064,12 +3072,12 @@
   "d": "2026-11-09"
  },
  "/etkinlik/g7-prizma-problemleri": {
-  "h": "35af1f395f3dfa93",
-  "d": "2026-11-09"
+  "h": "50a55b7d6326a83b",
+  "d": "2026-11-26"
  },
  "/etkinlik/g7-prizma-problemleri-2": {
-  "h": "8f8e777071ee0b0c",
-  "d": "2026-11-09"
+  "h": "12ada1d71a852832",
+  "d": "2026-11-26"
  },
  "/etkinlik/g7-rasyonel-karsilastir": {
   "h": "e78089bbf25d6911",
@@ -3096,8 +3104,8 @@
   "d": "2026-11-09"
  },
  "/etkinlik/g7-sayi-kodu-eslestir": {
-  "h": "3743905c394c373d",
-  "d": "2026-11-09"
+  "h": "e109a97f217fe16f",
+  "d": "2026-11-26"
  },
  "/etkinlik/g7-sayi-kumeleri": {
   "h": "4d170e070598f5ec",
@@ -3128,8 +3136,8 @@
   "d": "2026-11-09"
  },
  "/etkinlik/g7-t2-hangisi-farkli": {
-  "h": "0a3598d427d79587",
-  "d": "2026-11-09"
+  "h": "728d227d277f9e2d",
+  "d": "2026-11-26"
  },
  "/etkinlik/g7-t3-hangisi-farkli": {
   "h": "b75ffb4260775de2",
@@ -3220,12 +3228,12 @@
   "d": "2026-11-09"
  },
  "/etkinlik/g7-yuzey-alani": {
-  "h": "1603810c9902d60a",
-  "d": "2026-11-09"
+  "h": "647d1c5310ef33f9",
+  "d": "2026-11-26"
  },
  "/etkinlik/g7-yuzey-alani-problem": {
-  "h": "555eff8eb16461e3",
-  "d": "2026-11-09"
+  "h": "b1cb75dc0380d138",
+  "d": "2026-11-26"
  },
  "/etkinlik/g7-zar-deneyi": {
   "h": "2703ff4b69ed69f1",
@@ -4096,8 +4104,8 @@
   "d": "2026-11-09"
  },
  "/rehber/prizmanin-hacmi": {
-  "h": "35a5a0b2df0d2deb",
-  "d": "2026-11-09"
+  "h": "7b6e17eb18e4d372",
+  "d": "2026-11-26"
  },
  "/rehber/rasyonel-sayilar": {
   "h": "3d60b171bf0ee9fd",
@@ -4348,16 +4356,16 @@
   "d": "2026-11-09"
  },
  "/sinif/7": {
-  "h": "d16afce341715535",
-  "d": "2026-11-14"
+  "h": "c3867aefe5f7ecf0",
+  "d": "2026-11-26"
  },
  "/sinif/7/donusum": {
   "h": "d127f75129d02447",
   "d": "2026-11-09"
  },
  "/sinif/7/geometrik-nicelikler-1": {
-  "h": "95e4e8c99c3d087e",
-  "d": "2026-11-09"
+  "h": "6ecc5d5333e0f6af",
+  "d": "2026-11-26"
  },
  "/sinif/7/geometrik-nicelikler-2": {
   "h": "6068d50493aad28d",

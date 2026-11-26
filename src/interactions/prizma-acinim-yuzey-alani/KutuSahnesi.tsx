@@ -153,6 +153,7 @@ export function BoxScene({ a, b, c, net, t, labels = 'none', labelOn, glow, hidd
   const labelKey = labels + [...(labelOn ?? ['*'])].sort().join()
   const showBad = !!analysis && t > 0.995
   const badKey = showBad ? analysis!.bad.join() + '|' + analysis!.holes.join() : ''
+  const showCubes = !!cubes && t > 0.995 && !analysis?.bad.length
 
   /* yüzleri kur */
   useEffect(() => {
@@ -165,7 +166,8 @@ export function BoxScene({ a, b, c, net, t, labels = 'none', labelOn, glow, hidd
     const { top, groups } = buildHierarchy(root, (f) => {
       const mode = bad.has(f.id) ? 'bad' : glow?.has(f.id) ? 'glow' : 'normal'
       const col = paper ?? PAIR_COLOR[PAIR_OF[f.id]]
-      const mat = new THREE.MeshStandardMaterial({ map: faceTexture(f.w, f.h, col, mode), side: THREE.DoubleSide, roughness: 0.85, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 })
+      // içi birim küplerle doluyken yüzler yarı saydam olsun ki küpler görünsün
+      const mat = new THREE.MeshStandardMaterial({ map: faceTexture(f.w, f.h, col, mode), side: THREE.DoubleSide, roughness: 0.85, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1, transparent: showCubes, opacity: showCubes ? 0.3 : 1, depthWrite: !showCubes })
       const geo = new THREE.PlaneGeometry(f.w, f.h)
       const m = new THREE.Mesh(geo, mat)
       m.castShadow = true
@@ -214,7 +216,7 @@ export function BoxScene({ a, b, c, net, t, labels = 'none', labelOn, glow, hidd
     }
     stage.invalidate()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stage, root, K, labelKey, glowKey, badKey, paper, a, b, c])
+  }, [stage, root, K, labelKey, glowKey, badKey, paper, a, b, c, showCubes])
 
   /* katla */
   useEffect(() => {
@@ -225,7 +227,6 @@ export function BoxScene({ a, b, c, net, t, labels = 'none', labelOn, glow, hidd
   }, [t, stage, K, root])
 
   /* birim küplerle doldur */
-  const showCubes = !!cubes && t > 0.995 && !analysis?.bad.length
   useEffect(() => {
     const p = parts.current
     if (!stage || !p) return
