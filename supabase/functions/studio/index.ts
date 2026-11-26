@@ -3,7 +3,8 @@
  *
  * OpenAI anahtarı tarayıcıya hiç gitmez; bu fonksiyonun gizli ortam değişkenindedir.
  * Uzun üretimler (tam bir oyun) dakikalar sürebildiği için "background" modu kullanılır:
- *   start  → işi başlatır, kimliğini döndürür
+ *   start  → işi başlatır; stream: true ise model yazdıkça olayları canlı iletir (SSE)
+ *   stream → kopan canlı akışı kaldığı yerden sürdürür
  *   poll   → durumu sorar; bitince JSON sonucu döndürür
  *   cancel → işi durdurur
  *   status → bağlantı / ayar kontrolü (Ayarlar sayfası)
@@ -206,13 +207,30 @@ async function openaiKey() {
 }
 const hint = (k: string) => `${k.slice(0, 3)}…${k.slice(-4)}`
 
-async function openai(path: string, init: RequestInit = {}, keyOverride?: string) {
+async function openaiFetch(path: string, init: RequestInit = {}, keyOverride?: string) {
   const key = keyOverride ?? (await openaiKey())?.key
   if (!key) throw new Error('OpenAI anahtarı tanımlı değil. Panelde Ayarlar → OpenAI anahtarı bölümünden ekleyin.')
-  const r = await fetch(`${OPENAI}${path}`, {
+  return fetch(`${OPENAI}${path}`, {
     ...init,
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...(init.headers ?? {}) },
   })
+}
+
+/** OpenAI olay akışını panele olduğu gibi iletir */
+const sse = (body: ReadableStream<Uint8Array> | null) =>
+  new Response(body, { headers: { ...cors, 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no' } })
+
+async function errorMessage(r: Response) {
+  const text = await r.text()
+  try {
+    return `OpenAI ${r.status}: ${(JSON.parse(text).error?.message as string) ?? text.slice(0, 300)}`
+  } catch {
+    return `OpenAI ${r.status}: ${text.slice(0, 300)}`
+  }
+}
+
+async function openai(path: string, init: RequestInit = {}, keyOverride?: string) {
+  const r = await openaiFetch(path, init, keyOverride)
   const text = await r.text()
   let body: Record<string, unknown> = {}
   try {
@@ -317,19 +335,29 @@ Deno.serve(async (req) => {
         const effort = ['minimal', 'low', 'medium', 'high'].includes(settings.effort ?? '') ? settings.effort : 'medium'
         // Düşünme (reasoning) yalnızca gpt-5 / o-serisi modellerde var; diğerlerinde parametre hata verir
         const reasoning = /^(gpt-5|o\d)/i.test(model)
-        const resp = await openai('/responses', {
-          method: 'POST',
-          body: JSON.stringify({
-            model,
-            instructions,
-            input: buildInput(b),
-            background: true,
-            store: true,
-            ...(reasoning ? { reasoning: { effort } } : {}),
-            max_output_tokens: reasoning ? 100000 : 32000,
-            text: { format: { type: 'json_schema', name: 'studio_output', strict: true, schema: OUTPUT_SCHEMA } },
-          }),
+        const payload = (summary: boolean) => ({
+          model,
+          instructions,
+          input: buildInput(b),
+          background: true,
+          store: true,
+          ...(reasoning ? { reasoning: { effort, ...(summary ? { summary: 'auto' } : {}) } } : {}),
+          max_output_tokens: reasoning ? 100000 : 32000,
+          text: { format: { type: 'json_schema', name: 'studio_output', strict: true, schema: OUTPUT_SCHEMA } },
         })
+        if (body.stream) {
+          // Canlı akış: model yazdıkça panel önizlemesi oluşur. Düşünme özetleri (summary) her hesapta
+          // açık olmayabilir; reddedilirse onsuz yeniden dene.
+          let up = await openaiFetch('/responses', { method: 'POST', body: JSON.stringify({ ...payload(reasoning), stream: true }) })
+          if (!up.ok && reasoning) {
+            const msg = await errorMessage(up)
+            if (!/summar|verif/i.test(msg)) return json({ error: msg }, 502)
+            up = await openaiFetch('/responses', { method: 'POST', body: JSON.stringify({ ...payload(false), stream: true }) })
+          }
+          if (!up.ok) return json({ error: await errorMessage(up) }, 502)
+          return sse(up.body)
+        }
+        const resp = await openai('/responses', { method: 'POST', body: JSON.stringify(payload(false)) })
         return json({ id: resp.id, status: resp.status, model })
       }
 
@@ -356,6 +384,16 @@ Deno.serve(async (req) => {
           return json({ status: 'failed', error: status === 'cancelled' ? 'İptal edildi' : err ?? 'Üretim başarısız oldu' })
         }
         return json({ status })
+      }
+
+      case 'stream': {
+        // Kopan akışı kaldığı yerden sürdür (yalnızca stream ile başlatılan işler)
+        const id = String(body.id ?? '')
+        if (!/^resp_[\w-]+$/.test(id)) return json({ error: 'Geçersiz iş kimliği' }, 400)
+        const after = Math.max(0, Number(body.after) || 0)
+        const up = await openaiFetch(`/responses/${id}?stream=true&starting_after=${after}`)
+        if (!up.ok) return json({ error: await errorMessage(up) }, 502)
+        return sse(up.body)
       }
 
       case 'cancel': {

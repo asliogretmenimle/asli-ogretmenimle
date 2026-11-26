@@ -31,6 +31,8 @@ import { HtmlFrame } from '../../cms/HtmlFrame'
 import { SessionTracker } from '../../lib/report'
 import { TrackerProvider } from '../../lib/trackerContext'
 import { studioCall } from '../api'
+import { LiveBuild } from './LiveBuild'
+import { emptyLive, liveFromText, responseText, streamCall, type LiveState, type StreamEvent } from './stream'
 import { kindInfo } from '../catalog'
 import { sb } from '../supabase'
 import { Badge, Button, Empty, IconButton, Segmented, Select, cx, inputCls, useToast } from '../ui'
@@ -76,6 +78,9 @@ export function StudioWorkspace() {
   const [loadError, setLoadError] = useState<string | null>(null)
 
   const [gen, setGen] = useState<{ jobId: string; startedAt: number } | null>(null)
+  // Canlı inşa: model yazdıkça önizlemede oluşan tasarım
+  const [live, setLive] = useState<LiveState | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
   const [elapsed, setElapsed] = useState(0)
   const alive = useRef(true)
   const stopRef = useRef<string | null>(null)
@@ -124,6 +129,7 @@ export function StudioWorkspace() {
   const finishWithError = async (jobId: string | null, text: string, prompt?: string) => {
     await patch((s) => ({ ...s, messages: [...s.messages.filter((m) => !(jobId && m.pending === jobId)), { role: 'error', text, at: nowIso(), prompt }] }))
     setGen(null)
+    setLive(null)
     if (prompt) setDraft((d) => d || prompt)
   }
 
@@ -172,6 +178,7 @@ export function StudioWorkspace() {
       messages: [...s.messages.filter((m) => m.pending !== jobId), msg],
     })
     setGen(null)
+    setLive(null)
     if (version) {
       setView(idx)
       setErrors([])
@@ -196,6 +203,132 @@ export function StudioWorkspace() {
     }
   }
 
+  /**
+   * Canlı akış: model yazdıkça önizleme oluşur. Bağlantı koparsa kaldığı yerden sürdürür;
+   * hiç akış alınamazsa (eski sunucu sürümü vb.) sorgulamaya (poll) düşer.
+   */
+  const runStream = async (opts: { startBody?: Record<string, unknown>; resumeId?: string; shown: string; wasRetry: boolean; withUser?: StudioSession }) => {
+    let jobId = opts.resumeId ?? ''
+    let seq = 0
+    let text = ''
+    const thoughts: string[] = []
+    let completed: StreamEvent['response'] | null = null
+    let failed: string | null = null
+    let state = emptyLive()
+    setLive(state)
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const flush = () => {
+      timer = null
+      state = { ...liveFromText(text, state), thoughts: thoughts.filter((t) => t.trim()) }
+      if (state.phase === 'connecting' && (thoughts.length || jobId)) state.phase = 'thinking'
+      if (alive.current) setLive(state)
+    }
+    const schedule = () => {
+      if (!timer) timer = setTimeout(flush, 120)
+    }
+    const onEvent = (e: StreamEvent) => {
+      if (typeof e.sequence_number === 'number') seq = Math.max(seq, e.sequence_number)
+      switch (e.type) {
+        case 'response.created':
+        case 'response.queued':
+        case 'response.in_progress':
+          if (e.response?.id && !jobId) {
+            jobId = e.response.id
+            setGen((g) => (g ? { ...g, jobId } : { jobId, startedAt: Date.now() }))
+            const base = opts.withUser ?? sref.current
+            if (base) persist({ ...base, messages: [...base.messages, { role: 'assistant', text: '', at: nowIso(), pending: jobId, prompt: opts.shown }] })
+          }
+          break
+        case 'response.reasoning_summary_part.added':
+          thoughts.push('')
+          break
+        case 'response.reasoning_summary_text.delta':
+          if (!thoughts.length) thoughts.push('')
+          thoughts[thoughts.length - 1] += e.delta ?? ''
+          break
+        case 'response.output_text.delta':
+          text += e.delta ?? ''
+          break
+        case 'response.completed':
+          completed = e.response ?? {}
+          break
+        case 'response.incomplete':
+          failed = e.response?.incomplete_details?.reason === 'max_output_tokens' ? 'Çıktı çok uzun olduğu için yarıda kesildi. İsteği daha küçük parçalara bölün.' : 'Üretim tamamlanamadı.'
+          break
+        case 'response.failed':
+          failed = e.response?.error?.message ?? 'Üretim başarısız oldu.'
+          break
+        case 'error':
+          failed = e.message ?? 'Üretim sırasında hata oluştu.'
+          break
+      }
+      schedule()
+    }
+
+    let fallbackToPoll = false
+    for (let attempt = 0; attempt < 4 && alive.current && !completed && !failed; attempt++) {
+      if (jobId && stopRef.current === jobId) return
+      const ctrl = new AbortController()
+      abortRef.current = ctrl
+      try {
+        const body = attempt === 0 && opts.startBody ? { ...opts.startBody, stream: true } : { action: 'stream', id: jobId, after: jobId === opts.resumeId && attempt === 0 ? 0 : seq }
+        if (attempt > 0 || !opts.startBody) {
+          // Sürdürme: baştan alınıyorsa metni sıfırla
+          if ((body as { after: number }).after === 0) {
+            text = ''
+            thoughts.length = 0
+          }
+        }
+        const r = await streamCall(body, onEvent, ctrl.signal)
+        if (r.json) {
+          // Sunucu akış desteklemiyor: iş kimliğiyle sorgulamaya geç
+          if (typeof r.json.id === 'string') {
+            jobId = r.json.id
+            setGen((g) => (g ? { ...g, jobId } : { jobId, startedAt: Date.now() }))
+            const base = opts.withUser ?? sref.current
+            if (base) await persist({ ...base, messages: [...base.messages, { role: 'assistant', text: '', at: nowIso(), pending: jobId, prompt: opts.shown }] })
+          }
+          fallbackToPoll = true
+          break
+        }
+      } catch (e) {
+        if (ctrl.signal.aborted) return
+        if (!jobId) {
+          if (timer) clearTimeout(timer)
+          setLive(null)
+          if (opts.withUser) await persist(opts.withUser)
+          return finishWithError(null, (e as Error).message, opts.shown)
+        }
+      }
+      if (!jobId) break
+    }
+    if (timer) clearTimeout(timer)
+    abortRef.current = null
+    if (!alive.current || (jobId && stopRef.current === jobId)) return
+
+    if (failed) return finishWithError(jobId || null, failed, opts.shown)
+    if (completed) {
+      const finalText = responseText(completed) || text
+      let result: StudioResult | null = null
+      try {
+        result = JSON.parse(finalText) as StudioResult
+      } catch {
+        result = null
+      }
+      if (!result) return jobId ? pollJob(jobId, opts.shown, opts.wasRetry) : finishWithError(null, 'Modelin cevabı okunamadı. Tekrar deneyin.', opts.shown)
+      state = { ...liveFromText(finalText, state), thoughts: thoughts.filter((t) => t.trim()), phase: 'done' }
+      setLive(state)
+      await sleep(900)
+      if (!alive.current) return
+      return handleResult(result, jobId, opts.shown, opts.wasRetry)
+    }
+    if (jobId) {
+      if (!fallbackToPoll) setLive((l) => (l ? { ...l, phase: l.phase === 'connecting' ? 'thinking' : l.phase } : l))
+      return pollJob(jobId, opts.shown, opts.wasRetry)
+    }
+    return finishWithError(null, 'Stüdyo sunucusundan cevap alınamadı.', opts.shown)
+  }
+
   const generate = async (prompt: string, images: string[], opts: { hideUser?: boolean; retry?: boolean; originalPrompt?: string } = {}) => {
     const s = sref.current
     if (!s || !prompt.trim()) return
@@ -207,8 +340,9 @@ export function StudioWorkspace() {
     setSession(withUser)
     setGen({ jobId: '', startedAt: Date.now() })
     const shown = opts.originalPrompt ?? prompt
-    try {
-      const r = await studioCall<{ id: string }>({
+    setPane('preview')
+    await runStream({
+      startBody: {
         action: 'start',
         kind: s.kind,
         grade: s.grade,
@@ -217,15 +351,11 @@ export function StudioWorkspace() {
         history,
         current: cur ? { meta: cur.meta, html: cur.html ?? null, quiz: cur.quiz ?? null } : null,
         images,
-      })
-      if (!alive.current) return
-      setGen({ jobId: r.id, startedAt: Date.now() })
-      await persist({ ...withUser, messages: [...withUser.messages, { role: 'assistant', text: '', at: nowIso(), pending: r.id, prompt: shown }] })
-      await pollJob(r.id, shown, !!opts.retry)
-    } catch (e) {
-      await persist(withUser)
-      await finishWithError(null, (e as Error).message, shown)
-    }
+      },
+      shown,
+      wasRetry: !!opts.retry,
+      withUser,
+    })
   }
 
   const send = (text?: string) => {
@@ -241,6 +371,7 @@ export function StudioWorkspace() {
     const g = gen
     if (!g?.jobId) return
     stopRef.current = g.jobId
+    abortRef.current?.abort()
     studioCall({ action: 'cancel', id: g.jobId }).catch(() => {})
     const pending = sref.current?.messages.find((m) => m.pending === g.jobId)
     await finishWithError(g.jobId, 'Üretim durduruldu.', pending?.prompt)
@@ -265,8 +396,8 @@ export function StudioWorkspace() {
       if (last?.pending) {
         // Sayfa yeniden açıldı: devam eden üretimi izlemeyi sürdür
         setGen({ jobId: last.pending, startedAt: new Date(last.at).getTime() })
-        setPane('chat')
-        pollJob(last.pending, last.prompt ?? '', false)
+        setPane('preview')
+        runStream({ resumeId: last.pending, shown: last.prompt ?? '', wasRetry: false })
       } else if (st?.initialPrompt && s.messages.length === 0) {
         navigate(location.pathname, { replace: true, state: null })
         setPane('chat')
@@ -409,7 +540,9 @@ export function StudioWorkspace() {
               <div className="rounded-2xl bg-brand-soft/60 p-3.5 ring-1 ring-brand/15">
                 <div className="flex items-center gap-2.5">
                   <WandSparkles size={18} className="shrink-0 animate-pulse text-brand" />
-                  <p className="min-w-0 flex-1 text-sm font-extrabold text-brand-ink">{PHRASES[Math.min(PHRASES.length - 1, Math.floor(elapsed / 12))]}</p>
+                  <p className="min-w-0 flex-1 text-sm font-extrabold text-brand-ink">
+                    {live?.phase === 'writing' ? (session.kind === 'test' ? 'Soruları yazıyor…' : live.edits?.length ? 'Değişiklikleri uyguluyor…' : 'Tasarımı kodluyor…') : live?.phase === 'done' ? 'Hazır!' : PHRASES[Math.min(PHRASES.length - 1, Math.floor(elapsed / 12))]}
+                  </p>
                   <span className="text-xs font-bold text-brand-ink/70 tabular-nums">
                     {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, '0')}
                   </span>
@@ -423,6 +556,12 @@ export function StudioWorkspace() {
                     Durdur
                   </Button>
                 </div>
+                {(live?.reply || live?.thoughts.length) ? (
+                  <p className="mt-2.5 line-clamp-4 rounded-xl bg-white/80 px-3 py-2 text-[13px] font-semibold text-ink">
+                    {live.reply || live.thoughts[live.thoughts.length - 1]}
+                    <span className="ml-0.5 inline-block h-3.5 w-1.5 translate-y-0.5 animate-pulse rounded-sm bg-brand" />
+                  </p>
+                ) : null}
                 {pendingMsg?.prompt && <p className="sr-only">İstek: {pendingMsg.prompt}</p>}
               </div>
             )}
@@ -569,7 +708,9 @@ export function StudioWorkspace() {
           )}
 
           <div className="min-h-0 flex-1 overflow-auto">
-            {!version ? (
+            {gen && live && tab === 'preview' ? (
+              <LiveBuild kind={session.kind} live={live} baseHtml={session.versions[session.current]?.html ?? null} elapsed={elapsed} device={device} className="h-full w-full" />
+            ) : !version ? (
               <div className="grid h-full place-items-center p-6">
                 {gen ? (
                   <div className="text-center">
