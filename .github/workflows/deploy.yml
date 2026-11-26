@@ -17,4 +17,7 @@ jobs:
             echo "VERCEL_DEPLOY_HOOK secret tanımlı değil" >&2
             exit 1
           fi
-          curl -fsS -X POST "$HOOK"
+          status=$(curl -sS -o response.txt -w "%{http_code}" -X POST "$HOOK")
+          echo "HTTP $status"
+          cat response.txt; echo
+          [ "$status" -lt 300 ]
